@@ -9,9 +9,9 @@ public enum ScalePitchGeometry {
         return base + octaveOffset * 12
     }
 
-    /// 归一化到 [0, 1]（0 = 底部低音界，1 = 顶部高音界），默认显示区间为 [-2, 14] 共 16 个半音，
-    /// 能完整舒适呈现低音 6/7 到高音 1↑/2↑，同时让 1~1↑ 主八度占据黄金视觉区。
-    public static func normalizedY(semitone: Int, minSemitone: Int = -2, maxSemitone: Int = 14) -> CGFloat {
+    /// 归一化到 [0, 1]（0 = 底部低音界，1 = 顶部高音界），默认显示区间为 [-5, 14] 共 19 个半音，
+    /// 完整包容低音 5↓/6↓/7↓（如《爱之梦》《天鹅湖》《肖邦夜曲》）到高音 1↑/2↑。
+    public static func normalizedY(semitone: Int, minSemitone: Int = -5, maxSemitone: Int = 14) -> CGFloat {
         let span = CGFloat(max(1, maxSemitone - minSemitone))
         let clamped = CGFloat(max(minSemitone, min(maxSemitone, semitone)))
         return (clamped - CGFloat(minSemitone)) / span
@@ -26,7 +26,7 @@ public enum ScalePitchGeometry {
     public static func nearestDegreeAndOctave(
         normalizedFromBottom: CGFloat,
         mode: ScaleMode,
-        minSemitone: Int = -2,
+        minSemitone: Int = -5,
         maxSemitone: Int = 14
     ) -> (degree: Int, octaveOffset: Int) {
         let targetSemi = Double(minSemitone) + Double(max(0, min(1, normalizedFromBottom))) * Double(maxSemitone - minSemitone)
@@ -128,12 +128,12 @@ public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable
 
     public func color(isNight: Bool) -> Color {
         switch self {
-        case .I: return isNight ? Color(hex: 0xE8986A) : Color(hex: 0xC4513A)
-        case .ii: return isNight ? Color(hex: 0xE5B05C) : Color(hex: 0xBC6E28)
-        case .iii: return isNight ? Color(hex: 0xEA8491) : Color(hex: 0xCF5B68)
-        case .IV: return isNight ? Color(hex: 0x5CC8C0) : Color(hex: 0x2E8A84)
-        case .V: return isNight ? Color(hex: 0xF2C96B) : Color(hex: 0xC58822)
-        case .vi: return isNight ? Color(hex: 0xB392E8) : Color(hex: 0x6F5A9E)
+        case .I: return isNight ? Color(hex: 0xFF7582) : Color(hex: 0xF25563)
+        case .ii: return isNight ? Color(hex: 0xFFA959) : Color(hex: 0xF7882F)
+        case .iii: return isNight ? Color(hex: 0xFF74A6) : Color(hex: 0xE64980)
+        case .IV: return isNight ? Color(hex: 0x38E4B7) : Color(hex: 0x12B886)
+        case .V: return isNight ? Color(hex: 0x5CB3FF) : Color(hex: 0x228BE6)
+        case .vi: return isNight ? Color(hex: 0xA98BFF) : Color(hex: 0x7950F2)
         }
     }
 
@@ -141,6 +141,58 @@ public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable
         let all = DiatonicChord.allCases
         guard let idx = all.firstIndex(of: self) else { return .I }
         return all[(idx + 1) % all.count]
+    }
+}
+
+/// 真实大师左手伴奏织体（Texture）：同一套和弦，不同弹法就能瞬间听出圣桑水波、肖邦圆舞或东亚夏日治愈感！
+public enum AccompanimentTexture: String, CaseIterable, Codable, Sendable, Identifiable {
+    case swanRipple   // 天鹅水波：圣桑式细腻上下流动分解琶音
+    case feltWaltz    // 圆舞呼吸：三拍子低音落地 + 轻盈双和弦托举（李斯特/肖邦/萨蒂）
+    case summerGlass  // 夏日清风：开放九度透明钢琴 + 钢片琴高音星光泛音
+    case pureChorale  // 柔和长音：清澈稳定三和弦长音，最适合零基础听辨和弦内音
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .swanRipple: return "天鹅水波"
+        case .feltWaltz: return "圆舞呼吸"
+        case .summerGlass: return "夏日清风"
+        case .pureChorale: return "柔和长音"
+        }
+    }
+
+    public var subtitle: String {
+        switch self {
+        case .swanRipple: return "圣桑式流淌的波浪分解琶音，像湖面划过羽翼"
+        case .feltWaltz: return "低音轻落 + 轻盈摇曳的三拍子浪漫呼吸"
+        case .summerGlass: return "东亚治愈电影般的透明九和弦 + 八音盒泛音"
+        case .pureChorale: return "最纯净的三音叠加，清晰听出每个和弦骨架"
+        }
+    }
+
+    public var iconName: String {
+        switch self {
+        case .swanRipple: return "water.waves"
+        case .feltWaltz: return "wind"
+        case .summerGlass: return "sparkles"
+        case .pureChorale: return "circle.grid.3x3.fill"
+        }
+    }
+}
+
+/// 播放名曲时随进度条实时浮现的「电影字幕级逐句导赏」，让乐盲在听见的瞬间立刻看懂作曲家的巧思。
+public struct GuidedStoryMoment: Identifiable, Codable, Equatable, Sendable {
+    public let id: Int
+    public let timeFraction: Double // 0.0 ... 1.0
+    public let badge: String
+    public let caption: String
+
+    public init(id: Int, timeFraction: Double, badge: String, caption: String) {
+        self.id = id
+        self.timeFraction = max(0, min(1, timeFraction))
+        self.badge = badge
+        self.caption = caption
     }
 }
 

@@ -8,6 +8,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
     public var document: MelodyDocument
     public var chordPreset: ChordProgressionPreset
     public var chordOverrides: [Int: DiatonicChord]
+    public var accompanimentTexture: AccompanimentTexture?
     public var summaryNote: String
 
     public init(
@@ -17,6 +18,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
         document: MelodyDocument,
         chordPreset: ChordProgressionPreset = .autoMatch,
         chordOverrides: [Int: DiatonicChord] = [:],
+        accompanimentTexture: AccompanimentTexture? = .swanRipple,
         summaryNote: String = ""
     ) {
         self.id = id
@@ -25,6 +27,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
         self.document = document
         self.chordPreset = chordPreset
         self.chordOverrides = chordOverrides
+        self.accompanimentTexture = accompanimentTexture
         self.summaryNote = summaryNote
     }
 }
@@ -62,6 +65,7 @@ public final class MelodyNotebookStore: ObservableObject {
         document: MelodyDocument,
         chordPreset: ChordProgressionPreset,
         chordOverrides: [Int: DiatonicChord],
+        accompanimentTexture: AccompanimentTexture = .swanRipple,
         summaryNote: String,
         existingEntryID: UUID? = nil
     ) -> SavedMelodyEntry {
@@ -76,6 +80,7 @@ public final class MelodyNotebookStore: ObservableObject {
             entries[idx].document = cleanDoc
             entries[idx].chordPreset = chordPreset
             entries[idx].chordOverrides = chordOverrides
+            entries[idx].accompanimentTexture = accompanimentTexture
             entries[idx].summaryNote = summaryNote
             entries[idx].updatedAt = now
             let updated = entries.remove(at: idx)
@@ -89,6 +94,7 @@ public final class MelodyNotebookStore: ObservableObject {
                 document: cleanDoc,
                 chordPreset: chordPreset,
                 chordOverrides: chordOverrides,
+                accompanimentTexture: accompanimentTexture,
                 summaryNote: summaryNote
             )
             entries.insert(entry, at: 0)

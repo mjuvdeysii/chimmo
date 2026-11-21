@@ -183,6 +183,8 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
     public var isSpecimen: Bool
     public var specimenCategory: String?
     public var composerInsight: String?
+    public var preferredTexture: AccompanimentTexture?
+    public var guidedMoments: [GuidedStoryMoment]?
 
     public init(
         id: UUID = UUID(),
@@ -196,7 +198,9 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
         notes: [NoteBead] = [],
         isSpecimen: Bool = false,
         specimenCategory: String? = nil,
-        composerInsight: String? = nil
+        composerInsight: String? = nil,
+        preferredTexture: AccompanimentTexture? = nil,
+        guidedMoments: [GuidedStoryMoment]? = nil
     ) {
         self.id = id
         self.title = title
@@ -210,10 +214,19 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
         self.isSpecimen = isSpecimen
         self.specimenCategory = specimenCategory
         self.composerInsight = composerInsight
+        self.preferredTexture = preferredTexture
+        self.guidedMoments = guidedMoments
     }
 
     public var totalDuration: Double {
         let lastEnd = notes.map { $0.displayOnset(grooveStrength: grooveStrength) + $0.displayDuration(grooveStrength: grooveStrength) }.max() ?? 0
         return max(2.0, lastEnd + 0.5)
+    }
+
+    public func activeGuidedMoment(at time: Double?) -> GuidedStoryMoment? {
+        guard let moments = guidedMoments, !moments.isEmpty else { return nil }
+        guard let t = time else { return moments.first }
+        let frac = max(0, min(1, t / max(1.0, totalDuration)))
+        return moments.last(where: { $0.timeFraction <= frac + 0.02 }) ?? moments.first
     }
 }

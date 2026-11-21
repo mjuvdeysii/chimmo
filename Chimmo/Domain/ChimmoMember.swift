@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// 咩哞七小只（调内 1–7 音级正典，见 docs/IP.md）。
+/// 咩哞七小只（调内 1–7 音级正典，采用鲜活年轻的彩虹陶釉色板 + 形状/数字/名称三重无障碍编码）。
 public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Sendable {
-    case taono = 1  // 1 · 家 (Do)   - 赤陶倒钟共鸣铃（1-3-5 核心）
-    case doko = 2   // 2 · 迈步 (Re) - 暖杏陶小木鱼
-    case plokko = 3 // 3 · 晴雨 (Mi) - 胭脂珊瑚平衡不倒翁（1-3-5 核心）
-    case udo = 4    // 4 · 悬步 (Fa) - 影青瓷小陶笛
-    case corllo = 5 // 5 · 远望 (Sol)- 宣瓷螺旋号角贝（1-3-5 核心）
-    case bomo = 6   // 6 · 怀旧 (La) - 焙赭陶小手碟
-    case tinki = 7  // 7 · 踮脚 (Ti) - 窑赭陶小陀螺尖芽
+    case taono = 1  // 1 · 家 (Do)   - 珊瑚红陶钟（1-3-5 核心）
+    case doko = 2   // 2 · 迈步 (Re) - 鲜橘小木鱼
+    case plokko = 3 // 3 · 晴雨 (Mi) - 莓果粉不倒翁（1-3-5 核心）
+    case udo = 4    // 4 · 悬步 (Fa) - 薄荷青小陶笛
+    case corllo = 5 // 5 · 远望 (Sol)- 晴空蓝螺旋贝（1-3-5 核心）
+    case bomo = 6   // 6 · 怀旧 (La) - 鸢尾紫小手碟
+    case tinki = 7  // 7 · 踮脚 (Ti) - 暖阳黄小陀螺
 
     public var id: Int { rawValue }
     public var degree: Int { rawValue }
@@ -37,6 +37,18 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
         }
     }
 
+    public var solfege: String {
+        switch self {
+        case .taono: return "Do"
+        case .doko: return "Re"
+        case .plokko: return "Mi"
+        case .udo: return "Fa"
+        case .corllo: return "Sol"
+        case .bomo: return "La"
+        case .tinki: return "Ti"
+        }
+    }
+
     public var roleLabel: String {
         switch self {
         case .taono: return "家"
@@ -51,49 +63,49 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
 
     public var voiceOverSummary: String {
         switch self {
-        case .taono: return "1号陶诺，回家主音，稳重落地"
-        case .doko: return "2号豆叩，迈步音，轻轻离开家"
-        case .plokko: return "3号拍咯，晴雨音，决定大调明朗或小调微酸"
-        case .udo: return "4号呜嘟，悬步音，微微向3号靠拢"
-        case .corllo: return "5号壳咯，远望支柱，撑起天空"
-        case .bomo: return "6号钵莫，怀旧微酸音"
-        case .tinki: return "7号叮尖，踮脚张力音，急切想回到1号家"
+        case .taono: return "1号陶诺 Do，回家主音，稳重落地"
+        case .doko: return "2号豆叩 Re，迈步音，轻轻离开家"
+        case .plokko: return "3号拍咯 Mi，晴雨音，决定大调明朗或小调微酸"
+        case .udo: return "4号呜嘟 Fa，悬步音，微微向3号靠拢"
+        case .corllo: return "5号壳咯 Sol，远望支柱，撑起天空"
+        case .bomo: return "6号钵莫 La，怀旧微酸音"
+        case .tinki: return "7号叮尖 Ti，踮脚张力音，急切想回到1号家"
         }
     }
 
     public var bodyHex: UInt32 {
         switch self {
-        case .taono: return 0xC4513A
-        case .doko: return 0xBC6E28
-        case .plokko: return 0xCF5B68
-        case .udo: return 0x4E8280
-        case .corllo: return 0xEFE7D8
-        case .bomo: return 0x9A624B
-        case .tinki: return 0xB37418
+        case .taono: return 0xF25563  // 活力珊瑚红
+        case .doko: return 0xF7882F   // 清爽鲜橘
+        case .plokko: return 0xE64980 // 亮莓果粉
+        case .udo: return 0x12B886    // 鲜薄荷青
+        case .corllo: return 0x228BE6 // 晴空清蓝
+        case .bomo: return 0x7950F2   // 梦幻鸢尾紫
+        case .tinki: return 0xE59900  // 向日葵暖金
         }
     }
 
     public var accentHex: UInt32 {
         switch self {
-        case .taono: return 0x4A261E
-        case .doko: return 0x5A3516
-        case .plokko: return 0x3A2C2A
-        case .udo: return 0x244241
-        case .corllo: return 0xB85D3B
-        case .bomo: return 0xE8BD6B
-        case .tinki: return 0xFFC45A
+        case .taono: return 0x8F1D28
+        case .doko: return 0x8A420A
+        case .plokko: return 0x861942
+        case .udo: return 0x085E45
+        case .corllo: return 0x0F4C8A
+        case .bomo: return 0x3F2299
+        case .tinki: return 0x7A4E00
         }
     }
 
     public var nightGlowHex: UInt32 {
         switch self {
-        case .taono: return 0xFFB84D
-        case .doko: return 0xFFC45A
-        case .plokko: return 0xFFC45A
-        case .udo: return 0x4FD8CB
-        case .corllo: return 0xFFC45A
-        case .bomo: return 0xE8BD6B
-        case .tinki: return 0xFF7A66
+        case .taono: return 0xFF7582
+        case .doko: return 0xFFA959
+        case .plokko: return 0xFF74A6
+        case .udo: return 0x38E4B7
+        case .corllo: return 0x5CB3FF
+        case .bomo: return 0xA98BFF
+        case .tinki: return 0xFFD94A
         }
     }
 
@@ -101,7 +113,7 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
     public var accentColor: Color { Color(hex: accentHex) }
     public var nightGlowColor: Color { Color(hex: nightGlowHex) }
 
-    /// 1·3·5 主三和弦核心位（同时作为 29pt App Icon 三人组）。
+    /// 1·3·5 主三和弦核心位。
     public var isTriadPillar: Bool {
         self == .taono || self == .plokko || self == .corllo
     }

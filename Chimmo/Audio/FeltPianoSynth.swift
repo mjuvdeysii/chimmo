@@ -25,7 +25,7 @@ public final class FeltPianoSynth {
         var brightness: Double = 1.0
     }
 
-    private let maxVoices = 28
+    private let maxVoices = 36
     private let engine = AVAudioEngine()
     private let reverb = AVAudioUnitReverb()
     private var sourceNode: AVAudioSourceNode?
@@ -266,29 +266,84 @@ public final class FeltPianoSynth {
         }
     }
 
-    /// 弹奏指定调内三和弦（温暖大提琴低音根音 + 错落毛毡三和弦琶音），与画布上的和弦泳道光带一一对应。
+    /// 弹奏指定调内三和弦，支持 4 种真实大师左手伴奏织体（天鹅水波 / 圆舞呼吸 / 夏日清风 / 柔和长音），
+    /// 利用音频线程采样级延迟精准错落发声，零主线程抖动。
     public func playDiatonicChord(
         rootMIDI: Int,
         mode: ScaleMode,
         chord: DiatonicChord,
+        texture: AccompanimentTexture = .swanRipple,
+        spanDuration: Double = 1.6,
         intensity: Double = 0.82
     ) {
         let clamped = max(0.2, min(1.0, intensity))
-        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: chord.rootDegree, octaveOffset: -1)
-        playNote(frequency: bassHz, velocity: 0.28 * clamped, decay: 2.3, brightness: 0.56, timbre: .warmBass, delaySeconds: 0.0)
+        let dur = max(0.75, min(3.6, spanDuration))
+        let tones = chord.chordToneDegrees
+        let rDeg = chord.rootDegree
+        let thirdDeg = tones.count > 1 ? tones[1] : rDeg
+        let fifthDeg = tones.count > 2 ? tones[2] : rDeg
 
-        for (idx, deg) in chord.chordToneDegrees.enumerated() {
-            let oct = (idx > 0 && deg < chord.rootDegree) ? 0 : (idx == 0 ? -1 : 0)
-            let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
-            let delay = Double(idx + 1) * 0.036
-            playNote(
-                frequency: hz,
-                velocity: (0.20 - Double(idx) * 0.015) * clamped,
-                decay: 2.0,
-                brightness: 0.84,
-                timbre: .feltPiano,
-                delaySeconds: delay
-            )
+        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: rDeg, octaveOffset: -1)
+        let midRootHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: rDeg, octaveOffset: 0)
+        let thirdHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: thirdDeg, octaveOffset: thirdDeg < rDeg ? 0 : -1)
+        let fifthHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: fifthDeg, octaveOffset: fifthDeg < rDeg ? 0 : -1)
+
+        switch texture {
+        case .swanRipple:
+            // 圣桑《天鹅》标志性流水波浪：低音铺底 + 6 粒细腻上下波动的竖琴/钢琴分解琶音
+            playNote(frequency: bassHz, velocity: 0.25 * clamped, decay: dur * 1.35, brightness: 0.52, timbre: .warmBass, delaySeconds: 0.0)
+            let pattern: [Double] = [bassHz, fifthHz, midRootHz, thirdHz, midRootHz, fifthHz]
+            let stepSec = min(0.24, max(0.11, dur / Double(pattern.count)))
+            for (idx, hz) in pattern.enumerated() {
+                let vel = (idx == 0 ? 0.16 : (idx == 3 ? 0.18 : 0.14)) * clamped
+                playNote(
+                    frequency: hz,
+                    velocity: vel,
+                    decay: 1.55,
+                    brightness: 0.78,
+                    timbre: .feltPiano,
+                    delaySeconds: Double(idx) * stepSec
+                )
+            }
+
+        case .feltWaltz:
+            // 三拍子浪漫圆舞（李斯特/肖邦/萨蒂）：第 1 拍深沉低音，第 2、3 拍轻柔托起双和弦
+            playNote(frequency: bassHz, velocity: 0.30 * clamped, decay: dur * 1.25, brightness: 0.54, timbre: .warmBass, delaySeconds: 0.0)
+            let beat = min(0.55, max(0.26, dur / 3.0))
+            for beatIdx in 1...2 {
+                let t = Double(beatIdx) * beat
+                let liftVel = (beatIdx == 1 ? 0.17 : 0.13) * clamped
+                playNote(frequency: fifthHz, velocity: liftVel, decay: 1.35, brightness: 0.76, timbre: .feltPiano, delaySeconds: t)
+                playNote(frequency: thirdHz, velocity: liftVel * 0.95, decay: 1.35, brightness: 0.80, timbre: .feltPiano, delaySeconds: t + 0.018)
+                playNote(frequency: midRootHz, velocity: liftVel * 0.85, decay: 1.35, brightness: 0.82, timbre: .feltPiano, delaySeconds: t + 0.032)
+            }
+
+        case .summerGlass:
+            // 东亚治愈电影风：开放 add9 透明分解 + 高音区钢片琴星光泛音
+            let ninthDeg = ((rDeg) % 7) + 1
+            let ninthHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: ninthDeg, octaveOffset: 0)
+            let sparkleHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: fifthDeg, octaveOffset: 1)
+            playNote(frequency: bassHz, velocity: 0.24 * clamped, decay: 2.4, brightness: 0.50, timbre: .warmBass, delaySeconds: 0.0)
+            playNote(frequency: fifthHz, velocity: 0.18 * clamped, decay: 2.1, brightness: 0.82, timbre: .feltPiano, delaySeconds: 0.055)
+            playNote(frequency: ninthHz, velocity: 0.17 * clamped, decay: 2.0, brightness: 0.88, timbre: .feltPiano, delaySeconds: 0.13)
+            playNote(frequency: thirdHz, velocity: 0.16 * clamped, decay: 1.9, brightness: 0.86, timbre: .feltPiano, delaySeconds: 0.21)
+            playNote(frequency: sparkleHz, velocity: 0.13 * clamped, decay: 1.5, brightness: 1.05, timbre: .celesta, delaySeconds: min(0.52, dur * 0.42))
+
+        case .pureChorale:
+            // 柔和长音：最清澈、稳定的三音叠加，方便零基础听清和弦内音
+            playNote(frequency: bassHz, velocity: 0.25 * clamped, decay: 2.3, brightness: 0.55, timbre: .warmBass, delaySeconds: 0.0)
+            for (idx, deg) in tones.enumerated() {
+                let oct = (idx > 0 && deg < rDeg) ? 0 : (idx == 0 ? -1 : 0)
+                let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
+                playNote(
+                    frequency: hz,
+                    velocity: 0.19 * clamped,
+                    decay: 2.1,
+                    brightness: 0.80,
+                    timbre: .feltPiano,
+                    delaySeconds: Double(idx) * 0.025
+                )
+            }
         }
     }
 

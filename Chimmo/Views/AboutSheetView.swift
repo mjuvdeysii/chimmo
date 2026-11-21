@@ -81,16 +81,16 @@ public struct AboutSheetView: View {
 
                         Divider().overlay(palette.divider).padding(.vertical, 4)
 
-                        Text("开源许可与内容来源")
+                        Text("开源许可与 100% 版权自洁说明")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(palette.primaryInk)
-                        Text("• 动态规划音符切分算法移植自开源项目 SwiftF0 (lars76/swift-f0, MIT License)。\n• 内置古典标本依据 1920 年代前公有领域乐谱独立编配，现代编曲技法标本为本项目原创。")
+                        Text("• 动态规划音符切分算法移植自开源项目 SwiftF0 (lars76/swift-f0, MIT License)。\n• 内置 20 首古典名曲（圣桑《天鹅》、李斯特《爱之梦》《安慰曲》《钟》、巴赫《前奏曲》《G弦上的咏叹调》《小步舞曲》《大提琴组曲》、柴可夫斯基《天鹅湖》、德彪西、肖邦、德沃夏克、萨蒂、贝多芬、舒伯特、帕赫贝尔、莫扎特等）均为作者逝世逾百年的全球公有领域乐谱独立编配。\n• 内置 8 首夏日治愈与现代技法曲目均为本项目 100% 原创，不含任何受版权保护的现代影视/流行作品旋律。")
                             .font(.caption)
                             .foregroundStyle(palette.secondaryInk)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface))
+                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
                 }
                 .padding(16)
             }

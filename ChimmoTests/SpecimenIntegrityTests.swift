@@ -43,9 +43,12 @@ final class SpecimenIntegrityTests: XCTestCase {
         }
     }
 
-    func testComplete16SpecimenCatalogAndMIDIExport() {
-        XCTAssertEqual(SpecimenLibrary.all.count, 16, "V1.0 标本库应包含完整 16 首（8 公版古典 + 8 现代技法）")
-        let midiData = MIDIExporter.encodeSMF(document: SpecimenLibrary.summerSuspension, includeHarmonyCradle: true)
+    func testComplete28MasterpieceCatalogAndMIDIExport() {
+        XCTAssertEqual(SpecimenLibrary.all.count, 28, "v0.3.0 曲库应包含 28 首（20 首全球公版古典名曲 + 8 首原创夏日治愈技法）")
+        XCTAssertNotNil(SpecimenLibrary.saintSaensTheSwan.activeGuidedMoment(at: 0.0))
+        XCTAssertEqual(SpecimenLibrary.saintSaensTheSwan.preferredTexture, .swanRipple)
+
+        let midiData = MIDIExporter.encodeSMF(document: SpecimenLibrary.saintSaensTheSwan, includeHarmonyCradle: true)
         XCTAssertGreaterThan(midiData.count, 64)
         let header = String(decoding: midiData.prefix(4), as: UTF8.self)
         XCTAssertEqual(header, "MThd")
@@ -66,7 +69,7 @@ final class SpecimenIntegrityTests: XCTestCase {
     }
 
     @MainActor
-    func testWorkbenchLadderChordRibbonAndOfflineNotebook() {
+    func testWorkbenchLadderTextureBeadEditAndOfflineNotebook() {
         let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-test-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmpDir) }
@@ -74,25 +77,33 @@ final class SpecimenIntegrityTests: XCTestCase {
         let store = MelodyNotebookStore(directory: tmpDir)
         let vm = StudioViewModel(notebookStore: store)
         XCTAssertTrue(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.title, SpecimenLibrary.saintSaensTheSwan.title)
 
-        // 点按左侧音阶阶梯 3·拍咯，自动切入自由创作并落珠
+        // 点按左侧音阶阶梯 3·拍咯与 1·陶诺，自动切入自由创作并落珠
         vm.triggerLadderMember(.plokko, octaveOffset: 0)
         vm.triggerLadderMember(.taono, octaveOffset: 0)
         XCTAssertFalse(vm.document.isSpecimen)
         XCTAssertEqual(vm.document.notes.count, 2)
         XCTAssertFalse(vm.currentInsight.headline.isEmpty)
 
-        // 点击底部第 1 小节和弦光带卡片，应切换和弦
+        // 选中音珠拉长时长与删除功能验证
+        let durBefore = vm.document.notes.last?.rawDuration ?? 0
+        vm.adjustSelectedBeadDuration(delta: 0.25)
+        XCTAssertGreaterThan(vm.document.notes.last?.rawDuration ?? 0, durBefore)
+
+        // 切换伴奏织体与底部第 1 小节和弦光带卡片
+        vm.setAccompanimentTexture(.summerGlass)
         let beforeChord = vm.chordSpans[0].chord
         vm.cycleSpanChord(spanIndex: 0)
         XCTAssertNotEqual(vm.chordSpans[0].chord, beforeChord)
 
-        // 保存至本机离线乐思本并重新加载验证持久化
+        // 保存至本机离线乐思本并重新加载验证持久化（含伴奏织体）
         vm.saveCurrentToNotebook()
         XCTAssertEqual(store.entries.count, 1)
 
         let reloaded = MelodyNotebookStore(directory: tmpDir)
         XCTAssertEqual(reloaded.entries.count, 1)
         XCTAssertEqual(reloaded.entries.first?.document.notes.count, 2)
+        XCTAssertEqual(reloaded.entries.first?.accompanimentTexture, .summerGlass)
     }
 }
