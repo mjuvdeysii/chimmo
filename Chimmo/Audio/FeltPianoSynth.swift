@@ -2,28 +2,36 @@ import AVFAudio
 import Foundation
 import os
 
-/// 低延迟纯代码温暖毛毡钢琴合成器（AVAudioEngine + AVAudioSourceNode + 空间混响）。
-/// 音频渲染回调内零堆分配、锁粒度极短，无需外挂巨型 SF2 即可在首发版发出温润、带木锤柔击感的毛毡琴声。
+/// 温暖三层声学合成器（毛毡钢琴 Felt Piano + 大提琴低音托底 Warm Bass + 钢片琴星光泛音 Celesta）。
+/// 支持随「物理水位（waterLevel 0...1）」自动生长出从单音清唱、深沉低音、指尖错落琶音到星光泛音的丰富编曲层次。
 public final class FeltPianoSynth {
+
+    public enum Timbre: Int, Sendable {
+        case feltPiano = 0
+        case warmBass = 1
+        case celesta = 2
+    }
 
     private struct Voice: Sendable {
         var active: Bool = false
+        var timbre: Timbre = .feltPiano
         var frequency: Double = 440.0
         var phase: Double = 0.0
+        var hammerPhase: Double = 0.0
         var ageSamples: Double = 0.0
+        var delaySamples: Double = 0.0
         var velocity: Double = 0.5
         var decaySeconds: Double = 1.8
         var brightness: Double = 1.0
     }
 
-    private let maxVoices = 20
+    private let maxVoices = 28
     private let engine = AVAudioEngine()
     private let reverb = AVAudioUnitReverb()
     private var sourceNode: AVAudioSourceNode?
     private let sampleRate: Double = 44_100.0
     private let router: HalfDuplexAudioRouter
 
-    // 预分配固定长度声部数组，渲染线程绝不分配内存
     private let lock = OSAllocatedUnfairLock(initialState: [Voice]())
     private var isStarted = false
 
@@ -51,7 +59,6 @@ public final class FeltPianoSynth {
             voiceLock.withLock { voices in
                 let invSR = 1.0 / sr
                 let twoPi = 2.0 * Double.pi
-                let attackSamples = 0.012 * sr
 
                 for i in 0..<count {
                     var mixL = 0.0
@@ -59,54 +66,89 @@ public final class FeltPianoSynth {
 
                     for vIdx in 0..<voices.count {
                         if !voices[vIdx].active { continue }
+
+                        // 支持微琶音错落延迟（指尖拨弦/琶音感，零主线程定时器抖动）
+                        if voices[vIdx].delaySamples > 0 {
+                            voices[vIdx].delaySamples -= 1.0
+                            continue
+                        }
+
                         let age = voices[vIdx].ageSamples
                         let ageSec = age * invSR
                         let decay = voices[vIdx].decaySeconds
-                        if ageSec > decay * 2.4 {
+                        if ageSec > decay * 2.5 {
                             voices[vIdx].active = false
                             continue
                         }
 
-                        // 柔和毛毡起音 + 双段自然指数衰减
-                        let envAttack = min(1.0, age / attackSamples)
-                        let envDecay = exp(-ageSec / (decay * 0.48))
-                        let env = envAttack * envDecay * voices[vIdx].velocity
-
                         let ph = voices[vIdx].phase
-                        // 温暖毛毡泛音配方：厚实基频 + 柔滑 2 次 + 随时间快速变暗的 3/4 次泛音
-                        let bright = exp(-ageSec * 3.8) * voices[vIdx].brightness
-                        let sample = (
-                            sin(ph) * 0.72 +
-                            sin(ph * 2.0) * (0.19 * (0.45 + 0.55 * bright)) +
-                            sin(ph * 3.0) * (0.065 * bright) +
-                            sin(ph * 4.0) * (0.025 * bright * bright)
-                        ) * env
+                        let vel = voices[vIdx].velocity
+                        var sample = 0.0
 
-                        // 按音高轻微立体声展宽（低音偏左、高音偏右，模拟坐于钢琴前的真实听感）
-                        let pan = max(-0.35, min(0.35, (log2(voices[vIdx].frequency / 261.63)) * 0.16))
+                        switch voices[vIdx].timbre {
+                        case .feltPiano:
+                            let attack = min(1.0, age / (0.010 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.52))
+                            let env = attack * bodyDecay * vel
+                            let bright = exp(-ageSec * 3.6) * voices[vIdx].brightness
+                            // 极轻柔的毛毡木槌触弦瞬态（前 18ms）
+                            let hammerEnv = exp(-ageSec * 140.0) * 0.09
+                            let hammer = sin(voices[vIdx].hammerPhase) * hammerEnv
+                            sample = (
+                                sin(ph) * 0.70 +
+                                sin(ph * 2.001) * (0.21 * (0.4 + 0.6 * bright)) +
+                                sin(ph * 3.003) * (0.07 * bright) +
+                                sin(ph * 4.006) * (0.025 * bright * bright) +
+                                hammer
+                            ) * env
+
+                        case .warmBass:
+                            let attack = min(1.0, age / (0.028 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.70))
+                            let env = attack * bodyDecay * vel
+                            let sub = sin(ph * 0.5) * 0.24
+                            sample = (
+                                sub +
+                                sin(ph) * 0.62 +
+                                sin(ph * 2.0) * 0.18 * exp(-ageSec * 1.8) +
+                                sin(ph * 3.0) * 0.06 * exp(-ageSec * 2.8)
+                            ) * env
+
+                        case .celesta:
+                            let attack = min(1.0, age / (0.004 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.42))
+                            let env = attack * bodyDecay * vel
+                            // 钢片琴/八音盒清亮泛音（带非整数倍钟琴泛音 2.76x）
+                            sample = (
+                                sin(ph) * 0.66 +
+                                sin(ph * 2.0) * 0.22 * exp(-ageSec * 4.5) +
+                                sin(ph * 2.756) * 0.12 * exp(-ageSec * 7.5)
+                            ) * env
+                        }
+
+                        let pan = max(-0.42, min(0.42, (log2(max(40.0, voices[vIdx].frequency) / 261.63)) * 0.18))
                         mixL += sample * (0.5 - pan * 0.5)
                         mixR += sample * (0.5 + pan * 0.5)
 
-                        voices[vIdx].phase += twoPi * voices[vIdx].frequency * invSR
+                        let step = twoPi * voices[vIdx].frequency * invSR
+                        voices[vIdx].phase += step
+                        voices[vIdx].hammerPhase += step * 7.3
                         if voices[vIdx].phase > twoPi * 1024.0 {
                             voices[vIdx].phase.formTruncatingRemainder(dividingBy: twoPi)
                         }
                         voices[vIdx].ageSamples += 1.0
                     }
 
-                    // 柔和软限幅防多声部削波爆音
-                    let outL = Float(tanh(mixL * 0.85))
-                    let outR = Float(tanh(mixR * 0.85))
-                    leftPtr[i] = outL
-                    rightPtr?[i] = outR
+                    leftPtr[i] = Float(tanh(mixL * 0.86))
+                    rightPtr?[i] = Float(tanh(mixR * 0.86))
                 }
             }
             return noErr
         }
 
         sourceNode = node
-        reverb.loadFactoryPreset(.mediumHall2)
-        reverb.wetDryMix = 26.0
+        reverb.loadFactoryPreset(.largeHall2)
+        reverb.wetDryMix = 32.0
 
         engine.attach(node)
         engine.attach(reverb)
@@ -123,7 +165,6 @@ public final class FeltPianoSynth {
             }
             isStarted = true
         } catch {
-            // 模拟器无音频输出硬件时静默降级，不崩溃
             isStarted = false
         }
     }
@@ -144,12 +185,19 @@ public final class FeltPianoSynth {
         }
     }
 
-    public func playNote(frequency: Double, velocity: Double = 0.55, decay: Double = 1.6, brightness: Double = 0.9) {
+    public func playNote(
+        frequency: Double,
+        velocity: Double = 0.55,
+        decay: Double = 1.75,
+        brightness: Double = 0.95,
+        timbre: Timbre = .feltPiano,
+        delaySeconds: Double = 0.0
+    ) {
         ensureRunning()
-        guard frequency.isFinite && frequency >= 32.0 && frequency <= 4200.0 else { return }
+        guard frequency.isFinite && frequency >= 28.0 && frequency <= 4800.0 else { return }
+        let delaySamps = max(0.0, delaySeconds * sampleRate)
 
         lock.withLock { voices in
-            // 优先寻找空闲声部，否则复用最老声部
             var targetIdx = 0
             var oldestAge = -1.0
             for i in 0..<voices.count {
@@ -164,29 +212,75 @@ public final class FeltPianoSynth {
             }
             voices[targetIdx] = Voice(
                 active: true,
+                timbre: timbre,
                 frequency: frequency,
                 phase: 0.0,
+                hammerPhase: 0.0,
                 ageSamples: 0.0,
-                velocity: max(0.05, min(1.0, velocity)),
-                decaySeconds: max(0.25, min(4.0, decay)),
+                delaySamples: delaySamps,
+                velocity: max(0.03, min(1.0, velocity)),
+                decaySeconds: max(0.25, min(4.5, decay)),
                 brightness: max(0.2, min(1.4, brightness))
             )
         }
     }
 
-    public func playChord(
+    /// 随「物理水面高度（waterLevel 0...1）」弹奏富有生命力的错落琶音与低音托底，彻底告别死板电子琴柱式和弦。
+    public func playWaterCradle(
         rootMIDI: Int,
         mode: ScaleMode,
         voicing: ChordVoicing,
-        intensity: Double = 1.0
+        waterLevel: Double
     ) {
-        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: voicing.bassDegree, octaveOffset: voicing.bassOctave)
-        playNote(frequency: bassHz, velocity: 0.28 * intensity, decay: 2.2, brightness: 0.55)
+        let level = max(0.0, min(1.0, waterLevel))
+        guard level >= 0.08 else { return }
 
-        for (idx, deg) in voicing.upperDegrees.enumerated() {
+        // 1. 深水底基：温暖低音大提琴/毛毡低音根音
+        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: voicing.bassDegree, octaveOffset: voicing.bassOctave)
+        let bassVel = 0.22 + level * 0.16
+        playNote(frequency: bassHz, velocity: bassVel, decay: 2.5, brightness: 0.55, timbre: .warmBass, delaySeconds: 0.0)
+
+        // 2. 水位 ≥ 0.28：依次绽放指尖错落琶音（相隔 38ms，像竖琴/温柔钢琴伴奏）
+        guard level >= 0.28 else { return }
+        let arpNotes = level >= 0.52 ? voicing.upperDegrees : Array(voicing.upperDegrees.prefix(2))
+        for (idx, deg) in arpNotes.enumerated() {
             let oct = idx == 0 ? -1 : 0
             let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
-            playNote(frequency: hz, velocity: 0.16 * intensity, decay: 1.9, brightness: 0.72)
+            let delay = Double(idx + 1) * 0.038
+            let vel = (0.14 + level * 0.10) * (idx == 0 ? 1.05 : 0.92)
+            playNote(frequency: hz, velocity: vel, decay: 2.1, brightness: 0.78, timbre: .feltPiano, delaySeconds: delay)
+        }
+
+        // 3. 高水位（≥ 0.72）：拍尾浮现一粒晶莹的钢片琴/八音盒高八度星光泛音
+        if level >= 0.72, let shimmerDeg = voicing.upperDegrees.last {
+            let shimmerHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: shimmerDeg, octaveOffset: 1)
+            let shimmerVel = (level - 0.65) * 0.34
+            playNote(
+                frequency: shimmerHz,
+                velocity: shimmerVel,
+                decay: 1.45,
+                brightness: 1.1,
+                timbre: .celesta,
+                delaySeconds: Double(arpNotes.count + 1) * 0.042
+            )
+        }
+    }
+
+    /// 切换水面情绪色温时的一串清澈水波确认琶音
+    public func playWaterRipplePreview(rootMIDI: Int, mode: ScaleMode, profile: HarmonyProfile) {
+        let voicing = profile.voicing(for: 1)
+        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: voicing.bassDegree, octaveOffset: -1)
+        playNote(frequency: bassHz, velocity: 0.24, decay: 1.8, timbre: .warmBass, delaySeconds: 0.0)
+        for (idx, deg) in [1, 3, 5, 2].enumerated() {
+            let oct = idx == 3 ? 1 : 0
+            let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
+            playNote(
+                frequency: hz,
+                velocity: 0.20,
+                decay: 1.5,
+                timbre: idx == 3 ? .celesta : .feltPiano,
+                delaySeconds: Double(idx + 1) * 0.055
+            )
         }
     }
 }

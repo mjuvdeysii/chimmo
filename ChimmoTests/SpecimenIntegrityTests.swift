@@ -50,4 +50,25 @@ final class SpecimenIntegrityTests: XCTestCase {
         let header = String(decoding: midiData.prefix(4), as: UTF8.self)
         XCTAssertEqual(header, "MThd")
     }
+
+    @MainActor
+    func testInteractiveChimmoTapSpawnsFlyingPearlAndWaterWave() {
+        let vm = StudioViewModel()
+        XCTAssertTrue(vm.document.isSpecimen)
+
+        // 点按 3 号拍咯应立即切入指尖即兴画卷并发射飞珠涟漪
+        vm.triggerMember(.plokko)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.notes.count, 1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 3)
+        XCTAssertEqual(vm.latestDegree, 3)
+        XCTAssertFalse(vm.impulses.isEmpty)
+
+        // 左右轻拂水面应切换和声色温并保持水位托起
+        let initialProfile = vm.document.harmonyProfile
+        vm.waterLevel = 0.1
+        vm.swipeWaterProfile(direction: 1)
+        XCTAssertNotEqual(vm.document.harmonyProfile, initialProfile)
+        XCTAssertGreaterThanOrEqual(vm.waterLevel, 0.5)
+    }
 }
