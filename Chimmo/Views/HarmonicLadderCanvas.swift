@@ -655,7 +655,7 @@ public struct HarmonicLadderCanvas: View {
                 let by = pitchY(degree: b.degree, octave: b.octaveOffset, height: size.height)
 
                 let semiJump = ScalePitchGeometry.intervalDescription(from: a, to: b, mode: document.scaleMode).semitones
-                let archLift = CGFloat(min(28, semiJump * 2.8))
+                let archLift = CGFloat(min(28.0, Double(semiJump) * 2.8))
                 let midX = (ax + bx) * 0.5
                 let midY = min(ay, by) - archLift
 
