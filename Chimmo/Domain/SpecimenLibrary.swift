@@ -62,6 +62,7 @@ public enum SpecimenLibrary {
         mode: .brightMajor,
         harmony: .clearWater,
         texture: .swanRipple,
+        voice: .singingCello,
         bpm: 66,
         steps: [
             (1, 1, 2.0), (7, 0, 1.0), (3, 0, 1.5),
@@ -130,6 +131,7 @@ public enum SpecimenLibrary {
         mode: .wistfulMinor,
         harmony: .filmGlow,
         texture: .summerGlass,
+        voice: .celestaGlass,
         bpm: 112,
         steps: [
             (5, 0, 0.75), (1, 1, 0.75), (7, 0, 0.75), (6, 0, 0.75),
@@ -152,6 +154,7 @@ public enum SpecimenLibrary {
         mode: .wistfulMinor,
         harmony: .filmGlow,
         texture: .swanRipple,
+        voice: .singingCello,
         bpm: 84,
         steps: [
             (5, 0, 2.0), (1, 0, 0.75), (2, 0, 0.75), (3, 0, 0.75), (4, 0, 0.75),
@@ -234,6 +237,7 @@ public enum SpecimenLibrary {
         mode: .brightMajor,
         harmony: .feltSun,
         texture: .swanRipple,
+        voice: .singingCello,
         bpm: 64,
         steps: [
             (3, 0, 3.0), (3, 0, 0.75), (4, 0, 0.75), (2, 0, 1.0),
@@ -277,6 +281,7 @@ public enum SpecimenLibrary {
         mode: .brightMajor,
         harmony: .clearWater,
         texture: .pureChorale,
+        voice: .singingCello,
         bpm: 96,
         steps: [
             (1, 0, 0.6), (5, 0, 0.6), (1, 1, 0.6), (7, 0, 0.6),
@@ -348,6 +353,7 @@ public enum SpecimenLibrary {
         mode: .brightMajor,
         harmony: .clearWater,
         texture: .summerGlass,
+        voice: .singingCello,
         bpm: 70,
         steps: [
             (3, 0, 1.5), (5, 0, 0.75), (5, 0, 1.75),
@@ -594,6 +600,7 @@ public enum SpecimenLibrary {
         mode: ScaleMode,
         harmony: HarmonyProfile,
         texture: AccompanimentTexture,
+        voice: MelodyVoice = .concertPiano,
         bpm: Double,
         steps: [(Int, Int, Double)],
         guided: [GuidedStoryMoment]? = nil
@@ -629,6 +636,7 @@ public enum SpecimenLibrary {
             specimenCategory: category,
             composerInsight: insight,
             preferredTexture: texture,
+            preferredVoice: voice,
             guidedMoments: guided
         )
     }

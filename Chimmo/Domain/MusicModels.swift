@@ -1,23 +1,92 @@
 import Foundation
+import SwiftUI
 
+/// 五色天光调式光谱（严格遵循五度圈明暗顺序，每相邻两片天空只挪动 1 只咩哞半步！）：
+/// 云端失重 (#4) → 晴空晨光 (标准大调) → 落日余晖 (♭7) → 森林晨雾 (♭3 ♮6 ♭7) → 暮色夜曲 (自然小调 ♭3 ♭6 ♭7)
 public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
-    case brightMajor
-    case wistfulMinor
+    case cloudLydian      // ✨ 云端失重（Lydian: #4 梦境悬浮）
+    case brightMajor      // ☀️ 晴空晨光（Ionian: 标准大调）
+    case goldenMixolydian // 🌅 落日余晖（Mixolydian: ♭7 暖橘公路电影）
+    case forestDorian     // 🍃 森林晨雾（Dorian: ♭3 ♮6 微雨透阳光）
+    case wistfulMinor     // 🌧 暮色夜曲（Aeolian: 自然小调）
 
     public var id: String { rawValue }
 
     public var label: String {
         switch self {
-        case .brightMajor: return "晴朗大调"
-        case .wistfulMinor: return "微酸小调"
+        case .cloudLydian: return "云端失重"
+        case .brightMajor: return "晴空大调"
+        case .goldenMixolydian: return "落日余晖"
+        case .forestDorian: return "森林晨雾"
+        case .wistfulMinor: return "暮雨小调"
         }
     }
 
-    /// 半音偏移（相对主音 Do = 0）
+    public var shortSkyLabel: String {
+        switch self {
+        case .cloudLydian: return "云端"
+        case .brightMajor: return "晴空"
+        case .goldenMixolydian: return "落日"
+        case .forestDorian: return "晨雾"
+        case .wistfulMinor: return "暮雨"
+        }
+    }
+
+    public var iconName: String {
+        switch self {
+        case .cloudLydian: return "sparkles"
+        case .brightMajor: return "sun.max.fill"
+        case .goldenMixolydian: return "sunset.fill"
+        case .forestDorian: return "leaf.fill"
+        case .wistfulMinor: return "cloud.rain.fill"
+        }
+    }
+
+    /// 专业乐理原名（仅在「音乐家母语镜」或顿悟卡片里轻柔揭晓）
+    public var theoryName: String {
+        switch self {
+        case .cloudLydian: return "Lydian 利底亚 (#4)"
+        case .brightMajor: return "Major 自然大调"
+        case .goldenMixolydian: return "Mixolydian 混合利底亚 (♭7)"
+        case .forestDorian: return "Dorian 多利亚 (♭3 ♮6)"
+        case .wistfulMinor: return "Minor 自然小调 (♭3 ♭6 ♭7)"
+        }
+    }
+
+    /// 用一句话讲清这片天空为何有这种情绪（生活直觉 + 哪只咩哞挪了半步）
+    public var skyPhilosophy: String {
+        switch self {
+        case .cloudLydian: return "把 4·呜嘟 抬高半步，消除下坠引力，像漂浮在星海与云端。"
+        case .brightMajor: return "阳光最通透的标准比例，3-4 与 7-1↑ 藏着温柔的半音磁铁。"
+        case .goldenMixolydian: return "把 7·叮尖 放软半步，卸下急促张力，化作金黄暖橘的公路电影。"
+        case .forestDorian: return "3·拍咯 降半步带来微雨，但 6·钵莫 仍亮着——雨林里透出一束希望的光。"
+        case .wistfulMinor: return "3·拍咯、6·钵莫、7·叮尖 齐降半步，世界披上深邃浪漫的夜色。"
+        }
+    }
+
+    public var isMinorFlavored: Bool {
+        self == .forestDorian || self == .wistfulMinor
+    }
+
+    /// 相对主音 Do = 0 的 7 阶半音偏移
     public var semitoneOffsets: [Int] {
         switch self {
-        case .brightMajor: return [0, 2, 4, 5, 7, 9, 11]
-        case .wistfulMinor: return [0, 2, 3, 5, 7, 8, 10]
+        case .cloudLydian:      return [0, 2, 4, 6, 7, 9, 11]
+        case .brightMajor:      return [0, 2, 4, 5, 7, 9, 11]
+        case .goldenMixolydian: return [0, 2, 4, 5, 7, 9, 10]
+        case .forestDorian:     return [0, 2, 3, 5, 7, 9, 10]
+        case .wistfulMinor:     return [0, 2, 3, 5, 7, 8, 10]
+        }
+    }
+
+    /// 与相邻天光对应的极光天色（让画布背景随五色天光呼吸流转）
+    public func skyAuroraColor(isNight: Bool) -> Color {
+        switch self {
+        case .cloudLydian:      return isNight ? Color(hex: 0x74C0FC) : Color(hex: 0x4DABF7)
+        case .brightMajor:      return isNight ? Color(hex: 0x38E4C0) : Color(hex: 0x12B886)
+        case .goldenMixolydian: return isNight ? Color(hex: 0xFFA94D) : Color(hex: 0xF76707)
+        case .forestDorian:     return isNight ? Color(hex: 0x63E6BE) : Color(hex: 0x0CA678)
+        case .wistfulMinor:     return isNight ? Color(hex: 0x9775FA) : Color(hex: 0x7048E8)
         }
     }
 
@@ -29,6 +98,70 @@ public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
     public func frequencyHz(rootMIDI: Int, degree: Int, octaveOffset: Int = 0) -> Double {
         let midi = Double(midiNote(rootMIDI: rootMIDI, degree: degree, octaveOffset: octaveOffset))
         return 440.0 * pow(2.0, (midi - 69.0) / 12.0)
+    }
+}
+
+/// 主旋律乐器声色（让圣桑《天鹅》拥有真实大提琴歌唱感、李斯特拥有音乐厅毛毡钢琴、钟声拥有星光钢片琴）
+public enum MelodyVoice: String, CaseIterable, Codable, Sendable, Identifiable {
+    case singingCello  // 歌唱大提琴（带温柔揉弦与弓弦起音）
+    case concertPiano  // 音乐厅毛毡钢琴（温润双弦立体声）
+    case liquidHarp    // 湖面竖琴（清澈拨弦泛音）
+    case celestaGlass  // 星光钢片琴（剔透八音盒钟琴）
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .singingCello: return "歌唱大提琴"
+        case .concertPiano: return "毛毡钢琴"
+        case .liquidHarp: return "湖面竖琴"
+        case .celestaGlass: return "星光钢片琴"
+        }
+    }
+
+    public var iconName: String {
+        switch self {
+        case .singingCello: return "music.mic"
+        case .concertPiano: return "pianokeys"
+        case .liquidHarp: return "water.waves"
+        case .celestaGlass: return "sparkles"
+        }
+    }
+}
+
+/// 三层无障碍认知翻译透镜（同一张画布自由切换感知语言，永不拿术语筑墙）：
+/// 1. 诗意直觉镜（纯情绪与光影，零数字零术语）
+/// 2. 逻辑哲学镜（实时利萨如波纹对称花 + 种子折纸架构 + 延留张力丝 + 掌心触觉）
+/// 3. 音乐家母语镜（真实半音窄缝 + Do-Ti 唱名 + 音程弧标 + 和弦内/外音标注）
+public enum CognitiveLens: String, CaseIterable, Codable, Sendable, Identifiable {
+    case poetic     // 🌿 诗意直觉
+    case philosophy // 💠 逻辑哲学
+    case musician   // 🎼 音乐母语
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .poetic: return "诗意直觉"
+        case .philosophy: return "逻辑哲学"
+        case .musician: return "音乐母语"
+        }
+    }
+
+    public var shortLabel: String {
+        switch self {
+        case .poetic: return "诗意"
+        case .philosophy: return "哲学"
+        case .musician: return "乐理"
+        }
+    }
+
+    public var iconName: String {
+        switch self {
+        case .poetic: return "leaf.fill"
+        case .philosophy: return "atom"
+        case .musician: return "music.note"
+        }
     }
 }
 
@@ -48,7 +181,7 @@ public struct ChordVoicing: Sendable, Equatable {
     }
 }
 
-/// 三种现代开放声部排列的水面托底和声（避免老式纯三和弦电子琴土味）。
+/// 三种现代开放声部排列的水面托底和声
 public enum HarmonyProfile: String, CaseIterable, Codable, Sendable, Identifiable {
     case feltSun    // 毛毡暖阳：add9 / maj7
     case clearWater // 透明水波：sus2 / 四度悬浮
@@ -121,7 +254,7 @@ public struct GhostCandidate: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
-/// 单颗纸上陶珠。严格保留原始自由呼吸时间轴（rawOnset/rawDuration），量化仅作为非破坏性插值层。
+/// 单颗纸上陶珠。严格保留原始自由呼吸时间轴（rawOnset/rawDuration），并支持记录分形生长角色（起·承·转·合 / 延留迟到）。
 public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public var degree: Int
@@ -132,6 +265,7 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
     public var quantizedDuration: Double?
     public var confidence: Double
     public var ghostCandidates: [GhostCandidate]
+    public var phraseTag: String?
 
     public init(
         id: UUID = UUID(),
@@ -142,7 +276,8 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
         quantizedOnset: Double? = nil,
         quantizedDuration: Double? = nil,
         confidence: Double = 1.0,
-        ghostCandidates: [GhostCandidate] = []
+        ghostCandidates: [GhostCandidate] = [],
+        phraseTag: String? = nil
     ) {
         self.id = id
         self.degree = max(1, min(7, degree))
@@ -153,6 +288,7 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
         self.quantizedDuration = quantizedDuration
         self.confidence = confidence
         self.ghostCandidates = ghostCandidates
+        self.phraseTag = phraseTag
     }
 
     public var member: ChimmoMember { ChimmoMember.from(degree: degree) }
@@ -184,6 +320,7 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
     public var specimenCategory: String?
     public var composerInsight: String?
     public var preferredTexture: AccompanimentTexture?
+    public var preferredVoice: MelodyVoice?
     public var guidedMoments: [GuidedStoryMoment]?
 
     public init(
@@ -200,6 +337,7 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
         specimenCategory: String? = nil,
         composerInsight: String? = nil,
         preferredTexture: AccompanimentTexture? = nil,
+        preferredVoice: MelodyVoice? = nil,
         guidedMoments: [GuidedStoryMoment]? = nil
     ) {
         self.id = id
@@ -215,6 +353,7 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
         self.specimenCategory = specimenCategory
         self.composerInsight = composerInsight
         self.preferredTexture = preferredTexture
+        self.preferredVoice = preferredVoice
         self.guidedMoments = guidedMoments
     }
 

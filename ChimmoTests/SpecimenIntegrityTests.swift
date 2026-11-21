@@ -106,4 +106,48 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(reloaded.entries.first?.document.notes.count, 2)
         XCTAssertEqual(reloaded.entries.first?.accompanimentTexture, .summerGlass)
     }
+
+    func testFiveSkySpectrumShiftsExactlyOneSemitonePerStep() {
+        let skies = ScaleMode.allCases
+        XCTAssertEqual(skies.count, 5)
+        for i in 0..<(skies.count - 1) {
+            let a = skies[i].semitoneOffsets
+            let b = skies[i + 1].semitoneOffsets
+            let diffs = zip(a, b).map { $0 - $1 }
+            let changedCount = diffs.filter { $0 != 0 }.count
+            let totalShift = diffs.reduce(0, +)
+            XCTAssertEqual(changedCount, 1, "相邻两片天光（\(skies[i].label) -> \(skies[i+1].label)）应恰好只挪动 1 只咩哞")
+            XCTAssertEqual(totalShift, 1, "每向右移动一片天空，应恰好降 1 个半音")
+        }
+    }
+
+    func testMotifOrigamiCounterpointAndHarmonicRatioPhysics() {
+        // 物理比例验证：纯五度 3:2 高度和谐，半音 16:15 为张力摩擦
+        let fifth = HarmonicRatioPhysics.analyze(melodyDegree: 5, rootDegree: 1, mode: .brightMajor)
+        XCTAssertEqual(fifth.ratioText, "3 : 2")
+        XCTAssertFalse(fifth.isTense)
+        XCTAssertGreaterThan(fifth.consonance, 0.9)
+
+        let halfStep = HarmonicRatioPhysics.descriptor(forSemitones: 1)
+        XCTAssertEqual(halfStep.ratioText, "16 : 15")
+        XCTAssertTrue(halfStep.isTense)
+
+        // 3 音种子折纸「四句成诗」应自然生长为完整起承转合乐章
+        let seed = [
+            NoteBead(degree: 1, rawOnset: 0.1, rawDuration: 0.45),
+            NoteBead(degree: 3, rawOnset: 0.55, rawDuration: 0.45),
+            NoteBead(degree: 5, rawOnset: 1.0, rawDuration: 0.55)
+        ]
+        let poem = MotifOrigamiEngine.grow(notes: seed, operation: .fullFourPhrasePoem)
+        XCTAssertEqual(poem.count, 12) // 3+3+3+3
+        XCTAssertEqual(poem.first?.phraseTag, "起·种子")
+        XCTAssertEqual(poem.last?.phraseTag, "合·归家")
+
+        // 圣桑《天鹅》应能自动编织出影子对位副旋律
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        XCTAssertEqual(swan.preferredVoice, .singingCello)
+        let spans = TheoryLensEngine.buildChordSpans(document: swan, preset: .autoMatch)
+        let shadows = CounterpointShadowEngine.generateShadowVoice(document: swan, spans: spans)
+        XCTAssertFalse(shadows.isEmpty)
+    }
 }

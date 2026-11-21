@@ -1,11 +1,19 @@
 import SwiftUI
 
-/// 咩哞 0.3 核心舞台：左侧「真实全音/半音间距」七小只竖排阶梯 + 右侧「和弦泳道光带」声学卷轴 + 逐句电影字幕导赏 + 选中音珠快捷精修。
+/// 咩哞 0.4 全感官活体声学舞台：
+/// - 随「五色天光」动态呼吸的极光天幕背景；
+/// - 左侧「真实全音/半音不等距」七小只阶梯（在 5 种调式天空下自动实时迁移红标「半」字窄缝！）；
+/// - 三层无障碍认知透镜（🌿诗意直觉 ⇄ 💠逻辑哲学 ⇄ 🎼音乐母语）；
+/// - 💠哲学镜实时浮现「利萨如声波对称显微镜」与「起·承·转·合」种子折纸标牌；
+/// - 可选叠加「👥 影子对位副旋律」透明光珠；
+/// - 底部可一键切换的 4 格「和弦光带卡片」。
 public struct HarmonicLadderCanvas: View {
     public let document: MelodyDocument
     public let chordSpans: [ChordSpan]
+    public let shadowNotes: [CounterpointNote]
+    public let shadowEnabled: Bool
+    public let cognitiveLens: CognitiveLens
     public let palette: ChimmoPalette
-    public let showTheoryLens: Bool
     public let playheadTime: Double?
     public let activeDegrees: Set<Int>
     public let latestDegree: Int?
@@ -25,14 +33,16 @@ public struct HarmonicLadderCanvas: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var lastLadderStepKey: String? = nil
 
-    private let ladderWidth: CGFloat = 70
+    private let ladderWidth: CGFloat = 72
     private let chordStripHeight: CGFloat = 46
 
     public init(
         document: MelodyDocument,
         chordSpans: [ChordSpan],
+        shadowNotes: [CounterpointNote] = [],
+        shadowEnabled: Bool = false,
+        cognitiveLens: CognitiveLens = .philosophy,
         palette: ChimmoPalette,
-        showTheoryLens: Bool,
         playheadTime: Double?,
         activeDegrees: Set<Int>,
         latestDegree: Int?,
@@ -50,8 +60,10 @@ public struct HarmonicLadderCanvas: View {
     ) {
         self.document = document
         self.chordSpans = chordSpans
+        self.shadowNotes = shadowNotes
+        self.shadowEnabled = shadowEnabled
+        self.cognitiveLens = cognitiveLens
         self.palette = palette
-        self.showTheoryLens = showTheoryLens
         self.playheadTime = playheadTime
         self.activeDegrees = activeDegrees
         self.latestDegree = latestDegree
@@ -72,7 +84,7 @@ public struct HarmonicLadderCanvas: View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: reduceMotion)) { tl in
             let now = tl.date.timeIntervalSinceReferenceDate
             GeometryReader { geo in
-                let stageH = max(190, geo.size.height - chordStripHeight)
+                let stageH = max(180, geo.size.height - chordStripHeight)
                 let scrollW = max(140, geo.size.width - ladderWidth)
                 let totalSec = max(3.2, document.totalDuration)
 
@@ -92,7 +104,7 @@ public struct HarmonicLadderCanvas: View {
         }
     }
 
-    // MARK: - 1. Left True-Semitone Pitch Ladder (5↓ -> 1 -> ... -> 1↑)
+    // MARK: - 1. Left True-Semitone Pitch Ladder (Dynamic half-steps across ALL 5 Modal Skies!)
 
     private struct LadderStep: Identifiable {
         let id: String
@@ -116,20 +128,30 @@ public struct HarmonicLadderCanvas: View {
         ]
     }
 
+    /// 动态计算当前 5 色天光下的真实「半音紧邻阶梯对」（例如云端 Lydian 是 #4-5 与 7-1↑，森林 Dorian 是 2-3 与 6-7！）
+    private var dynamicHalfStepPairs: [(Int, Int, Int, Int)] {
+        let seq: [(Int, Int)] = [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (1, 1)]
+        var pairs: [(Int, Int, Int, Int)] = []
+        for i in 0..<(seq.count - 1) {
+            let s0 = ScalePitchGeometry.semitoneOffset(degree: seq[i].0, octaveOffset: seq[i].1, mode: document.scaleMode)
+            let s1 = ScalePitchGeometry.semitoneOffset(degree: seq[i + 1].0, octaveOffset: seq[i + 1].1, mode: document.scaleMode)
+            if s1 - s0 == 1 {
+                pairs.append((seq[i].0, seq[i].1, seq[i + 1].0, seq[i + 1].1))
+            }
+        }
+        return pairs
+    }
+
     private func leftPitchLadder(stageHeight: CGFloat) -> some View {
-        let isMinor = document.scaleMode == .wistfulMinor
+        let isMinorish = document.scaleMode.isMinorFlavored
 
         return ZStack {
-            palette.shelfSurface.opacity(palette.isNight ? 0.90 : 0.80)
+            palette.shelfSurface.opacity(palette.isNight ? 0.92 : 0.84)
 
-            // 半音紧邻窄缝括号提示（大调：3-4 与 7-1↑；小调：2-3 与 5-6）
-            if showTheoryLens {
-                let halfPairs: [(Int, Int, Int, Int)] = isMinor
-                    ? [(2, 0, 3, 0), (5, 0, 6, 0)]
-                    : [(3, 0, 4, 0), (7, 0, 1, 1)]
-
-                ForEach(0..<halfPairs.count, id: \.self) { idx in
-                    let p = halfPairs[idx]
+            // 动态半音窄缝提示（哲学镜与乐理镜可见；诗意镜隐去文字保持纯粹）
+            if cognitiveLens != .poetic {
+                ForEach(0..<dynamicHalfStepPairs.count, id: \.self) { idx in
+                    let p = dynamicHalfStepPairs[idx]
                     let yLow = pitchY(degree: p.0, octave: p.1, height: stageHeight)
                     let yHigh = pitchY(degree: p.2, octave: p.3, height: stageHeight)
                     let midY = (yLow + yHigh) * 0.5
@@ -137,14 +159,15 @@ public struct HarmonicLadderCanvas: View {
 
                     HStack(spacing: 1) {
                         RoundedRectangle(cornerRadius: 1.5)
-                            .fill(palette.tensionFilament.opacity(0.9))
+                            .fill(palette.tensionFilament.opacity(0.92))
                             .frame(width: 2.5, height: max(9, gap - 2))
-                        Text("半")
+                        Text(cognitiveLens == .musician ? "半" : "窄")
                             .font(.system(size: 8.5, weight: .bold))
                             .foregroundStyle(palette.tensionFilament)
                     }
                     .position(x: ladderWidth - 9, y: midY)
                     .allowsHitTesting(false)
+                    .animation(.spring(response: 0.42, dampingFraction: 0.78), value: document.scaleMode)
                 }
             }
 
@@ -157,9 +180,9 @@ public struct HarmonicLadderCanvas: View {
                 HStack(spacing: 4) {
                     ZStack {
                         Circle()
-                            .fill(color.opacity(step.isSecondaryLow ? 0.55 : (isSinging ? 1.0 : 0.90)))
+                            .fill(color.opacity(step.isSecondaryLow ? 0.55 : (isSinging ? 1.0 : 0.92)))
                             .frame(width: step.isSecondaryLow ? 14 : (isSinging ? 21 : 17), height: step.isSecondaryLow ? 14 : (isSinging ? 21 : 17))
-                            .shadow(color: isSinging ? color.opacity(0.55) : .clear, radius: 5)
+                            .shadow(color: isSinging ? color.opacity(0.6) : .clear, radius: 6)
 
                         if !step.isSecondaryLow {
                             if isSinging {
@@ -169,26 +192,43 @@ public struct HarmonicLadderCanvas: View {
                                 }
                             } else {
                                 HStack(spacing: 3) {
-                                    Circle().fill(Color.white.opacity(0.95)).frame(width: 2.4, height: 2.4)
-                                    Circle().fill(Color.white.opacity(0.95)).frame(width: 2.4, height: 2.4)
+                                    Circle().fill(Color.white.opacity(0.95)).frame(width: 2.3, height: 2.3)
+                                    Circle().fill(Color.white.opacity(0.95)).frame(width: 2.3, height: 2.3)
                                 }
-                                .offset(y: (member == .plokko && isMinor) ? 1.2 : -0.4)
+                                .offset(y: (member == .plokko && isMinorish) ? 1.2 : -0.4)
                             }
                         }
                     }
 
+                    // 三层无障碍认知透镜分别呈现不同语言！
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(step.badge)
-                            .font(.system(size: step.isSecondaryLow ? 9.5 : 10.5, weight: .bold, design: .rounded))
-                            .foregroundStyle(isSinging ? color : palette.primaryInk)
-                        if !step.isSecondaryLow {
-                            Text(member.chineseName)
-                                .font(.system(size: 8.5, weight: .medium))
-                                .foregroundStyle(palette.secondaryInk)
+                        switch cognitiveLens {
+                        case .poetic:
+                            Text(step.isSecondaryLow ? "低望" : member.roleLabel)
+                                .font(.system(size: step.isSecondaryLow ? 9 : 10, weight: .bold))
+                                .foregroundStyle(isSinging ? color : palette.primaryInk)
+                            if !step.isSecondaryLow {
+                                Text(member.chineseName)
+                                    .font(.system(size: 8, weight: .medium))
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
+                        case .philosophy:
+                            Text(step.isSecondaryLow ? "5↓" : "\(step.badge)·\(member.roleLabel)")
+                                .font(.system(size: step.isSecondaryLow ? 9 : 9.5, weight: .bold, design: .rounded))
+                                .foregroundStyle(isSinging ? color : palette.primaryInk)
+                        case .musician:
+                            Text(step.isSecondaryLow ? "5↓" : "\(step.badge) \(member.solfege)")
+                                .font(.system(size: step.isSecondaryLow ? 9 : 9.5, weight: .bold, design: .rounded))
+                                .foregroundStyle(isSinging ? color : palette.primaryInk)
+                            if !step.isSecondaryLow {
+                                Text(member.chineseName)
+                                    .font(.system(size: 8, weight: .medium))
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
                         }
                     }
                 }
-                .position(x: 27, y: y)
+                .position(x: 30, y: y)
                 .animation(.spring(response: 0.42, dampingFraction: 0.78), value: document.scaleMode)
                 .allowsHitTesting(false)
             }
@@ -212,21 +252,46 @@ public struct HarmonicLadderCanvas: View {
                 }
         )
         .accessibilityElement()
-        .accessibilityLabel("左侧真实半音阶梯，从低音 5 到高音 1 陶诺")
-        .accessibilityHint("点按或上下滑动可弹奏并向画布写入音珠")
+        .accessibilityLabel("左侧真实半音阶梯，当前天光 \(document.scaleMode.label)")
+        .accessibilityHint("点按或上下滑动可弹奏并写入音珠")
     }
 
-    // MARK: - 2. Right Illuminated Harmonic Scroll + Live Movie Subtitle + Quick Edit Bar
+    // MARK: - 2. Right Living Aurora Harmonic Scroll
 
     private func rightHarmonicScroll(width: CGFloat, height: CGFloat, totalSec: Double, now: TimeInterval) -> some View {
         let padX: CGFloat = 18
         let usableW = max(100, width - padX * 2)
+        let skyTint = document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+
+        // 计算当前正在发声的音符与当前和弦根音之间的物理比例（供右上角实时利萨如显微镜使用）
+        let currentChordRoot: Int = {
+            if let t = playheadTime, let ch = TheoryLensEngine.chord(at: t, in: chordSpans) {
+                return ch.rootDegree
+            }
+            return chordSpans.first?.chord.rootDegree ?? 1
+        }()
+        let liveDegree = latestDegree ?? document.notes.first?.degree ?? 1
+        let livePhysics = HarmonicRatioPhysics.analyze(melodyDegree: liveDegree, rootDegree: currentChordRoot, mode: document.scaleMode)
 
         return ZStack {
+            // 活体五色天光极光底幕
+            LinearGradient(
+                colors: [
+                    skyTint.opacity(palette.isNight ? 0.16 : 0.11),
+                    palette.paper.opacity(0.0)
+                ],
+                startPoint: .topTrailing,
+                endPoint: .bottomLeading
+            )
+            .animation(.easeInOut(duration: 0.45), value: document.scaleMode)
+
             Canvas { ctx, size in
                 drawBeatBreathColumns(ctx: &ctx, size: size)
                 drawIlluminatedChordLanes(ctx: &ctx, size: size, totalSec: totalSec, padX: padX, usableW: usableW, now: now)
                 drawTrueSemitoneLines(ctx: &ctx, size: size)
+                if shadowEnabled {
+                    drawShadowCounterpointLayer(ctx: &ctx, size: size, totalSec: totalSec, padX: padX, usableW: usableW)
+                }
                 drawMelodyArcsAndIntervals(ctx: &ctx, size: size, totalSec: totalSec, padX: padX, usableW: usableW, now: now)
                 drawSoundRipples(ctx: &ctx, size: size, now: now)
 
@@ -243,8 +308,8 @@ public struct HarmonicLadderCanvas: View {
                 onTapCanvasPitch(deg, oct, targetTime)
             }
 
-            // 音程弧线微标签
-            if showTheoryLens && document.notes.count > 1 {
+            // 音程弧线标注（仅在「🎼 音乐母语」镜开启）
+            if cognitiveLens == .musician && document.notes.count > 1 {
                 let sorted = document.notes.sorted {
                     $0.displayOnset(grooveStrength: document.grooveStrength) < $1.displayOnset(grooveStrength: document.grooveStrength)
                 }
@@ -264,13 +329,26 @@ public struct HarmonicLadderCanvas: View {
                             .font(.system(size: 9.5, weight: .bold, design: .rounded))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(
-                                Capsule().fill(palette.cardSurface.opacity(0.92))
-                            )
+                            .background(Capsule().fill(palette.cardSurface.opacity(0.92)))
                             .foregroundStyle(info.semitones == 1 ? palette.tensionFilament : palette.homeAnchor)
                             .position(x: midX, y: max(14, midY))
                             .allowsHitTesting(false)
                     }
+                }
+            }
+
+            // 种子折纸架构标牌（起·承·转·合，在哲学镜与乐理镜呈现）
+            if cognitiveLens != .poetic {
+                let taggedStarts = uniquePhraseTagMarkers(totalSec: totalSec, padX: padX, usableW: usableW)
+                ForEach(taggedStarts, id: \.tag) { item in
+                    Text(item.tag)
+                        .font(.system(size: 9.5, weight: .bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(palette.harmonyWash.opacity(0.18)))
+                        .foregroundStyle(palette.harmonyWash)
+                        .position(x: max(36, min(width - 36, item.x)), y: height - 14)
+                        .allowsHitTesting(false)
                 }
             }
 
@@ -305,40 +383,68 @@ public struct HarmonicLadderCanvas: View {
                     .animation(.spring(response: 0.42, dampingFraction: 0.78), value: document.scaleMode)
             }
 
-            // 顶部悬浮「名曲逐拍电影字幕导赏」气泡（播放或开启透视镜时浮现）
-            if showTheoryLens, let moment = document.activeGuidedMoment(at: playheadTime) {
-                VStack {
-                    HStack(spacing: 6) {
-                        Text(moment.badge)
-                            .font(.system(size: 10, weight: .bold))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2.5)
-                            .background(Capsule().fill(palette.bassRibbon))
-                            .foregroundStyle(.white)
-                        Text(moment.caption)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(palette.primaryInk)
-                            .lineLimit(2)
+            // 💠 逻辑哲学镜专属：右上角实时「利萨如声波对称显微镜」+ 顶部电影字幕导赏
+            VStack(spacing: 6) {
+                HStack(alignment: .top, spacing: 8) {
+                    if cognitiveLens != .poetic, let moment = document.activeGuidedMoment(at: playheadTime) {
+                        HStack(spacing: 6) {
+                            Text(moment.badge)
+                                .font(.system(size: 10, weight: .bold))
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2.5)
+                                .background(Capsule().fill(palette.bassRibbon))
+                                .foregroundStyle(.white)
+                            Text(moment.caption)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(palette.primaryInk)
+                                .lineLimit(2)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(palette.cardSurface.opacity(palette.isNight ? 0.90 : 0.94))
+                                .shadow(color: palette.primaryInk.opacity(0.08), radius: 8, y: 2)
+                        )
+                        .animation(.easeInOut(duration: 0.25), value: moment.id)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(palette.cardSurface.opacity(palette.isNight ? 0.90 : 0.94))
-                            .shadow(color: palette.primaryInk.opacity(0.08), radius: 8, y: 2)
-                    )
-                    .padding(.top, 8)
-                    .padding(.horizontal, 10)
-                    Spacer()
-                }
-                .allowsHitTesting(false)
-                .animation(.easeInOut(duration: 0.25), value: moment.id)
-            }
 
-            // 底部悬浮「已选中音珠快捷精修胶囊」（拉长 / 缩短 / 删除，轻松精修自己的脑放旋律）
-            if selectedBeadID != nil && !document.isSpecimen {
-                VStack {
-                    Spacer()
+                    Spacer(minLength: 4)
+
+                    if cognitiveLens == .philosophy {
+                        VStack(spacing: 2) {
+                            LissajousWaveView(
+                                ratioA: Double(livePhysics.ratioA),
+                                ratioB: Double(livePhysics.ratioB),
+                                consonance: livePhysics.consonance,
+                                accentColor: livePhysics.isTense ? palette.melodyTerracotta : palette.homeAnchor,
+                                isNight: palette.isNight,
+                                compact: true
+                            )
+                            .frame(width: 44, height: 44)
+                            Text(livePhysics.ratioText)
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundStyle(livePhysics.isTense ? palette.melodyTerracotta : palette.homeAnchor)
+                        }
+                        .padding(6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(palette.cardSurface.opacity(palette.isNight ? 0.88 : 0.92))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .strokeBorder(palette.divider, lineWidth: 0.9)
+                                )
+                        )
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.horizontal, 8)
+                .allowsHitTesting(false)
+
+                Spacer()
+
+                // 底部悬浮「已选中音珠快捷精修胶囊」
+                if selectedBeadID != nil && !document.isSpecimen {
                     HStack(spacing: 10) {
                         Button {
                             onAdjustSelectedDuration(-0.18)
@@ -383,6 +489,19 @@ public struct HarmonicLadderCanvas: View {
         }
     }
 
+    private func uniquePhraseTagMarkers(totalSec: Double, padX: CGFloat, usableW: CGFloat) -> [(tag: String, x: CGFloat)] {
+        var seen: Set<String> = []
+        var items: [(String, CGFloat)] = []
+        for b in document.notes.sorted(by: { $0.rawOnset < $1.rawOnset }) {
+            if let t = b.phraseTag, !seen.contains(t) {
+                seen.insert(t)
+                let x = padX + CGFloat(b.displayOnset(grooveStrength: document.grooveStrength) / totalSec) * usableW
+                items.append((t, x))
+            }
+        }
+        return items
+    }
+
     // MARK: - 3. Bottom Interactive Chord Ribbon
 
     private func bottomChordRibbon(scrollWidth: CGFloat) -> some View {
@@ -390,7 +509,7 @@ public struct HarmonicLadderCanvas: View {
             VStack(spacing: 1) {
                 Image(systemName: "square.stack.3d.up.fill")
                     .font(.system(size: 11))
-                Text("和弦光带")
+                Text(cognitiveLens == .poetic ? "脚下光影" : "和弦光带")
                     .font(.system(size: 9.5, weight: .bold))
             }
             .foregroundStyle(palette.homeAnchor)
@@ -404,7 +523,7 @@ public struct HarmonicLadderCanvas: View {
                 HStack(spacing: 6) {
                     Image(systemName: "waveform.path")
                         .font(.caption)
-                    Text("纯单音清唱模式（点右下角「织体」可重新点亮和弦光带）")
+                    Text("纯单音清唱模式（点右下角「声音」可重新点亮和弦光带）")
                         .font(.caption2)
                 }
                 .foregroundStyle(palette.secondaryInk)
@@ -420,21 +539,26 @@ public struct HarmonicLadderCanvas: View {
                             onCycleSpanChord(span.id)
                         } label: {
                             VStack(spacing: 1) {
-                                HStack(spacing: 4) {
-                                    Text(span.chord.roman)
-                                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                                    Text(span.chord.tonesFormula)
-                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                        .opacity(0.85)
+                                if cognitiveLens == .poetic {
+                                    Text(span.chord.moodTitle)
+                                        .font(.system(size: 11.5, weight: .bold))
+                                } else {
+                                    HStack(spacing: 4) {
+                                        Text(span.chord.roman)
+                                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        Text(span.chord.tonesFormula)
+                                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                            .opacity(0.85)
+                                    }
+                                    Text(span.chord.moodTitle)
+                                        .font(.system(size: 9, weight: .medium))
+                                        .opacity(0.82)
                                 }
-                                Text(span.chord.moodTitle)
-                                    .font(.system(size: 9, weight: .medium))
-                                    .opacity(0.82)
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(
                                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                    .fill(tint.opacity(isCurrent ? (palette.isNight ? 0.34 : 0.22) : (palette.isNight ? 0.14 : 0.10)))
+                                    .fill(tint.opacity(isCurrent ? (palette.isNight ? 0.36 : 0.24) : (palette.isNight ? 0.14 : 0.10)))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 11, style: .continuous)
                                             .strokeBorder(tint.opacity(isCurrent ? 0.95 : 0.32), lineWidth: isCurrent ? 1.6 : 0.8)
@@ -443,8 +567,8 @@ public struct HarmonicLadderCanvas: View {
                             .foregroundStyle(isCurrent ? palette.primaryInk : tint)
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("第 \(span.id + 1) 小节和弦 \(span.chord.roman)，组成音 \(span.chord.tonesFormula)，\(span.chord.moodTitle)")
-                        .accessibilityHint("轻点切换和弦，实时改变上方发光泳道与伴奏色彩")
+                        .accessibilityLabel("第 \(span.id + 1) 小节 \(span.chord.moodTitle)，和弦 \(span.chord.roman)")
+                        .accessibilityHint("轻点可切换其他和弦，实时听见情绪关系变化")
                     }
                 }
                 .padding(.horizontal, 8)
@@ -475,21 +599,21 @@ public struct HarmonicLadderCanvas: View {
 
         let fillColor: Color = palette.isNight ? member.nightGlowColor : member.bodyColor
         let pulse: CGFloat = (!reduceMotion && isActive)
-            ? 1.18 + CGFloat(sin(now * 14.0)) * 0.06
+            ? 1.20 + CGFloat(sin(now * 14.0)) * 0.06
             : (isSelected ? 1.12 : 1.0)
 
         return ZStack {
             if isSelected {
                 Circle()
-                    .strokeBorder(palette.primaryInk.opacity(0.75), lineWidth: 2.0)
+                    .strokeBorder(palette.primaryInk.opacity(0.78), lineWidth: 2.0)
                     .frame(width: 28, height: 28)
             } else if inChord && !chordSpans.isEmpty {
                 Circle()
-                    .fill(fillColor.opacity(isActive ? 0.38 : 0.16))
-                    .frame(width: isActive ? 34 : 25, height: isActive ? 34 : 25)
-            } else if !inChord && showTheoryLens {
+                    .fill(fillColor.opacity(isActive ? 0.40 : 0.16))
+                    .frame(width: isActive ? 36 : 25, height: isActive ? 36 : 25)
+            } else if !inChord && cognitiveLens != .poetic {
                 Circle()
-                    .strokeBorder(palette.tensionFilament.opacity(0.85), style: StrokeStyle(lineWidth: 1.5, dash: [3, 2.5]))
+                    .strokeBorder(palette.tensionFilament.opacity(0.88), style: StrokeStyle(lineWidth: 1.5, dash: [3, 2.5]))
                     .frame(width: 24, height: 24)
             }
 
@@ -510,7 +634,7 @@ public struct HarmonicLadderCanvas: View {
                     }
             }
 
-            if showTheoryLens {
+            if cognitiveLens == .musician {
                 Text("\(bead.degree)")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .foregroundStyle(palette.isNight ? Color(hex: 0x0E1726) : .white)
@@ -532,8 +656,8 @@ public struct HarmonicLadderCanvas: View {
                 }
         )
         .accessibilityElement()
-        .accessibilityLabel("\(bead.degree)号 \(member.chineseName) \(member.solfege)，\(inChord ? "和弦内音" : "和弦外色彩音")")
-        .accessibilityHint("轻点试听与编辑时长，上下拖动调整音高")
+        .accessibilityLabel("\(bead.degree)号 \(member.chineseName) \(member.solfege)，\(inChord ? "和弦内音" : "色彩张力音")")
+        .accessibilityHint("轻点试听与精修时长，上下拖动调整音高")
     }
 
     // MARK: - Canvas Drawing Layers
@@ -546,7 +670,7 @@ public struct HarmonicLadderCanvas: View {
                 let rect = CGRect(x: CGFloat(i) * colW, y: 0, width: colW, height: size.height)
                 ctx.fill(
                     Path(rect),
-                    with: .color(palette.bassRibbon.opacity(palette.isNight ? 0.04 : 0.032))
+                    with: .color(palette.bassRibbon.opacity(palette.isNight ? 0.04 : 0.028))
                 )
             }
             if i > 0 {
@@ -632,6 +756,38 @@ public struct HarmonicLadderCanvas: View {
         }
     }
 
+    /// 透明的「巴赫式影子对位副旋律」光轨（在留白间隙里温柔接唱）
+    private func drawShadowCounterpointLayer(
+        ctx: inout GraphicsContext,
+        size: CGSize,
+        totalSec: Double,
+        padX: CGFloat,
+        usableW: CGFloat
+    ) {
+        guard !shadowNotes.isEmpty else { return }
+        var prevPt: CGPoint? = nil
+        for sh in shadowNotes {
+            let x = padX + CGFloat(sh.onset / totalSec) * usableW
+            let y = pitchY(degree: sh.degree, octave: sh.octaveOffset, height: size.height)
+            let pt = CGPoint(x: x, y: y)
+            let isCur = playheadTime.map { $0 >= sh.onset - 0.04 && $0 <= sh.onset + sh.duration } ?? false
+
+            if let prev = prevPt {
+                var p = Path()
+                p.move(to: prev)
+                p.addQuadCurve(to: pt, control: CGPoint(x: (prev.x + pt.x) * 0.5, y: max(prev.y, pt.y) + 12))
+                ctx.stroke(p, with: .color(palette.harmonyWash.opacity(0.35)), style: StrokeStyle(lineWidth: 1.6, dash: [4, 4]))
+            }
+            prevPt = pt
+
+            let r: CGFloat = isCur ? 7.5 : 5.0
+            ctx.fill(
+                Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
+                with: .color(palette.harmonyWash.opacity(isCur ? 0.92 : 0.50))
+            )
+        }
+    }
+
     private func drawMelodyArcsAndIntervals(
         ctx: inout GraphicsContext,
         size: CGSize,
@@ -667,8 +823,8 @@ public struct HarmonicLadderCanvas: View {
                 let color = palette.isNight ? a.member.nightGlowColor : a.member.bodyColor
                 ctx.stroke(
                     arc,
-                    with: .color(color.opacity(isPlayed ? 0.62 : 0.22)),
-                    style: StrokeStyle(lineWidth: isPlayed ? 2.3 : 1.3, lineCap: .round)
+                    with: .color(color.opacity(isPlayed ? 0.65 : 0.22)),
+                    style: StrokeStyle(lineWidth: isPlayed ? 2.4 : 1.3, lineCap: .round)
                 )
             }
         }
@@ -686,14 +842,14 @@ public struct HarmonicLadderCanvas: View {
             var tail = Path()
             tail.move(to: CGPoint(x: x, y: y))
             tail.addLine(to: CGPoint(x: min(size.width - 8, x + tailW), y: y))
-            let tailGrad = Gradient(colors: [color.opacity(isCurrent ? 0.72 : 0.36), .clear])
+            let tailGrad = Gradient(colors: [color.opacity(isCurrent ? 0.74 : 0.38), .clear])
             ctx.stroke(
                 tail,
                 with: .linearGradient(tailGrad, startPoint: CGPoint(x: x, y: y), endPoint: CGPoint(x: x + tailW, y: y)),
                 style: StrokeStyle(lineWidth: isCurrent ? 10 : 6.5, lineCap: .round)
             )
 
-            if showTheoryLens && bead.member.isTensionDegree {
+            if cognitiveLens != .poetic && bead.member.isTensionDegree {
                 let targetY: CGFloat = (bead.degree == 7)
                     ? pitchY(degree: 1, octave: bead.octaveOffset + 1, height: size.height)
                     : pitchY(degree: 3, octave: bead.octaveOffset, height: size.height)
@@ -736,7 +892,7 @@ public struct HarmonicLadderCanvas: View {
         line.addLine(to: CGPoint(x: x, y: height - 6))
         ctx.stroke(
             line,
-            with: .color(palette.melodyTerracotta.opacity(0.72)),
+            with: .color(palette.melodyTerracotta.opacity(0.75)),
             style: StrokeStyle(lineWidth: 2.0)
         )
     }
