@@ -1,0 +1,214 @@
+name: iOS 27 Build, Test & TestFlight
+
+on:
+  push:
+    branches: [main, "dev/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 27 & install XcodeGen
+        run: |
+          ls -d /Applications/Xcode*.app
+          X=$(ls -d /Applications/Xcode_*.app /Applications/Xcode.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          xcodebuild -version
+          SDK=$(xcodebuild -showsdks | grep -oE 'iphoneos[0-9.]+' | sort -V | tail -1 || true)
+          echo "::notice title=Toolchain::$(xcodebuild -version | tr '\n' ' ') (${SDK:-unknown})"
+          brew install xcodegen >/dev/null
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Run unit tests & zero-network probe (iOS 27 Simulator)
+        run: |
+          set -o pipefail
+          DEV=$(xcrun simctl list devices available -j | python3 -c "
+          import json, re, sys
+          d = json.load(sys.stdin)['devices']
+          cands = []
+          for rt, devs in d.items():
+              if 'iOS' not in rt:
+                  continue
+              for x in devs:
+                  if x.get('isAvailable') and 'iPhone' in x.get('name', ''):
+                      ver = tuple(int(n) for n in re.findall(r'\d+', rt))
+                      is_base = 1 if re.fullmatch(r'iPhone \d+', x['name']) else 0
+                      cands.append((ver, is_base, x['name'], x['udid']))
+          cands.sort()
+          if not cands:
+              sys.exit('No available iPhone simulator found')
+          print(cands[-1][3])
+          ")
+          echo "::notice title=Simulator::$DEV"
+          mkdir -p shots
+          xcrun simctl boot "$DEV" 2>/dev/null || true
+          xcrun simctl spawn "$DEV" log stream --style compact --level debug \
+            --predicate '(process BEGINSWITH "Chimmo") AND (subsystem == "com.apple.network" OR subsystem == "com.apple.CFNetwork" OR subsystem == "com.apple.nsurlsessiond")' \
+            > shots/net_raw.log 2>&1 &
+          echo $! > net.pid
+
+          xcodebuild test \
+            -project Chimmo.xcodeproj \
+            -scheme Chimmo \
+            -destination "id=$DEV" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log | grep -E "error:|warning: |Test Case.*(passed|failed)|\*\* " || true
+
+          grep -q "\*\* TEST SUCCEEDED \*\*" build.log
+
+      - name: Zero-network probe report
+        if: always()
+        continue-on-error: true
+        run: |
+          kill "$(cat net.pid 2>/dev/null)" 2>/dev/null || true
+          mkdir -p shots
+          {
+            echo "Chimmo network probe ($(wc -l < shots/net_raw.log 2>/dev/null || echo 0) raw lines)"
+            grep -E "nw_connection|nw_endpoint|Task <|hostname|https?://|resolver|Connection [0-9]+" shots/net_raw.log 2>/dev/null \
+              | sed -E 's/^[0-9-]+ [0-9:.]+ //' | sort | uniq -c | sort -rn | head -50 || true
+          } > shots/ios_network.txt
+          cat shots/ios_network.txt | head -30 | while IFS= read -r l; do echo "::notice title=Network::$l"; done
+
+      - name: Report build errors on failure
+        if: failure()
+        run: |
+          grep -E "error:|fatal error:|failed" build.log 2>/dev/null | tail -60 || tail -80 build.log
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chimmo-ci-logs
+          path: |
+            shots/ios_network.txt
+            build.log
+          retention-days: 14
+
+  testflight:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: xcode-27
+    timeout-minutes: 50
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      TEAM: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check App Store Connect secrets
+        id: check
+        run: |
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_KEY_P8" ] || [ -z "$TEAM" ]; then
+            echo "::warning title=TestFlight skipped::请在仓库 Settings → Secrets and variables → Actions 填入 ASC_KEY_ID、ASC_ISSUER_ID、ASC_KEY_P8、APPLE_TEAM_ID 后重跑即可自动上传 TestFlight。"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p ~/private_keys
+          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          chmod 600 ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          python3 Tools/asc.py ensure-bundle-ids app.chimmo --name "Chimmo" --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          if python3 Tools/asc.py check-app app.chimmo --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Archive, cloud-sign & upload to TestFlight
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          set -o pipefail
+          X=$(ls -d /Applications/Xcode_*.app /Applications/Xcode.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          brew install xcodegen >/dev/null
+          xcodegen generate
+
+          AUTH=(-allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          BUILD=$((100 + ${{ github.run_number }}))
+
+          xcodebuild archive \
+            -project Chimmo.xcodeproj \
+            -scheme Chimmo \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Chimmo.xcarchive \
+            DEVELOPMENT_TEAM="$TEAM" \
+            CURRENT_PROJECT_VERSION=$BUILD \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee archive.log | grep -E "error:|\*\* " || true
+          grep -q "ARCHIVE SUCCEEDED" archive.log
+
+          APPDIR=build/Chimmo.xcarchive/Products/Applications/Chimmo.app
+          codesign -f -s - --entitlements Chimmo/Resources/Chimmo.entitlements "$APPDIR"
+
+          cat > ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+
+          xcodebuild -exportArchive \
+            -archivePath build/Chimmo.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/export "${AUTH[@]}" \
+            2>&1 | tee export.log | grep -E "error:|Upload|\*\* " || true
+          grep -q "EXPORT SUCCEEDED" export.log
+
+          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APPDIR/Info.plist" 2>/dev/null || echo "0.1.0")
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          echo "MARKETING_VERSION=$VER" >> "$GITHUB_ENV"
+          echo "::notice title=TestFlight::咩哞 v${VER} (Build $BUILD) 已上传，Apple 处理约需 10–30 分钟。"
+
+      - name: Extract App filing certificate (备案 SHA-1 & 公钥)
+        if: steps.check.outputs.ready == 'true'
+        continue-on-error: true
+        run: |
+          sed 's#<string>upload</string>#<string>export</string>#' ExportOptions.plist > ExportLocal.plist
+          AUTH=(-allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          xcodebuild -exportArchive -archivePath build/Chimmo.xcarchive -exportOptionsPlist ExportLocal.plist -exportPath build/local "${AUTH[@]}" > /dev/null 2>&1 || exit 0
+          mkdir -p build/ipa && unzip -q -o build/local/*.ipa -d build/ipa
+          cd build/ipa && codesign -d --extract-certificates=cert Payload/*.app 2>/dev/null
+          SHA1=$(openssl x509 -inform der -in cert0 -noout -fingerprint -sha1 | cut -d= -f2)
+          MOD=$(openssl x509 -inform der -in cert0 -noout -modulus | cut -d= -f2)
+          echo "::notice title=备案 SHA-1::$SHA1"
+          echo "::notice title=备案 公钥::$MOD"
+
+      - name: Sync CHANGELOG.md to TestFlight What to Test
+        if: steps.check.outputs.ready == 'true' && env.BUILD != ''
+        continue-on-error: true
+        timeout-minutes: 25
+        run: |
+          python3 Tools/asc.py sync-whats-new \
+            --bundle-id app.chimmo \
+            --build "$BUILD" \
+            --version "$MARKETING_VERSION" \
+            --changelog CHANGELOG.md \
+            --locale zh-Hans \
+            --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"

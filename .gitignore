@@ -1,0 +1,24 @@
+# Xcode & macOS
+*.xcodeproj
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+.DS_Store
+
+# CI & local test outputs
+shots/
+*.log
+sim.txt
+net.pid
+ExportOptions.plist
+ExportLocal.plist
+
+# Python
+__pycache__/
+*.pyc
+.venv/
