@@ -266,6 +266,32 @@ public final class FeltPianoSynth {
         }
     }
 
+    /// 弹奏指定调内三和弦（温暖大提琴低音根音 + 错落毛毡三和弦琶音），与画布上的和弦泳道光带一一对应。
+    public func playDiatonicChord(
+        rootMIDI: Int,
+        mode: ScaleMode,
+        chord: DiatonicChord,
+        intensity: Double = 0.82
+    ) {
+        let clamped = max(0.2, min(1.0, intensity))
+        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: chord.rootDegree, octaveOffset: -1)
+        playNote(frequency: bassHz, velocity: 0.28 * clamped, decay: 2.3, brightness: 0.56, timbre: .warmBass, delaySeconds: 0.0)
+
+        for (idx, deg) in chord.chordToneDegrees.enumerated() {
+            let oct = (idx > 0 && deg < chord.rootDegree) ? 0 : (idx == 0 ? -1 : 0)
+            let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
+            let delay = Double(idx + 1) * 0.036
+            playNote(
+                frequency: hz,
+                velocity: (0.20 - Double(idx) * 0.015) * clamped,
+                decay: 2.0,
+                brightness: 0.84,
+                timbre: .feltPiano,
+                delaySeconds: delay
+            )
+        }
+    }
+
     /// 切换水面情绪色温时的一串清澈水波确认琶音
     public func playWaterRipplePreview(rootMIDI: Int, mode: ScaleMode, profile: HarmonyProfile) {
         let voicing = profile.voicing(for: 1)

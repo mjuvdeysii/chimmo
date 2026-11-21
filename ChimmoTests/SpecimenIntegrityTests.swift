@@ -51,24 +51,48 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(header, "MThd")
     }
 
+    func testTrueSemitoneGeometryMajorAndMinor() {
+        // 大调：3-4 相差 1 个半音，7-高音1 相差 1 个半音
+        let m3 = ScalePitchGeometry.semitoneOffset(degree: 3, octaveOffset: 0, mode: .brightMajor)
+        let m4 = ScalePitchGeometry.semitoneOffset(degree: 4, octaveOffset: 0, mode: .brightMajor)
+        let m7 = ScalePitchGeometry.semitoneOffset(degree: 7, octaveOffset: 0, mode: .brightMajor)
+        let mHigh1 = ScalePitchGeometry.semitoneOffset(degree: 1, octaveOffset: 1, mode: .brightMajor)
+        XCTAssertEqual(m4 - m3, 1)
+        XCTAssertEqual(mHigh1 - m7, 1)
+
+        // 小调：3 级（拍咯）真实下降 1 个半音（4 -> 3）
+        let minor3 = ScalePitchGeometry.semitoneOffset(degree: 3, octaveOffset: 0, mode: .wistfulMinor)
+        XCTAssertEqual(m3 - minor3, 1)
+    }
+
     @MainActor
-    func testInteractiveChimmoTapSpawnsFlyingPearlAndWaterWave() {
-        let vm = StudioViewModel()
+    func testWorkbenchLadderChordRibbonAndOfflineNotebook() {
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-test-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let store = MelodyNotebookStore(directory: tmpDir)
+        let vm = StudioViewModel(notebookStore: store)
         XCTAssertTrue(vm.document.isSpecimen)
 
-        // 点按 3 号拍咯应立即切入指尖即兴画卷并发射飞珠涟漪
-        vm.triggerMember(.plokko)
+        // 点按左侧音阶阶梯 3·拍咯，自动切入自由创作并落珠
+        vm.triggerLadderMember(.plokko, octaveOffset: 0)
+        vm.triggerLadderMember(.taono, octaveOffset: 0)
         XCTAssertFalse(vm.document.isSpecimen)
-        XCTAssertEqual(vm.document.notes.count, 1)
-        XCTAssertEqual(vm.document.notes.first?.degree, 3)
-        XCTAssertEqual(vm.latestDegree, 3)
-        XCTAssertFalse(vm.impulses.isEmpty)
+        XCTAssertEqual(vm.document.notes.count, 2)
+        XCTAssertFalse(vm.currentInsight.headline.isEmpty)
 
-        // 左右轻拂水面应切换和声色温并保持水位托起
-        let initialProfile = vm.document.harmonyProfile
-        vm.waterLevel = 0.1
-        vm.swipeWaterProfile(direction: 1)
-        XCTAssertNotEqual(vm.document.harmonyProfile, initialProfile)
-        XCTAssertGreaterThanOrEqual(vm.waterLevel, 0.5)
+        // 点击底部第 1 小节和弦光带卡片，应切换和弦
+        let beforeChord = vm.chordSpans[0].chord
+        vm.cycleSpanChord(spanIndex: 0)
+        XCTAssertNotEqual(vm.chordSpans[0].chord, beforeChord)
+
+        // 保存至本机离线乐思本并重新加载验证持久化
+        vm.saveCurrentToNotebook()
+        XCTAssertEqual(store.entries.count, 1)
+
+        let reloaded = MelodyNotebookStore(directory: tmpDir)
+        XCTAssertEqual(reloaded.entries.count, 1)
+        XCTAssertEqual(reloaded.entries.first?.document.notes.count, 2)
     }
 }
