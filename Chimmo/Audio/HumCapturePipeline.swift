@@ -33,17 +33,6 @@ public final class HumCapturePipeline: ObservableObject {
         guard !isRecording else { return }
         synth.stopForRecording()
 
-        let requestAndStart = { [weak self] (granted: Bool) in
-            Task { @MainActor in
-                guard let self else { return }
-                guard granted else {
-                    self.statusMessage = "未开启麦克风权限，可直接点按下方七只咩哞创作旋律"
-                    return
-                }
-                self.beginEngineCapture()
-            }
-        }
-
         #if os(iOS)
         switch AVAudioApplication.shared.recordPermission {
         case .granted:
@@ -51,7 +40,15 @@ public final class HumCapturePipeline: ObservableObject {
         case .denied:
             statusMessage = "未开启麦克风权限，可直接点按下方七只咩哞创作旋律"
         case .undetermined:
-            AVAudioApplication.requestRecordPermission(completionHandler: requestAndStart)
+            Task { @MainActor [weak self] in
+                let granted = await AVAudioApplication.requestRecordPermission()
+                guard let self else { return }
+                if granted {
+                    self.beginEngineCapture()
+                } else {
+                    self.statusMessage = "未开启麦克风权限，可直接点按下方七只咩哞创作旋律"
+                }
+            }
         @unknown default:
             beginEngineCapture()
         }
@@ -76,16 +73,14 @@ public final class HumCapturePipeline: ObservableObject {
                 guard count > 0 else { return }
 
                 var sumSq: Float = 0.0
-                var chunk = [Float](repeating: 0, count: count)
-                for i in 0..<count {
-                    let s = channelData[i]
-                    chunk[i] = s
+                let frozenChunk = Array(UnsafeBufferPointer(start: channelData, count: count))
+                for s in frozenChunk {
                     sumSq += s * s
                 }
                 bufferLock.withLock { buf in
                     // 单次哼唱上限 30 秒，防止内存暴涨
                     if buf.count < 48_000 * 30 {
-                        buf.append(contentsOf: chunk)
+                        buf.append(contentsOf: frozenChunk)
                     }
                 }
                 let rms = sqrt(Double(sumSq) / Double(count))
@@ -152,7 +147,7 @@ public final class HumCapturePipeline: ObservableObject {
         return result
     }
 
-    public static func resampleLinear(_ input: [Float], from srcRate: Double, to dstRate: Double) -> [Float] {
+    nonisolated public static func resampleLinear(_ input: [Float], from srcRate: Double, to dstRate: Double) -> [Float] {
         guard !input.isEmpty else { return [] }
         if abs(srcRate - dstRate) < 1.0 { return input }
         let ratio = srcRate / dstRate
