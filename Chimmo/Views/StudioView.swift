@@ -336,6 +336,7 @@ public struct StudioView: View {
     @StateObject private var vm = StudioViewModel()
     @Environment(\.colorScheme) private var systemScheme
     @State private var showSpecimens = false
+    @State private var showAbout = false
 
     public init() {}
 
@@ -417,6 +418,13 @@ public struct StudioView: View {
                         Image(systemName: isNight ? "sun.max" : "lamp.desk")
                     }
                     .accessibilityLabel(isNight ? "切换日光纸面" : "切换夜灯舞台")
+
+                    Button {
+                        showAbout = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                    }
+                    .accessibilityLabel("关于咩哞与导出 MIDI")
                 }
             }
             .sheet(isPresented: $showSpecimens) {
@@ -425,6 +433,13 @@ public struct StudioView: View {
                     currentSpecimenID: vm.document.id,
                     onSelectSpecimen: { spec in vm.selectSpecimen(spec) },
                     onBorrowHarmony: { profile, mode in vm.borrowHarmony(profile: profile, mode: mode) }
+                )
+            }
+            .sheet(isPresented: $showAbout) {
+                AboutSheetView(
+                    palette: palette,
+                    currentDocument: vm.document,
+                    cradleEnabled: vm.cradleEnabled
                 )
             }
         }

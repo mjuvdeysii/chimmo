@@ -42,4 +42,12 @@ final class SpecimenIntegrityTests: XCTestCase {
             }
         }
     }
+
+    func testComplete16SpecimenCatalogAndMIDIExport() {
+        XCTAssertEqual(SpecimenLibrary.all.count, 16, "V1.0 标本库应包含完整 16 首（8 公版古典 + 8 现代技法）")
+        let midiData = MIDIExporter.encodeSMF(document: SpecimenLibrary.summerSuspension, includeHarmonyCradle: true)
+        XCTAssertGreaterThan(midiData.count, 64)
+        let header = String(decoding: midiData.prefix(4), as: UTF8.self)
+        XCTAssertEqual(header, "MThd")
+    }
 }
