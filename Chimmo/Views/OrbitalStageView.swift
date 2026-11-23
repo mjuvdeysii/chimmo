@@ -370,6 +370,7 @@ public struct OrbitalStageView: View {
 
     private func drawOrbitalDiscCanvas(ctx: inout GraphicsContext, size: CGSize, mediaNow: Double) {
         let m = orbitalMetrics(for: size)
+        let acoustic = currentAcousticEnvelope
         let total = max(0.5, vm.document.totalDuration)
         let currentTime = vm.clock.currentTime(at: mediaNow)
         let rotTurns = vm.clock.continuousRotationTurns(at: mediaNow)
@@ -480,8 +481,15 @@ public struct OrbitalStageView: View {
         )
         let rimColor = palette.isNight ? Color(hex: 0x524036).opacity(0.75) : Color(hex: 0xD2B48C).opacity(0.85)
         ctx.stroke(Path(ellipseIn: platterRect), with: .color(rimColor), lineWidth: 3.4)
+        if acoustic.rmsEnergy > 0.01 {
+            ctx.stroke(
+                Path(ellipseIn: platterRect),
+                with: .color(palette.nightLampGold.opacity(acoustic.rmsEnergy * 0.36)),
+                lineWidth: 3.4 + CGFloat(acoustic.rmsEnergy) * 2.5
+            )
+        }
 
-        // 12 枚随盘面同转的极简节拍刻度（让任何缓慢旋律的旋转都肉眼一目了然）
+        // 12 枚随盘面同转的极简节拍刻度（让任何缓慢旋律的旋转与声学共鸣一目了然）
         for tick in 0..<12 {
             let ta = -Double.pi / 2.0 + Double(tick) * (Double.pi / 6.0) + discRot
             let r0 = m.platterRadius * (tick % 3 == 0 ? 0.932 : 0.950)
@@ -489,9 +497,10 @@ public struct OrbitalStageView: View {
             var tp = Path()
             tp.move(to: CGPoint(x: m.center.x + CGFloat(cos(ta)) * r0, y: m.center.y + CGFloat(sin(ta)) * r0))
             tp.addLine(to: CGPoint(x: m.center.x + CGFloat(cos(ta)) * r1, y: m.center.y + CGFloat(sin(ta)) * r1))
+            let baseOp = tick % 3 == 0 ? 0.72 : 0.35
             ctx.stroke(
                 tp,
-                with: .color((tick % 3 == 0 ? palette.nightLampGold : palette.secondaryInk).opacity(tick % 3 == 0 ? 0.72 : 0.35)),
+                with: .color((tick % 3 == 0 ? palette.nightLampGold : palette.secondaryInk).opacity(min(1.0, baseOp + acoustic.rmsEnergy * 0.22))),
                 style: StrokeStyle(lineWidth: tick % 3 == 0 ? 1.8 : 1.1, lineCap: .round)
             )
         }
@@ -735,8 +744,8 @@ public struct OrbitalStageView: View {
             }
         }
 
-        // 6. 中央利萨如谐振花纹玻璃圆心（实时映照当前声学和谐比例）
-        drawCenterMandalaHub(ctx: &ctx, center: m.center, hubRadius: m.innerRadius * 0.76, mediaNow: mediaNow)
+        // 6. 中央利萨如谐振花纹玻璃圆心（实时映照当前声学和谐比例与实时响度呼吸）
+        drawCenterMandalaHub(ctx: &ctx, center: m.center, hubRadius: m.innerRadius * 0.76, mediaNow: mediaNow, acoustic: acoustic)
 
         // 7. 12 点钟黄铜唱针与声波涟漪绽放 + 跟灯弹光桥
         if vm.followGlowActive,
@@ -746,6 +755,10 @@ public struct OrbitalStageView: View {
         }
         drawRipplesOnDisc(ctx: &ctx, metrics: m, discRot: discRot, needleAngle: needleAngle, mediaNow: mediaNow)
         drawTonearmNeedle(ctx: &ctx, metrics: m, needleAngle: needleAngle, isPlaying: vm.isPlaying, mediaNow: mediaNow)
+    }
+
+    private var currentAcousticEnvelope: AcousticEnvelopeSnapshot {
+        reduceMotion ? .silent : vm.synth.currentAcousticEnvelope()
     }
 
     private func notesIsEmptyPlaceholder(notes: [NoteBead]) -> Bool {
@@ -819,22 +832,29 @@ public struct OrbitalStageView: View {
         center: CGPoint,
         amplitude: CGFloat,
         mediaNow: Double,
+        acoustic: AcousticEnvelopeSnapshot = .silent,
         glowWidth: CGFloat = 4.0,
         coreWidth: CGFloat = 1.5
     ) {
         let phys = vm.activeHarmonyPhysics
         let tension = 1.0 - phys.consonance
         let phase = reduceMotion ? 0.45 : mediaNow * (0.45 + tension * 2.0)
+        let modAmp = amplitude * (1.0 + CGFloat(acoustic.rmsEnergy) * 0.24)
         var wave = Path()
         let steps = 110
         for i in 0...steps {
             let u = (Double(i) / Double(steps)) * Double.pi * 2.0
-            let x = center.x + CGFloat(sin(Double(phys.ratioA) * u + phase)) * amplitude
-            let y = center.y + CGFloat(sin(Double(phys.ratioB) * u)) * amplitude
+            let x = center.x + CGFloat(sin(Double(phys.ratioA) * u + phase)) * modAmp
+            let y = center.y + CGFloat(sin(Double(phys.ratioB) * u)) * modAmp
             if i == 0 { wave.move(to: CGPoint(x: x, y: y)) } else { wave.addLine(to: CGPoint(x: x, y: y)) }
         }
         let lineCol = phys.isTense ? palette.tensionFilament : palette.homeAnchor
-        ctx.stroke(wave, with: .color(lineCol.opacity(0.28)), style: StrokeStyle(lineWidth: glowWidth, lineCap: .round))
+        let modGlowW = glowWidth + CGFloat(acoustic.shimmerEnergy) * 3.8
+        ctx.stroke(
+            wave,
+            with: .color(lineCol.opacity(0.28 + acoustic.shimmerEnergy * 0.22)),
+            style: StrokeStyle(lineWidth: modGlowW, lineCap: .round)
+        )
         ctx.stroke(wave, with: .color(lineCol.opacity(0.90)), style: StrokeStyle(lineWidth: coreWidth, lineCap: .round))
     }
 
@@ -848,7 +868,23 @@ public struct OrbitalStageView: View {
         ctx.stroke(p, with: .color(color.opacity(0.55)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
     }
 
-    private func drawCenterMandalaHub(ctx: inout GraphicsContext, center: CGPoint, hubRadius: CGFloat, mediaNow: Double) {
+    private func drawCenterMandalaHub(
+        ctx: inout GraphicsContext,
+        center: CGPoint,
+        hubRadius: CGFloat,
+        mediaNow: Double,
+        acoustic: AcousticEnvelopeSnapshot = .silent
+    ) {
+        if acoustic.warmthEnergy > 0.01 {
+            let auraR = hubRadius + 4.0 + CGFloat(acoustic.warmthEnergy) * 9.0
+            let auraRect = CGRect(x: center.x - auraR, y: center.y - auraR, width: auraR * 2, height: auraR * 2)
+            ctx.stroke(
+                Path(ellipseIn: auraRect),
+                with: .color(palette.nightLampGold.opacity(acoustic.warmthEnergy * 0.28)),
+                lineWidth: 2.2 + CGFloat(acoustic.warmthEnergy) * 3.2
+            )
+        }
+
         let hubRect = CGRect(x: center.x - hubRadius, y: center.y - hubRadius, width: hubRadius * 2, height: hubRadius * 2)
         let hubGrad = Gradient(colors: palette.isNight
             ? [Color(hex: 0xFFB84D).opacity(0.32), Color(hex: 0x242F63)]
@@ -860,8 +896,8 @@ public struct OrbitalStageView: View {
         )
         ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.nightLampGold.opacity(0.55)), lineWidth: 1.5)
 
-        // 利萨如实时波纹花（双层柔光 + 清晰主丝线）
-        drawLissajousWave(ctx: &ctx, center: center, amplitude: hubRadius * 0.56, mediaNow: mediaNow)
+        // 利萨如实时波纹花（随声压实时呼吸）
+        drawLissajousWave(ctx: &ctx, center: center, amplitude: hubRadius * 0.56, mediaNow: mediaNow, acoustic: acoustic)
 
         // 暂停态提示可轻点圆心起转
         if !vm.isPlaying && !vm.followGlowActive && !vm.document.notes.isEmpty {
@@ -890,8 +926,9 @@ public struct OrbitalStageView: View {
             let pt = CGPoint(x: metrics.center.x + CGFloat(cos(ang)) * rOrbit, y: metrics.center.y + CGFloat(sin(ang)) * rOrbit)
             let col = Color(hex: ev.colorHex)
 
+            let dynScale: CGFloat = ev.isShadow ? 1.0 : CGFloat(0.72 + ev.intensity * 0.56)
             for ring in 0..<2 {
-                let ringR = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * ((ev.isShadow ? 24.0 : 36.0) + CGFloat(ring) * 12.0)
+                let ringR = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * ((ev.isShadow ? 24.0 : 36.0 * dynScale) + CGFloat(ring) * 12.0)
                 let rect = CGRect(x: pt.x - ringR, y: pt.y - ringR, width: ringR * 2, height: ringR * 2)
                 ctx.stroke(
                     Path(ellipseIn: rect),
@@ -900,12 +937,12 @@ public struct OrbitalStageView: View {
                 )
             }
 
-            // 零堆分配星尘迸溅微粒（主音珠发声时迸溅 8 颗微粒，影子对位音维持柔和月光涟漪不喧宾夺主）
+            // 零堆分配星尘迸溅微粒（主音珠发声时迸溅 8 颗微粒，随击打力度放大扩散范围）
             if !reduceMotion && !ev.isShadow {
                 let baseSeed = ev.birthMediaTime * 13.7 + Double(ev.laneIndex) * 2.3
                 for pIdx in 0..<8 {
                     let pAng = baseSeed + Double(pIdx) * (Double.pi * 2.0 / 8.0)
-                    let pDist = 10.0 + prog * (28.0 + Double(pIdx % 3) * 9.0)
+                    let pDist = (10.0 + prog * (28.0 + Double(pIdx % 3) * 9.0)) * Double(dynScale)
                     let px = pt.x + CGFloat(cos(pAng) * pDist)
                     let py = pt.y + CGFloat(sin(pAng) * pDist)
                     let pr: CGFloat = (pIdx % 2 == 0) ? 2.2 : 1.5
@@ -994,6 +1031,7 @@ public struct OrbitalStageView: View {
 
     private func drawFlowingRiverCanvas(ctx: inout GraphicsContext, size: CGSize, mediaNow: Double) {
         let lay = riverLayout(for: size)
+        let acoustic = currentAcousticEnvelope
         let currentTime = vm.clock.currentTime(at: mediaNow)
         let scrollX = FlowingRiverGeometry.worldScrollX(
             playheadTime: currentTime,
@@ -1063,6 +1101,13 @@ public struct OrbitalStageView: View {
                 mountainFill,
                 with: .linearGradient(grad, startPoint: CGPoint(x: 0, y: lay.padV), endPoint: CGPoint(x: 0, y: size.height))
             )
+            if acoustic.rmsEnergy > 0.01 {
+                ctx.stroke(
+                    curve,
+                    with: .color(palette.homeAnchor.opacity(0.14 + acoustic.rmsEnergy * 0.24)),
+                    style: StrokeStyle(lineWidth: 5.5 + CGFloat(acoustic.rmsEnergy) * 5.0, lineCap: .round)
+                )
+            }
             ctx.stroke(curve, with: .color(palette.homeAnchor.opacity(0.75)), style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
 
             // 湖面倒影轮廓（让《天鹅》等抒情曲线呈现在静水湖面之上）
@@ -1166,7 +1211,8 @@ public struct OrbitalStageView: View {
         var beam = Path()
         beam.move(to: CGPoint(x: lay.anchorX, y: 12))
         beam.addLine(to: CGPoint(x: lay.anchorX, y: size.height - 12))
-        ctx.stroke(beam, with: .color(palette.nightLampGold.opacity(vm.isPlaying ? 0.24 : 0.12)), lineWidth: 9.0)
+        let beamHaloAlpha = (vm.isPlaying ? 0.24 : 0.12) + acoustic.shimmerEnergy * 0.26
+        ctx.stroke(beam, with: .color(palette.nightLampGold.opacity(beamHaloAlpha)), lineWidth: 9.0 + CGFloat(acoustic.shimmerEnergy) * 6.0)
         ctx.stroke(beam, with: .color(palette.nightLampGold.opacity(vm.isPlaying ? 0.94 : 0.52)), lineWidth: 2.6)
 
         for ev in vm.rippleBus.activeEvents(at: mediaNow) {
@@ -1175,7 +1221,8 @@ public struct OrbitalStageView: View {
             let y = lay.padV + (CGFloat(7 - ev.laneIndex) + 0.5) * lay.rowH + (ev.isShadow ? 10.0 : 0.0)
             let x = vm.isPlaying ? lay.anchorX : FlowingRiverGeometry.screenX(onset: ev.onset, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
             let col = Color(hex: ev.colorHex)
-            let r = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * (ev.isShadow ? 22.0 : 34.0)
+            let dynScale: CGFloat = ev.isShadow ? 1.0 : CGFloat(0.72 + ev.intensity * 0.56)
+            let r = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * (ev.isShadow ? 22.0 : 34.0 * dynScale)
             ctx.stroke(
                 Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
                 with: .color(col.opacity((1.0 - prog) * (ev.isShadow ? 0.50 : 0.72))),
@@ -1185,7 +1232,7 @@ public struct OrbitalStageView: View {
                 let baseSeed = ev.birthMediaTime * 11.3 + Double(ev.laneIndex) * 1.9
                 for pIdx in 0..<8 {
                     let pAng = baseSeed + Double(pIdx) * (Double.pi * 2.0 / 8.0)
-                    let pDist = 9.0 + prog * (24.0 + Double(pIdx % 3) * 8.0)
+                    let pDist = (9.0 + prog * (24.0 + Double(pIdx % 3) * 8.0)) * Double(dynScale)
                     let px = x + CGFloat(cos(pAng) * pDist)
                     let py = y + CGFloat(sin(pAng) * pDist)
                     let pr: CGFloat = (pIdx % 2 == 0) ? 2.0 : 1.4
@@ -1210,10 +1257,11 @@ public struct OrbitalStageView: View {
 
     private func drawResonanceNebulaCanvas(ctx: inout GraphicsContext, size: CGSize, mediaNow: Double) {
         let nm = nebulaMetrics(for: size)
+        let acoustic = currentAcousticEnvelope
         let currentTime = vm.clock.currentTime(at: mediaNow)
         let spans = vm.chordSpans
 
-        // 1. 当前幕情绪天光星云光晕背景
+        // 1. 当前幕情绪天光星云光晕背景（随真实音频 RMS 与温暖度呼吸舒展）
         let activeChordColor: Color = {
             if let ct = currentTime, let sp = spans.first(where: { ct >= $0.startTime && ct < $0.endTime }) {
                 return sp.chord.color(isNight: palette.isNight)
@@ -1224,18 +1272,19 @@ public struct OrbitalStageView: View {
             return vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
         }()
         let nebulaGrad = Gradient(colors: [
-            activeChordColor.opacity(palette.isNight ? 0.24 : 0.14),
+            activeChordColor.opacity((palette.isNight ? 0.24 : 0.14) + acoustic.rmsEnergy * 0.14),
             activeChordColor.opacity(0.03),
             Color.clear
         ])
+        let auraExpandR = nm.ringRadius * (1.38 + CGFloat(acoustic.warmthEnergy) * 0.16)
         ctx.fill(
             Path(ellipseIn: CGRect(
-                x: nm.center.x - nm.ringRadius * 1.38,
-                y: nm.center.y - nm.ringRadius * 1.38,
-                width: nm.ringRadius * 2.76,
-                height: nm.ringRadius * 2.76
+                x: nm.center.x - auraExpandR,
+                y: nm.center.y - auraExpandR,
+                width: auraExpandR * 2,
+                height: auraExpandR * 2
             )),
-            with: .radialGradient(nebulaGrad, center: nm.center, startRadius: 6, endRadius: nm.ringRadius * 1.35)
+            with: .radialGradient(nebulaGrad, center: nm.center, startRadius: 6, endRadius: auraExpandR)
         )
 
         // 2. 外圈星轨与 8 条谐振星弦辐条
@@ -1294,6 +1343,14 @@ public struct OrbitalStageView: View {
         }
 
         // 4. 中央大尺度利萨如谐振星核
+        if acoustic.warmthEnergy > 0.01 {
+            let glowR = nm.hubRadius + 5.0 + CGFloat(acoustic.warmthEnergy) * 10.0
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: nm.center.x - glowR, y: nm.center.y - glowR, width: glowR * 2, height: glowR * 2)),
+                with: .color(palette.nightLampGold.opacity(acoustic.warmthEnergy * 0.26)),
+                lineWidth: 2.4 + CGFloat(acoustic.warmthEnergy) * 3.0
+            )
+        }
         let hubRect = CGRect(
             x: nm.center.x - nm.hubRadius,
             y: nm.center.y - nm.hubRadius,
@@ -1314,6 +1371,7 @@ public struct OrbitalStageView: View {
             center: nm.center,
             amplitude: nm.hubRadius * 0.62,
             mediaNow: mediaNow,
+            acoustic: acoustic,
             glowWidth: 5.0,
             coreWidth: 1.8
         )
@@ -1406,7 +1464,8 @@ public struct OrbitalStageView: View {
             let prog = max(0.0, min(1.0, age / 0.85))
             let pt = ConstellationGeometry.starPoint(laneIndex: ev.laneIndex, center: nm.center, radius: nm.ringRadius)
             let col = Color(hex: ev.colorHex)
-            let rr = 18.0 + CGFloat(prog) * (ev.isShadow ? 24.0 : 34.0)
+            let dynScale: CGFloat = ev.isShadow ? 1.0 : CGFloat(0.72 + ev.intensity * 0.56)
+            let rr = 18.0 + CGFloat(prog) * (ev.isShadow ? 24.0 : 34.0 * dynScale)
             ctx.stroke(
                 Path(ellipseIn: CGRect(x: pt.x - rr, y: pt.y - rr, width: rr * 2, height: rr * 2)),
                 with: .color(col.opacity((1.0 - prog) * 0.76)),
@@ -1928,6 +1987,7 @@ public struct OrbitalStageView: View {
 
     private var rainbowKeyRibbon: some View {
         let hints = smartHintByLane
+        let chordDegrees = vm.activeChordToneDegrees
 
         return GeometryReader { geo in
             HStack(alignment: .bottom, spacing: 5) {
@@ -1935,6 +1995,7 @@ public struct OrbitalStageView: View {
                     let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
                     let isFollowTarget = targetFollowLaneIndex == lane.index
                     let hint = hints[lane.index]
+                    let isChordResonant = !isMuted && !isFollowTarget && hint == nil && chordDegrees.contains(lane.degree)
                     let isPlayingThis = vm.activeLaneIndices.contains(lane.index) || struckRibbonLane == lane.index
                     let barH = CGFloat(58 - lane.index * 2) // 左侧低音更高厚，右侧高音渐趋精巧
                     let col = lane.barColor(isNight: palette.isNight)
@@ -1988,6 +2049,14 @@ public struct OrbitalStageView: View {
                                 .offset(y: -3.5)
                         }
                     }
+                    .overlay(alignment: .bottom) {
+                        if isChordResonant {
+                            Capsule()
+                                .fill(Color.white.opacity(palette.isNight ? 0.55 : 0.72))
+                                .frame(width: 14, height: 3)
+                                .padding(.bottom, 4)
+                        }
+                    }
                     .shadow(
                         color: (isFollowTarget || hint != nil)
                             ? palette.nightLampGold.opacity(0.70)
@@ -2014,6 +2083,7 @@ public struct OrbitalStageView: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged { val in
                         let w = max(1, geo.size.width)
+                        let h = max(1, geo.size.height)
                         let idx = max(0, min(7, Int(floor((val.location.x / w) * 8.0))))
                         if struckRibbonLane != idx {
                             struckRibbonLane = idx
@@ -2021,8 +2091,10 @@ public struct OrbitalStageView: View {
                             if vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive {
                                 return
                             }
+                            let normY = Double(max(0, min(1, val.location.y / h)))
+                            let dyn = ExpressiveTouchMapper.dynamics(normalizedY: normY)
                             wakeRippleTimeline()
-                            vm.strikeXylophoneLane(lane)
+                            vm.strikeXylophoneLane(lane, touchIntensity: dyn.velocity, touchBrightness: dyn.brightness)
                         }
                     }
                     .onEnded { _ in

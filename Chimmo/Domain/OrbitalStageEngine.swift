@@ -472,3 +472,28 @@ public enum PreLinguisticGuideGeometry {
         return (inner, outer)
     }
 }
+
+/// 彩虹琴键纵向触控表达映射器：顶部清亮强劲、底部轻柔温润，零文字直觉控制力度与涟漪大小。
+public enum ExpressiveTouchMapper {
+    public struct TouchDynamics: Equatable, Sendable {
+        public let velocity: Double
+        public let brightness: Double
+        public let rippleScale: Double
+
+        public init(velocity: Double, brightness: Double, rippleScale: Double) {
+            self.velocity = velocity
+            self.brightness = brightness
+            self.rippleScale = rippleScale
+        }
+    }
+
+    public static func dynamics(normalizedY: Double) -> TouchDynamics {
+        let clampedY = max(0.0, min(1.0, normalizedY))
+        let energy = 1.0 - clampedY
+        return TouchDynamics(
+            velocity: 0.36 + energy * 0.48,
+            brightness: 0.64 + energy * 0.54,
+            rippleScale: 0.72 + energy * 0.56
+        )
+    }
+}

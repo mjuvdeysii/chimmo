@@ -604,4 +604,49 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound6LivingAcousticSoundboard() throws {
+        // 1. 全部 5 种室内乐声学音色在 48kHz 混响管线下无格式错误且实时输出包络可观测
+        let synth = FeltPianoSynth()
+        let timbres: [FeltPianoSynth.Timbre] = [.feltPiano, .singingCello, .liquidHarp, .warmBass, .celesta]
+        for timbre in timbres {
+            let res = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 329.63, timbre: timbre)
+            XCTAssertEqual(res.reverbInRate, 48_000.0, accuracy: 1.0)
+            XCTAssertEqual(res.reverbOutRate, 48_000.0, accuracy: 1.0)
+            XCTAssertTrue(res.peak.isFinite)
+            XCTAssertGreaterThan(res.peak, 0.03)
+            XCTAssertLessThanOrEqual(res.peak, 1.0)
+            XCTAssertGreaterThan(res.envelopeDuringRender.rmsEnergy, 0.0)
+            XCTAssertEqual(res.envelopeAfterSilence.rmsEnergy, 0.0, accuracy: 1e-6)
+        }
+
+        // 2. 彩虹琴键纵向力度表达映射器：顶部清亮强劲、底部轻柔温润、越界安全钳位
+        let topDyn = ExpressiveTouchMapper.dynamics(normalizedY: 0.0)
+        let bottomDyn = ExpressiveTouchMapper.dynamics(normalizedY: 1.0)
+        XCTAssertGreaterThan(topDyn.velocity, bottomDyn.velocity)
+        XCTAssertGreaterThan(topDyn.brightness, bottomDyn.brightness)
+        XCTAssertGreaterThan(topDyn.rippleScale, bottomDyn.rippleScale)
+        XCTAssertEqual(ExpressiveTouchMapper.dynamics(normalizedY: -0.5), topDyn)
+        XCTAssertEqual(ExpressiveTouchMapper.dynamics(normalizedY: 1.5), bottomDyn)
+
+        // 3. 当前和弦共鸣音级与涟漪力度透传契约
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v013-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        let chordDegrees = vm.activeChordToneDegrees
+        XCTAssertEqual(chordDegrees.count, 3)
+        XCTAssertTrue(chordDegrees.allSatisfy { (1...7).contains($0) })
+
+        vm.setChordPreset(.off)
+        XCTAssertTrue(vm.activeChordToneDegrees.isEmpty)
+
+        vm.setChordPreset(.autoMatch)
+        vm.toggleFollowGlow()
+        XCTAssertTrue(vm.activeChordToneDegrees.isEmpty)
+        vm.stopPlayback()
+
+        let bus = StageRippleBus()
+        bus.emit(laneIndex: 2, degree: 3, onset: 0.5, colorHex: 0xE64980, intensity: 0.84)
+        XCTAssertEqual(bus.events.last?.intensity ?? 0.0, 0.84, accuracy: 1e-5)
+    }
 }

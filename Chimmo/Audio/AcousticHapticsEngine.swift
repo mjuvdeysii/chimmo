@@ -76,23 +76,31 @@ public final class AcousticHapticsEngine {
 
     /// 音高触感：把 0...7 音阶轨道映射为细腻的质地与清脆度，指尖直接摸出高低起伏与张力解决。
     public func playPitchTouch(laneIndex: Int, isHome: Bool, isTension: Bool) {
+        playExpressivePitchTouch(laneIndex: laneIndex, velocity: 0.62, isHome: isHome, isTension: isTension)
+    }
+
+    /// 带敲击力度的跨感官音高触感：随手指落键轻重平滑缩放脉冲强弱与锋利度。
+    public func playExpressivePitchTouch(laneIndex: Int, velocity: Double, isHome: Bool, isTension: Bool) {
+        let v = Float(max(0.30, min(1.0, velocity)))
         #if os(iOS)
         if isTension {
-            playTensionFlutter(intensity: 0.48)
+            playTensionFlutter(intensity: max(0.32, min(0.88, 0.72 * v)))
             return
         }
         guard supportsHaptics && isEngineRunning else {
+            let impactStrength = CGFloat(max(0.35, min(1.0, v)))
             if isHome {
-                mediumImpact.impactOccurred()
+                mediumImpact.impactOccurred(intensity: impactStrength)
             } else {
-                softImpact.impactOccurred()
+                softImpact.impactOccurred(intensity: impactStrength)
             }
             ensureEngineAsync()
             return
         }
         let clamped = max(0, min(7, laneIndex))
-        let sharpness = Float(0.18 + Double(clamped) * 0.08)
-        let intensity: Float = isHome ? 0.78 : Float(0.52 + Double(clamped) * 0.03)
+        let baseSharpness = Float(0.16 + Double(clamped) * 0.08)
+        let sharpness = max(0.10, min(0.92, baseSharpness + (v - 0.5) * 0.16))
+        let intensity = max(0.24, min(1.0, (isHome ? 0.86 : 0.70) * v))
         let ev = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [

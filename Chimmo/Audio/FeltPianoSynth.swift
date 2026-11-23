@@ -2,6 +2,21 @@ import AVFAudio
 import Foundation
 import os
 
+/// 实时声学能量包络快照（由音频渲染线程每帧无锁写入，供主舞台 60fps 呼吸与光泽随动读取，零堆分配）。
+public struct AcousticEnvelopeSnapshot: Equatable, Sendable {
+    public let rmsEnergy: Double
+    public let warmthEnergy: Double
+    public let shimmerEnergy: Double
+
+    public init(rmsEnergy: Double, warmthEnergy: Double, shimmerEnergy: Double) {
+        self.rmsEnergy = rmsEnergy
+        self.warmthEnergy = warmthEnergy
+        self.shimmerEnergy = shimmerEnergy
+    }
+
+    public static let silent = AcousticEnvelopeSnapshot(rmsEnergy: 0.0, warmthEnergy: 0.0, shimmerEnergy: 0.0)
+}
+
 /// 温暖五声部室内乐声学合成器（歌唱大提琴 Singing Cello + 音乐厅毛毡钢琴 Felt Piano + 湖面竖琴 Liquid Harp + 大提琴低音 Warm Bass + 星光钢片琴 Celesta）。
 /// 全异步懒初始化与无锁渲染护航：不在 `init()` 或主线程阻塞构建 `AVAudioEngine` / `AVAudioUnitReverb`，彻底杜绝真机首屏卡死与音频线程优先级反转。
 public final class FeltPianoSynth: @unchecked Sendable {
@@ -53,10 +68,16 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var sampleRate: Double = 48_000.0
         var voices: [Voice]
         var pair: ContinuousPairState = ContinuousPairState()
+        var envRMS: Double = 0.0
+        var envWarmth: Double = 0.0
+        var envShimmer: Double = 0.0
+        var lpWarmthState: Double = 0.0
+        var prevMono: Double = 0.0
     }
 
     private let router: HalfDuplexAudioRouter
     private let lock: OSAllocatedUnfairLock<AudioState>
+    private let telemetryLock = OSAllocatedUnfairLock<AcousticEnvelopeSnapshot>(initialState: .silent)
     private let audioQueue = DispatchQueue(label: "app.chimmo.audio.synth", qos: .userInitiated)
     private let lifecycleLock = NSLock()
 
@@ -126,6 +147,10 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
     }
 
+    public func currentAcousticEnvelope() -> AcousticEnvelopeSnapshot {
+        telemetryLock.withLockIfAvailable { $0 } ?? .silent
+    }
+
     public func silenceAll() {
         lock.withLock { state in
             for i in 0..<state.voices.count {
@@ -133,7 +158,13 @@ public final class FeltPianoSynth: @unchecked Sendable {
             }
             state.pair.active = false
             state.pair.targetGain = 0.0
+            state.envRMS = 0.0
+            state.envWarmth = 0.0
+            state.envShimmer = 0.0
+            state.lpWarmthState = 0.0
+            state.prevMono = 0.0
         }
+        telemetryLock.withLockIfAvailable { $0 = .silent }
     }
 
     /// 实时平滑连续双声波共振（支持连续滑动频率比，丝滑无爆音）
@@ -459,6 +490,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
 
     private func makeSourceNode(format: AVAudioFormat) -> AVAudioSourceNode {
         let stateLock = lock
+        let tLock = telemetryLock
         return AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let count = Int(frameCount)
@@ -471,12 +503,17 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 let sr = max(22_050.0, state.sampleRate)
                 let invSR = 1.0 / sr
                 let twoPi = 2.0 * Double.pi
+                var sumSq = 0.0
+                var sumWarmSq = 0.0
+                var sumDiffSq = 0.0
+                var lpWarm = state.lpWarmthState
+                var prevMono = state.prevMono
 
                 for i in 0..<count {
                     var mixL = 0.0
                     var mixR = 0.0
 
-                    // 1. 44 声部室内乐发声引擎
+                    // 1. 44 声部室内乐物理微声学发声引擎
                     for vIdx in 0..<state.voices.count {
                         if !state.voices[vIdx].active { continue }
 
@@ -498,85 +535,98 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         let vel = state.voices[vIdx].velocity
                         let freq = state.voices[vIdx].frequency
                         var sample = 0.0
+                        var stereoSplit = 0.0
                         var instFreq = freq
 
                         switch state.voices[vIdx].timbre {
                         case .feltPiano:
-                            let attack = min(1.0, age / (0.009 * sr))
-                            let bodyDecay = exp(-ageSec / (decay * 0.56))
+                            let attack = min(1.0, age / (0.008 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.58))
                             let env = attack * bodyDecay * vel
-                            let bright = exp(-ageSec * 3.4) * state.voices[vIdx].brightness
-                            let hammerEnv = exp(-ageSec * 145.0) * 0.085
-                            let hammer = sin(state.voices[vIdx].hammerPhase) * hammerEnv
-                            let fund = (sin(ph) + sin(phD)) * 0.36
+                            let bright = exp(-ageSec * 3.1) * state.voices[vIdx].brightness * (0.72 + 0.38 * vel)
+                            let hammerThump = exp(-ageSec * 135.0) * 0.11 * sin(state.voices[vIdx].hammerPhase * 0.65)
+                            let strA = sin(ph)
+                            let strB = sin(phD)
+                            stereoSplit = (strA - strB) * 0.14 * env
                             sample = (
-                                fund +
-                                sin(ph * 2.001) * (0.20 * (0.35 + 0.65 * bright)) +
-                                sin(ph * 3.003) * (0.075 * bright) +
-                                sin(ph * 4.006) * (0.028 * bright * bright) +
-                                hammer
+                                (strA + strB) * 0.36 +
+                                sin(ph * 2.001) * (0.21 * (0.35 + 0.65 * bright)) +
+                                sin(ph * 3.003) * (0.08 * bright) +
+                                sin(ph * 4.006) * (0.032 * bright * bright) +
+                                hammerThump
                             ) * env
 
                         case .singingCello:
-                            let attack = min(1.0, age / (0.055 * sr))
+                            let attack = min(1.0, age / (0.052 * sr))
                             let sustainPhase = min(1.0, ageSec / max(0.25, decay))
                             let release = sustainPhase < 0.72
-                                ? (1.0 - sustainPhase * 0.20)
-                                : max(0.0, 0.856 * exp(-(ageSec - decay * 0.72) / max(0.18, decay * 0.42)))
-                            let env = attack * release * vel * 0.92
-                            let vibDepth = min(1.0, max(0.0, (ageSec - 0.16) / 0.32)) * 0.0052
-                            instFreq = freq * (1.0 + vibDepth * sin(twoPi * 5.1 * ageSec))
-                            let bowWarmth = 0.65 + 0.35 * sin(min(Double.pi, ageSec * 2.2))
+                                ? (1.0 - sustainPhase * 0.18)
+                                : max(0.0, 0.87 * exp(-(ageSec - decay * 0.72) / max(0.18, decay * 0.44)))
+                            let env = attack * release * vel * 0.94
+                            let scoop = -0.006 * exp(-ageSec * 22.0)
+                            let vibDepth = min(1.0, max(0.0, (ageSec - 0.14) / 0.30)) * 0.0056
+                            let vib = vibDepth * (0.78 * sin(twoPi * 5.05 * ageSec) + 0.22 * sin(twoPi * 3.1 * ageSec))
+                            instFreq = freq * (1.0 + scoop + vib)
+                            let bowBloom = exp(-ageSec / 0.048) * 0.12
+                            let bowWarmth = 0.68 + 0.32 * sin(min(Double.pi, ageSec * 2.1))
                             sample = (
-                                sin(ph) * 0.54 +
-                                sin(ph * 2.0) * (0.26 * bowWarmth) +
-                                sin(ph * 3.0) * (0.13 * bowWarmth) +
-                                sin(ph * 4.0) * 0.055 +
-                                sin(ph * 5.0) * 0.025
+                                sin(ph) * (0.53 + bowBloom * 0.4) +
+                                sin(ph * 2.0) * (0.27 * bowWarmth) +
+                                sin(ph * 3.0) * (0.14 * bowWarmth + bowBloom * 0.3) +
+                                sin(ph * 4.0) * 0.058 +
+                                sin(ph * 5.0) * 0.028
                             ) * env
 
                         case .liquidHarp:
-                            let attack = min(1.0, age / (0.004 * sr))
-                            let bodyDecay = exp(-ageSec / (decay * 0.48))
+                            let attack = min(1.0, age / (0.0035 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.50))
                             let env = attack * bodyDecay * vel
-                            let shimmer = exp(-ageSec * 4.8)
+                            let shimmer = exp(-ageSec * 4.5) * state.voices[vIdx].brightness
+                            let pluckTransient = exp(-ageSec * 85.0) * 0.09 * sin(ph * 3.0)
+                            stereoSplit = sin(ph * 2.0) * 0.08 * shimmer * env
                             sample = (
-                                sin(ph) * 0.64 +
-                                sin(ph * 2.0) * (0.24 * (0.3 + 0.7 * shimmer)) +
-                                sin(ph * 3.0) * (0.09 * shimmer) +
-                                sin(ph * 4.0) * (0.03 * shimmer * shimmer)
+                                sin(ph) * 0.62 +
+                                sin(ph * 2.0) * (0.25 * (0.32 + 0.68 * shimmer)) +
+                                sin(ph * 3.0) * (0.095 * shimmer) +
+                                sin(ph * 4.0) * (0.035 * shimmer * shimmer) +
+                                pluckTransient
                             ) * env
 
                         case .warmBass:
-                            let attack = min(1.0, age / (0.030 * sr))
-                            let bodyDecay = exp(-ageSec / (decay * 0.72))
+                            let attack = min(1.0, age / (0.026 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.74))
                             let env = attack * bodyDecay * vel
-                            let sub = sin(ph * 0.5) * 0.24
+                            let pluckBody = exp(-ageSec * 26.0) * 0.12 * sin(ph * 2.0)
+                            let sub = sin(ph * 0.5) * 0.26
                             sample = (
                                 sub +
-                                sin(ph) * 0.62 +
-                                sin(ph * 2.0) * 0.18 * exp(-ageSec * 1.8) +
-                                sin(ph * 3.0) * 0.06 * exp(-ageSec * 2.8)
+                                sin(ph) * 0.60 +
+                                sin(ph * 2.0) * 0.19 * exp(-ageSec * 1.7) +
+                                sin(ph * 3.0) * 0.065 * exp(-ageSec * 2.6) +
+                                pluckBody
                             ) * env
 
                         case .celesta:
-                            let attack = min(1.0, age / (0.003 * sr))
-                            let bodyDecay = exp(-ageSec / (decay * 0.42))
+                            let attack = min(1.0, age / (0.0025 * sr))
+                            let bodyDecay = exp(-ageSec / (decay * 0.44))
                             let env = attack * bodyDecay * vel
+                            let pinTick = exp(-ageSec * 360.0) * 0.09 * sin(ph * 5.2)
                             sample = (
-                                sin(ph) * 0.64 +
-                                sin(ph * 2.0) * 0.22 * exp(-ageSec * 4.2) +
-                                sin(ph * 2.756) * 0.13 * exp(-ageSec * 7.2)
+                                sin(ph) * 0.63 +
+                                sin(ph * 2.0) * 0.21 * exp(-ageSec * 3.8) +
+                                sin(ph * 2.756) * 0.12 * exp(-ageSec * 6.8) +
+                                sin(ph * 3.98) * 0.075 * exp(-ageSec * 9.5) +
+                                pinTick
                             ) * env
                         }
 
-                        let pan = max(-0.44, min(0.44, (log2(max(40.0, freq) / 261.63)) * 0.18))
-                        mixL += sample * (0.5 - pan * 0.5)
-                        mixR += sample * (0.5 + pan * 0.5)
+                        let pan = max(-0.46, min(0.46, (log2(max(40.0, freq) / 261.63)) * 0.20))
+                        mixL += sample * (0.5 - pan * 0.5) - stereoSplit
+                        mixR += sample * (0.5 + pan * 0.5) + stereoSplit
 
                         let step = twoPi * instFreq * invSR
                         state.voices[vIdx].phase += step
-                        state.voices[vIdx].phaseDetune += step * 1.00055
+                        state.voices[vIdx].phaseDetune += step * 1.00058
                         state.voices[vIdx].hammerPhase += step * 7.3
                         if state.voices[vIdx].phase > twoPi * 1024.0 {
                             state.voices[vIdx].phase.formTruncatingRemainder(dividingBy: twoPi)
@@ -604,9 +654,35 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         if state.pair.phaseB > twoPi * 1024.0 { state.pair.phaseB.formTruncatingRemainder(dividingBy: twoPi) }
                     }
 
-                    leftPtr[i] = Float(tanh(mixL * 0.84))
-                    rightPtr?[i] = Float(tanh(mixR * 0.84))
+                    let outL = tanh(mixL * 0.84)
+                    let outR = tanh(mixR * 0.84)
+                    leftPtr[i] = Float(outL)
+                    rightPtr?[i] = Float(outR)
+
+                    let mono = (outL + outR) * 0.5
+                    sumSq += mono * mono
+                    lpWarm += (mono - lpWarm) * 0.055
+                    sumWarmSq += lpWarm * lpWarm
+                    let diff = mono - prevMono
+                    prevMono = mono
+                    sumDiffSq += diff * diff
                 }
+
+                state.lpWarmthState = lpWarm
+                state.prevMono = prevMono
+                let invN = 1.0 / Double(max(1, count))
+                let rawRMS = min(1.0, sqrt(sumSq * invN) * 2.8)
+                let rawWarm = min(1.0, sqrt(sumWarmSq * invN) * 3.1)
+                let rawShim = min(1.0, sqrt(sumDiffSq * invN) * 14.0)
+                state.envRMS += (rawRMS - state.envRMS) * (rawRMS > state.envRMS ? 0.38 : 0.14)
+                state.envWarmth += (rawWarm - state.envWarmth) * (rawWarm > state.envWarmth ? 0.35 : 0.12)
+                state.envShimmer += (rawShim - state.envShimmer) * (rawShim > state.envShimmer ? 0.42 : 0.16)
+                let snap = AcousticEnvelopeSnapshot(
+                    rmsEnergy: max(0.0, min(1.0, state.envRMS)),
+                    warmthEnergy: max(0.0, min(1.0, state.envWarmth)),
+                    shimmerEnergy: max(0.0, min(1.0, state.envShimmer))
+                )
+                tLock.withLockIfAvailable { $0 = snap }
                 return true
             }
 
@@ -695,17 +771,34 @@ public final class FeltPianoSynth: @unchecked Sendable {
     /// 离线音频管线自检（供 XCTest 直接验证 48kHz 双端混响连接绝不报 -10868 且真实输出有效 PCM 声压，绝不触发实时录音/播放权限）
     public func verifyOfflineRenderPeak(
         sampleRate: Double = 48_000.0,
-        frequency: Double = 440.0
+        frequency: Double = 440.0,
+        timbre: Timbre = .feltPiano
     ) throws -> (peak: Float, reverbInRate: Double, reverbOutRate: Double) {
+        let res = try verifyOfflineRenderTelemetry(sampleRate: sampleRate, frequency: frequency, timbre: timbre)
+        return (res.peak, res.reverbInRate, res.reverbOutRate)
+    }
+
+    public func verifyOfflineRenderTelemetry(
+        sampleRate: Double = 48_000.0,
+        frequency: Double = 440.0,
+        timbre: Timbre = .feltPiano
+    ) throws -> (
+        peak: Float,
+        reverbInRate: Double,
+        reverbOutRate: Double,
+        envelopeDuringRender: AcousticEnvelopeSnapshot,
+        envelopeAfterSilence: AcousticEnvelopeSnapshot
+    ) {
         guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
             throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
         }
 
+        silenceAll()
         lock.withLock { state in
             state.sampleRate = sampleRate
             state.voices[0] = Voice(
                 active: true,
-                timbre: .feltPiano,
+                timbre: timbre,
                 frequency: frequency,
                 phase: 0.0,
                 phaseDetune: 0.0,
@@ -743,7 +836,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
 
         var peak: Float = 0.0
-        for _ in 0..<4 {
+        for _ in 0..<8 {
             let status = try eng.renderOffline(512, to: buffer)
             if status == .success, let channels = buffer.floatChannelData {
                 let len = Int(buffer.frameLength)
@@ -752,8 +845,10 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 }
             }
         }
+        let duringEnv = currentAcousticEnvelope()
         eng.stop()
         silenceAll()
-        return (peak, inRate, outRate)
+        let afterEnv = currentAcousticEnvelope()
+        return (peak, inRate, outRate, duringEnv, afterEnv)
     }
 }

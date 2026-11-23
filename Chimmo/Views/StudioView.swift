@@ -16,6 +16,7 @@ public struct StageRippleEvent: Sendable {
     public let onset: Double
     public let colorHex: UInt32
     public let isShadow: Bool
+    public let intensity: Double
 }
 
 /// 零视图重绘的高频涟漪总线（Canvas 直接按 `CACurrentMediaTime()` 读取，不触发 SwiftUI 视图树重排）。
@@ -33,6 +34,7 @@ public final class StageRippleBus {
         onset: Double,
         colorHex: UInt32,
         isShadow: Bool = false,
+        intensity: Double = 0.65,
         at mediaTime: Double = CACurrentMediaTime()
     ) {
         events.removeAll { mediaTime - $0.birthMediaTime > 0.95 }
@@ -42,7 +44,8 @@ public final class StageRippleBus {
             degree: degree,
             onset: onset,
             colorHex: colorHex,
-            isShadow: isShadow
+            isShadow: isShadow,
+            intensity: max(0.30, min(1.0, intensity))
         )
         events.append(ev)
         if isShadow {
@@ -131,6 +134,15 @@ public final class StudioViewModel: ObservableObject {
 
     public var cradleEnabled: Bool {
         chordPreset != .off
+    }
+
+    /// 当前伴奏和弦对应的 3 个调内共鸣音级（供底部琴键底部显示柔和白金微光，零文字和声引导）
+    public var activeChordToneDegrees: Set<Int> {
+        guard cradleEnabled && !followGlowActive else { return [] }
+        let spans = chordSpans
+        let current = spans.first(where: { $0.id == activeChordSpanID }) ?? spans.first
+        guard let span = current else { return [] }
+        return Set(span.chord.chordToneDegrees)
     }
 
     public var shadowNotes: [CounterpointNote] {
@@ -384,9 +396,15 @@ public final class StudioViewModel: ObservableObject {
 
     // MARK: - Rainbow Touch Ribbon & Context Echo
 
-    public func strikeXylophoneLane(_ lane: XylophoneLane) {
+    public func strikeXylophoneLane(
+        _ lane: XylophoneLane,
+        touchIntensity: Double = 0.60,
+        touchBrightness: Double = 0.96
+    ) {
         flashLane(lane.index, degree: lane.degree)
         let member = lane.member
+        let vel = max(0.32, min(0.90, touchIntensity))
+        let bright = max(0.55, min(1.25, touchBrightness))
 
         // 模式 1：亮灯跟弹（星盘主动旋转，把下一颗发光星珠带到 12 点钟唱针处等你敲！）
         if followGlowActive && followGlowIndex < document.notes.count {
@@ -402,8 +420,9 @@ public final class StudioViewModel: ObservableObject {
                 )
                 synth.playNote(
                     frequency: hz,
-                    velocity: 0.64,
+                    velocity: min(0.92, vel + 0.05),
                     decay: max(1.1, target.rawDuration * 1.55),
+                    brightness: bright,
                     timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice)
                 )
                 if let ch = TheoryLensEngine.chord(at: onset, in: chordSpans) {
@@ -416,9 +435,9 @@ public final class StudioViewModel: ObservableObject {
                         intensity: 0.62
                     )
                 }
-                rippleBus.emit(laneIndex: lane.index, degree: target.degree, onset: onset, colorHex: member.bodyHex)
+                rippleBus.emit(laneIndex: lane.index, degree: target.degree, onset: onset, colorHex: member.bodyHex, intensity: vel)
                 updateHarmonyDescriptor(for: target.degree, at: onset)
-                AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.58)
+                AcousticHapticsEngine.shared.playConsonantGlow(intensity: Float(max(0.42, min(0.88, vel))))
 
                 followGlowIndex += 1
                 if followGlowIndex >= document.notes.count {
@@ -434,9 +453,15 @@ public final class StudioViewModel: ObservableObject {
                 }
             } else {
                 let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
-                synth.playNote(frequency: hz, velocity: 0.45, decay: 1.0, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
-                rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex)
-                AcousticHapticsEngine.shared.playPitchTouch(laneIndex: lane.index, isHome: lane.degree == 1, isTension: member.isTensionDegree)
+                let softVel = max(0.32, vel * 0.78)
+                synth.playNote(frequency: hz, velocity: softVel, decay: 1.0, brightness: bright, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+                rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex, intensity: softVel)
+                AcousticHapticsEngine.shared.playExpressivePitchTouch(
+                    laneIndex: lane.index,
+                    velocity: softVel,
+                    isHome: lane.degree == 1,
+                    isTension: member.isTensionDegree
+                )
             }
             return
         }
@@ -454,19 +479,29 @@ public final class StudioViewModel: ObservableObject {
             document.notes[idx].octaveOffset = lane.octaveOffset
             document.notes[idx].ghostCandidates.removeAll()
             let onset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
-            rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex)
-            AcousticHapticsEngine.shared.playPitchTouch(laneIndex: lane.index, isHome: lane.degree == 1, isTension: member.isTensionDegree)
+            rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex, intensity: vel)
+            AcousticHapticsEngine.shared.playExpressivePitchTouch(
+                laneIndex: lane.index,
+                velocity: vel,
+                isHome: lane.degree == 1,
+                isTension: member.isTensionDegree
+            )
             updateHarmonyDescriptor(for: lane.degree, at: onset)
             playContextEcho(upToIndex: idx)
             return
         }
 
-        // 模式 3：纯粹自由演奏（同时泛起星盘涟漪与谐振花纹）
+        // 模式 3：纯粹自由演奏（同时泛起星盘涟漪、表达力度与谐振花纹）
         let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
-        synth.playNote(frequency: hz, velocity: 0.60, decay: 1.45, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+        synth.playNote(frequency: hz, velocity: vel, decay: 1.45, brightness: bright, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
         let currentT = clock.currentTime() ?? 0.0
-        rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: currentT, colorHex: member.bodyHex)
-        AcousticHapticsEngine.shared.playPitchTouch(laneIndex: lane.index, isHome: lane.degree == 1, isTension: member.isTensionDegree)
+        rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: currentT, colorHex: member.bodyHex, intensity: vel)
+        AcousticHapticsEngine.shared.playExpressivePitchTouch(
+            laneIndex: lane.index,
+            velocity: vel,
+            isHome: lane.degree == 1,
+            isTension: member.isTensionDegree
+        )
         updateHarmonyDescriptor(for: lane.degree, at: currentT)
     }
 
