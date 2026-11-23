@@ -3,11 +3,12 @@ import Foundation
 import os
 
 /// 端到端离线哼唱捕捉管线：
-/// 半双工机身麦采集 → 16 kHz 降采样 → YIN-vDSP → SwiftF0 DP 音符切分 → 调式引力陶珠与相对高低轮廓。
+/// 半双工机身麦采集 → 16 kHz 降采样 → YIN-vDSP → SwiftF0 DP 音符切分 → 调式引力音符与相对高低轮廓。
 @MainActor
 public final class HumCapturePipeline: ObservableObject {
     @Published public private(set) var isRecording: Bool = false
     @Published public private(set) var inputLevel: Double = 0.0
+    @Published public private(set) var livePitchTrace: [Double] = []
     @Published public private(set) var statusMessage: String = ""
 
     private let router: HalfDuplexAudioRouter
@@ -19,6 +20,7 @@ public final class HumCapturePipeline: ObservableObject {
     private var capturedSampleRate: Double = 48_000.0
     private var startTimestamp: Date?
     private var lastLevelTick: Date = .distantPast
+    private var liveTraceTask: Task<Void, Never>?
 
     public init(
         router: HalfDuplexAudioRouter,
@@ -45,7 +47,7 @@ public final class HumCapturePipeline: ObservableObject {
         case .granted:
             beginEngineCaptureAsync()
         case .denied:
-            statusMessage = "未开启麦克风权限，可直接点按下方彩虹琴条或画山坡创作"
+            statusMessage = "未开启麦克风权限，可直接点下方琴键或手绘曲线"
         case .undetermined:
             Task { @MainActor [weak self] in
                 let granted = await AVAudioApplication.requestRecordPermission()
@@ -53,7 +55,7 @@ public final class HumCapturePipeline: ObservableObject {
                 if granted {
                     self.beginEngineCaptureAsync()
                 } else {
-                    self.statusMessage = "未开启麦克风权限，可直接点按下方彩虹琴条或画山坡创作"
+                    self.statusMessage = "未开启麦克风权限，可直接点下方琴键或手绘曲线"
                 }
             }
         @unknown default:
@@ -65,10 +67,13 @@ public final class HumCapturePipeline: ObservableObject {
     }
 
     private func beginEngineCaptureAsync() {
+        liveTraceTask?.cancel()
+        liveTraceTask = nil
+        livePitchTrace = []
         let routerRef = router
         let bufferLock = sampleLock
         bufferLock.withLock { $0.removeAll(keepingCapacity: true) }
-        statusMessage = "正在唤醒麦克风…"
+        statusMessage = ""
 
         Task.detached(priority: .userInitiated) { [weak self] in
             do {
@@ -122,15 +127,77 @@ public final class HumCapturePipeline: ObservableObject {
                     self.capturedSampleRate = sr
                     self.startTimestamp = Date()
                     self.isRecording = true
-                    self.statusMessage = "用轻柔的 da / la 哼出大概高低起伏就行…"
+                    self.statusMessage = ""
+                    self.startLivePitchTracker()
                 }
             } catch {
                 await MainActor.run { [weak self] in
                     guard let self else { return }
-                    self.statusMessage = "麦克风暂时不可用，可直接画山坡或点彩虹琴条"
+                    self.liveTraceTask?.cancel()
+                    self.liveTraceTask = nil
+                    self.livePitchTrace = []
+                    self.statusMessage = "麦克风暂时不可用，可直接手绘曲线或点下方琴键"
                     self.isRecording = false
                     self.synth.ensureRunning()
                 }
+            }
+        }
+    }
+
+    private func startLivePitchTracker() {
+        liveTraceTask?.cancel()
+        livePitchTrace = []
+        let det = detector
+        let lock = sampleLock
+        let srcRate = capturedSampleRate
+
+        liveTraceTask = Task { @MainActor [weak self] in
+            var recentSemitones: [Double] = []
+            var lastSampleTotal = 0
+            while !Task.isCancelled {
+                guard let self, self.isRecording else { break }
+                let snapshot = lock.withLock { buf -> (total: Int, tail: [Float]) in
+                    let total = buf.count
+                    let tailCount = max(1024, Int(srcRate * 0.09))
+                    if total <= tailCount {
+                        return (total, buf)
+                    }
+                    return (total, Array(buf.suffix(tailCount)))
+                }
+
+                if snapshot.total > lastSampleTotal && snapshot.tail.count >= max(512, Int(srcRate * 0.05)) {
+                    lastSampleTotal = snapshot.total
+                    let tail = snapshot.tail
+                    let semitone = await Task.detached(priority: .utility) { () -> Double? in
+                        var sumSq = 0.0
+                        for v in tail { sumSq += Double(v * v) }
+                        let rms = sqrt(sumSq / Double(max(1, tail.count)))
+                        guard rms >= 0.0045 else { return nil }
+                        let mono16k = HumCapturePipeline.resampleLinear(tail, from: srcRate, to: PitchContour.sampleRate)
+                        let contour = det.detect(mono16kSamples: mono16k, fmin: 75.0, fmax: 1100.0)
+                        var validSemis: [Double] = []
+                        for i in 0..<contour.pitchHz.count {
+                            let hz = contour.pitchHz[i]
+                            let conf = i < contour.confidence.count ? contour.confidence[i] : 1.0
+                            if hz > 65.0 && conf >= 0.35 {
+                                validSemis.append(12.0 * log2(hz / 110.0))
+                            }
+                        }
+                        guard !validSemis.isEmpty else { return nil }
+                        let sorted = validSemis.sorted()
+                        return sorted[sorted.count / 2]
+                    }.value
+
+                    guard !Task.isCancelled, self.isRecording else { break }
+                    if let s = semitone, s.isFinite {
+                        recentSemitones.append(s)
+                        if recentSemitones.count > 28 {
+                            recentSemitones.removeFirst(recentSemitones.count - 28)
+                        }
+                        self.livePitchTrace = LivePitchContourFilter.normalizeSemitoneTrace(recentSemitones)
+                    }
+                }
+                try? await Task.sleep(nanoseconds: 85_000_000)
             }
         }
     }
@@ -139,6 +206,9 @@ public final class HumCapturePipeline: ObservableObject {
         guard isRecording else { return nil }
         isRecording = false
         inputLevel = 0.0
+        liveTraceTask?.cancel()
+        liveTraceTask = nil
+        livePitchTrace = []
 
         recordEngine?.inputNode.removeTap(onBus: 0)
         recordEngine?.stop()
@@ -155,11 +225,11 @@ public final class HumCapturePipeline: ObservableObject {
         synth.ensureRunning()
 
         guard elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
-            statusMessage = "轻哼时间太短，再哼一小句试试"
+            statusMessage = "再哼长一点试试"
             return nil
         }
 
-        statusMessage = "正在把旋律凝结成音珠…"
+        statusMessage = ""
         let det = detector
 
         let result: ScaleGravityEngine.SnappedResult = await Task.detached(priority: .userInitiated) {
@@ -170,18 +240,21 @@ public final class HumCapturePipeline: ObservableObject {
         }.value
 
         if result.notes.isEmpty {
-            statusMessage = "没有听清音高，靠近手机轻轻哼 da / la 再试一次"
+            statusMessage = "没听清声音，靠近些轻轻哼一段再试"
             return nil
         }
-        statusMessage = "捉到 \(result.notes.count) 颗音珠！"
+        statusMessage = ""
         return result
     }
 
-    /// 「只听高低走势、不管跑调」的相对轮廓提取器
+    /// 「只听高低走势、不管跑调」的相对轮廓提取器（含自适应噪底门限与三点中值滤波）
     public func stopAndExtractRelativeContour(slotCount: Int) async -> [Double]? {
         guard isRecording else { return nil }
         isRecording = false
         inputLevel = 0.0
+        liveTraceTask?.cancel()
+        liveTraceTask = nil
+        livePitchTrace = []
 
         recordEngine?.inputNode.removeTap(onBus: 0)
         recordEngine?.stop()
@@ -197,24 +270,26 @@ public final class HumCapturePipeline: ObservableObject {
         synth.ensureRunning()
 
         guard slotCount > 0, elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
-            statusMessage = "哼的时间太短啦，按脑海里的高低多哼两秒试试"
+            statusMessage = "再哼长一点试试"
             return nil
         }
 
-        statusMessage = "正在把你的高低走势贴到拍子上…"
+        statusMessage = ""
         let det = detector
 
         let heights: [Double] = await Task.detached(priority: .userInitiated) {
             let mono16k = HumCapturePipeline.resampleLinear(rawSamples, from: sourceRate, to: PitchContour.sampleRate)
             let contour = det.detect(mono16kSamples: mono16k, fmin: 75.0, fmax: 1100.0)
-            var voicedSemis: [Double] = []
-            for i in 0..<contour.pitchHz.count {
-                let hz = contour.pitchHz[i]
-                let conf = i < contour.confidence.count ? contour.confidence[i] : 1.0
-                if hz > 65.0 && conf >= 0.32 {
-                    voicedSemis.append(12.0 * log2(hz / 110.0))
-                }
-            }
+            let rmsFrames = LivePitchContourFilter.frameRMS(
+                mono16kSamples: mono16k,
+                frameCount: contour.pitchHz.count,
+                hopSize: PitchContour.hopSize
+            )
+            let voicedSemis = LivePitchContourFilter.extractVoicedSemitones(
+                pitchHz: contour.pitchHz,
+                confidence: contour.confidence,
+                frameRMS: rmsFrames
+            )
             guard voicedSemis.count >= max(2, slotCount) else { return [] }
 
             var slotMedians: [Double] = []
@@ -235,10 +310,10 @@ public final class HumCapturePipeline: ObservableObject {
         }.value
 
         if heights.isEmpty {
-            statusMessage = "没听清声音，靠近手机轻轻哼出高低起伏再试一次"
+            statusMessage = "没听清声音，靠近些轻轻哼一段再试"
             return nil
         }
-        statusMessage = "已按你的哼唱高低排好音轨！"
+        statusMessage = ""
         return heights
     }
 

@@ -752,4 +752,62 @@ final class SpecimenIntegrityTests: XCTestCase {
         }
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound9VocalRibbonSustainAndMiniVinyl() throws {
+        // 1. LivePitchContourFilter 自适应噪底、三点中值滤波与活体音高轨迹归一化
+        let quietFloor = LivePitchContourFilter.adaptiveNoiseFloorRMS(peakRMS: 0.01)
+        let loudFloor = LivePitchContourFilter.adaptiveNoiseFloorRMS(peakRMS: 0.40)
+        XCTAssertEqual(quietFloor, 0.004, accuracy: 1e-6)
+        XCTAssertGreaterThan(loudFloor, quietFloor)
+
+        let glitchSpike = LivePitchContourFilter.medianSmooth([12.0, 24.0, 12.2, 12.4])
+        XCTAssertEqual(glitchSpike[1], 12.2, accuracy: 1e-5, "孤立八度毛刺必须被中值滤波抹平")
+
+        let flatHum = LivePitchContourFilter.normalizeSemitoneTrace([12.0, 12.1, 12.2, 12.05])
+        XCTAssertEqual(flatHum.count, 4)
+        XCTAssertTrue(flatHum.allSatisfy { abs($0 - 0.48) < 1e-5 }, "平稳单音轻哼时音高丝带应稳在中心")
+
+        let risingTrace = LivePitchContourFilter.normalizeSemitoneTrace([0.0, 4.0, 7.0, 12.0])
+        XCTAssertEqual(risingTrace.count, 4)
+        XCTAssertTrue(zip(risingTrace, risingTrace.dropFirst()).allSatisfy { $0 <= $1 })
+        XCTAssertTrue(risingTrace.allSatisfy { $0 >= 0.08 && $0 <= 0.92 })
+
+        let voiced = LivePitchContourFilter.extractVoicedSemitones(
+            pitchHz: [120.0, 220.0, 440.0, 80.0],
+            confidence: [0.9, 0.9, 0.9, 0.9],
+            frameRMS: [0.001, 0.15, 0.25, 0.002]
+        )
+        XCTAssertEqual(voiced.count, 2, "低于自适应噪底的帧必须被静音门限剔除")
+
+        // 2. TactileSustainStage 三档呼吸延音节拍门槛与无 Emoji/黑话校验
+        let s0 = TactileSustainStage.stage(forHeldSeconds: -0.5)
+        let s1 = TactileSustainStage.stage(forHeldSeconds: 0.50)
+        let s2 = TactileSustainStage.stage(forHeldSeconds: 1.00)
+        let s3 = TactileSustainStage.stage(forHeldSeconds: 1.60)
+        XCTAssertEqual([s0.tier, s1.tier, s2.tier, s3.tier], [0, 1, 2, 3])
+        XCTAssertLessThan(s0.haloScale, s1.haloScale)
+        XCTAssertLessThan(s1.haloScale, s2.haloScale)
+        XCTAssertLessThan(s2.haloScale, s3.haloScale)
+        XCTAssertLessThan(s0.targetDuration, s1.targetDuration)
+        XCTAssertLessThan(s1.targetDuration, s2.targetDuration)
+        XCTAssertLessThan(s2.targetDuration, s3.targetDuration)
+        for stage in [s0, s1, s2, s3] {
+            XCTAssertFalse(stage.label.contains("音珠"))
+            for scalar in stage.label.unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji)
+            }
+        }
+
+        // 3. HumCapturePipeline 初始干净状态与重采样比例校验
+        let router = HalfDuplexAudioRouter()
+        let synth = FeltPianoSynth()
+        let pipeline = HumCapturePipeline(router: router, synth: synth)
+        XCTAssertTrue(pipeline.livePitchTrace.isEmpty)
+        XCTAssertTrue(pipeline.statusMessage.isEmpty)
+        let resampled = HumCapturePipeline.resampleLinear([Float](repeating: 0.25, count: 4800), from: 48_000.0, to: 16_000.0)
+        XCTAssertEqual(resampled.count, 1600)
+    }
 }

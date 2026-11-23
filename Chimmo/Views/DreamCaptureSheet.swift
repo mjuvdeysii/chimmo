@@ -9,6 +9,7 @@ public struct DreamCaptureSheet: View {
     public let palette: ChimmoPalette
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var modeTab: Int = 0
     @State private var drumScale: CGFloat = 1.0
     @State private var sketchPoints: [CGPoint] = []
@@ -355,19 +356,7 @@ public struct DreamCaptureSheet: View {
                 .accessibilityLabel(isRec ? "停止录音" : "开始哼唱录音")
             }
 
-            HStack(spacing: 7) {
-                ForEach(0..<7, id: \.self) { idx in
-                    let weight = 1.0 - abs(Double(idx) - 3.0) * 0.18
-                    let h = isRec
-                        ? max(8.0, CGFloat(8.0 + Double(level) * 32.0 * weight))
-                        : CGFloat(10.0 + weight * 10.0)
-                    Capsule()
-                        .fill((isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(isRec ? 0.88 : 0.35))
-                        .frame(width: 5, height: h)
-                        .animation(.spring(response: 0.16, dampingFraction: 0.7), value: h)
-                }
-            }
-            .frame(height: 36)
+            liveVocalPitchStage(isRec: isRec, level: level, trace: vm.capturePipeline.livePitchTrace)
 
             if !vm.capturePipeline.statusMessage.isEmpty {
                 Text(vm.capturePipeline.statusMessage)
@@ -380,6 +369,101 @@ public struct DreamCaptureSheet: View {
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(palette.cardSurface))
+    }
+
+    private func liveVocalPitchStage(isRec: Bool, level: CGFloat, trace: [Double]) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(palette.shelfSurface.opacity(0.65))
+
+            if isRec && trace.count >= 2 {
+                Canvas { ctx, size in
+                    let padX: CGFloat = 14
+                    let padY: CGFloat = 10
+                    let w = max(1, size.width - padX * 2)
+                    let h = max(1, size.height - padY * 2)
+
+                    for row in [0.25, 0.50, 0.75] {
+                        let gy = padY + CGFloat(row) * h
+                        var line = Path()
+                        line.move(to: CGPoint(x: padX, y: gy))
+                        line.addLine(to: CGPoint(x: size.width - padX, y: gy))
+                        ctx.stroke(
+                            line,
+                            with: .color(palette.divider.opacity(0.45)),
+                            style: StrokeStyle(lineWidth: 0.7, dash: [3, 4])
+                        )
+                    }
+
+                    let pts: [CGPoint] = trace.enumerated().map { idx, norm in
+                        let tx = CGFloat(idx) / CGFloat(max(1, trace.count - 1))
+                        let clampedNorm = CGFloat(max(0.0, min(1.0, norm)))
+                        return CGPoint(
+                            x: padX + tx * w,
+                            y: padY + (1.0 - clampedNorm) * h
+                        )
+                    }
+
+                    var path = Path()
+                    path.move(to: pts[0])
+                    for i in 1..<pts.count {
+                        let prev = pts[i - 1]
+                        let cur = pts[i]
+                        let mid = CGPoint(x: (prev.x + cur.x) * 0.5, y: (prev.y + cur.y) * 0.5)
+                        path.addQuadCurve(to: mid, control: prev)
+                        if i == pts.count - 1 {
+                            path.addLine(to: cur)
+                        }
+                    }
+
+                    let startPt = CGPoint(x: padX, y: size.height * 0.5)
+                    let endPt = CGPoint(x: size.width - padX, y: size.height * 0.5)
+                    let glowGrad = Gradient(colors: [
+                        palette.homeAnchor.opacity(0.22),
+                        palette.nightLampGold.opacity(0.26),
+                        palette.melodyTerracotta.opacity(0.24)
+                    ])
+                    ctx.stroke(
+                        path,
+                        with: .linearGradient(glowGrad, startPoint: startPt, endPoint: endPt),
+                        style: StrokeStyle(lineWidth: 8.5, lineCap: .round, lineJoin: .round)
+                    )
+
+                    let coreGrad = Gradient(colors: [
+                        palette.homeAnchor,
+                        palette.nightLampGold,
+                        palette.melodyTerracotta
+                    ])
+                    ctx.stroke(
+                        path,
+                        with: .linearGradient(coreGrad, startPoint: startPt, endPoint: endPt),
+                        style: StrokeStyle(lineWidth: 3.2, lineCap: .round, lineJoin: .round)
+                    )
+
+                    if let tip = pts.last {
+                        let outerRect = CGRect(x: tip.x - 6, y: tip.y - 6, width: 12, height: 12)
+                        let innerRect = CGRect(x: tip.x - 3, y: tip.y - 3, width: 6, height: 6)
+                        ctx.fill(Path(ellipseIn: outerRect), with: .color(palette.nightLampGold.opacity(0.32)))
+                        ctx.fill(Path(ellipseIn: innerRect), with: .color(.white.opacity(0.95)))
+                    }
+                }
+            } else {
+                HStack(spacing: 7) {
+                    ForEach(0..<7, id: \.self) { idx in
+                        let weight = 1.0 - abs(Double(idx) - 3.0) * 0.18
+                        let h = isRec
+                            ? max(8.0, CGFloat(8.0 + Double(level) * 34.0 * weight))
+                            : CGFloat(10.0 + weight * 10.0)
+                        Capsule()
+                            .fill((isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(isRec ? 0.88 : 0.35))
+                            .frame(width: 5, height: h)
+                            .animation(reduceMotion ? nil : .spring(response: 0.16, dampingFraction: 0.7), value: h)
+                    }
+                }
+            }
+        }
+        .frame(height: 64)
+        .accessibilityHidden(true)
     }
 
     // MARK: - Tab 2: Compact Action Tiles + Visual Seed Bars

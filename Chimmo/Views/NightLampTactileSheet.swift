@@ -6,16 +6,19 @@ import UIKit
 
 /// 闭眼夜灯触觉剧场（Zero-Vision OLED 夜间摸音创作空间）：
 /// - 全屏低亮度深曜夜幕，指尖在磁吸迟滞音阶脊线上滑动寻音（跨越台阶触发细腻 Core Haptics 触感与柔声试音），
-/// - 找到满意的那颗音后松手立刻落珠（在最终停留音阶上停留越久，音珠尾音越长），全程无需盯住屏幕或辨认小按钮。
+/// - 找到满意的那颗音后松手立刻落音（在最终停留音阶上停留跨越节拍分界时激发温柔脉搏与光环扩展），全程无需盯住屏幕或辨认小按钮。
 public struct NightLampTactileSheet: View {
     @ObservedObject public var vm: StudioViewModel
     public let onCommitted: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var localPentatonicSafe: Bool
     @State private var currentHoverLane: Int? = nil
     @State private var touchPoint: CGPoint? = nil
     @State private var touchStartTime: Double = 0
+    @State private var sustainTier: Int = 0
+    @State private var sustainPollTask: Task<Void, Never>? = nil
     @State private var capturedBeads: [NoteBead] = []
     @State private var voiceOverLanePos: Int = 0
 
@@ -41,6 +44,9 @@ public struct NightLampTactileSheet: View {
         }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled(!capturedBeads.isEmpty)
+        .onDisappear {
+            stopSustainPulseWatcher()
+        }
     }
 
     private var topBar: some View {
@@ -119,21 +125,41 @@ public struct NightLampTactileSheet: View {
                     .position(x: geo.size.width * 0.5, y: yPos)
                 }
 
-                // 跟随指尖的暖琥珀夜灯光晕（不刺眼、仅照亮指腹周边）
+                // 跟随指尖的暖琥珀夜灯光晕与呼吸延音光圈（随停留时间分拍扩张，零文字反馈时长）
                 if let pt = touchPoint {
                     let hoverColor = currentHoverLane.map { XylophoneLane.lane(at: $0).barColor(isNight: true) } ?? Color(hex: 0xFFB84D)
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [hoverColor.opacity(0.42), Color(hex: 0xFFB84D).opacity(0.14), .clear],
-                                center: .center,
-                                startRadius: 6,
-                                endRadius: 95
+                    let heldSeconds = max(0.0, CACurrentMediaTime() - touchStartTime)
+                    let sustainStage = TactileSustainStage.stage(forHeldSeconds: heldSeconds)
+                    let activeScale = max(sustainStage.haloScale, sustainTier >= 3 ? 1.78 : (sustainTier == 2 ? 1.50 : (sustainTier == 1 ? 1.24 : 1.0)))
+
+                    ZStack {
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    colors: [hoverColor.opacity(0.44), Color(hex: 0xFFB84D).opacity(0.16), .clear],
+                                    center: .center,
+                                    startRadius: 6,
+                                    endRadius: 95
+                                )
                             )
-                        )
-                        .frame(width: 190, height: 190)
-                        .position(pt)
-                        .allowsHitTesting(false)
+                            .frame(width: 190, height: 190)
+                            .scaleEffect(activeScale)
+
+                        if sustainTier >= 1 {
+                            ForEach(1...min(3, sustainTier), id: \.self) { ringTier in
+                                let ringDiameter: CGFloat = 56.0 + CGFloat(ringTier) * 28.0
+                                Circle()
+                                    .strokeBorder(
+                                        Color(hex: 0xFFB84D).opacity(ringTier == sustainTier ? 0.56 : 0.28),
+                                        lineWidth: ringTier == 3 ? 1.6 : 1.1
+                                    )
+                                    .frame(width: ringDiameter, height: ringDiameter)
+                            }
+                        }
+                    }
+                    .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.78), value: sustainTier)
+                    .position(pt)
+                    .allowsHitTesting(false)
                 } else {
                     VStack(spacing: 10) {
                         Circle()
@@ -170,14 +196,17 @@ public struct NightLampTactileSheet: View {
                             touchStartTime = CACurrentMediaTime()
                             currentHoverLane = snapped
                             previewTactileLane(snapped)
+                            restartSustainPulseWatcher()
                         } else if snapped != currentHoverLane {
-                            // 切换到新音高时重置停留计时，确保音珠时长严格反映最终定音的停留长度
+                            // 切换到新音高时重置停留计时，确保音符时长严格反映最终定音的停留长度
                             touchStartTime = CACurrentMediaTime()
                             currentHoverLane = snapped
                             previewTactileLane(snapped)
+                            restartSustainPulseWatcher()
                         }
                     }
                     .onEnded { val in
+                        stopSustainPulseWatcher()
                         let normY = TactileFieldMapper.rawNormalizedY(locationY: val.location.y, height: geo.size.height)
                         let finalLane = currentHoverLane ?? TactileFieldMapper.snappedLaneIndex(
                             normalizedY: normY,
@@ -188,12 +217,13 @@ public struct NightLampTactileSheet: View {
                         commitTactileBead(laneIndex: finalLane, duration: heldDuration)
                         currentHoverLane = nil
                         touchPoint = nil
+                        sustainTier = 0
                     }
             )
             .accessibilityElement()
             .accessibilityLabel("闭眼滑音画布，已录下 \(capturedBeads.count) 个音")
             .accessibilityValue(XylophoneLane.lane(at: allowed[max(0, min(allowed.count - 1, voiceOverLanePos))]).member.voiceOverSummary)
-            .accessibilityHint("上下轻扫切换音高预览，使用转子操作记录这颗音珠，或直接单指滑动松手落珠")
+            .accessibilityHint("上下轻扫切换音高预览，使用转子记录短音或长音，也可以单指滑动停留松手落音")
             .accessibilityAdjustableAction { direction in
                 let maxIdx = max(0, allowed.count - 1)
                 switch direction {
@@ -207,9 +237,15 @@ public struct NightLampTactileSheet: View {
                 let laneIdx = allowed[max(0, min(maxIdx, voiceOverLanePos))]
                 previewTactileLane(laneIdx)
             }
-            .accessibilityAction(named: "记录这颗音珠") {
+            .accessibilityAction(named: "记录短音") {
                 let safePos = max(0, min(allowed.count - 1, voiceOverLanePos))
-                commitTactileBead(laneIndex: allowed[safePos], duration: 0.56)
+                let shortDur = TactileSustainStage.stage(forHeldSeconds: 0.20).targetDuration
+                commitTactileBead(laneIndex: allowed[safePos], duration: shortDur)
+            }
+            .accessibilityAction(named: "记录长音") {
+                let safePos = max(0, min(allowed.count - 1, voiceOverLanePos))
+                let longDur = TactileSustainStage.stage(forHeldSeconds: 1.00).targetDuration
+                commitTactileBead(laneIndex: allowed[safePos], duration: longDur)
             }
         }
         .frame(maxHeight: .infinity)
@@ -334,6 +370,29 @@ public struct NightLampTactileSheet: View {
             decay: 0.9,
             timbre: FeltPianoSynth.Timbre.from(voice: vm.melodyVoice)
         )
+    }
+
+    private func restartSustainPulseWatcher() {
+        sustainPollTask?.cancel()
+        sustainTier = 0
+        sustainPollTask = Task { @MainActor in
+            while !Task.isCancelled {
+                guard touchPoint != nil else { break }
+                let held = CACurrentMediaTime() - touchStartTime
+                let nextStage = TactileSustainStage.stage(forHeldSeconds: held)
+                if nextStage.tier > sustainTier {
+                    sustainTier = nextStage.tier
+                    AcousticHapticsEngine.shared.playBeatTap(isStrong: nextStage.tier == 3)
+                }
+                if sustainTier >= 3 { break }
+                try? await Task.sleep(nanoseconds: 65_000_000)
+            }
+        }
+    }
+
+    private func stopSustainPulseWatcher() {
+        sustainPollTask?.cancel()
+        sustainPollTask = nil
     }
 
     private func commitTactileBead(laneIndex: Int, duration: Double) {

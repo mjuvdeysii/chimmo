@@ -163,7 +163,8 @@ public struct MusicBoxShelfView: View {
                 MiniOrbitalDiscPreview(
                     document: entry.document,
                     isNight: palette.isNight,
-                    isSpinning: isPlayingThis && !reduceMotion,
+                    isPlaying: isPlayingThis,
+                    reduceMotion: reduceMotion,
                     spinStartTime: inlinePlayStart
                 )
                 .frame(width: 74, height: 74)
@@ -344,7 +345,8 @@ public struct MusicBoxShelfView: View {
                     MiniOrbitalDiscPreview(
                         document: spec,
                         isNight: palette.isNight,
-                        isSpinning: isPlayingThis && !reduceMotion,
+                        isPlaying: isPlayingThis,
+                        reduceMotion: reduceMotion,
                         spinStartTime: inlinePlayStart
                     )
                     .frame(width: 72, height: 72)
@@ -481,22 +483,25 @@ public struct MusicBoxShelfView: View {
     }
 }
 
-/// 迷你陶瓷星盘唱片缩略图（试听播放时同步转动）
+/// 迷你陶瓷星盘唱片缩略图（试听播放时同步转动、点亮正在唱出的音符并沿盘缘推进金弧进度环）
 private struct MiniOrbitalDiscPreview: View {
     let document: MelodyDocument
     let isNight: Bool
-    let isSpinning: Bool
+    let isPlaying: Bool
+    let reduceMotion: Bool
     let spinStartTime: Double
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isSpinning)) { _ in
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isPlaying)) { _ in
             let now = CACurrentMediaTime()
             let total = max(1.0, document.totalDuration)
-            let rot: Double = isSpinning ? -((now - spinStartTime) / total) * 2.0 * Double.pi : 0.0
+            let elapsed = isPlaying ? max(0.0, now - spinStartTime) : 0.0
+            let progress = isPlaying ? min(1.0, elapsed / total) : 0.0
+            let rot: Double = (isPlaying && !reduceMotion) ? -(elapsed / total) * 2.0 * Double.pi : 0.0
 
             Canvas { ctx, size in
                 let c = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
-                let maxR = min(size.width, size.height) * 0.47
+                let maxR = min(size.width, size.height) * 0.455
                 let discRect = CGRect(x: c.x - maxR, y: c.y - maxR, width: maxR * 2, height: maxR * 2)
                 let discBg = isNight ? Color(hex: 0x1E2754) : Color(hex: 0xF7F1E4)
                 let rimCol = isNight ? Color(hex: 0x564337) : Color(hex: 0xD3B78F)
@@ -514,29 +519,54 @@ private struct MiniOrbitalDiscPreview: View {
                     )
                 }
 
-                // 音珠星座
+                // 音符星座与棱镜音程渐变丝线
                 let notes = document.notes.sorted { $0.rawOnset < $1.rawOnset }
                 let innerR = maxR * 0.30
                 let outerR = maxR * 0.88
-                var pts: [(CGPoint, Color)] = []
+                var pts: [(pt: CGPoint, col: Color, laneIdx: Int, bead: NoteBead)] = []
                 for bead in notes {
                     let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
                     let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
                     let ang = -Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: bead.rawOnset, totalDuration: total) + rot
                     let pt = CGPoint(x: c.x + CGFloat(cos(ang)) * r, y: c.y + CGFloat(sin(ang)) * r)
                     let col = XylophoneLane.lane(at: laneIdx).barColor(isNight: isNight)
-                    pts.append((pt, col))
+                    pts.append((pt, col, laneIdx, bead))
                 }
 
                 if pts.count > 1 {
-                    var p = Path()
-                    p.move(to: pts[0].0)
-                    for i in 1..<pts.count { p.addLine(to: pts[i].0) }
-                    ctx.stroke(p, with: .color(Color.gray.opacity(0.28)), lineWidth: 1.0)
+                    for i in 1..<pts.count {
+                        let a = pts[i - 1]
+                        let b = pts[i]
+                        var seg = Path()
+                        seg.move(to: a.pt)
+                        seg.addLine(to: b.pt)
+                        let style = IntervalSilkStyle.metrics(fromLane: a.laneIdx, toLane: b.laneIdx, isNight: isNight)
+                        ctx.stroke(
+                            seg,
+                            with: .linearGradient(
+                                Gradient(colors: [a.col.opacity(style.coreOpacity * 0.62), b.col.opacity(style.coreOpacity * 0.62)]),
+                                startPoint: a.pt,
+                                endPoint: b.pt
+                            ),
+                            style: StrokeStyle(lineWidth: max(0.9, style.coreWidth * 0.55), lineCap: .round)
+                        )
+                    }
                 }
 
-                for (pt, col) in pts {
-                    ctx.fill(Path(ellipseIn: CGRect(x: pt.x - 2.6, y: pt.y - 2.6, width: 5.2, height: 5.2)), with: .color(col))
+                for item in pts {
+                    let durWin = max(0.18, item.bead.rawDuration * 0.85)
+                    let isActive = isPlaying && elapsed >= item.bead.rawOnset && elapsed < item.bead.rawOnset + durWin
+                    if isActive {
+                        ctx.fill(
+                            Path(ellipseIn: CGRect(x: item.pt.x - 5.2, y: item.pt.y - 5.2, width: 10.4, height: 10.4)),
+                            with: .color(Color(hex: 0xFFB84D).opacity(0.45))
+                        )
+                    }
+                    let dotR: CGFloat = isActive ? 3.3 : 2.5
+                    ctx.fill(
+                        Path(ellipseIn: CGRect(x: item.pt.x - dotR, y: item.pt.y - dotR, width: dotR * 2, height: dotR * 2)),
+                        with: .color(isActive ? Color(hex: 0xFFB84D) : item.col)
+                    )
                 }
 
                 // 暖金圆心
@@ -545,6 +575,21 @@ private struct MiniOrbitalDiscPreview: View {
                     Path(ellipseIn: CGRect(x: c.x - hubR, y: c.y - hubR, width: hubR * 2, height: hubR * 2)),
                     with: .color(Color(hex: 0xE5A93B).opacity(0.85))
                 )
+
+                // 外圈试听推进进度金弧
+                if isPlaying && progress > 0.002 {
+                    let ringR = maxR + 1.2
+                    var arc = Path()
+                    arc.addArc(
+                        center: c,
+                        radius: ringR,
+                        startAngle: .radians(-Double.pi / 2.0),
+                        endAngle: .radians(-Double.pi / 2.0 + progress * 2.0 * Double.pi),
+                        clockwise: false
+                    )
+                    ctx.stroke(arc, with: .color(Color(hex: 0xFFB84D).opacity(0.28)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
+                    ctx.stroke(arc, with: .color(Color(hex: 0xFFB84D).opacity(0.92)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+                }
             }
         }
     }

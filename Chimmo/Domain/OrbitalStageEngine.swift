@@ -589,3 +589,103 @@ public enum IntervalSilkStyle {
         )
     }
 }
+
+/// 活体哼唱轮廓滤波与归一化器：带自适应噪声门限、三点中值去毛刺与稳态中心化，让哼唱丝带既灵动跟音又抗底噪跳变。
+public enum LivePitchContourFilter {
+    public static func adaptiveNoiseFloorRMS(peakRMS: Double) -> Double {
+        guard peakRMS.isFinite, peakRMS > 0 else { return 0.004 }
+        return max(0.004, peakRMS * 0.12)
+    }
+
+    public static func medianSmooth(_ values: [Double]) -> [Double] {
+        guard values.count >= 3 else { return values }
+        var out = values
+        for i in 1..<(values.count - 1) {
+            let a = values[i - 1], b = values[i], c = values[i + 1]
+            if a.isFinite && b.isFinite && c.isFinite {
+                out[i] = [a, b, c].sorted()[1]
+            }
+        }
+        return out
+    }
+
+    public static func normalizeSemitoneTrace(_ rawSemitones: [Double]) -> [Double] {
+        let valid = rawSemitones.filter { $0.isFinite }
+        guard !valid.isEmpty else { return [] }
+        let smoothed = medianSmooth(valid)
+        guard let lo = smoothed.min(), let hi = smoothed.max() else { return [] }
+        let span = hi - lo
+        if span < 0.8 {
+            return Array(repeating: 0.48, count: smoothed.count)
+        }
+        let effSpan = max(4.0, span)
+        let mid = (lo + hi) * 0.5
+        return smoothed.map { val in
+            let norm = 0.5 + (val - mid) / effSpan
+            return max(0.08, min(0.92, norm))
+        }
+    }
+
+    public static func frameRMS(mono16kSamples: [Float], frameCount: Int, hopSize: Int) -> [Double] {
+        guard frameCount > 0, !mono16kSamples.isEmpty else { return [] }
+        let n = mono16kSamples.count
+        var result = [Double](repeating: 0.0, count: frameCount)
+        let halfWin = max(64, hopSize)
+        for f in 0..<frameCount {
+            let center = f * hopSize
+            let lo = max(0, center - halfWin)
+            let hi = min(n, center + halfWin)
+            guard hi > lo else { continue }
+            var sumSq = 0.0
+            for idx in lo..<hi {
+                let s = Double(mono16kSamples[idx])
+                sumSq += s * s
+            }
+            result[f] = sqrt(sumSq / Double(hi - lo))
+        }
+        return result
+    }
+
+    public static func extractVoicedSemitones(
+        pitchHz: [Double],
+        confidence: [Double],
+        frameRMS: [Double]
+    ) -> [Double] {
+        let peak = frameRMS.filter { $0.isFinite }.max() ?? 0.0
+        let gate = adaptiveNoiseFloorRMS(peakRMS: peak)
+        var voiced: [Double] = []
+        voiced.reserveCapacity(pitchHz.count)
+        for i in 0..<pitchHz.count {
+            let hz = pitchHz[i]
+            let conf = i < confidence.count ? confidence[i] : 1.0
+            let rms = i < frameRMS.count ? frameRMS[i] : peak
+            if hz.isFinite && hz > 65.0 && conf >= 0.32 && rms >= gate {
+                voiced.append(12.0 * log2(hz / 110.0))
+            }
+        }
+        return medianSmooth(voiced)
+    }
+}
+
+/// 闭眼滑音长按呼吸延音节拍标尺：按停留时长映射三档脉冲门槛，帮助闭眼与视障用户用触觉雕塑长音与短音。
+public enum TactileSustainStage {
+    public struct Stage: Equatable, Sendable {
+        public let tier: Int
+        public let haloScale: CGFloat
+        public let targetDuration: Double
+        public let label: String
+    }
+
+    public static func stage(forHeldSeconds held: Double) -> Stage {
+        let safeHeld = held.isFinite ? max(0.0, held) : 0.0
+        if safeHeld >= 1.40 {
+            return Stage(tier: 3, haloScale: 1.78, targetDuration: 1.65, label: "延音")
+        } else if safeHeld >= 0.90 {
+            return Stage(tier: 2, haloScale: 1.50, targetDuration: 1.15, label: "长音")
+        } else if safeHeld >= 0.45 {
+            return Stage(tier: 1, haloScale: 1.24, targetDuration: 0.65, label: "一拍")
+        } else {
+            return Stage(tier: 0, haloScale: 1.00, targetDuration: 0.38, label: "短音")
+        }
+    }
+}

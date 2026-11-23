@@ -13,7 +13,7 @@
 	<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key><true/>
 	<key>ITSAppUsesNonExemptEncryption</key><false/>
-	<key>NSMicrophoneUsageDescription</key><string>咩哞只在本机实时聆听你的哼唱并把旋律凝结成音珠，所有声音不上传、不联网。</string>
+	<key>NSMicrophoneUsageDescription</key><string>咩哞只在本机实时聆听你的哼唱并生成旋律，所有声音不上传、不联网。</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key><string>PaperBackground</string>
