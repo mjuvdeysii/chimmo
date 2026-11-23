@@ -9,6 +9,7 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
     public let melodyVoice: MelodyVoice?
     public let shadowEnabled: Bool
     public let headline: String?
+    public let visualMode: StageVisualMode
 
     public init(
         id: UUID = UUID(),
@@ -17,7 +18,8 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
         chordOverrides: [Int: DiatonicChord] = [:],
         melodyVoice: MelodyVoice? = nil,
         shadowEnabled: Bool = false,
-        headline: String? = nil
+        headline: String? = nil,
+        visualMode: StageVisualMode = .orbitalDisc
     ) {
         self.id = id
         self.document = document
@@ -26,6 +28,7 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
         self.melodyVoice = melodyVoice
         self.shadowEnabled = shadowEnabled
         self.headline = headline
+        self.visualMode = visualMode
     }
 }
 
@@ -36,6 +39,7 @@ public struct VinylPostcardShareSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var useNightCard: Bool
+    @State private var selectedMode: StageVisualMode
     @State private var exportedPNGURL: URL?
     @State private var exportedMIDIURL: URL?
 
@@ -43,6 +47,7 @@ public struct VinylPostcardShareSheet: View {
         self.palette = palette
         self.request = request
         self._useNightCard = State(initialValue: palette.isNight)
+        self._selectedMode = State(initialValue: request.visualMode)
     }
 
     private var snapshot: VinylPostcardSnapshot {
@@ -53,7 +58,8 @@ public struct VinylPostcardShareSheet: View {
             melodyVoice: request.melodyVoice,
             shadowEnabled: request.shadowEnabled,
             isNight: useNightCard,
-            headline: request.headline
+            headline: request.headline,
+            visualMode: selectedMode
         )
     }
 
@@ -61,12 +67,34 @@ public struct VinylPostcardShareSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    // 浅色 / 深色图片样式切换
-                    Picker("图片样式", selection: $useNightCard) {
-                        Text("浅色").tag(false)
-                        Text("深色").tag(true)
+                    // 浅色 / 深色 + 三态画境切换（纯图标，零说明）
+                    HStack(spacing: 10) {
+                        Picker("图片样式", selection: $useNightCard) {
+                            Text("浅色").tag(false)
+                            Text("深色").tag(true)
+                        }
+                        .pickerStyle(.segmented)
+
+                        HStack(spacing: 2) {
+                            ForEach(StageVisualMode.allCases) { mode in
+                                let active = selectedMode == mode
+                                Button {
+                                    selectedMode = mode
+                                } label: {
+                                    Image(systemName: mode.iconName)
+                                        .font(.system(size: 12.5, weight: .bold))
+                                        .frame(width: 30, height: 28)
+                                        .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(mode.rawValue)样式")
+                            }
+                        }
+                        .fixedSize()
+                        .padding(3)
+                        .background(Capsule().fill(palette.cardSurface))
                     }
-                    .pickerStyle(.segmented)
                     .padding(.horizontal, 16)
 
                     // 等比缩放呈现 540x680 卡片预览
@@ -135,6 +163,9 @@ public struct VinylPostcardShareSheet: View {
             .onChange(of: useNightCard) { _, _ in
                 refreshPostcardOnly()
             }
+            .onChange(of: selectedMode) { _, _ in
+                refreshPostcardOnly()
+            }
         }
         .presentationDetents([.large])
     }
@@ -147,7 +178,8 @@ public struct VinylPostcardShareSheet: View {
             melodyVoice: request.melodyVoice,
             shadowEnabled: request.shadowEnabled,
             isNight: useNightCard,
-            headline: request.headline
+            headline: request.headline,
+            visualMode: selectedMode
         )
     }
 
@@ -169,6 +201,7 @@ public struct AboutSheetView: View {
     public let chordOverrides: [Int: DiatonicChord]
     public let melodyVoice: MelodyVoice?
     public let shadowEnabled: Bool
+    public let visualMode: StageVisualMode
 
     @Environment(\.dismiss) private var dismiss
     @State private var exportedMIDIURL: URL?
@@ -181,7 +214,8 @@ public struct AboutSheetView: View {
         chordPreset: ChordProgressionPreset = .autoMatch,
         chordOverrides: [Int: DiatonicChord] = [:],
         melodyVoice: MelodyVoice? = nil,
-        shadowEnabled: Bool = false
+        shadowEnabled: Bool = false,
+        visualMode: StageVisualMode = .orbitalDisc
     ) {
         self.palette = palette
         self.currentDocument = currentDocument
@@ -190,6 +224,7 @@ public struct AboutSheetView: View {
         self.chordOverrides = chordOverrides
         self.melodyVoice = melodyVoice
         self.shadowEnabled = shadowEnabled
+        self.visualMode = visualMode
     }
 
     public var body: some View {
@@ -244,7 +279,8 @@ public struct AboutSheetView: View {
                                         chordOverrides: chordOverrides,
                                         melodyVoice: melodyVoice,
                                         shadowEnabled: shadowEnabled,
-                                        isNight: palette.isNight
+                                        isNight: palette.isNight,
+                                        visualMode: visualMode
                                     )
                                 } label: {
                                     Label("生成图片 (.png)", systemImage: "photo")

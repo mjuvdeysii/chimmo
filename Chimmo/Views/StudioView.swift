@@ -189,6 +189,7 @@ public final class StudioViewModel: ObservableObject {
         self.notebook = notebookStore ?? MelodyNotebookStore()
         self.pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(SpecimenLibrary.saintSaensTheSwan)
         self.clock.updateTotalDuration(SpecimenLibrary.saintSaensTheSwan.totalDuration)
+        s.applySpaceProfile(AcousticSpaceProfile.profile(for: SpecimenLibrary.saintSaensTheSwan.scaleMode))
     }
 
     // MARK: - Manual Hand-Crank / Vinyl Scrubbing
@@ -989,6 +990,7 @@ public final class StudioViewModel: ObservableObject {
             pushUndo()
             document.scaleMode = mode
         }
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: mode))
         previewArpeggioTask?.cancel()
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
 
@@ -1309,6 +1311,7 @@ public final class StudioViewModel: ObservableObject {
         }
 
         clock.setRate(playbackRate)
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: document.scaleMode))
         clock.start(totalDuration: total, from: startOffset)
         isPlaying = true
 
@@ -1396,12 +1399,18 @@ public final class StudioViewModel: ObservableObject {
                         degree: bead.degree,
                         octaveOffset: bead.octaveOffset
                     )
+                    let pan = AcousticSpatialPanMapper.pan(
+                        forBeatOnset: onset,
+                        totalDuration: totalDuration,
+                        visualMode: self.visualMode
+                    )
                     self.synth.playNote(
                         frequency: hz,
                         velocity: 0.62,
                         decay: max(0.85, dur * 1.45 * rateScale),
                         brightness: 0.96,
-                        timbre: FeltPianoSynth.Timbre.from(voice: self.melodyVoice)
+                        timbre: FeltPianoSynth.Timbre.from(voice: self.melodyVoice),
+                        pan: pan
                     )
                     nextNoteIdx += 1
                 }
@@ -1423,13 +1432,19 @@ public final class StudioViewModel: ObservableObject {
                         degree: shadow.degree,
                         octaveOffset: shadow.octaveOffset
                     )
+                    let sPan = -AcousticSpatialPanMapper.pan(
+                        forBeatOnset: shadow.onset,
+                        totalDuration: totalDuration,
+                        visualMode: self.visualMode
+                    ) * 0.65
                     let duetTimbre: FeltPianoSynth.Timbre = (self.melodyVoice == .liquidHarp) ? .celesta : .liquidHarp
                     self.synth.playNote(
                         frequency: sHz,
                         velocity: 0.36,
                         decay: max(0.85, shadow.duration * rateScale * 1.35),
                         brightness: 0.85,
-                        timbre: duetTimbre
+                        timbre: duetTimbre,
+                        pan: sPan
                     )
                 }
 
@@ -1599,7 +1614,8 @@ public struct StudioView: View {
                             chordOverrides: vm.chordOverrides,
                             melodyVoice: vm.melodyVoice,
                             shadowEnabled: vm.shadowCounterpointEnabled,
-                            headline: vm.currentInsight.headline
+                            headline: vm.currentInsight.headline,
+                            visualMode: vm.visualMode
                         )
                     }
                 )
@@ -1634,7 +1650,8 @@ public struct StudioView: View {
                             chordOverrides: entry.chordOverrides,
                             melodyVoice: entry.document.preferredVoice,
                             shadowEnabled: false,
-                            headline: entry.summaryNote.isEmpty ? nil : entry.summaryNote
+                            headline: entry.summaryNote.isEmpty ? nil : entry.summaryNote,
+                            visualMode: vm.visualMode
                         )
                     },
                     onStartNewTap: {
@@ -1662,7 +1679,8 @@ public struct StudioView: View {
                 chordPreset: vm.chordPreset,
                 chordOverrides: vm.chordOverrides,
                 melodyVoice: vm.melodyVoice,
-                shadowEnabled: vm.shadowCounterpointEnabled
+                shadowEnabled: vm.shadowCounterpointEnabled,
+                visualMode: vm.visualMode
             )
         }
         .sheet(item: $postcardTarget) { req in

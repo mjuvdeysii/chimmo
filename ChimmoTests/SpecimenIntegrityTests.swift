@@ -810,4 +810,81 @@ final class SpecimenIntegrityTests: XCTestCase {
         let resampled = HumCapturePipeline.resampleLinear([Float](repeating: 0.25, count: 4800), from: 48_000.0, to: 16_000.0)
         XCTAssertEqual(resampled.count, 1600)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound10SpatialAcousticsAndThreeStagePostcards() throws {
+        // 1. AcousticSpaceProfile 五色情绪空间气候校验
+        for mode in ScaleMode.allCases {
+            let prof = AcousticSpaceProfile.profile(for: mode)
+            XCTAssertGreaterThanOrEqual(prof.reverbWetMix, 14.0)
+            XCTAssertLessThanOrEqual(prof.reverbWetMix, 44.0)
+            XCTAssertGreaterThanOrEqual(prof.warmthDamping, 0.70)
+            XCTAssertLessThanOrEqual(prof.warmthDamping, 1.25)
+            XCTAssertGreaterThanOrEqual(prof.stereoSpread, 0.85)
+        }
+        let dreamProf = AcousticSpaceProfile.profile(for: .cloudLydian)
+        let brightProf = AcousticSpaceProfile.profile(for: .brightMajor)
+        let minorProf = AcousticSpaceProfile.profile(for: .wistfulMinor)
+        XCTAssertGreaterThan(dreamProf.reverbWetMix, brightProf.reverbWetMix)
+        XCTAssertGreaterThan(brightProf.warmthDamping, minorProf.warmthDamping)
+
+        // 2. AcousticSpatialPanMapper 三态主舞台方位映射与安全钳位
+        for mode in StageVisualMode.allCases {
+            let pMid = AcousticSpatialPanMapper.pan(forBeatOnset: 2.0, totalDuration: 4.0, visualMode: mode)
+            XCTAssertTrue(pMid.isFinite)
+            XCTAssertGreaterThanOrEqual(pMid, -0.58)
+            XCTAssertLessThanOrEqual(pMid, 0.58)
+            XCTAssertEqual(AcousticSpatialPanMapper.pan(forBeatOnset: .nan, totalDuration: 4.0, visualMode: mode), 0.0)
+            XCTAssertEqual(AcousticSpatialPanMapper.pan(forBeatOnset: 1.0, totalDuration: 0.0, visualMode: mode), 0.0)
+        }
+        let riverLeft = AcousticSpatialPanMapper.pan(forBeatOnset: 0.0, totalDuration: 4.0, visualMode: .flowingRiver)
+        let riverRight = AcousticSpatialPanMapper.pan(forBeatOnset: 4.0, totalDuration: 4.0, visualMode: .flowingRiver)
+        XCTAssertLessThan(riverLeft, 0.0)
+        XCTAssertGreaterThan(riverRight, 0.0)
+
+        // 3. FeltPianoSynth 48kHz 离线立体声像与空间气候应用验证
+        let synth = FeltPianoSynth()
+        synth.applySpaceProfile(dreamProf)
+        XCTAssertEqual(synth.currentSpaceProfile(), dreamProf)
+
+        let leftRender = try synth.verifySpatialPanOfflineTelemetry(
+            sampleRate: 48_000.0,
+            frequency: 440.0,
+            pan: -0.55,
+            spaceProfile: brightProf
+        )
+        XCTAssertEqual(leftRender.reverbInRate, 48_000.0, accuracy: 1.0)
+        XCTAssertEqual(leftRender.reverbOutRate, 48_000.0, accuracy: 1.0)
+        XCTAssertGreaterThan(leftRender.peakL, leftRender.peakR)
+
+        let rightRender = try synth.verifySpatialPanOfflineTelemetry(
+            sampleRate: 48_000.0,
+            frequency: 440.0,
+            pan: 0.55,
+            spaceProfile: brightProf
+        )
+        XCTAssertGreaterThan(rightRender.peakR, rightRender.peakL)
+
+        // 4. 三态所见即所得黑胶明信片离线 PNG 渲染校验
+        let emptyDoc = MelodyDocument(title: "空态明信片", subtitle: "", notes: [])
+        for vMode in StageVisualMode.allCases {
+            for night in [false, true] {
+                let png = VinylPostcardExporter.renderPNGData(
+                    document: SpecimenLibrary.saintSaensTheSwan,
+                    shadowEnabled: true,
+                    isNight: night,
+                    visualMode: vMode
+                )
+                XCTAssertNotNil(png, "\(vMode.rawValue) 明信片 PNG 不得为空")
+                XCTAssertGreaterThan(png?.count ?? 0, 1000)
+
+                let emptyPng = VinylPostcardExporter.renderPNGData(
+                    document: emptyDoc,
+                    isNight: night,
+                    visualMode: vMode
+                )
+                XCTAssertNotNil(emptyPng)
+            }
+        }
+    }
 }

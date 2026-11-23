@@ -689,3 +689,52 @@ public enum TactileSustainStage {
         }
     }
 }
+
+/// 调式声学空间气候档案：按 5 种情绪风格动态微调空间混响湿度、音板温暖阻尼与立体声展宽。
+public struct AcousticSpaceProfile: Equatable, Sendable {
+    public let reverbWetMix: Float
+    public let warmthDamping: Double
+    public let stereoSpread: Double
+
+    public init(reverbWetMix: Float, warmthDamping: Double, stereoSpread: Double) {
+        self.reverbWetMix = reverbWetMix
+        self.warmthDamping = warmthDamping
+        self.stereoSpread = stereoSpread
+    }
+
+    public static func profile(for mode: ScaleMode) -> AcousticSpaceProfile {
+        switch mode {
+        case .cloudLydian:
+            return AcousticSpaceProfile(reverbWetMix: 38.0, warmthDamping: 0.94, stereoSpread: 1.22)
+        case .brightMajor:
+            return AcousticSpaceProfile(reverbWetMix: 22.0, warmthDamping: 1.08, stereoSpread: 1.00)
+        case .goldenMixolydian:
+            return AcousticSpaceProfile(reverbWetMix: 27.0, warmthDamping: 0.90, stereoSpread: 1.06)
+        case .forestDorian:
+            return AcousticSpaceProfile(reverbWetMix: 31.0, warmthDamping: 0.98, stereoSpread: 1.12)
+        case .wistfulMinor:
+            return AcousticSpaceProfile(reverbWetMix: 35.0, warmthDamping: 0.86, stereoSpread: 1.14)
+        }
+    }
+}
+
+/// 音画同步全息空间声像映射器：让旋律在「转盘 / 曲线 / 星环」上的当前几何方位直接映射为左右双耳立体声像。
+public enum AcousticSpatialPanMapper {
+    public static func pan(forBeatOnset onset: Double, totalDuration: Double, visualMode: StageVisualMode) -> Double {
+        guard onset.isFinite && totalDuration.isFinite && totalDuration > 0.05 else {
+            return 0.0
+        }
+        let progress = max(0.0, min(1.0, onset / totalDuration))
+        let angle = OrbitalGeometry.noteBaseAngle(onset: onset, totalDuration: totalDuration)
+        let raw: Double
+        switch visualMode {
+        case .orbitalDisc:
+            raw = sin(angle) * 0.44
+        case .flowingRiver:
+            raw = (progress * 2.0 - 1.0) * 0.48
+        case .resonanceNebula:
+            raw = cos(angle) * 0.36 + sin(angle * 2.0) * 0.14
+        }
+        return max(-0.58, min(0.58, raw))
+    }
+}
