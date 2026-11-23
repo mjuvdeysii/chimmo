@@ -72,10 +72,10 @@ public struct XylophoneLane: Identifiable, Equatable, Sendable {
 /// 敲完节奏后的「4 张旋律山坡快选卡」：
 /// 不让零基础用户面对平直空白画布一个个盲猜，而是先像挑滤镜一样选一座最接近脑海轮廓的「山」，再微调 1～2 颗珠子即可！
 public enum MelodyHillTemplate: String, CaseIterable, Identifiable, Sendable {
-    case climb      // ↗ 爬坡扬起
-    case arch       // ⌒ 拱桥起伏
-    case gentleFall // ↘ 温柔下坡
-    case wave       // 〰 轻快波浪
+    case climb      // 爬坡扬起
+    case arch       // 拱桥起伏
+    case gentleFall // 温柔下坡
+    case wave       // 轻快波浪
 
     public var id: String { rawValue }
 
@@ -90,10 +90,10 @@ public enum MelodyHillTemplate: String, CaseIterable, Identifiable, Sendable {
 
     public var shortLabel: String {
         switch self {
-        case .climb: return "↗ 爬坡"
-        case .arch: return "⌒ 拱桥"
-        case .gentleFall: return "↘ 下坡"
-        case .wave: return "〰 波浪"
+        case .climb: return "爬坡"
+        case .arch: return "拱桥"
+        case .gentleFall: return "下坡"
+        case .wave: return "波浪"
         }
     }
 
@@ -212,18 +212,18 @@ public enum XylophoneRollEngine {
         // 情况 A：第一拍（开场三选：稳重底音 1 / 温柔中音 3 / 明亮起势 5）
         if index <= 0 || beads.isEmpty {
             return [
-                SmartPitchHint(laneIndex: 0, badge: "🏠 稳起", reason: "从 1·陶诺 稳稳起唱"),
-                SmartPitchHint(laneIndex: 2, badge: "☀️ 温柔", reason: "从 3·拍咯 温柔展开"),
-                SmartPitchHint(laneIndex: 4, badge: "🚀 亮起", reason: "从 5·壳咯 高亮起势")
+                SmartPitchHint(laneIndex: 0, badge: "稳起", reason: "从 1·陶诺 稳稳起唱"),
+                SmartPitchHint(laneIndex: 2, badge: "温柔", reason: "从 3·拍咯 温柔展开"),
+                SmartPitchHint(laneIndex: 4, badge: "亮起", reason: "从 5·壳咯 高亮起势")
             ]
         }
 
         // 情况 B：最后一拍（收尾三选：归家 1 / 温柔悬停 3 / 留白未完 5）
         if index >= beads.count - 1 && beads.count >= 3 {
             return [
-                SmartPitchHint(laneIndex: 0, badge: "🏠 回家", reason: "稳稳落回 1·陶诺 结束"),
-                SmartPitchHint(laneIndex: 2, badge: "🌤 轻停", reason: "柔和停在 3·拍咯"),
-                SmartPitchHint(laneIndex: 4, badge: "✨ 留白", reason: "悬在 5·壳咯 意犹未尽")
+                SmartPitchHint(laneIndex: 0, badge: "回家", reason: "稳稳落回 1·陶诺 结束"),
+                SmartPitchHint(laneIndex: 2, badge: "轻停", reason: "柔和停在 3·拍咯"),
+                SmartPitchHint(laneIndex: 4, badge: "留白", reason: "悬在 5·壳咯 意犹未尽")
             ]
         }
 
@@ -241,29 +241,29 @@ public enum XylophoneRollEngine {
         // 1) 往上走一步
         if prevPos + 1 < allowed.count {
             let up = allowed[prevPos + 1]
-            hints.append(SmartPitchHint(laneIndex: up, badge: "↗ 高一步", reason: "比上一拍自然抬高一格"))
+            hints.append(SmartPitchHint(laneIndex: up, badge: "高一", reason: "比上一拍自然抬高一格"))
             used.insert(up)
         }
         // 2) 往下走一步
         if prevPos - 1 >= 0 {
             let down = allowed[prevPos - 1]
-            hints.append(SmartPitchHint(laneIndex: down, badge: "↘ 低一步", reason: "比上一拍轻轻落下一格"))
+            hints.append(SmartPitchHint(laneIndex: down, badge: "低一", reason: "比上一拍轻轻落下一格"))
             used.insert(down)
         }
         // 3) 跨步亮点或稳住同音
         if prevPos + 2 < allowed.count && hints.count < 3 {
             let leap = allowed[prevPos + 2]
             if !used.contains(leap) {
-                hints.append(SmartPitchHint(laneIndex: leap, badge: "✨ 跳高", reason: "向上跨出一小步更有情绪"))
+                hints.append(SmartPitchHint(laneIndex: leap, badge: "跳高", reason: "向上跨出一小步更有情绪"))
                 used.insert(leap)
             }
         }
         if hints.count < 3 && !used.contains(prevLane) {
-            hints.append(SmartPitchHint(laneIndex: prevLane, badge: "= 同高", reason: "保持和上一拍一样高"))
+            hints.append(SmartPitchHint(laneIndex: prevLane, badge: "同高", reason: "保持和上一拍一样高"))
             used.insert(prevLane)
         }
         if hints.count < 3 && !used.contains(0) {
-            hints.append(SmartPitchHint(laneIndex: 0, badge: "🏠 回家", reason: "落回 1·陶诺 稳住"))
+            hints.append(SmartPitchHint(laneIndex: 0, badge: "回家", reason: "落回 1·陶诺 稳住"))
             used.insert(0)
         }
 

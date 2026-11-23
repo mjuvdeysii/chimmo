@@ -1,18 +1,195 @@
 import SwiftUI
 
-/// 应用内「关于与隐私承诺」页（完全离线可查阅，同时提供标准 .mid 导出入口）。
+/// 明信片与标准 MIDI 导出请求载体
+public struct VinylPostcardRequest: Identifiable, Sendable {
+    public let id: UUID
+    public let document: MelodyDocument
+    public let chordPreset: ChordProgressionPreset
+    public let chordOverrides: [Int: DiatonicChord]
+    public let melodyVoice: MelodyVoice?
+    public let shadowEnabled: Bool
+    public let headline: String?
+
+    public init(
+        id: UUID = UUID(),
+        document: MelodyDocument,
+        chordPreset: ChordProgressionPreset = .autoMatch,
+        chordOverrides: [Int: DiatonicChord] = [:],
+        melodyVoice: MelodyVoice? = nil,
+        shadowEnabled: Bool = false,
+        headline: String? = nil
+    ) {
+        self.id = id
+        self.document = document
+        self.chordPreset = chordPreset
+        self.chordOverrides = chordOverrides
+        self.melodyVoice = melodyVoice
+        self.shadowEnabled = shadowEnabled
+        self.headline = headline
+    }
+}
+
+/// 离线黑胶星轨明信片 & 标准 MIDI 分享抽屉（零 Emoji，纯粹的窑陶 × 黄铜版画展示体验）
+public struct VinylPostcardShareSheet: View {
+    public let palette: ChimmoPalette
+    public let request: VinylPostcardRequest
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var useNightCard: Bool
+    @State private var exportedPNGURL: URL?
+    @State private var exportedMIDIURL: URL?
+
+    public init(palette: ChimmoPalette, request: VinylPostcardRequest) {
+        self.palette = palette
+        self.request = request
+        self._useNightCard = State(initialValue: palette.isNight)
+    }
+
+    private var snapshot: VinylPostcardSnapshot {
+        VinylPostcardSnapshot(
+            document: request.document,
+            chordPreset: request.chordPreset,
+            chordOverrides: request.chordOverrides,
+            melodyVoice: request.melodyVoice,
+            shadowEnabled: request.shadowEnabled,
+            isNight: useNightCard,
+            headline: request.headline
+        )
+    }
+
+    public var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 18) {
+                    // 昼夜两种画廊质感卡片切换
+                    Picker("明信片底色", selection: $useNightCard) {
+                        Text("日光暖瓷版").tag(false)
+                        Text("深夜曜蓝版").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+
+                    // 等比缩放呈现 540x680 美术馆实卡
+                    VinylPostcardCanvasView(snapshot: snapshot)
+                        .scaleEffect(0.5)
+                        .frame(width: 270, height: 340)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .shadow(color: Color.black.opacity(useNightCard ? 0.36 : 0.14), radius: 16, y: 8)
+
+                    VStack(spacing: 10) {
+                        if let pngURL = exportedPNGURL {
+                            ShareLink(item: pngURL) {
+                                HStack(spacing: 8) {
+                                    ChimmoCraftMark(
+                                        .vinylSeal,
+                                        color: palette.isNight ? Color(hex: 0x151B36) : .white
+                                    )
+                                    .frame(width: 17, height: 17)
+                                    Text("分享高清黑胶星轨明信片 (PNG)")
+                                        .font(.subheadline.weight(.bold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .background(Capsule().fill(palette.homeAnchor))
+                                .foregroundStyle(palette.isNight ? Color(hex: 0x151B36) : .white)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if let midiURL = exportedMIDIURL {
+                            ShareLink(item: midiURL) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "pianokeys")
+                                        .font(.subheadline.weight(.semibold))
+                                    Text("导出标准编曲工程 (.mid)")
+                                        .font(.subheadline.weight(.semibold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Capsule().fill(palette.cardSurface))
+                                .overlay(Capsule().strokeBorder(palette.divider, lineWidth: 1.0))
+                                .foregroundStyle(palette.primaryInk)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+
+                    Text("明信片图像与 MIDI 工程完全在本机离线渲染，不触碰任何网络服务")
+                        .font(.caption2)
+                        .foregroundStyle(palette.secondaryInk)
+                }
+                .padding(.vertical, 16)
+            }
+            .background(palette.paper.ignoresSafeArea())
+            .navigationTitle("黑胶声纹明信片")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                }
+            }
+            .onAppear {
+                refreshFiles()
+            }
+            .onChange(of: useNightCard) { _, _ in
+                refreshPostcardOnly()
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    private func refreshPostcardOnly() {
+        exportedPNGURL = try? VinylPostcardExporter.writeTemporaryPostcardFile(
+            document: request.document,
+            chordPreset: request.chordPreset,
+            chordOverrides: request.chordOverrides,
+            melodyVoice: request.melodyVoice,
+            shadowEnabled: request.shadowEnabled,
+            isNight: useNightCard,
+            headline: request.headline
+        )
+    }
+
+    private func refreshFiles() {
+        refreshPostcardOnly()
+        exportedMIDIURL = try? MIDIExporter.writeTemporaryMIDIFile(
+            document: request.document,
+            includeHarmonyCradle: request.chordPreset != .off
+        )
+    }
+}
+
+/// 应用内「关于与隐私承诺」页（完全离线可查阅，同时提供高清 PNG 明信片与标准 .mid 导出入口）。
 public struct AboutSheetView: View {
     public let palette: ChimmoPalette
     public let currentDocument: MelodyDocument
     public let cradleEnabled: Bool
+    public let chordPreset: ChordProgressionPreset
+    public let chordOverrides: [Int: DiatonicChord]
+    public let melodyVoice: MelodyVoice?
+    public let shadowEnabled: Bool
 
     @Environment(\.dismiss) private var dismiss
     @State private var exportedMIDIURL: URL?
+    @State private var exportedPNGURL: URL?
 
-    public init(palette: ChimmoPalette, currentDocument: MelodyDocument, cradleEnabled: Bool) {
+    public init(
+        palette: ChimmoPalette,
+        currentDocument: MelodyDocument,
+        cradleEnabled: Bool,
+        chordPreset: ChordProgressionPreset = .autoMatch,
+        chordOverrides: [Int: DiatonicChord] = [:],
+        melodyVoice: MelodyVoice? = nil,
+        shadowEnabled: Bool = false
+    ) {
         self.palette = palette
         self.currentDocument = currentDocument
         self.cradleEnabled = cradleEnabled
+        self.chordPreset = chordPreset
+        self.chordOverrides = chordOverrides
+        self.melodyVoice = melodyVoice
+        self.shadowEnabled = shadowEnabled
     }
 
     public var body: some View {
@@ -21,9 +198,17 @@ public struct AboutSheetView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // 品牌与七小只卡片
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("咩哞 · Chimmo")
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(palette.primaryInk)
+                        HStack(spacing: 10) {
+                            ChimmoCraftBadge(
+                                .vinylSeal,
+                                accent: palette.homeAnchor,
+                                surface: palette.cardSurface,
+                                size: 34
+                            )
+                            Text("咩哞 · Chimmo")
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(palette.primaryInk)
+                        }
                         Text("把脑海里的旋律唱出来、看得见。七只哑光窑陶小偶（1陶诺、2豆叩、3拍咯、4呜嘟、5壳咯、6钵莫、7叮尖）对应调内七个音级，陪零基础的你捉住脑放旋律、看见编曲家眼中的引力与和声。")
                             .font(.subheadline)
                             .foregroundStyle(palette.secondaryInk)
@@ -32,37 +217,70 @@ public struct AboutSheetView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface))
 
-                    // 标准 MIDI 导出（收于二级页面，不打扰零基础首屏）
+                    // 高清明信片 PNG 与标准 MIDI 导出
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("导出当前乐思（进阶）")
+                        Text("离线导出当前乐思")
                             .font(.headline)
                             .foregroundStyle(palette.primaryInk)
-                        Text("可将当前画布上的旋律陶珠与水面托底和声导出为标准 MIDI（.mid）文件，直接导入 GarageBand 或 Logic Pro 继续编曲。")
+                        Text("可将当前星盘刻成离线高清黑胶明信片（PNG）分享给好友，或导出标准 MIDI（.mid）文件直接导入 GarageBand / Logic Pro 继续编曲。")
                             .font(.caption)
                             .foregroundStyle(palette.secondaryInk)
 
-                        if let url = exportedMIDIURL {
-                            ShareLink(item: url) {
-                                Label("分享 \(url.lastPathComponent)", systemImage: "square.and.arrow.up")
-                                    .font(.subheadline.weight(.medium))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 9)
-                                    .background(Capsule().fill(palette.homeAnchor))
-                                    .foregroundStyle(palette.isNight ? Color(hex: 0x102026) : .white)
+                        HStack(spacing: 10) {
+                            if let pngURL = exportedPNGURL {
+                                ShareLink(item: pngURL) {
+                                    Label("分享黑胶明信片", systemImage: "photo.on.rectangle")
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 13)
+                                        .padding(.vertical, 9)
+                                        .background(Capsule().fill(palette.homeAnchor))
+                                        .foregroundStyle(palette.isNight ? Color(hex: 0x102026) : .white)
+                                }
+                            } else {
+                                Button {
+                                    exportedPNGURL = try? VinylPostcardExporter.writeTemporaryPostcardFile(
+                                        document: currentDocument,
+                                        chordPreset: cradleEnabled ? chordPreset : .off,
+                                        chordOverrides: chordOverrides,
+                                        melodyVoice: melodyVoice,
+                                        shadowEnabled: shadowEnabled,
+                                        isNight: palette.isNight
+                                    )
+                                } label: {
+                                    Label("生成黑胶明信片 (.png)", systemImage: "photo")
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 13)
+                                        .padding(.vertical, 9)
+                                        .background(Capsule().fill(palette.homeAnchor))
+                                        .foregroundStyle(palette.isNight ? Color(hex: 0x102026) : .white)
+                                }
+                                .buttonStyle(.plain)
                             }
-                        } else {
-                            Button {
-                                exportedMIDIURL = try? MIDIExporter.writeTemporaryMIDIFile(
-                                    document: currentDocument,
-                                    includeHarmonyCradle: cradleEnabled
-                                )
-                            } label: {
-                                Label("生成标准 .mid 文件", systemImage: "pianokeys")
-                                    .font(.subheadline.weight(.medium))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 9)
-                                    .background(Capsule().fill(palette.homeAnchor))
-                                    .foregroundStyle(palette.isNight ? Color(hex: 0x102026) : .white)
+
+                            if let url = exportedMIDIURL {
+                                ShareLink(item: url) {
+                                    Label("分享 .mid", systemImage: "square.and.arrow.up")
+                                        .font(.caption.weight(.semibold))
+                                        .padding(.horizontal, 13)
+                                        .padding(.vertical, 9)
+                                        .background(Capsule().fill(palette.cardSurface))
+                                        .foregroundStyle(palette.primaryInk)
+                                }
+                            } else {
+                                Button {
+                                    exportedMIDIURL = try? MIDIExporter.writeTemporaryMIDIFile(
+                                        document: currentDocument,
+                                        includeHarmonyCradle: cradleEnabled
+                                    )
+                                } label: {
+                                    Label("生成 .mid", systemImage: "pianokeys")
+                                        .font(.caption.weight(.semibold))
+                                        .padding(.horizontal, 13)
+                                        .padding(.vertical, 9)
+                                        .background(Capsule().fill(palette.cardSurface))
+                                        .foregroundStyle(palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }

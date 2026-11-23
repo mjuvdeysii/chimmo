@@ -2,13 +2,13 @@ import Foundation
 import SwiftUI
 
 /// 五色天光调式光谱（严格遵循五度圈明暗顺序，每相邻两片天空只挪动 1 只咩哞半步！）：
-/// 云端失重 (#4) → 晴空晨光 (标准大调) → 落日余晖 (♭7) → 森林晨雾 (♭3 ♮6 ♭7) → 暮色夜曲 (自然小调 ♭3 ♭6 ♭7)
+/// 云端失重 (#4) -> 晴空晨光 (标准大调) -> 落日余晖 (b7) -> 森林晨雾 (b3 #6 b7) -> 暮色夜曲 (自然小调 b3 b6 b7)
 public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
-    case cloudLydian      // ✨ 云端失重（Lydian: #4 梦境悬浮）
-    case brightMajor      // ☀️ 晴空晨光（Ionian: 标准大调）
-    case goldenMixolydian // 🌅 落日余晖（Mixolydian: ♭7 暖橘公路电影）
-    case forestDorian     // 🍃 森林晨雾（Dorian: ♭3 ♮6 微雨透阳光）
-    case wistfulMinor     // 🌧 暮色夜曲（Aeolian: 自然小调）
+    case cloudLydian      // 云端失重（Lydian: #4 梦境悬浮）
+    case brightMajor      // 晴空晨光（Ionian: 标准大调）
+    case goldenMixolydian // 落日余晖（Mixolydian: b7 暖橘公路电影）
+    case forestDorian     // 森林晨雾（Dorian: b3 #6 微雨透阳光）
+    case wistfulMinor     // 暮色夜曲（Aeolian: 自然小调）
 
     public var id: String { rawValue }
 
@@ -47,9 +47,9 @@ public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
         switch self {
         case .cloudLydian: return "Lydian 利底亚 (#4)"
         case .brightMajor: return "Major 自然大调"
-        case .goldenMixolydian: return "Mixolydian 混合利底亚 (♭7)"
-        case .forestDorian: return "Dorian 多利亚 (♭3 ♮6)"
-        case .wistfulMinor: return "Minor 自然小调 (♭3 ♭6 ♭7)"
+        case .goldenMixolydian: return "Mixolydian 混合利底亚 (b7)"
+        case .forestDorian: return "Dorian 多利亚 (b3 还原6)"
+        case .wistfulMinor: return "Minor 自然小调 (b3 b6 b7)"
         }
     }
 
@@ -134,9 +134,9 @@ public enum MelodyVoice: String, CaseIterable, Codable, Sendable, Identifiable {
 /// 2. 逻辑哲学镜（实时利萨如波纹对称花 + 种子折纸架构 + 延留张力丝 + 掌心触觉）
 /// 3. 音乐家母语镜（真实半音窄缝 + Do-Ti 唱名 + 音程弧标 + 和弦内/外音标注）
 public enum CognitiveLens: String, CaseIterable, Codable, Sendable, Identifiable {
-    case poetic     // 🌿 诗意直觉
-    case philosophy // 💠 逻辑哲学
-    case musician   // 🎼 音乐母语
+    case poetic     // 诗意直觉
+    case philosophy // 逻辑哲学
+    case musician   // 音乐母语
 
     public var id: String { rawValue }
 

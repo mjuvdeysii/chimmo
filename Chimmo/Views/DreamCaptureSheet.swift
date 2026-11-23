@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// 零乐理 3 秒「捕梦创作」抽屉：
-/// - 1) 🥁 拍节奏 · 画山坡：先按脑海里的快慢轻敲木鼓，再单指画一条起伏山坡（或一键套用 4 座山坡），五音不全也能一次写对；
-/// - 2) 🎙 随口轻哼：不管跑不跑调，只听你的相对高低起伏自动排上星盘；
-/// - 3) ✨ 亮灯跟弹 & 空白星盘：随时跟着亮灯体验名曲，或铺开一张全新的安心 5 音画布。
+/// - 1) 拍节奏 · 画山坡：先按脑海里的快慢轻敲木鼓，再单指画一条起伏山坡（或一键套用 4 座山坡），五音不全也能一次写对；
+/// - 2) 随口轻哼：不管跑不跑调，只听你的相对高低起伏自动排上星盘；
+/// - 3) 魔法 · 跟弹 · 夜灯剧场：随时进入闭眼夜灯触觉剧场、跟着亮灯体验名曲，或铺开一张全新的安心 5 音画布。
 public struct DreamCaptureSheet: View {
     @ObservedObject public var vm: StudioViewModel
     public let palette: ChimmoPalette
@@ -14,6 +14,7 @@ public struct DreamCaptureSheet: View {
     @State private var sketchPoints: [CGPoint] = []
     @State private var sketchSize: CGSize = CGSize(width: 300, height: 140)
     @State private var seedShifts: [Int] = [0, 0, 0]
+    @State private var showNightLampTheater: Bool = false
 
     public init(vm: StudioViewModel, palette: ChimmoPalette) {
         self.vm = vm
@@ -60,6 +61,11 @@ public struct DreamCaptureSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .fullScreenCover(isPresented: $showNightLampTheater) {
+            NightLampTactileSheet(vm: vm) {
+                dismiss()
+            }
+        }
     }
 
     // MARK: - Tab 0: Drum Tap + 1-Finger Mountain Sketch + 4 Instant Hills
@@ -113,14 +119,12 @@ public struct DreamCaptureSheet: View {
                     }
                 } label: {
                     HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(palette.nightLampGold.opacity(0.24))
-                                .frame(width: 46, height: 46)
-                            Image(systemName: "hand.tap.fill")
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(palette.nightLampGold)
-                        }
+                        ChimmoCraftBadge(
+                            .drumPulse,
+                            accent: palette.nightLampGold,
+                            surface: palette.shelfSurface,
+                            size: 46
+                        )
                         VStack(alignment: .leading, spacing: 2) {
                             Text("轻敲这里定下节奏")
                                 .font(.headline.weight(.bold))
@@ -252,6 +256,35 @@ public struct DreamCaptureSheet: View {
                     }
                 }
             }
+
+            // D. 一键切入闭眼夜灯触觉剧场
+            Button {
+                showNightLampTheater = true
+            } label: {
+                HStack(spacing: 10) {
+                    ChimmoCraftBadge(
+                        .nightLampHalo,
+                        accent: palette.nightLampGold,
+                        surface: palette.shelfSurface,
+                        size: 32
+                    )
+                    Text("闭上眼睛用掌心震动摸出音珠 · 进入夜灯触觉剧场")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(palette.secondaryInk)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(palette.nightLampGold.opacity(0.32), lineWidth: 1.0)
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -308,10 +341,52 @@ public struct DreamCaptureSheet: View {
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(palette.cardSurface))
     }
 
-    // MARK: - Tab 2: Magic Origami, Seed Variations, Follow-the-Glow & Blank Canvas
+    // MARK: - Tab 2: Night-Lamp Theater, Magic Origami, Seed Variations, Follow-the-Glow & Blank Canvas
 
     private var followAndBlankSection: some View {
         VStack(alignment: .leading, spacing: 14) {
+            // 闭眼夜灯触觉剧场入口卡片（深曜夜色 × 温暖琥珀矢量夜灯图标）
+            Button {
+                showNightLampTheater = true
+            } label: {
+                HStack(spacing: 12) {
+                    ChimmoCraftBadge(
+                        .nightLampHalo,
+                        accent: Color(hex: 0xFFB84D),
+                        surface: Color(hex: 0x151D3B),
+                        size: 42
+                    )
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("闭眼夜灯触觉剧场")
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(Color(hex: 0xF4EBDD))
+                        Text("无需盯住屏幕，单指在磁吸脊线上靠掌心震动滑寻音高，松手即落珠")
+                            .font(.caption2)
+                            .foregroundStyle(Color(hex: 0xAEB4CC))
+                    }
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: 0xFFB84D))
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: 0x121A37), Color(hex: 0x1B244B)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .strokeBorder(Color(hex: 0xFFB84D).opacity(0.40), lineWidth: 1.1)
+                        )
+                )
+            }
+            .buttonStyle(.plain)
+
             Button {
                 if !vm.followGlowActive {
                     vm.toggleFollowGlow()
@@ -319,12 +394,14 @@ public struct DreamCaptureSheet: View {
                 dismiss()
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "sparkles")
-                        .font(.title2)
-                        .foregroundStyle(palette.nightLampGold)
-                        .frame(width: 36)
+                    ChimmoCraftBadge(
+                        .followBeacon,
+                        accent: palette.nightLampGold,
+                        surface: palette.shelfSurface,
+                        size: 38
+                    )
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("✨ 亮灯跟弹当前曲目")
+                        Text("亮灯跟弹当前曲目")
                             .font(.headline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
                         Text("转盘自动转到下一颗发光星珠，按你的速度跟着敲下方彩虹条即可亲自演奏！")
@@ -338,11 +415,15 @@ public struct DreamCaptureSheet: View {
             }
             .buttonStyle(.plain)
 
-            // 🌱 旋律折纸生长（把短短 3 颗音长成完整乐章）
+            // 旋律折纸生长（把短短 3 颗音长成完整乐章）
             VStack(alignment: .leading, spacing: 8) {
-                Text("🌱 旋律折纸生长（零基础一键扩写完整乐章）")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(palette.secondaryInk)
+                HStack(spacing: 6) {
+                    ChimmoCraftMark(.origamiPrism, color: palette.homeAnchor)
+                        .frame(width: 14, height: 14)
+                    Text("旋律折纸生长（零基础一键扩写完整乐章）")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(palette.secondaryInk)
+                }
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     ForEach(MotifGrowthOperation.allCases) { op in
@@ -368,12 +449,16 @@ public struct DreamCaptureSheet: View {
                 }
             }
 
-            // 🧅 大师火种微调（改掉前 3 颗火种音，即刻生出专属个人变奏）
+            // 大师火种微调（改掉前 3 颗火种音，即刻生出专属个人变奏）
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("🧅 改 3 颗火种 · 长出专属名曲变奏")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.secondaryInk)
+                    HStack(spacing: 6) {
+                        ChimmoCraftMark(.seedBloom, color: palette.homeAnchor)
+                            .frame(width: 14, height: 14)
+                        Text("改 3 颗火种 · 长出专属名曲变奏")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(palette.secondaryInk)
+                    }
                     Spacer()
                     if seedShifts != [0, 0, 0] {
                         Button("重置") { seedShifts = [0, 0, 0] }

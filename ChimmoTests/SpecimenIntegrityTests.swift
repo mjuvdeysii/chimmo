@@ -183,13 +183,13 @@ final class SpecimenIntegrityTests: XCTestCase {
             chordPreset: .autoMatch,
             chordOverrides: [:],
             accompanimentTexture: .swanRipple,
-            moodSticker: "✨ 我的名曲变奏",
+            moodSticker: "我的名曲变奏",
             summaryNote: "从《天鹅》3 颗火种中改写出的专属变奏"
         )
-        XCTAssertEqual(saved.moodSticker, "✨ 我的名曲变奏")
+        XCTAssertEqual(saved.moodSticker, "我的名曲变奏")
 
         let reloaded = MelodyNotebookStore(directory: tmpDir)
-        XCTAssertEqual(reloaded.entries.first?.moodSticker, "✨ 我的名曲变奏")
+        XCTAssertEqual(reloaded.entries.first?.moodSticker, "我的名曲变奏")
         XCTAssertEqual(reloaded.entries.first?.document.title, varied.title)
     }
 
@@ -452,5 +452,94 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(vm.playbackRate, 0.65, accuracy: 1e-5)
         XCTAssertEqual(vm.clock.playbackRate, 0.65, accuracy: 1e-5)
         vm.stopPlayback()
+    }
+
+    @MainActor
+    func testAudioSynth48kHzGraphNoFormatErrorAndAudiblePCM() throws {
+        let synth = FeltPianoSynth()
+        let result = try synth.verifyOfflineRenderPeak(sampleRate: 48_000.0, frequency: 440.0)
+        XCTAssertEqual(result.reverbInRate, 48_000.0, accuracy: 1.0, "混响输入总线必须与 48kHz 硬件源对齐")
+        XCTAssertEqual(result.reverbOutRate, 48_000.0, accuracy: 1.0, "混响输出总线必须显式声明同频格式，严防 iOS -10868 静音故障")
+        XCTAssertGreaterThan(result.peak, 0.05, "合成器渲染管线必须产生真实可闻的正向声压振幅")
+    }
+
+    @MainActor
+    func testCreativeAlchemyRound3NightLampPostcardBorrowAndZeroEmojiGuard() throws {
+        // 1. TactileFieldMapper 闭眼迟滞磁吸校验
+        XCTAssertEqual(TactileFieldMapper.rawNormalizedY(locationY: 92, height: 100, paddingRatio: 0.08), 0.0, accuracy: 1e-5)
+        XCTAssertEqual(TactileFieldMapper.rawNormalizedY(locationY: 8, height: 100, paddingRatio: 0.08), 1.0, accuracy: 1e-5)
+
+        // 五声安全模式共有 6 档 [0, 1, 2, 4, 5, 7]，死区 0.24 下跨 0.74 才切到下一档
+        XCTAssertEqual(
+            TactileFieldMapper.snappedLaneIndex(normalizedY: 0.12, previousLaneIndex: 0, pentatonicSafe: true),
+            0,
+            "在死区范围内的手部微颤不应触发跳音"
+        )
+        XCTAssertEqual(
+            TactileFieldMapper.snappedLaneIndex(normalizedY: 0.18, previousLaneIndex: 0, pentatonicSafe: true),
+            1,
+            "跨过迟滞阈值后应精准吸进下一档音阶"
+        )
+        XCTAssertEqual(
+            TactileFieldMapper.magneticDetentNormalizedY(laneIndex: 7, pentatonicSafe: false),
+            1.0,
+            accuracy: 1e-5
+        )
+
+        // 2. 离线黑胶星轨明信片 PNG 渲染与空曲安全防护
+        let pngData = VinylPostcardExporter.renderPNGData(
+            document: SpecimenLibrary.saintSaensTheSwan,
+            shadowEnabled: true,
+            isNight: true
+        )
+        XCTAssertNotNil(pngData)
+        if let pngData {
+            XCTAssertGreaterThan(pngData.count, 1024)
+            XCTAssertEqual(Array(pngData.prefix(4)), [0x89, 0x50, 0x4E, 0x47], "导出字节必须为标准 PNG 文件头")
+        }
+
+        let emptyDoc = MelodyDocument(title: "空盘测试", subtitle: "", notes: [])
+        XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: emptyDoc, isNight: false))
+
+        let tempURL = try VinylPostcardExporter.writeTemporaryPostcardFile(document: SpecimenLibrary.saintSaensTheSwan)
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: tempURL.path))
+        XCTAssertTrue(tempURL.lastPathComponent.hasSuffix(".png"))
+
+        // 3. 夜灯触觉短句落盘 & 28 首名曲「借天光」氛围移植
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v010-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.applyNightLampPhrase(
+            [
+                NoteBead(degree: 1, rawOnset: 0.14, rawDuration: 0.45),
+                NoteBead(degree: 5, rawOnset: 0.70, rawDuration: 0.65)
+            ],
+            pentatonicSafe: true
+        )
+        XCTAssertEqual(vm.document.notes.count, 2)
+        XCTAssertTrue(vm.pentatonicSafe)
+        XCTAssertTrue(vm.document.title.contains("夜灯摸音"))
+
+        vm.borrowHarmonyAtmosphere(from: SpecimenLibrary.tchaikovskySwanLake)
+        XCTAssertEqual(vm.document.notes.count, 2, "借天光只能套用调式与织体，绝不可覆盖用户自己的音符旋律")
+        XCTAssertEqual(vm.document.scaleMode, .wistfulMinor)
+        XCTAssertEqual(vm.document.harmonyProfile, .filmGlow)
+        XCTAssertEqual(vm.accompanimentTexture, .swanRipple)
+        XCTAssertEqual(vm.melodyVoice, .singingCello)
+        vm.stopPlayback()
+
+        // 4. 全局零 Emoji 门禁守卫
+        var inspectStrings: [String] = []
+        inspectStrings.append(contentsOf: PitchGlyphShape.allCases.map(\.symbolName))
+        inspectStrings.append(contentsOf: MelodyHillTemplate.allCases.map(\.shortLabel))
+        inspectStrings.append(contentsOf: DiatonicChord.allCases.map(\.shortMoodGlyph))
+        inspectStrings.append(contentsOf: XylophoneRollEngine.suggestThreeLanes(forBeatIndex: 0, in: [], pentatonicSafe: true).map(\.badge))
+        for text in inspectStrings {
+            for scalar in text.unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji, "禁止在设计文案与标记中出现 Emoji 符号：\(text)")
+            }
+        }
     }
 }

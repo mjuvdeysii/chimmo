@@ -22,7 +22,7 @@ public enum StageVisualMode: String, CaseIterable, Identifiable, Sendable {
 }
 
 /// 色彩 + 位置 + 几何形状三重无障碍音高编码（色盲友好 & 零乐理直觉识别）：
-/// 1(●) 2(■) 3(▲) 4(◆) 5(★) 6(💧) 7(✦) 1↑(◎)
+/// 1(圆点) 2(圆方) 3(三角) 4(棱镜) 5(五星) 6(水滴) 7(星芒) 1↑(双环)
 public enum PitchGlyphShape: String, CaseIterable, Sendable {
     case circle
     case roundedSquare
@@ -48,14 +48,14 @@ public enum PitchGlyphShape: String, CaseIterable, Sendable {
 
     public var symbolName: String {
         switch self {
-        case .circle: return "●"
-        case .roundedSquare: return "■"
-        case .triangle: return "▲"
-        case .diamond: return "◆"
-        case .star: return "★"
-        case .teardrop: return "💧"
-        case .spark: return "✦"
-        case .doubleRing: return "◎"
+        case .circle: return "圆点"
+        case .roundedSquare: return "圆方"
+        case .triangle: return "三角"
+        case .diamond: return "棱镜"
+        case .star: return "五星"
+        case .teardrop: return "水滴"
+        case .spark: return "星芒"
+        case .doubleRing: return "双环"
         }
     }
 
@@ -366,5 +366,55 @@ public enum ConstellationGeometry {
 
         let progress = currentTime < curOnset ? 0.0 : 1.0
         return CometSnapshot(position: p0, activeLaneIndex: curLane, nextLaneIndex: curLane, progress: progress)
+    }
+}
+
+/// 闭眼夜灯触觉剧场音高磁吸迟滞映射器（Schmitt 迟滞防抖：在零视觉盯着屏幕滑动时，绝不因手指轻微颤动而在相邻音高之间反复跳音）。
+public enum TactileFieldMapper {
+
+    /// 把屏幕纵向触摸点转换为从下到上的归一化高度（0.0 = 最底端低音，1.0 = 最顶端高音）
+    public static func rawNormalizedY(
+        locationY: CGFloat,
+        height: CGFloat,
+        paddingRatio: CGFloat = 0.08
+    ) -> Double {
+        let safeH = max(1.0, height)
+        let pad = safeH * max(0.0, min(0.30, paddingRatio))
+        let usable = max(1.0, safeH - pad * 2.0)
+        let norm = 1.0 - Double((locationY - pad) / usable)
+        return max(0.0, min(1.0, norm))
+    }
+
+    /// 带迟滞边界的音阶吸附：只有跨过半格再加上 `hysteresis` 死区后才会切换到下一阶梯，给闭眼手指清晰稳重的「机械棘轮感」。
+    public static func snappedLaneIndex(
+        normalizedY: Double,
+        previousLaneIndex: Int?,
+        pentatonicSafe: Bool,
+        hysteresis: Double = 0.24
+    ) -> Int {
+        let allowed = XylophoneLane.allowedIndices(pentatonicSafe: pentatonicSafe)
+        guard allowed.count > 1 else { return allowed.first ?? 0 }
+
+        let clampedY = max(0.0, min(1.0, normalizedY))
+        let posFloat = clampedY * Double(allowed.count - 1)
+        let safeHysteresis = max(0.0, min(0.45, hysteresis))
+
+        if let prev = previousLaneIndex, let prevPos = allowed.firstIndex(of: prev) {
+            if abs(posFloat - Double(prevPos)) < (0.5 + safeHysteresis) {
+                return prev
+            }
+        }
+
+        let targetPos = max(0, min(allowed.count - 1, Int(posFloat.rounded())))
+        return allowed[targetPos]
+    }
+
+    /// 返回指定音阶轨道在触觉场中的磁吸中心归一化高度 `[0, 1]`
+    public static func magneticDetentNormalizedY(laneIndex: Int, pentatonicSafe: Bool) -> Double {
+        let allowed = XylophoneLane.allowedIndices(pentatonicSafe: pentatonicSafe)
+        guard allowed.count > 1 else { return 0.5 }
+        let snapped = XylophoneLane.nearestAllowedIndex(laneIndex, pentatonicSafe: pentatonicSafe)
+        let pos = allowed.firstIndex(of: snapped) ?? 0
+        return Double(pos) / Double(allowed.count - 1)
     }
 }

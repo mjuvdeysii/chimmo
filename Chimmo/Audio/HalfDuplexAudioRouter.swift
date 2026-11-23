@@ -37,12 +37,12 @@ public final class HalfDuplexAudioRouter: @unchecked Sendable {
         switch mode {
         case .playback:
             try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try session.setPreferredIOBufferDuration(0.010)
+            try? session.setPreferredIOBufferDuration(0.010)
             try session.setActive(true)
         case .recording:
             try session.setCategory(.record, mode: .measurement, options: [])
-            try session.setPreferredSampleRate(48_000)
-            try session.setPreferredIOBufferDuration(0.010)
+            try? session.setPreferredSampleRate(48_000)
+            try? session.setPreferredIOBufferDuration(0.010)
             try session.setActive(true)
             // 若存在机身内置麦克风，优先选中内置麦，杜绝蓝牙通话麦把音质锁死到 16kHz HFP
             if let builtIn = session.availableInputs?.first(where: { $0.portType == .builtInMic }) {

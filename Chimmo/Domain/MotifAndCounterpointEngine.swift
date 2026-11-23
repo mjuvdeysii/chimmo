@@ -58,10 +58,10 @@ public enum HarmonicRatioPhysics {
 
 /// 3 音种子分形生长法则（把短短几秒钟的脑放火花，用巴赫与圣桑的几何哲学折出完整乐章）
 public enum MotifGrowthOperation: String, CaseIterable, Identifiable, Sendable {
-    case climbSequence      // 🌱 爬楼模进（原样搬高一层）
-    case waterMirror        // 🪞 水面倒影（上下翻转对称）
-    case tearfulSuspension  // 💧 迟到半秒（4→3 延留催泪收束）
-    case fullFourPhrasePoem // ✨ 四句成诗（起·承·转·合完整乐章）
+    case climbSequence      // 爬楼模进（原样搬高一层）
+    case waterMirror        // 水面倒影（上下翻转对称）
+    case tearfulSuspension  // 迟到半秒（4->3 延留催泪收束）
+    case fullFourPhrasePoem // 四句成诗（起·承·转·合完整乐章）
 
     public var id: String { rawValue }
 

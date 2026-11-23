@@ -68,6 +68,8 @@ public final class FeltPianoSynth: @unchecked Sendable {
     private var isStarting: Bool = false
     private var observersInstalled: Bool = false
     private var observerTokens: [NSObjectProtocol] = []
+    private var engineConfigObserverToken: NSObjectProtocol?
+    private var graphGeneration: UInt64 = 0
 
     public init(router: HalfDuplexAudioRouter = HalfDuplexAudioRouter()) {
         self.router = router
@@ -77,8 +79,18 @@ public final class FeltPianoSynth: @unchecked Sendable {
     }
 
     deinit {
+        let nc = NotificationCenter.default
         for token in observerTokens {
-            NotificationCenter.default.removeObserver(token)
+            nc.removeObserver(token)
+        }
+        if let engToken = engineConfigObserverToken {
+            nc.removeObserver(engToken)
+        }
+    }
+
+    private func hasActiveVoices() -> Bool {
+        lock.withLock { state in
+            state.pair.active || state.voices.contains(where: { $0.active })
         }
     }
 
@@ -333,7 +345,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
             queue: nil
         ) { [weak self] _ in
             self?.audioQueue.async {
-                self?.lifecycleLock.withLock { self?.isStarted = false }
+                self?.stopEngineOnQueue()
             }
         }
         observerTokens.append(inactiveToken)
@@ -344,53 +356,82 @@ public final class FeltPianoSynth: @unchecked Sendable {
             queue: nil
         ) { [weak self] _ in
             self?.audioQueue.async {
-                self?.stopEngineOnQueue()
+                guard let self else { return }
+                self.lifecycleLock.withLock {
+                    self.isStarted = false
+                    self.isStarting = false
+                }
+                if self.hasActiveVoices() {
+                    self.ensureRunning()
+                }
             }
         }
         observerTokens.append(resumeToken)
-        #endif
 
-        let cfgToken = nc.addObserver(
-            forName: .AVAudioEngineConfigurationChange,
+        let routeToken = nc.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
             object: nil,
             queue: nil
-        ) { [weak self] _ in
+        ) { [weak self] note in
+            let reasonRaw = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
+            let reason = reasonRaw.flatMap(AVAudioSession.RouteChangeReason.init(rawValue:))
+            guard reason == .oldDeviceUnavailable || reason == .newDeviceAvailable || reason == .categoryChange else {
+                return
+            }
             self?.audioQueue.async {
-                self?.resetEngineOnQueue()
+                guard let self else { return }
+                let wasRunningOrActive = self.lifecycleLock.withLock { self.isStarted } || self.hasActiveVoices()
+                self.resetEngineOnQueue()
+                if wasRunningOrActive && self.router.currentMode == .playback {
+                    self.ensureRunning()
+                }
             }
         }
-        observerTokens.append(cfgToken)
+        observerTokens.append(routeToken)
+        #endif
+    }
+
+    private func teardownGraphLocked() {
+        if let tok = engineConfigObserverToken {
+            NotificationCenter.default.removeObserver(tok)
+            engineConfigObserverToken = nil
+        }
+        if let eng = engine {
+            if eng.isRunning {
+                eng.stop()
+            }
+            eng.reset()
+        }
+        engine = nil
+        reverb = nil
+        sourceNode = nil
+        configuredSampleRate = 0
     }
 
     private func startEngineOnQueue() {
         installObserversIfNeeded()
         do {
             try router.configure(mode: .playback)
-            let hwRate = max(44_100.0, router.hardwareSampleRate)
-            lock.withLock { $0.sampleRate = hwRate }
+            let probeEngine = AVAudioEngine()
+            let outSR = probeEngine.outputNode.outputFormat(forBus: 0).sampleRate
+            let effectiveSR = (outSR >= 22_050.0 && outSR <= 96_000.0) ? outSR : max(44_100.0, router.hardwareSampleRate)
+            lock.withLock { $0.sampleRate = effectiveSR }
 
-            if engine == nil || abs(configuredSampleRate - hwRate) > 1.0 {
-                resetEngineOnQueue()
-                try buildGraphOnQueue(sampleRate: hwRate)
-            }
-
-            guard let eng = engine else {
-                lifecycleLock.withLock {
-                    isStarted = false
-                    isStarting = false
-                }
-                return
-            }
-
-            if !eng.isRunning {
+            if engine == nil || abs(configuredSampleRate - effectiveSR) > 1.0 {
+                teardownGraphLocked()
+                try startGraphOnQueue(sampleRate: effectiveSR)
+            } else if let eng = engine, !eng.isRunning {
                 eng.prepare()
                 try eng.start()
             }
+
+            let running = engine?.isRunning ?? false
             lifecycleLock.withLock {
-                isStarted = true
+                isStarted = running
                 isStarting = false
             }
         } catch {
+            teardownGraphLocked()
             lifecycleLock.withLock {
                 isStarted = false
                 isStarting = false
@@ -409,28 +450,16 @@ public final class FeltPianoSynth: @unchecked Sendable {
     }
 
     private func resetEngineOnQueue() {
-        if let eng = engine {
-            if eng.isRunning {
-                eng.stop()
-            }
-            eng.reset()
-        }
-        engine = nil
-        reverb = nil
-        sourceNode = nil
-        configuredSampleRate = 0
+        teardownGraphLocked()
         lifecycleLock.withLock {
             isStarted = false
             isStarting = false
         }
     }
 
-    private func buildGraphOnQueue(sampleRate: Double) throws {
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
-            return
-        }
+    private func makeSourceNode(format: AVAudioFormat) -> AVAudioSourceNode {
         let stateLock = lock
-        let node = AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList -> OSStatus in
+        return AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let count = Int(frameCount)
             guard count > 0, let leftPtr = abl[0].mData?.assumingMemoryBound(to: Float.self) else {
@@ -589,20 +618,142 @@ public final class FeltPianoSynth: @unchecked Sendable {
             }
             return noErr
         }
+    }
+
+    private func attachConfigObserver(for eng: AVAudioEngine, generation: UInt64) {
+        if let existing = engineConfigObserverToken {
+            NotificationCenter.default.removeObserver(existing)
+            engineConfigObserverToken = nil
+        }
+        engineConfigObserverToken = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: eng,
+            queue: nil
+        ) { [weak self] _ in
+            self?.audioQueue.async {
+                guard let self, self.graphGeneration == generation else { return }
+                let hadVoices = self.hasActiveVoices()
+                self.resetEngineOnQueue()
+                if hadVoices && self.router.currentMode == .playback {
+                    self.ensureRunning()
+                }
+            }
+        }
+    }
+
+    private func startGraphOnQueue(sampleRate: Double) throws {
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+            return
+        }
+
+        // 优先构建完整「声源 -> 音乐厅混响 -> mainMixerNode」链路；若极少数音频路由拒绝混响格式则自动降级为「声源 -> mainMixerNode」直通，绝不静音！
+        do {
+            let eng = AVAudioEngine()
+            let node = makeSourceNode(format: format)
+            let rev = AVAudioUnitReverb()
+            rev.loadFactoryPreset(.mediumHall2)
+            rev.wetDryMix = 28.0
+
+            let mixer = eng.mainMixerNode
+            mixer.outputVolume = 1.0
+
+            eng.attach(node)
+            eng.attach(rev)
+            try eng.connectNode(node, to: rev, format: format)
+            try eng.connectNode(rev, to: mixer, format: format)
+
+            eng.prepare()
+            try eng.start()
+
+            graphGeneration &+= 1
+            attachConfigObserver(for: eng, generation: graphGeneration)
+            self.engine = eng
+            self.reverb = rev
+            self.sourceNode = node
+            self.configuredSampleRate = sampleRate
+        } catch {
+            let eng = AVAudioEngine()
+            let node = makeSourceNode(format: format)
+            let mixer = eng.mainMixerNode
+            mixer.outputVolume = 1.0
+
+            eng.attach(node)
+            try eng.connectNode(node, to: mixer, format: format)
+
+            eng.prepare()
+            try eng.start()
+
+            graphGeneration &+= 1
+            attachConfigObserver(for: eng, generation: graphGeneration)
+            self.engine = eng
+            self.reverb = nil
+            self.sourceNode = node
+            self.configuredSampleRate = sampleRate
+        }
+    }
+
+    /// 离线音频管线自检（供 XCTest 直接验证 48kHz 双端混响连接绝不报 -10868 且真实输出有效 PCM 声压，绝不触发实时录音/播放权限）
+    public func verifyOfflineRenderPeak(
+        sampleRate: Double = 48_000.0,
+        frequency: Double = 440.0
+    ) throws -> (peak: Float, reverbInRate: Double, reverbOutRate: Double) {
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+            throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
+        }
+
+        lock.withLock { state in
+            state.sampleRate = sampleRate
+            state.voices[0] = Voice(
+                active: true,
+                timbre: .feltPiano,
+                frequency: frequency,
+                phase: 0.0,
+                phaseDetune: 0.0,
+                hammerPhase: 0.0,
+                ageSamples: 0.0,
+                delaySamples: 0.0,
+                velocity: 0.72,
+                decaySeconds: 1.2,
+                brightness: 0.95
+            )
+        }
 
         let eng = AVAudioEngine()
+        let node = makeSourceNode(format: format)
         let rev = AVAudioUnitReverb()
         rev.loadFactoryPreset(.mediumHall2)
         rev.wetDryMix = 28.0
+        let mixer = eng.mainMixerNode
+        mixer.outputVolume = 1.0
 
         eng.attach(node)
         eng.attach(rev)
         try eng.connectNode(node, to: rev, format: format)
-        try eng.connectNode(rev, to: eng.mainMixerNode, format: nil)
+        try eng.connectNode(rev, to: mixer, format: format)
 
-        self.engine = eng
-        self.reverb = rev
-        self.sourceNode = node
-        self.configuredSampleRate = sampleRate
+        try eng.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 512)
+        try eng.start()
+
+        let inRate = rev.inputFormat(forBus: 0).sampleRate
+        let outRate = rev.outputFormat(forBus: 0).sampleRate
+
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: eng.manualRenderingFormat, frameCapacity: 512) else {
+            eng.stop()
+            throw NSError(domain: "app.chimmo.synth", code: -2, userInfo: [NSLocalizedDescriptionKey: "Buffer allocation failed"])
+        }
+
+        var peak: Float = 0.0
+        for _ in 0..<4 {
+            let status = try eng.renderOffline(512, to: buffer)
+            if status == .success, let channels = buffer.floatChannelData {
+                let len = Int(buffer.frameLength)
+                for i in 0..<len {
+                    peak = max(peak, abs(channels[0][i]))
+                }
+            }
+        }
+        eng.stop()
+        silenceAll()
+        return (peak, inRate, outRate)
     }
 }

@@ -20,7 +20,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
         chordPreset: ChordProgressionPreset = .autoMatch,
         chordOverrides: [Int: DiatonicChord] = [:],
         accompanimentTexture: AccompanimentTexture? = .swanRipple,
-        moodSticker: String? = "🦢 湖畔微风",
+        moodSticker: String? = "湖畔微风",
         summaryNote: String = ""
     ) {
         self.id = id
@@ -112,11 +112,11 @@ public final class MelodyNotebookStore: ObservableObject {
 
     private func defaultSticker(for mode: ScaleMode) -> String {
         switch mode {
-        case .cloudLydian: return "✨ 云端发呆"
-        case .brightMajor: return "☀️ 晴空草坡"
-        case .goldenMixolydian: return "🌅 落日余晖"
-        case .forestDorian: return "🍃 林间晨雾"
-        case .wistfulMinor: return "🌙 深夜台灯"
+        case .cloudLydian: return "云端发呆"
+        case .brightMajor: return "晴空草坡"
+        case .goldenMixolydian: return "落日余晖"
+        case .forestDorian: return "林间晨雾"
+        case .wistfulMinor: return "深夜台灯"
         }
     }
 

@@ -1,7 +1,7 @@
 import QuartzCore
 import SwiftUI
 
-/// 咩哞 v0.7 Tab 2：「唱片馆」—— 我的旋转脑放唱片 + 28 首公版/原创名曲黑胶馆（一键放上星盘亮灯跟弹或改写）
+/// 咩哞 v0.10 Tab 2：「唱片馆」—— 我的旋转脑放唱片 + 28 首公版/原创名曲黑胶馆（支持跟弹、放上声盘、借天光与黑胶明信片分享）
 public struct MusicBoxShelfView: View {
     public let palette: ChimmoPalette
     public let synth: FeltPianoSynth
@@ -10,6 +10,8 @@ public struct MusicBoxShelfView: View {
     public let onLoadSavedToBoard: (SavedMelodyEntry) -> Void
     public let onPlayAlongSpecimen: (MelodyDocument) -> Void
     public let onEditSpecimenOnBoard: (MelodyDocument) -> Void
+    public let onBorrowAtmosphere: (MelodyDocument) -> Void
+    public let onShareSavedEntry: (SavedMelodyEntry) -> Void
     public let onStartNewTap: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -27,6 +29,8 @@ public struct MusicBoxShelfView: View {
         onLoadSavedToBoard: @escaping (SavedMelodyEntry) -> Void,
         onPlayAlongSpecimen: @escaping (MelodyDocument) -> Void,
         onEditSpecimenOnBoard: @escaping (MelodyDocument) -> Void,
+        onBorrowAtmosphere: @escaping (MelodyDocument) -> Void = { _ in },
+        onShareSavedEntry: @escaping (SavedMelodyEntry) -> Void = { _ in },
         onStartNewTap: @escaping () -> Void
     ) {
         self.palette = palette
@@ -36,6 +40,8 @@ public struct MusicBoxShelfView: View {
         self.onLoadSavedToBoard = onLoadSavedToBoard
         self.onPlayAlongSpecimen = onPlayAlongSpecimen
         self.onEditSpecimenOnBoard = onEditSpecimenOnBoard
+        self.onBorrowAtmosphere = onBorrowAtmosphere
+        self.onShareSavedEntry = onShareSavedEntry
         self.onStartNewTap = onStartNewTap
         self._selectedSegment = State(initialValue: notebook.entries.isEmpty ? 1 : 0)
     }
@@ -174,12 +180,12 @@ public struct MusicBoxShelfView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
-                    Text(entry.moodSticker ?? "◎ 星轨唱片")
-                        .font(.system(size: 10, weight: .bold))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2.5)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
+                    ChimmoEditorialPill(
+                        text: entry.moodSticker ?? "星轨唱片",
+                        accent: entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
+                        surface: palette.shelfSurface,
+                        textColor: palette.primaryInk
+                    )
                     Text(dateStr)
                         .font(.caption2)
                         .foregroundStyle(palette.secondaryInk)
@@ -218,6 +224,17 @@ public struct MusicBoxShelfView: View {
                     .buttonStyle(.plain)
 
                     Spacer()
+
+                    Button {
+                        onShareSavedEntry(entry)
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(palette.homeAnchor)
+                            .padding(6)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("分享 \(entry.document.title) 黑胶明信片")
 
                     Button(role: .destructive) {
                         if isPlayingThis { stopInlinePlay() }
@@ -330,14 +347,14 @@ public struct MusicBoxShelfView: View {
                             .lineLimit(2)
                     }
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: 7) {
                         Button {
                             stopInlinePlay()
                             onPlayAlongSpecimen(spec)
                         } label: {
                             Label("亮灯跟弹", systemImage: "sparkles")
                                 .font(.caption2.weight(.bold))
-                                .padding(.horizontal, 11)
+                                .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
                                 .background(Capsule().fill(palette.homeAnchor))
                                 .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
@@ -350,10 +367,30 @@ public struct MusicBoxShelfView: View {
                         } label: {
                             Label("放上声盘", systemImage: "record.circle")
                                 .font(.caption2.weight(.semibold))
-                                .padding(.horizontal, 10)
+                                .padding(.horizontal, 9)
                                 .padding(.vertical, 6)
                                 .background(Capsule().fill(palette.shelfSurface))
                                 .foregroundStyle(palette.primaryInk)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            stopInlinePlay()
+                            onBorrowAtmosphere(spec)
+                        } label: {
+                            HStack(spacing: 4) {
+                                ChimmoCraftMark(
+                                    .atmosphereHorizon,
+                                    color: spec.scaleMode.skyAuroraColor(isNight: palette.isNight)
+                                )
+                                .frame(width: 11, height: 11)
+                                Text("借天光")
+                            }
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 6)
+                            .background(Capsule().fill(spec.scaleMode.skyAuroraColor(isNight: palette.isNight).opacity(0.14)))
+                            .foregroundStyle(spec.scaleMode.skyAuroraColor(isNight: palette.isNight))
                         }
                         .buttonStyle(.plain)
                     }

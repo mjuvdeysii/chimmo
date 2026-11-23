@@ -140,7 +140,7 @@ public final class StudioViewModel: ObservableObject {
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.45)
         showToast(
             shadowCounterpointEnabled
-                ? "👥 已唤醒巴赫影子对位：副声部将在旋律留白处轻声对话"
+                ? "已唤醒巴赫影子对位：副声部将在旋律留白处轻声对话"
                 : "已收起影子对位声部"
         )
     }
@@ -152,7 +152,7 @@ public final class StudioViewModel: ObservableObject {
         }
         showToast(
             musicHapticsEnabled
-                ? "🫀 已开启掌心音乐触觉：播放时可感受每拍律动与和声呼吸"
+                ? "已开启掌心音乐触觉：播放时可感受每拍律动与和声呼吸"
                 : "已关闭播放期间的掌心触觉脉冲"
         )
     }
@@ -163,7 +163,7 @@ public final class StudioViewModel: ObservableObject {
         clock.setRate(clamped)
         AcousticHapticsEngine.shared.playScrubTick()
         let formatted = String(format: "%.2g×", clamped)
-        showToast("⏱ 播放呼吸速度已调至 \(formatted)")
+        showToast("播放呼吸速度已调至 \(formatted)")
     }
 
     public var smartHints: [SmartPitchHint] {
@@ -440,7 +440,7 @@ public final class StudioViewModel: ObservableObject {
                     if let first = document.notes.first {
                         clock.setScrubTime(first.displayOnset(grooveStrength: document.grooveStrength))
                     }
-                    showToast("✨ 整首演奏完成！再跟着亮灯敲一遍，或退出自由改写")
+                    showToast("整首演奏完成！再跟着亮灯敲一遍，或退出自由改写")
                 } else {
                     let next = document.notes[followGlowIndex]
                     let nextOnset = next.displayOnset(grooveStrength: document.grooveStrength)
@@ -590,7 +590,7 @@ public final class StudioViewModel: ObservableObject {
         smartHintActive = false
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("✨ 已按「\(operation.label)」长出 \(document.notes.count) 颗星珠！")
+        showToast("已按「\(operation.label)」长出 \(document.notes.count) 颗星珠！")
         togglePlayback()
     }
 
@@ -611,7 +611,84 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = varied.notes.first?.id
         smartHintActive = false
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("🌱 3 颗火种微调已长成你的专属变奏！")
+        showToast("3 颗火种微调已长成你的专属变奏！")
+        togglePlayback()
+    }
+
+    /// 将「闭眼夜灯触觉剧场」录下的星珠序列贴到星盘并立刻旋转试听。
+    public func applyNightLampPhrase(_ beads: [NoteBead], pentatonicSafe safe: Bool) {
+        guard !beads.isEmpty else { return }
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        isTappingRhythm = false
+        pushUndo()
+        currentSavedEntryID = nil
+        chordOverrides.removeAll()
+        if chordPreset == .off { chordPreset = .autoMatch }
+
+        pentatonicSafe = safe
+        document = MelodyDocument(
+            title: "夜灯摸音 #\(notebook.entries.count + 1)",
+            subtitle: "在深夜掌心触觉里凝结的旋律",
+            rootMIDI: 60,
+            scaleMode: document.scaleMode,
+            harmonyProfile: document.harmonyProfile,
+            grooveStrength: 0.0,
+            notes: beads,
+            isSpecimen: false,
+            preferredTexture: accompanimentTexture,
+            preferredVoice: melodyVoice
+        )
+        clock.updateTotalDuration(document.totalDuration)
+        selectedBeadID = document.notes.first?.id
+        smartHintActive = false
+        activeGuidedMoment = nil
+        AcousticHapticsEngine.shared.playResolutionExhale()
+        showToast("夜灯触觉已凝结 \(beads.count) 颗星珠，开始转动试听")
+        togglePlayback()
+    }
+
+    /// 从任意名曲「借天光」：保留自己的旋律线条不变，披上大师名曲的天光调式、水波织体与主奏乐器。
+    public func borrowHarmonyAtmosphere(from specimen: MelodyDocument) {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        isTappingRhythm = false
+
+        if document.notes.isEmpty {
+            openSpecimen(specimen, autoPlay: true)
+            return
+        }
+
+        pushUndo()
+        document.scaleMode = specimen.scaleMode
+        document.harmonyProfile = specimen.harmonyProfile
+        if let tex = specimen.preferredTexture {
+            accompanimentTexture = tex
+            document.preferredTexture = tex
+        } else {
+            document.preferredTexture = accompanimentTexture
+        }
+        if let voice = specimen.preferredVoice {
+            melodyVoice = voice
+            document.preferredVoice = voice
+        } else {
+            document.preferredVoice = melodyVoice
+        }
+        chordPreset = .autoMatch
+        chordOverrides.removeAll()
+
+        if document.isSpecimen {
+            document.isSpecimen = false
+            currentSavedEntryID = nil
+            if !document.title.contains("借景") {
+                document.title = "\(document.title) · 借景"
+            }
+        }
+        activeGuidedMoment = nil
+        AcousticHapticsEngine.shared.playResolutionExhale()
+        showToast("已将《\(specimen.title)》的天光与音色披在你的旋律上！")
         togglePlayback()
     }
 
@@ -622,7 +699,7 @@ public final class StudioViewModel: ObservableObject {
             if selectedBeadID == nil {
                 selectedBeadID = document.notes.first?.id
             }
-            showToast("💡 盘面已点亮 3 圈最搭音轨，点一下试试")
+            showToast("盘面已点亮 3 圈最搭音轨，点一下试试")
         }
     }
 
@@ -638,7 +715,7 @@ public final class StudioViewModel: ObservableObject {
                 clock.setScrubTime(first.displayOnset(grooveStrength: document.grooveStrength))
             }
             AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.6)
-            showToast("✨ 跟着亮金光的琴条敲，转盘会陪你转到下一拍")
+            showToast("跟着亮金光的琴条敲，转盘会陪你转到下一拍")
         } else {
             clock.setScrubTime(nil)
         }
@@ -649,8 +726,8 @@ public final class StudioViewModel: ObservableObject {
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         showToast(
             pentatonicSafe
-                ? "🎋 已开启安心 5 音：收起 4 和 7，怎么点都自然顺耳"
-                : "🎼 已解锁全部 8 音星轨（含 4 与 7 的情绪张力）"
+                ? "已开启安心 5 音：收起 4 和 7，怎么点都自然顺耳"
+                : "已解锁全部 8 音星轨（含 4 与 7 的情绪张力）"
         )
     }
 
@@ -1015,7 +1092,7 @@ public final class StudioViewModel: ObservableObject {
         if let first = specimen.notes.first {
             clock.setScrubTime(first.displayOnset(grooveStrength: specimen.grooveStrength))
         }
-        showToast("✨ 跟着亮金光的琴条敲，演奏《\(specimen.title)》")
+        showToast("跟着亮金光的琴条敲，演奏《\(specimen.title)》")
     }
 
     public func openSavedEntry(_ entry: SavedMelodyEntry, autoPlay: Bool = true) {
@@ -1057,7 +1134,7 @@ public final class StudioViewModel: ObservableObject {
             chordPreset: chordPreset,
             chordOverrides: chordOverrides,
             accompanimentTexture: accompanimentTexture,
-            moodSticker: moodSticker ?? (document.scaleMode.isMinorFlavored ? "🌙 温柔夜曲" : "◎ 星轨唱片"),
+            moodSticker: moodSticker ?? (document.scaleMode.isMinorFlavored ? "温柔夜曲" : "星轨唱片"),
             summaryNote: currentInsight.headline,
             existingEntryID: currentSavedEntryID
         )
@@ -1341,13 +1418,14 @@ public final class StudioViewModel: ObservableObject {
     }
 }
 
-/// 咩哞 v0.7：零卡顿首帧渲染 + iOS 27 Liquid Glass 双标签旋转声盘玩具架构
+/// 咩哞 v0.10：零卡顿首帧渲染 + iOS 27 Liquid Glass 双标签旋转声盘玩具架构
 public struct StudioView: View {
     @StateObject private var vm = StudioViewModel()
     @Environment(\.colorScheme) private var systemScheme
 
     @State private var selectedTab: ChimmoTab = .board
     @State private var showAbout: Bool = false
+    @State private var postcardTarget: VinylPostcardRequest? = nil
 
     public init() {}
 
@@ -1369,6 +1447,16 @@ public struct StudioView: View {
                     palette: palette,
                     onOpenAbout: {
                         showAbout = true
+                    },
+                    onOpenSharePostcard: {
+                        postcardTarget = VinylPostcardRequest(
+                            document: vm.document,
+                            chordPreset: vm.chordPreset,
+                            chordOverrides: vm.chordOverrides,
+                            melodyVoice: vm.melodyVoice,
+                            shadowEnabled: vm.shadowCounterpointEnabled,
+                            headline: vm.currentInsight.headline
+                        )
                     }
                 )
             }
@@ -1391,6 +1479,20 @@ public struct StudioView: View {
                         vm.openSpecimen(spec, autoPlay: true)
                         selectedTab = .board
                     },
+                    onBorrowAtmosphere: { spec in
+                        vm.borrowHarmonyAtmosphere(from: spec)
+                        selectedTab = .board
+                    },
+                    onShareSavedEntry: { entry in
+                        postcardTarget = VinylPostcardRequest(
+                            document: entry.document,
+                            chordPreset: entry.chordPreset,
+                            chordOverrides: entry.chordOverrides,
+                            melodyVoice: entry.document.preferredVoice,
+                            shadowEnabled: false,
+                            headline: entry.summaryNote.isEmpty ? nil : entry.summaryNote
+                        )
+                    },
                     onStartNewTap: {
                         selectedTab = .board
                         vm.startRhythmTap()
@@ -1400,12 +1502,24 @@ public struct StudioView: View {
         }
         .tint(palette.homeAnchor)
         .modifier(OptionalAppearanceModifier(preference: vm.appearance))
+        .task {
+            // 首帧绘制完约 180ms 后异步预热后台音频引擎，兼具瞬时开屏与首次点按零延迟发声
+            try? await Task.sleep(nanoseconds: 180_000_000)
+            vm.synth.ensureRunning()
+        }
         .sheet(isPresented: $showAbout) {
             AboutSheetView(
                 palette: palette,
                 currentDocument: vm.document,
-                cradleEnabled: vm.cradleEnabled
+                cradleEnabled: vm.cradleEnabled,
+                chordPreset: vm.chordPreset,
+                chordOverrides: vm.chordOverrides,
+                melodyVoice: vm.melodyVoice,
+                shadowEnabled: vm.shadowCounterpointEnabled
             )
+        }
+        .sheet(item: $postcardTarget) { req in
+            VinylPostcardShareSheet(palette: palette, request: req)
         }
     }
 }
