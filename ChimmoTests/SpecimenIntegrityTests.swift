@@ -887,4 +887,54 @@ final class SpecimenIntegrityTests: XCTestCase {
             }
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound11StringDecayRibbonVibratoAndVoiceOverDuration() throws {
+        // 1. 跨音高琴弦物理阻尼律单调性与安全边界验证
+        let bassDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: 1.8, frequency: 130.81)
+        let midDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: 1.8, frequency: 261.63)
+        let trebleDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: 1.8, frequency: 1046.50)
+        XCTAssertGreaterThan(bassDecay, midDecay)
+        XCTAssertGreaterThan(midDecay, trebleDecay)
+        XCTAssertGreaterThan(PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: 130.81),
+                             PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: 1046.50))
+        let nanDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: .nan, frequency: 0.0)
+        XCTAssertTrue(nanDecay.isFinite && nanDecay >= 0.22)
+
+        // 2. 底栏琴条纵向表达死区与水银光柱 + 揉弦偏移映射验证
+        let tapDeadzone = KeyRibbonExpressionMapper.expression(verticalOffsetPt: 6.5, barHeightPt: 62.0)
+        XCTAssertFalse(tapDeadzone.isVibratoActive)
+        XCTAssertEqual(tapDeadzone.mercuryFraction, 0.0)
+
+        let pushUp = KeyRibbonExpressionMapper.expression(verticalOffsetPt: -26.0, barHeightPt: 62.0)
+        XCTAssertTrue(pushUp.isVibratoActive)
+        XCTAssertGreaterThan(pushUp.mercuryFraction, 0.18)
+        XCTAssertLessThanOrEqual(pushUp.mercuryFraction, 1.0)
+        let vibState = HarmonicVibratoMapper.vibratoState(
+            dxFromStar: pushUp.vibratoDX,
+            dyFromStar: pushUp.vibratoDY,
+            radius: 26.0,
+            baseHz: 440.0,
+            anchorHz: 261.63
+        )
+        XCTAssertLessThanOrEqual(abs(vibState.centsOffset), 24.0)
+
+        // 3. 主舞台盲人转子时值朗读摘要包含精确拍长与零 Emoji 验证
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v018-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.document = MelodyDocument(
+            title: "时值朗读验证",
+            subtitle: "",
+            notes: [NoteBead(degree: 5, octaveOffset: 0, rawOnset: 0.2, rawDuration: 1.2)]
+        )
+        vm.selectedBeadID = vm.document.notes.first?.id
+        let summary = vm.stageAccessibilitySummary
+        XCTAssertTrue(summary.contains("1.2秒"), "选中拍摘要应读出具体秒数以便视障者调控长短音")
+        for scalar in summary.unicodeScalars {
+            let v = scalar.value
+            let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+            XCTAssertFalse(isEmoji)
+        }
+        vm.stopPlayback()
+    }
 }

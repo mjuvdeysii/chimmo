@@ -800,7 +800,8 @@ public final class StudioViewModel: ObservableObject {
            let idx = document.notes.firstIndex(where: { $0.id == selID }) {
             let bead = document.notes[idx]
             let lane = XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset))
-            parts.append("第 \(idx + 1) 拍，\(lane.digitLabel) \(lane.solfege)")
+            let durText = String(format: "%.1f秒", bead.rawDuration)
+            parts.append("第 \(idx + 1) 拍，\(lane.digitLabel) \(lane.solfege)，\(durText)")
         }
         if isPlaying {
             parts.append("正在播放")

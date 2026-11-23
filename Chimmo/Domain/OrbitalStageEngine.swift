@@ -738,3 +738,40 @@ public enum AcousticSpatialPanMapper {
         return max(-0.58, min(0.58, raw))
     }
 }
+
+/// 跨音高琴弦物理阻尼律：低音共鸣箱温暖绵长，高音琴弦短促清透、空气高频吸收略快（无音频线程开销，在触发时预计算）。
+public enum PitchScaledAcousticEnvelope {
+    public static func scaledDecay(baseDecay: Double, frequency: Double) -> Double {
+        let safeDecay = baseDecay.isFinite ? max(0.25, min(4.8, baseDecay)) : 1.5
+        let safeFreq = frequency.isFinite ? max(40.0, min(4800.0, frequency)) : 261.63
+        let factor = max(0.58, min(1.38, pow(261.63 / safeFreq, 0.28)))
+        return max(0.22, min(5.4, safeDecay * factor))
+    }
+
+    public static func highFrequencyAirAbsorption(frequency: Double) -> Double {
+        let safeFreq = frequency.isFinite ? max(40.0, min(4800.0, frequency)) : 261.63
+        return max(0.68, min(1.18, pow(261.63 / safeFreq, 0.16)))
+    }
+}
+
+/// 底栏 8 键彩虹琴条纵向微推表现映射：保持 8pt 点击/横滑死区，超过死区按垂直位移映射水银微光柱高度与柔和弦乐揉弦偏移。
+public enum KeyRibbonExpressionMapper {
+    public struct Expression: Equatable, Sendable {
+        public let isVibratoActive: Bool
+        public let mercuryFraction: Double
+        public let vibratoDX: CGFloat
+        public let vibratoDY: CGFloat
+    }
+
+    public static func expression(verticalOffsetPt: CGFloat, barHeightPt: CGFloat) -> Expression {
+        guard verticalOffsetPt.isFinite, abs(verticalOffsetPt) > 8.0 else {
+            return Expression(isVibratoActive: false, mercuryFraction: 0.0, vibratoDX: 0.0, vibratoDY: 0.0)
+        }
+        let usableSpan = max(18.0, Double(barHeightPt.isFinite ? barHeightPt : 62.0) * 0.65)
+        let norm = max(-1.0, min(1.0, Double(-verticalOffsetPt) / usableSpan))
+        let mercury = max(0.18, min(1.0, 0.22 + abs(norm) * 0.78))
+        let dx = CGFloat(norm * 22.0)
+        let dy = CGFloat(abs(norm) * 10.0)
+        return Expression(isVibratoActive: true, mercuryFraction: mercury, vibratoDX: dx, vibratoDY: dy)
+    }
+}

@@ -232,6 +232,8 @@ public final class FeltPianoSynth: @unchecked Sendable {
 
         let resolvedPan = pan.map { max(-0.65, min(0.65, $0.isFinite ? $0 : 0.0)) }
             ?? max(-0.46, min(0.46, log2(max(40.0, frequency) / 261.63) * 0.20))
+        let scaledDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: decay, frequency: frequency)
+        let absorbedBright = max(0.2, min(1.4, brightness * PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: frequency)))
 
         lock.withLock { state in
             let delaySamps = max(0.0, delaySeconds * state.sampleRate)
@@ -257,8 +259,8 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 ageSamples: 0.0,
                 delaySamples: delaySamps,
                 velocity: max(0.03, min(1.0, velocity)),
-                decaySeconds: max(0.25, min(4.8, decay)),
-                brightness: max(0.2, min(1.4, brightness)),
+                decaySeconds: scaledDecay,
+                brightness: absorbedBright,
                 pan: resolvedPan
             )
         }

@@ -32,6 +32,8 @@ public struct OrbitalStageView: View {
     @State private var manualRiverScrollX: CGFloat = 0
     @State private var riverStartScrollX: CGFloat = 0
     @State private var struckRibbonLane: Int? = nil
+    @State private var ribbonDragAnchorY: CGFloat? = nil
+    @State private var ribbonMercuryLevel: Double = 0.0
     @State private var struckNebulaLane: Int? = nil
     @State private var nebulaHoldCenter: CGPoint = .zero
     @State private var isActivelyDraggingStage: Bool = false
@@ -167,10 +169,22 @@ public struct OrbitalStageView: View {
             }
             .onChange(of: vm.visualMode) { _, _ in
                 struckNebulaLane = nil
+                struckRibbonLane = nil
+                ribbonDragAnchorY = nil
+                ribbonMercuryLevel = 0.0
+                vm.endStarVibrato()
+            }
+            .onChange(of: vm.followGlowActive) { _, _ in
+                struckRibbonLane = nil
+                ribbonDragAnchorY = nil
+                ribbonMercuryLevel = 0.0
                 vm.endStarVibrato()
             }
             .onDisappear {
                 struckNebulaLane = nil
+                struckRibbonLane = nil
+                ribbonDragAnchorY = nil
+                ribbonMercuryLevel = 0.0
                 vm.endStarVibrato()
             }
         }
@@ -285,6 +299,18 @@ public struct OrbitalStageView: View {
                 }
                 .accessibilityAction(named: "降低一音") {
                     vm.shiftSelectedBeadPitch(delta: -1)
+                }
+                .accessibilityAction(named: "延长当前拍") {
+                    if vm.selectedBeadID == nil {
+                        vm.selectedBeadID = vm.document.notes.first?.id
+                    }
+                    vm.adjustSelectedBeadDuration(delta: 0.22)
+                }
+                .accessibilityAction(named: "缩短当前拍") {
+                    if vm.selectedBeadID == nil {
+                        vm.selectedBeadID = vm.document.notes.first?.id
+                    }
+                    vm.adjustSelectedBeadDuration(delta: -0.18)
                 }
                 .accessibilityAction(named: "插入一拍") {
                     vm.insertBeatAfterSelected()
@@ -2198,11 +2224,19 @@ public struct OrbitalStageView: View {
                         }
                     }
                     .overlay(alignment: .bottom) {
-                        if isChordResonant {
-                            Capsule()
-                                .fill(Color.white.opacity(palette.isNight ? 0.55 : 0.72))
-                                .frame(width: 14, height: 3)
-                                .padding(.bottom, 4)
+                        ZStack(alignment: .bottom) {
+                            if struckRibbonLane == lane.index && ribbonMercuryLevel > 0.05 {
+                                Capsule()
+                                    .fill(Color.white.opacity(0.62))
+                                    .frame(width: 5, height: max(8, barH * CGFloat(ribbonMercuryLevel) * 0.72))
+                                    .padding(.bottom, 5)
+                            }
+                            if isChordResonant {
+                                Capsule()
+                                    .fill(Color.white.opacity(palette.isNight ? 0.55 : 0.72))
+                                    .frame(width: 14, height: 3)
+                                    .padding(.bottom, 4)
+                            }
                         }
                     }
                     .shadow(
@@ -2219,6 +2253,7 @@ public struct OrbitalStageView: View {
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: isFollowTarget)
                     .accessibilityElement()
                     .accessibilityLabel("\(lane.member.voiceOverSummary)")
+                    .accessibilityValue(isFollowTarget ? "当前亮灯" : (isChordResonant ? "和谐音" : ""))
                     .accessibilityAddTraits(.isButton)
                     .accessibilityAction {
                         vm.strikeXylophoneLane(lane)
@@ -2234,6 +2269,9 @@ public struct OrbitalStageView: View {
                         let h = max(1, geo.size.height)
                         let idx = max(0, min(7, Int(floor((val.location.x / w) * 8.0))))
                         if struckRibbonLane != idx {
+                            vm.endStarVibrato()
+                            ribbonMercuryLevel = 0.0
+                            ribbonDragAnchorY = val.location.y
                             struckRibbonLane = idx
                             let lane = XylophoneLane.lane(at: idx)
                             if vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive {
@@ -2243,10 +2281,35 @@ public struct OrbitalStageView: View {
                             let dyn = ExpressiveTouchMapper.dynamics(normalizedY: normY)
                             wakeRippleTimeline()
                             vm.strikeXylophoneLane(lane, touchIntensity: dyn.velocity, touchBrightness: dyn.brightness)
+                        } else if !vm.followGlowActive && vm.selectedBeadID == nil,
+                                  let anchorY = ribbonDragAnchorY {
+                            let lane = XylophoneLane.lane(at: idx)
+                            if vm.pentatonicSafe && !lane.isPentatonicSafe {
+                                return
+                            }
+                            let expr = KeyRibbonExpressionMapper.expression(
+                                verticalOffsetPt: val.location.y - anchorY,
+                                barHeightPt: h
+                            )
+                            ribbonMercuryLevel = expr.mercuryFraction
+                            if expr.isVibratoActive {
+                                wakeRippleTimeline()
+                                vm.beginOrUpdateStarVibrato(
+                                    laneIndex: idx,
+                                    dx: expr.vibratoDX,
+                                    dy: expr.vibratoDY,
+                                    hitRadius: 26.0
+                                )
+                            } else {
+                                vm.endStarVibrato()
+                            }
                         }
                     }
                     .onEnded { _ in
                         struckRibbonLane = nil
+                        ribbonDragAnchorY = nil
+                        ribbonMercuryLevel = 0.0
+                        vm.endStarVibrato()
                     }
             )
         }
