@@ -1,10 +1,11 @@
 import QuartzCore
 import SwiftUI
 
-/// 咩哞 v0.7 旗舰双态声画主舞台：
-/// - 模式 A「◎ 星轨星盘」：音乐盒式旋转同心声盘，盘面随旋律顺滑旋转，每个发声的音符转到 12 点钟黄铜唱针下方绽放涟漪，支持单指手摇搓盘、拖珠改音、外环换和声；
-/// - 模式 B「〰 流动山河」：28% 处固定金光束，整片旋律山河平滑向左流淌，永远停留在视线中心；
-/// - 零乐理三重无障碍编码：颜色 + 轨道高低 + 8 种几何图腾（● ■ ▲ ◆ ★ 💧 ✦ ◎），辅以 CoreHaptics 音高触觉与 VoiceOver 语义读音。
+/// 咩哞 v0.9 旗舰三态声画主舞台：
+/// - 模式 A「◎ 星轨星盘」：音乐盒式旋转同心声盘，盘面随旋律顺滑旋转，外环悬浮四幕情绪中文锚词，支持巴赫影子月亮对位、单指手摇搓盘、拖珠改音、外环换和声；
+/// - 模式 B「〰 流动山河」：28% 处固定金光束，整片旋律山河与湖面倒影平滑向左流淌，永远停留在视线中心；
+/// - 模式 C「✦ 星云万花筒」：8 颗星辰环绕中央利萨如谐振星核，金色彗星沿旋律星座划过，单指点按或滑过星辰即兴共鸣；
+/// - 零乐理三重无障碍编码：颜色 + 轨道高低 + 8 种几何图腾（● ■ ▲ ◆ ★ 💧 ✦ ◎），辅以 CoreHaptics 掌心音乐触觉与 VoiceOver 语义读音。
 public struct OrbitalStageView: View {
     @ObservedObject public var vm: StudioViewModel
     public let palette: ChimmoPalette
@@ -30,6 +31,7 @@ public struct OrbitalStageView: View {
     @State private var manualRiverScrollX: CGFloat = 0
     @State private var riverStartScrollX: CGFloat = 0
     @State private var struckRibbonLane: Int? = nil
+    @State private var struckNebulaLane: Int? = nil
     @State private var isActivelyDraggingStage: Bool = false
     @State private var scrubTick: Int = 0
     @State private var lastScrubTimestamp: Double = 0
@@ -182,6 +184,7 @@ public struct OrbitalStageView: View {
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
 
                     Text(vm.document.scaleMode.shortSkyLabel)
                         .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -189,6 +192,7 @@ public struct OrbitalStageView: View {
                         .padding(.vertical, 2)
                         .background(Capsule().fill(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight).opacity(0.18)))
                         .foregroundStyle(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
+                        .fixedSize()
                 }
 
                 Text(headerSubtitle)
@@ -199,7 +203,7 @@ public struct OrbitalStageView: View {
 
             Spacer(minLength: 4)
 
-            // 星盘 ⇄ 山河 双态切换胶囊
+            // 星盘 ⇄ 山河 ⇄ 星云 三态切换胶囊
             HStack(spacing: 2) {
                 ForEach(StageVisualMode.allCases) { mode in
                     let active = vm.visualMode == mode
@@ -208,14 +212,14 @@ public struct OrbitalStageView: View {
                             vm.visualMode = mode
                         }
                     } label: {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 2.5) {
                             Image(systemName: mode.iconName)
-                                .font(.system(size: 10.5, weight: .bold))
+                                .font(.system(size: 9.5, weight: .bold))
                             Text(mode.rawValue)
-                                .font(.caption2.weight(.bold))
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
                         }
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 5.5)
                         .background(
                             Capsule().fill(active ? palette.homeAnchor : Color.clear)
                         )
@@ -225,6 +229,7 @@ public struct OrbitalStageView: View {
                     .accessibilityLabel("切换到\(mode.rawValue)视图")
                 }
             }
+            .fixedSize()
             .padding(3)
             .background(Capsule().fill(palette.shelfSurface))
         }
@@ -250,29 +255,39 @@ public struct OrbitalStageView: View {
             return "选中第 \(idx + 1) 拍 · 拖珠或点下方彩虹条微调"
         }
         if vm.document.notes.isEmpty {
-            return "点圆盘种音珠，或点下方「捕梦创作」敲一段节奏"
+            return vm.visualMode == .resonanceNebula
+                ? "点任意星辰即兴弹奏，或点下方「捕梦创作」"
+                : "点圆盘种音珠，或点下方「捕梦创作」敲一段节奏"
         }
-        return vm.visualMode == .orbitalDisc
-            ? "点▶转动听曲，或用手指拨转声盘"
-            : "点▶山河随声流动，或左右滑动"
+        switch vm.visualMode {
+        case .orbitalDisc:
+            return "点▶转动听曲，或用手指拨转声盘"
+        case .flowingRiver:
+            return "点▶山河随声流动，或左右滑动"
+        case .resonanceNebula:
+            return "点任意星辰即兴弹奏，点圆心开启星云流转"
+        }
     }
 
-    // MARK: - 2. Hero Stage Container (Orbital Disc OR Flowing Mountain River)
+    // MARK: - 2. Hero Stage Container (Orbital Disc OR Flowing River OR Resonance Nebula)
 
     private var heroStageContainer: some View {
         let boardBg = palette.isNight ? Color(hex: 0x121936) : Color(hex: 0xFAF6EE)
         let borderCol = palette.isNight ? palette.nightLampGold.opacity(0.20) : Color(hex: 0xCBB18D).opacity(0.32)
 
         return GeometryReader { geo in
-            ZStack(alignment: .topTrailing) {
+            ZStack {
                 TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: !shouldRunCanvasTimeline)) { _ in
                     let mediaNow = CACurrentMediaTime()
                     let _ = scrubTick
                     Canvas { ctx, size in
-                        if vm.visualMode == .orbitalDisc {
+                        switch vm.visualMode {
+                        case .orbitalDisc:
                             drawOrbitalDiscCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
-                        } else {
+                        case .flowingRiver:
                             drawFlowingRiverCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
+                        case .resonanceNebula:
+                            drawResonanceNebulaCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
                         }
                     }
                 }
@@ -283,25 +298,40 @@ public struct OrbitalStageView: View {
                             if !isActivelyDraggingStage {
                                 isActivelyDraggingStage = true
                             }
-                            if vm.visualMode == .orbitalDisc {
+                            switch vm.visualMode {
+                            case .orbitalDisc:
                                 handleOrbitalDragChanged(val, in: geo.size)
-                            } else {
+                            case .flowingRiver:
                                 handleRiverDragChanged(val, in: geo.size)
+                            case .resonanceNebula:
+                                handleNebulaDragChanged(val, in: geo.size)
                             }
                         }
                         .onEnded { val in
                             isActivelyDraggingStage = false
-                            if vm.visualMode == .orbitalDisc {
+                            switch vm.visualMode {
+                            case .orbitalDisc:
                                 handleOrbitalDragEnded(val, in: geo.size)
-                            } else {
+                            case .flowingRiver:
                                 handleRiverDragEnded(val, in: geo.size)
+                            case .resonanceNebula:
+                                handleNebulaDragEnded(val, in: geo.size)
                             }
                         }
                 )
 
-                // 右上角轻巧声学谐振微标（实时显示当前音程美学，零术语墙）
-                harmonyBadgeOverlay
-                    .padding(10)
+                // 顶部轻巧微标层：左上（活体对位 / 倍速微标） + 右上（实时声学谐振音程）
+                VStack {
+                    HStack(alignment: .top) {
+                        if vm.shadowCounterpointEnabled || abs(vm.playbackRate - 1.0) > 0.01 {
+                            activeFeaturesOverlay
+                        }
+                        Spacer(minLength: 8)
+                        harmonyBadgeOverlay
+                    }
+                    Spacer()
+                }
+                .padding(10)
             }
             .background(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
@@ -315,6 +345,38 @@ public struct OrbitalStageView: View {
             .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.28 : 0.07), radius: 14, y: 5)
         }
         .frame(minHeight: 255, maxHeight: .infinity)
+    }
+
+    private var activeFeaturesOverlay: some View {
+        Button {
+            showMoodSheet = true
+        } label: {
+            HStack(spacing: 5) {
+                if vm.shadowCounterpointEnabled {
+                    HStack(spacing: 3) {
+                        Image(systemName: "moon.stars.fill")
+                            .font(.system(size: 9, weight: .bold))
+                        Text("对位")
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(Color(hex: 0x4EA8DE))
+                }
+                if abs(vm.playbackRate - 1.0) > 0.01 {
+                    Text(String(format: "%.2g×", vm.playbackRate))
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(palette.nightLampGold)
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(palette.cardSurface.opacity(palette.isNight ? 0.85 : 0.92))
+                    .shadow(color: Color.black.opacity(0.06), radius: 4, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("打开情绪与声色调整对位和播放速度")
     }
 
     private var harmonyBadgeOverlay: some View {
@@ -351,7 +413,7 @@ public struct OrbitalStageView: View {
 
     private func orbitalMetrics(for size: CGSize) -> OrbitalMetrics {
         let center = CGPoint(x: size.width * 0.5, y: size.height * 0.52)
-        let maxR = min(size.width, size.height) * 0.455
+        let maxR = min(size.width, size.height) * 0.432
         let haloRadius = maxR * 0.98
         let platterRadius = maxR * 0.89
         let innerRadius = platterRadius * 0.31
@@ -375,7 +437,7 @@ public struct OrbitalStageView: View {
             ? (-Double.pi / 2.0 + ((currentTime! / total) * 2.0 * Double.pi))
             : (-Double.pi / 2.0)
 
-        // 1. 外环 4 幕和声极光弧（点按外环即可切换每一幕的情绪底色）
+        // 1. 外环 4 幕和声极光弧 + 悬浮正立诗意情绪标签（归家 / 托举 / 推力 / 怀旧，点按外环即可切换每一幕的情绪底色）
         let spans = vm.chordSpans
         if !spans.isEmpty {
             for span in spans {
@@ -388,9 +450,26 @@ public struct OrbitalStageView: View {
                 let col = span.chord.color(isNight: palette.isNight)
                 ctx.stroke(
                     arc,
-                    with: .color(col.opacity(isCurrentSpan ? 0.90 : 0.34)),
+                    with: .color(col.opacity(isCurrentSpan ? 0.92 : 0.34)),
                     style: StrokeStyle(lineWidth: isCurrentSpan ? 6.5 : 3.5, lineCap: .round)
                 )
+
+                // 外环悬浮永远正立不倒置的诗意情绪词
+                let midA = (a0 + a1) * 0.5
+                let labelR = m.haloRadius + 12.5
+                let rawX = m.center.x + CGFloat(cos(midA)) * labelR
+                let rawY = m.center.y + CGFloat(sin(midA)) * labelR
+                let labelPt = CGPoint(
+                    x: max(26.0, min(size.width - 26.0, rawX)),
+                    y: max(18.0, min(size.height - 14.0, rawY))
+                )
+                let avoidCornerOverlap = (labelPt.x > size.width - 102 && labelPt.y < 38) || (labelPt.x < 102 && labelPt.y < 38)
+                if !avoidCornerOverlap {
+                    let moodText = Text(span.chord.shortMoodGlyph)
+                        .font(.system(size: isCurrentSpan ? 10.5 : 9.0, weight: .bold, design: .rounded))
+                        .foregroundStyle(isCurrentSpan ? col : palette.secondaryInk.opacity(0.76))
+                    ctx.draw(moodText, at: labelPt, anchor: .center)
+                }
             }
         }
 
@@ -641,12 +720,101 @@ public struct OrbitalStageView: View {
             ctx.fill(glyphPath, with: .color(.white.opacity(0.96)), style: FillStyle(eoFill: true))
         }
 
+        // 5.8 巴赫影子月亮对位副音珠（在主旋律留白处轻声对话，呈半透明银蓝新月浮在内偏轨道）
+        if vm.shadowCounterpointEnabled {
+            for shadow in vm.shadowNotes {
+                let sLaneIdx = XylophoneLane.laneIndex(degree: shadow.degree, octaveOffset: shadow.octaveOffset)
+                let sAng = -Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: shadow.onset, totalDuration: total) + discRot
+                let baseR = OrbitalGeometry.orbitRadius(laneIndex: sLaneIdx, innerRadius: m.innerRadius, outerRadius: m.outerRadius)
+                let sRadius = max(m.innerRadius * 0.90, baseR - 6.0)
+                let sPt = CGPoint(x: m.center.x + CGFloat(cos(sAng)) * sRadius, y: m.center.y + CGFloat(sin(sAng)) * sRadius)
+                let isShadowSinging: Bool = {
+                    guard let ct = currentTime else { return false }
+                    return ct >= shadow.onset - 0.04 && ct <= shadow.onset + max(0.20, shadow.duration * 0.9)
+                }()
+
+                var tether = Path()
+                tether.move(to: m.center)
+                tether.addLine(to: sPt)
+                ctx.stroke(
+                    tether,
+                    with: .color(Color(hex: 0x7EC8E3).opacity(isShadowSinging ? 0.34 : 0.10)),
+                    style: StrokeStyle(lineWidth: 0.9, dash: [2, 3])
+                )
+                drawCrescentMoonOrb(
+                    ctx: &ctx,
+                    center: sPt,
+                    radius: isShadowSinging ? 9.5 : 7.4,
+                    color: Color(hex: 0x7EC8E3),
+                    isGlowing: isShadowSinging
+                )
+            }
+        }
+
         // 6. 中央利萨如谐振花纹玻璃圆心（实时映照当前声学和谐比例）
         drawCenterMandalaHub(ctx: &ctx, center: m.center, hubRadius: m.innerRadius * 0.76, mediaNow: mediaNow)
 
         // 7. 12 点钟黄铜唱针与声波涟漪绽放
         drawRipplesOnDisc(ctx: &ctx, metrics: m, discRot: discRot, needleAngle: needleAngle, mediaNow: mediaNow)
         drawTonearmNeedle(ctx: &ctx, metrics: m, needleAngle: needleAngle, isPlaying: vm.isPlaying, mediaNow: mediaNow)
+    }
+
+    private func drawCrescentMoonOrb(
+        ctx: inout GraphicsContext,
+        center: CGPoint,
+        radius r: CGFloat,
+        color: Color,
+        isGlowing: Bool
+    ) {
+        if isGlowing {
+            let glowR = r + 5.5
+            ctx.fill(
+                Path(ellipseIn: CGRect(x: center.x - glowR, y: center.y - glowR, width: glowR * 2, height: glowR * 2)),
+                with: .color(color.opacity(0.28))
+            )
+        }
+        var crescent = Path()
+        let topTip = CGPoint(x: center.x + r * 0.35, y: center.y - r * 0.86)
+        let botTip = CGPoint(x: center.x + r * 0.35, y: center.y + r * 0.86)
+        crescent.move(to: topTip)
+        crescent.addCurve(
+            to: botTip,
+            control1: CGPoint(x: center.x - r * 1.05, y: center.y - r * 0.55),
+            control2: CGPoint(x: center.x - r * 1.05, y: center.y + r * 0.55)
+        )
+        crescent.addCurve(
+            to: topTip,
+            control1: CGPoint(x: center.x - r * 0.20, y: center.y + r * 0.42),
+            control2: CGPoint(x: center.x - r * 0.20, y: center.y - r * 0.42)
+        )
+        crescent.closeSubpath()
+
+        ctx.fill(crescent, with: .color(color.opacity(isGlowing ? 0.94 : 0.72)))
+        ctx.stroke(crescent, with: .color(.white.opacity(isGlowing ? 0.88 : 0.52)), lineWidth: 0.9)
+    }
+
+    private func drawLissajousWave(
+        ctx: inout GraphicsContext,
+        center: CGPoint,
+        amplitude: CGFloat,
+        mediaNow: Double,
+        glowWidth: CGFloat = 4.0,
+        coreWidth: CGFloat = 1.5
+    ) {
+        let phys = vm.activeHarmonyPhysics
+        let tension = 1.0 - phys.consonance
+        let phase = reduceMotion ? 0.45 : mediaNow * (0.45 + tension * 2.0)
+        var wave = Path()
+        let steps = 110
+        for i in 0...steps {
+            let u = (Double(i) / Double(steps)) * Double.pi * 2.0
+            let x = center.x + CGFloat(sin(Double(phys.ratioA) * u + phase)) * amplitude
+            let y = center.y + CGFloat(sin(Double(phys.ratioB) * u)) * amplitude
+            if i == 0 { wave.move(to: CGPoint(x: x, y: y)) } else { wave.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        let lineCol = phys.isTense ? palette.tensionFilament : palette.homeAnchor
+        ctx.stroke(wave, with: .color(lineCol.opacity(0.28)), style: StrokeStyle(lineWidth: glowWidth, lineCap: .round))
+        ctx.stroke(wave, with: .color(lineCol.opacity(0.90)), style: StrokeStyle(lineWidth: coreWidth, lineCap: .round))
     }
 
     private func drawOrbitalTensionTick(ctx: inout GraphicsContext, center: CGPoint, radius: CGFloat, inward: Bool, color: Color) {
@@ -672,21 +840,7 @@ public struct OrbitalStageView: View {
         ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.nightLampGold.opacity(0.55)), lineWidth: 1.5)
 
         // 利萨如实时波纹花（双层柔光 + 清晰主丝线）
-        let phys = vm.activeHarmonyPhysics
-        let amp = hubRadius * 0.56
-        let tension = 1.0 - phys.consonance
-        let phase = reduceMotion ? 0.45 : mediaNow * (0.45 + tension * 2.0)
-        var wave = Path()
-        let steps = 110
-        for i in 0...steps {
-            let u = (Double(i) / Double(steps)) * Double.pi * 2.0
-            let x = center.x + CGFloat(sin(Double(phys.ratioA) * u + phase)) * amp
-            let y = center.y + CGFloat(sin(Double(phys.ratioB) * u)) * amp
-            if i == 0 { wave.move(to: CGPoint(x: x, y: y)) } else { wave.addLine(to: CGPoint(x: x, y: y)) }
-        }
-        let lineCol = phys.isTense ? palette.tensionFilament : palette.homeAnchor
-        ctx.stroke(wave, with: .color(lineCol.opacity(0.28)), style: StrokeStyle(lineWidth: 4.0, lineCap: .round))
-        ctx.stroke(wave, with: .color(lineCol.opacity(0.90)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+        drawLissajousWave(ctx: &ctx, center: center, amplitude: hubRadius * 0.56, mediaNow: mediaNow)
 
         // 暂停态提示可轻点圆心起转
         if !vm.isPlaying && !vm.followGlowActive && !vm.document.notes.isEmpty {
@@ -716,17 +870,17 @@ public struct OrbitalStageView: View {
             let col = Color(hex: ev.colorHex)
 
             for ring in 0..<2 {
-                let ringR = 8.0 + CGFloat(prog) * (36.0 + CGFloat(ring) * 14.0)
+                let ringR = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * ((ev.isShadow ? 24.0 : 36.0) + CGFloat(ring) * 12.0)
                 let rect = CGRect(x: pt.x - ringR, y: pt.y - ringR, width: ringR * 2, height: ringR * 2)
                 ctx.stroke(
                     Path(ellipseIn: rect),
-                    with: .color(col.opacity((1.0 - prog) * (ring == 0 ? 0.72 : 0.36))),
-                    lineWidth: 2.0
+                    with: .color(col.opacity((1.0 - prog) * (ev.isShadow ? 0.48 : (ring == 0 ? 0.72 : 0.36)))),
+                    lineWidth: ev.isShadow ? 1.5 : 2.0
                 )
             }
 
-            // 零堆分配星尘迸溅微粒（纯三角函数确定性计算 8 颗向外飘散微粒）
-            if !reduceMotion {
+            // 零堆分配星尘迸溅微粒（主音珠发声时迸溅 8 颗微粒，影子对位音维持柔和月光涟漪不喧宾夺主）
+            if !reduceMotion && !ev.isShadow {
                 let baseSeed = ev.birthMediaTime * 13.7 + Double(ev.laneIndex) * 2.3
                 for pIdx in 0..<8 {
                     let pAng = baseSeed + Double(pIdx) * (Double.pi * 2.0 / 8.0)
@@ -746,9 +900,9 @@ public struct OrbitalStageView: View {
     }
 
     private func drawTonearmNeedle(ctx: inout GraphicsContext, metrics: OrbitalMetrics, needleAngle: Double, isPlaying: Bool, mediaNow: Double) {
-        // 物理弹簧微颤：刚触及唱针 0.18 秒内的轻微阻尼微震
+        // 物理弹簧微颤：仅主旋律音珠触及唱针 0.18 秒内激发轻微阻尼微震
         var kickOffset: CGFloat = 0
-        if !reduceMotion, let newest = vm.rippleBus.events.last {
+        if !reduceMotion, let newest = vm.rippleBus.events.last(where: { !$0.isShadow }) {
             let age = mediaNow - newest.birthMediaTime
             if age >= 0 && age < 0.18 {
                 kickOffset = CGFloat(sin(age * 35.0) * exp(-age * 14.0) * 3.5)
@@ -946,6 +1100,27 @@ public struct OrbitalStageView: View {
             ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(.white.opacity(0.96)), style: FillStyle(eoFill: true))
         }
 
+        // 3.5 巴赫影子月亮对位副音珠（浮在山河主珠下方轻声回响）
+        if vm.shadowCounterpointEnabled {
+            for shadow in vm.shadowNotes {
+                let sLaneIdx = XylophoneLane.laneIndex(degree: shadow.degree, octaveOffset: shadow.octaveOffset)
+                let sx = FlowingRiverGeometry.screenX(onset: shadow.onset, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
+                guard sx >= -24 && sx <= size.width + 24 else { continue }
+                let sy = lay.padV + (CGFloat(7 - sLaneIdx) + 0.5) * lay.rowH + 10.0
+                let isShadowSinging: Bool = {
+                    guard let ct = currentTime else { return false }
+                    return ct >= shadow.onset - 0.04 && ct <= shadow.onset + max(0.20, shadow.duration * 0.9)
+                }()
+                drawCrescentMoonOrb(
+                    ctx: &ctx,
+                    center: CGPoint(x: sx, y: sy),
+                    radius: isShadowSinging ? 8.8 : 6.8,
+                    color: Color(hex: 0x7EC8E3),
+                    isGlowing: isShadowSinging
+                )
+            }
+        }
+
         // 4. 28% 处固定金光游标与声波涟漪 + 零堆分配星尘迸溅微粒
         var beam = Path()
         beam.move(to: CGPoint(x: lay.anchorX, y: 12))
@@ -956,16 +1131,16 @@ public struct OrbitalStageView: View {
         for ev in vm.rippleBus.activeEvents(at: mediaNow) {
             let age = mediaNow - ev.birthMediaTime
             let prog = max(0, min(1, age / 0.85))
-            let y = lay.padV + (CGFloat(7 - ev.laneIndex) + 0.5) * lay.rowH
+            let y = lay.padV + (CGFloat(7 - ev.laneIndex) + 0.5) * lay.rowH + (ev.isShadow ? 10.0 : 0.0)
             let x = vm.isPlaying ? lay.anchorX : FlowingRiverGeometry.screenX(onset: ev.onset, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
             let col = Color(hex: ev.colorHex)
-            let r = 8.0 + CGFloat(prog) * 34.0
+            let r = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * (ev.isShadow ? 22.0 : 34.0)
             ctx.stroke(
                 Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
-                with: .color(col.opacity((1.0 - prog) * 0.72)),
-                lineWidth: 2.0
+                with: .color(col.opacity((1.0 - prog) * (ev.isShadow ? 0.50 : 0.72))),
+                lineWidth: ev.isShadow ? 1.5 : 2.0
             )
-            if !reduceMotion {
+            if !reduceMotion && !ev.isShadow {
                 let baseSeed = ev.birthMediaTime * 11.3 + Double(ev.laneIndex) * 1.9
                 for pIdx in 0..<8 {
                     let pAng = baseSeed + Double(pIdx) * (Double.pi * 2.0 / 8.0)
@@ -980,6 +1155,265 @@ public struct OrbitalStageView: View {
                     )
                 }
             }
+        }
+    }
+
+    // MARK: - 2B-bis. Resonance Nebula Kaleidoscope Canvas Rendering
+
+    private func nebulaMetrics(for size: CGSize) -> (center: CGPoint, ringRadius: CGFloat, hubRadius: CGFloat) {
+        let center = CGPoint(x: size.width * 0.5, y: size.height * 0.53)
+        let ringRadius = min(size.width, size.height) * 0.365
+        let hubRadius = ringRadius * 0.56
+        return (center, ringRadius, hubRadius)
+    }
+
+    private func drawResonanceNebulaCanvas(ctx: inout GraphicsContext, size: CGSize, mediaNow: Double) {
+        let nm = nebulaMetrics(for: size)
+        let currentTime = vm.clock.currentTime(at: mediaNow)
+        let spans = vm.chordSpans
+
+        // 1. 当前幕情绪天光星云光晕背景
+        let activeChordColor: Color = {
+            if let ct = currentTime, let sp = spans.first(where: { ct >= $0.startTime && ct < $0.endTime }) {
+                return sp.chord.color(isNight: palette.isNight)
+            }
+            if let sp = spans.first(where: { $0.id == vm.activeChordSpanID }) {
+                return sp.chord.color(isNight: palette.isNight)
+            }
+            return vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        }()
+        let nebulaGrad = Gradient(colors: [
+            activeChordColor.opacity(palette.isNight ? 0.24 : 0.14),
+            activeChordColor.opacity(0.03),
+            Color.clear
+        ])
+        ctx.fill(
+            Path(ellipseIn: CGRect(
+                x: nm.center.x - nm.ringRadius * 1.38,
+                y: nm.center.y - nm.ringRadius * 1.38,
+                width: nm.ringRadius * 2.76,
+                height: nm.ringRadius * 2.76
+            )),
+            with: .radialGradient(nebulaGrad, center: nm.center, startRadius: 6, endRadius: nm.ringRadius * 1.35)
+        )
+
+        // 2. 外圈星轨与 8 条谐振星弦辐条
+        let ringRect = CGRect(
+            x: nm.center.x - nm.ringRadius,
+            y: nm.center.y - nm.ringRadius,
+            width: nm.ringRadius * 2,
+            height: nm.ringRadius * 2
+        )
+        ctx.stroke(
+            Path(ellipseIn: ringRect),
+            with: .color(palette.secondaryInk.opacity(palette.isNight ? 0.18 : 0.14)),
+            style: StrokeStyle(lineWidth: 1.2, dash: [4, 6])
+        )
+
+        for laneIdx in 0..<8 {
+            let lane = XylophoneLane.lane(at: laneIdx)
+            let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
+            let sPt = ConstellationGeometry.starPoint(laneIndex: laneIdx, center: nm.center, radius: nm.ringRadius)
+            let isLit = vm.activeLaneIndices.contains(laneIdx) || targetFollowLaneIndex == laneIdx
+            var spoke = Path()
+            spoke.move(to: nm.center)
+            spoke.addLine(to: sPt)
+            ctx.stroke(
+                spoke,
+                with: .color(lane.barColor(isNight: palette.isNight).opacity(isMuted ? 0.08 : (isLit ? 0.62 : 0.20))),
+                style: StrokeStyle(lineWidth: isLit ? 2.2 : 1.0, dash: isMuted ? [2, 4] : [])
+            )
+        }
+
+        // 3. 旋律星座连线（用弧线连起曲谱在 8 颗星辰间的星际漫游）
+        let notes = vm.document.notes.sorted {
+            $0.displayOnset(grooveStrength: vm.document.grooveStrength) < $1.displayOnset(grooveStrength: vm.document.grooveStrength)
+        }
+        if notes.count > 1 {
+            var constellation = Path()
+            let lane0 = XylophoneLane.laneIndex(degree: notes[0].degree, octaveOffset: notes[0].octaveOffset)
+            let pStart = ConstellationGeometry.starPoint(laneIndex: lane0, center: nm.center, radius: nm.ringRadius)
+            constellation.move(to: pStart)
+            for i in 1..<notes.count {
+                let lPrev = XylophoneLane.laneIndex(degree: notes[i - 1].degree, octaveOffset: notes[i - 1].octaveOffset)
+                let lCur = XylophoneLane.laneIndex(degree: notes[i].degree, octaveOffset: notes[i].octaveOffset)
+                let p0 = ConstellationGeometry.starPoint(laneIndex: lPrev, center: nm.center, radius: nm.ringRadius)
+                let p1 = ConstellationGeometry.starPoint(laneIndex: lCur, center: nm.center, radius: nm.ringRadius)
+                let ctrl = CGPoint(
+                    x: (p0.x + p1.x) * 0.39 + nm.center.x * 0.22,
+                    y: (p0.y + p1.y) * 0.39 + nm.center.y * 0.22
+                )
+                constellation.addQuadCurve(to: p1, control: ctrl)
+            }
+            ctx.stroke(
+                constellation,
+                with: .color(palette.homeAnchor.opacity(palette.isNight ? 0.36 : 0.28)),
+                style: StrokeStyle(lineWidth: 2.0, lineCap: .round)
+            )
+        }
+
+        // 4. 中央大尺度利萨如谐振星核
+        let hubRect = CGRect(
+            x: nm.center.x - nm.hubRadius,
+            y: nm.center.y - nm.hubRadius,
+            width: nm.hubRadius * 2,
+            height: nm.hubRadius * 2
+        )
+        let hubBg = Gradient(colors: palette.isNight
+            ? [Color(hex: 0xFFB84D).opacity(0.24), Color(hex: 0x1D2754)]
+            : [Color(hex: 0xFFE6AC).opacity(0.60), Color(hex: 0xF7ECDA)]
+        )
+        ctx.fill(
+            Path(ellipseIn: hubRect),
+            with: .radialGradient(hubBg, center: nm.center, startRadius: 4, endRadius: nm.hubRadius)
+        )
+        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.nightLampGold.opacity(0.50)), lineWidth: 1.5)
+        drawLissajousWave(
+            ctx: &ctx,
+            center: nm.center,
+            amplitude: nm.hubRadius * 0.62,
+            mediaNow: mediaNow,
+            glowWidth: 5.0,
+            coreWidth: 1.8
+        )
+
+        if !vm.isPlaying && !vm.followGlowActive && !vm.document.notes.isEmpty {
+            let triR = nm.hubRadius * 0.22
+            var playTri = Path()
+            playTri.move(to: CGPoint(x: nm.center.x - triR * 0.52, y: nm.center.y - triR * 0.78))
+            playTri.addLine(to: CGPoint(x: nm.center.x + triR * 0.92, y: nm.center.y))
+            playTri.addLine(to: CGPoint(x: nm.center.x - triR * 0.52, y: nm.center.y + triR * 0.78))
+            playTri.closeSubpath()
+            ctx.fill(playTri, with: .color(palette.nightLampGold.opacity(0.36)))
+        }
+
+        // 5. 流星轨迹（播放/搓盘时，金色彗星在星座星辰间顺滑飞舞，身后拖拽 5 颗微尘尾迹）
+        let comet = currentTime.flatMap {
+            ConstellationGeometry.cometSnapshot(
+                notes: notes,
+                grooveStrength: vm.document.grooveStrength,
+                currentTime: $0,
+                center: nm.center,
+                radius: nm.ringRadius
+            )
+        }
+
+        // 5.5 影子对位银蓝双星连弦（主星与影子新月之间亮起温柔和声弧弦）
+        if vm.shadowCounterpointEnabled,
+           let shadowEv = vm.rippleBus.lastShadowEvent {
+            let age = mediaNow - shadowEv.birthMediaTime
+            if age >= 0 && age <= 1.1 {
+                let fade = 1.0 - (age / 1.1)
+                let shadowPt = ConstellationGeometry.starPoint(laneIndex: shadowEv.laneIndex, center: nm.center, radius: nm.ringRadius)
+                let mainAnchor = comet?.position ?? ConstellationGeometry.starPoint(
+                    laneIndex: notes.first.map { XylophoneLane.laneIndex(degree: $0.degree, octaveOffset: $0.octaveOffset) } ?? 0,
+                    center: nm.center,
+                    radius: nm.ringRadius
+                )
+                var duetArc = Path()
+                duetArc.move(to: mainAnchor)
+                duetArc.addQuadCurve(
+                    to: shadowPt,
+                    control: CGPoint(
+                        x: (mainAnchor.x + shadowPt.x) * 0.36 + nm.center.x * 0.28,
+                        y: (mainAnchor.y + shadowPt.y) * 0.36 + nm.center.y * 0.28
+                    )
+                )
+                ctx.stroke(
+                    duetArc,
+                    with: .color(Color(hex: 0x7EC8E3).opacity(fade * 0.85)),
+                    style: StrokeStyle(lineWidth: 2.8, lineCap: .round)
+                )
+                drawCrescentMoonOrb(
+                    ctx: &ctx,
+                    center: shadowPt,
+                    radius: 10.5,
+                    color: Color(hex: 0x7EC8E3),
+                    isGlowing: true
+                )
+            }
+        }
+
+        if let c = comet {
+            let p0 = ConstellationGeometry.starPoint(laneIndex: c.activeLaneIndex, center: nm.center, radius: nm.ringRadius)
+            for tailIdx in 1...5 {
+                let backT = max(0.0, 1.0 - Double(tailIdx) * 0.14)
+                let tx = p0.x + (c.position.x - p0.x) * CGFloat(backT)
+                let ty = p0.y + (c.position.y - p0.y) * CGFloat(backT)
+                let tr = CGFloat(5.2 - Double(tailIdx) * 0.75)
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: tx - tr, y: ty - tr, width: tr * 2, height: tr * 2)),
+                    with: .color(palette.nightLampGold.opacity(max(0.15, 0.72 - Double(tailIdx) * 0.12)))
+                )
+            }
+            let auraR: CGFloat = 13.0
+            ctx.fill(
+                Path(ellipseIn: CGRect(x: c.position.x - auraR, y: c.position.y - auraR, width: auraR * 2, height: auraR * 2)),
+                with: .color(palette.nightLampGold.opacity(0.32))
+            )
+            let coreR: CGFloat = 6.2
+            ctx.fill(
+                Path(ellipseIn: CGRect(x: c.position.x - coreR, y: c.position.y - coreR, width: coreR * 2, height: coreR * 2)),
+                with: .color(palette.nightLampGold)
+            )
+        }
+
+        // 6. 星波涟漪与 8 颗釉面陶瓷星座星辰（含色盲图腾 + 清晰数字 + 声波扩散环）
+        let activeRipples = vm.rippleBus.activeEvents(at: mediaNow)
+        for ev in activeRipples {
+            let age = mediaNow - ev.birthMediaTime
+            let prog = max(0.0, min(1.0, age / 0.85))
+            let pt = ConstellationGeometry.starPoint(laneIndex: ev.laneIndex, center: nm.center, radius: nm.ringRadius)
+            let col = Color(hex: ev.colorHex)
+            let rr = 18.0 + CGFloat(prog) * (ev.isShadow ? 24.0 : 34.0)
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: pt.x - rr, y: pt.y - rr, width: rr * 2, height: rr * 2)),
+                with: .color(col.opacity((1.0 - prog) * 0.76)),
+                lineWidth: ev.isShadow ? 1.8 : 2.5
+            )
+        }
+
+        let hints = smartHintByLane
+        for laneIdx in 0..<8 {
+            let lane = XylophoneLane.lane(at: laneIdx)
+            let col = lane.barColor(isNight: palette.isNight)
+            let pt = ConstellationGeometry.starPoint(laneIndex: laneIdx, center: nm.center, radius: nm.ringRadius)
+            let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
+            let isFollowTarget = targetFollowLaneIndex == laneIdx
+            let isCometHome = comet?.activeLaneIndex == laneIdx && currentTime != nil
+            let isLit = vm.activeLaneIndices.contains(laneIdx) || struckNebulaLane == laneIdx || isFollowTarget || isCometHome
+            let hasHint = hints[laneIdx] != nil
+
+            let starR: CGFloat = isLit ? 22.0 : (isMuted ? 14.5 : 18.0)
+            let starRect = CGRect(x: pt.x - starR, y: pt.y - starR, width: starR * 2, height: starR * 2)
+
+            if isLit || hasHint {
+                let haloR = starR + 6.5
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: pt.x - haloR, y: pt.y - haloR, width: haloR * 2, height: haloR * 2)),
+                    with: .color((isFollowTarget || hasHint ? palette.nightLampGold : col).opacity(0.32))
+                )
+            }
+
+            ctx.fill(Path(ellipseIn: starRect), with: .color(col.opacity(isMuted ? 0.25 : 0.96)))
+            ctx.stroke(
+                Path(ellipseIn: starRect),
+                with: .color((isFollowTarget || hasHint) ? palette.nightLampGold : Color.white.opacity(0.65)),
+                lineWidth: (isFollowTarget || hasHint) ? 2.4 : 1.1
+            )
+
+            // 色盲几何图腾 + 清晰唱名数字双排刻画在星辰中心
+            let gSize = starR * 0.72
+            let gRect = CGRect(x: pt.x - gSize * 0.5, y: pt.y - starR * 0.44 - gSize * 0.25, width: gSize, height: gSize)
+            ctx.fill(
+                PitchGlyphShape.glyph(forLaneIndex: laneIdx).path(in: gRect),
+                with: .color(.white.opacity(isMuted ? 0.45 : 0.96)),
+                style: FillStyle(eoFill: true)
+            )
+            let digitTxt = Text(lane.digitLabel)
+                .font(.system(size: starR > 19 ? 11 : 9.5, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(isMuted ? 0.5 : 0.98))
+            ctx.draw(digitTxt, at: CGPoint(x: pt.x, y: pt.y + starR * 0.42), anchor: .center)
         }
     }
 
@@ -1276,6 +1710,45 @@ public struct OrbitalStageView: View {
         default:
             break
         }
+        discInteractionMode = .none
+    }
+
+    private func handleNebulaDragChanged(_ val: DragGesture.Value, in size: CGSize) {
+        let nm = nebulaMetrics(for: size)
+        if case .none = discInteractionMode {
+            dragStartPoint = val.startLocation
+            let dist = hypot(val.startLocation.x - nm.center.x, val.startLocation.y - nm.center.y)
+            if dist < nm.hubRadius * 0.92 {
+                discInteractionMode = .centerHub
+                return
+            }
+            discInteractionMode = .bead(UUID())
+        }
+
+        guard case .bead = discInteractionMode else { return }
+        if let laneIdx = ConstellationGeometry.hitStarLane(
+            at: val.location,
+            center: nm.center,
+            radius: nm.ringRadius,
+            hitRadius: 36,
+            pentatonicSafe: vm.pentatonicSafe && !vm.followGlowActive
+        ) {
+            if struckNebulaLane != laneIdx {
+                struckNebulaLane = laneIdx
+                wakeRippleTimeline()
+                vm.strikeXylophoneLane(XylophoneLane.lane(at: laneIdx))
+            }
+        } else {
+            struckNebulaLane = nil
+        }
+    }
+
+    private func handleNebulaDragEnded(_ val: DragGesture.Value, in size: CGSize) {
+        let moveDist = hypot(val.location.x - dragStartPoint.x, val.location.y - dragStartPoint.y)
+        if case .centerHub = discInteractionMode, moveDist < 14 {
+            vm.togglePlayback()
+        }
+        struckNebulaLane = nil
         discInteractionMode = .none
     }
 
@@ -1610,35 +2083,132 @@ private struct MoodAndSoundSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    // 1. 安心 5 音护网开关
-                    Button {
-                        vm.togglePentatonicSafe()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: vm.pentatonicSafe ? "checkmark.shield.fill" : "shield")
-                                .font(.title2)
-                                .foregroundStyle(vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.secondaryInk)
+                    // 1. 活体声场与无障碍共生开关（安心 5 音 · 巴赫影子对位 · 掌心音乐触觉 · 呼吸速度）
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("护网、对位与掌心触觉")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(palette.primaryInk)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("🎋 安心 5 音护网")
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(palette.primaryInk)
-                                Text(vm.pentatonicSafe ? "已收起 4 和 7，闭眼乱点也自然好听" : "已解锁全部 8 个彩虹音阶，含 4 与 7 的情感张力")
-                                    .font(.caption)
-                                    .foregroundStyle(palette.secondaryInk)
+                        Button {
+                            vm.togglePentatonicSafe()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: vm.pentatonicSafe ? "checkmark.shield.fill" : "shield")
+                                    .font(.title2)
+                                    .foregroundStyle(vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.secondaryInk)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("🎋 安心 5 音护网")
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(palette.primaryInk)
+                                    Text(vm.pentatonicSafe ? "已收起 4 和 7，闭眼乱点也自然好听" : "已解锁全部 8 个彩虹音阶，含 4 与 7 的情感张力")
+                                        .font(.caption2)
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                                Spacer()
+                                Text(vm.pentatonicSafe ? "已开启" : "已关闭")
+                                    .font(.caption.weight(.bold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Capsule().fill(vm.pentatonicSafe ? Color(hex: 0x2F9E44).opacity(0.18) : palette.shelfSurface))
+                                    .foregroundStyle(vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.secondaryInk)
                             }
-                            Spacer()
-                            Text(vm.pentatonicSafe ? "已开启" : "已关闭")
-                                .font(.caption.weight(.bold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Capsule().fill(vm.pentatonicSafe ? Color(hex: 0x2F9E44).opacity(0.18) : palette.shelfSurface))
-                                .foregroundStyle(vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.secondaryInk)
+                            .padding(14)
+                            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
                         }
-                        .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
+                        .buttonStyle(.plain)
+
+                        Button {
+                            vm.toggleShadowCounterpoint()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: vm.shadowCounterpointEnabled ? "moon.stars.fill" : "moon.stars")
+                                    .font(.title2)
+                                    .foregroundStyle(vm.shadowCounterpointEnabled ? Color(hex: 0x4EA8DE) : palette.secondaryInk)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("👥 巴赫影子对位")
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(palette.primaryInk)
+                                    Text("当主旋律停在长音呼吸时，盘面浮现银蓝新月并与竖琴轻声对话")
+                                        .font(.caption2)
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                                Spacer()
+                                Text(vm.shadowCounterpointEnabled ? "已开启" : "已关闭")
+                                    .font(.caption.weight(.bold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Capsule().fill(vm.shadowCounterpointEnabled ? Color(hex: 0x4EA8DE).opacity(0.18) : palette.shelfSurface))
+                                    .foregroundStyle(vm.shadowCounterpointEnabled ? Color(hex: 0x4EA8DE) : palette.secondaryInk)
+                            }
+                            .padding(14)
+                            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            vm.toggleMusicHaptics()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: vm.musicHapticsEnabled ? "waveform.path.ecg" : "hand.raised")
+                                    .font(.title2)
+                                    .foregroundStyle(vm.musicHapticsEnabled ? palette.nightLampGold : palette.secondaryInk)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("🫀 掌心音乐触觉")
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(palette.primaryInk)
+                                    Text("播放时实时把每拍音高质感与和声转折传递到掌心（听障友好）")
+                                        .font(.caption2)
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                                Spacer()
+                                Text(vm.musicHapticsEnabled ? "已开启" : "已关闭")
+                                    .font(.caption.weight(.bold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Capsule().fill(vm.musicHapticsEnabled ? palette.nightLampGold.opacity(0.20) : palette.shelfSurface))
+                                    .foregroundStyle(vm.musicHapticsEnabled ? palette.nightLampGold : palette.secondaryInk)
+                            }
+                            .padding(14)
+                            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
+                        }
+                        .buttonStyle(.plain)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("⏱ 呼吸播放速度（慢放细品每颗音珠转动）")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(palette.secondaryInk)
+
+                            HStack(spacing: 8) {
+                                ForEach(
+                                    [
+                                        (0.65, "0.65× 慢镜"),
+                                        (0.85, "0.85× 散步"),
+                                        (1.0, "1.0× 原速"),
+                                        (1.25, "1.25× 轻快")
+                                    ],
+                                    id: \.0
+                                ) { option in
+                                    let active = abs(vm.playbackRate - option.0) < 0.04
+                                    Button {
+                                        vm.setPlaybackRate(option.0)
+                                    } label: {
+                                        Text(option.1)
+                                            .font(.caption2.weight(.bold))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 9)
+                                            .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface.opacity(0.55)))
                     }
-                    .buttonStyle(.plain)
 
                     // 2. 五色天光情绪光谱
                     VStack(alignment: .leading, spacing: 10) {

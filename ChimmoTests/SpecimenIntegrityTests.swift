@@ -343,15 +343,114 @@ final class SpecimenIntegrityTests: XCTestCase {
         vm.applyDrawnHillContour([0.1, 0.5, 0.9, 0.6, 0.2, 0.0])
         XCTAssertEqual(vm.document.notes.count, 6)
 
-        // Creative Alchemy Round 1: 折纸成诗 + 大师火种微调变奏
+        // Creative Alchemy Round 1: 折纸成诗（6 音提取 4 音种子 -> 4+4+4+3 = 15 颗）+ 大师火种微调变奏
         vm.growCurrentWithOrigami(.fullFourPhrasePoem)
-        XCTAssertEqual(vm.document.notes.count, 12)
+        XCTAssertEqual(vm.document.notes.count, 15)
+        let tags = Set(vm.document.notes.compactMap(\.phraseTag))
+        XCTAssertTrue(tags.contains("起·种子"))
+        XCTAssertTrue(tags.contains("承·爬楼"))
+        XCTAssertTrue(tags.contains("转·倒影"))
+        XCTAssertTrue(tags.contains("合·归家"))
 
         vm.openSpecimen(SpecimenLibrary.saintSaensTheSwan, autoPlay: false)
         let originalTitle = vm.document.title
         vm.applyMasterpieceSeedShifts([1, -1, 2])
         XCTAssertFalse(vm.document.isSpecimen)
         XCTAssertTrue(vm.document.title.contains(originalTitle))
+        vm.stopPlayback()
+    }
+
+    @MainActor
+    func testCreativeAlchemyRound2RateShadowAndConstellation() {
+        // 1. PlaybackClock 无跳变变速验证（含循环边界跨圈）
+        let clock = PlaybackClock()
+        clock.start(totalDuration: 8.0, from: 2.0, at: 100.0)
+        XCTAssertEqual(clock.currentTime(at: 102.5) ?? -1, 4.5, accuracy: 1e-6)
+        let turnsBeforeSlow = clock.continuousRotationTurns(at: 102.5)
+
+        clock.setRate(0.5, at: 102.5)
+        XCTAssertEqual(clock.currentTime(at: 102.5) ?? -1, 4.5, accuracy: 1e-6, "中途降速绝不能引发播放位置跳变")
+        XCTAssertEqual(clock.continuousRotationTurns(at: 102.5), turnsBeforeSlow, accuracy: 1e-6)
+        XCTAssertEqual(clock.currentTime(at: 104.5) ?? -1, 5.5, accuracy: 1e-6, "0.5× 速推进 2 秒墙钟应推进 1 秒乐曲时间")
+
+        // 跨过第 1 圈结尾进入第 2 圈后再次切到 1.25×，旋转圈数与当前时刻均保持连续
+        let turnsBeforeFast = clock.continuousRotationTurns(at: 112.5)
+        let timeBeforeFast = clock.currentTime(at: 112.5) ?? -1
+        clock.setRate(1.25, at: 112.5)
+        XCTAssertEqual(clock.currentTime(at: 112.5) ?? -1, timeBeforeFast, accuracy: 1e-6)
+        XCTAssertEqual(clock.continuousRotationTurns(at: 112.5), turnsBeforeFast, accuracy: 1e-6)
+        clock.stop()
+
+        // 2. ConstellationGeometry 星云万花筒几何与流星轨迹插值
+        let center = CGPoint(x: 200, y: 200)
+        let radius: CGFloat = 120
+        let starPoints = (0..<8).map { ConstellationGeometry.starPoint(laneIndex: $0, center: center, radius: radius) }
+        for (idx, pt) in starPoints.enumerated() {
+            XCTAssertEqual(hypot(pt.x - center.x, pt.y - center.y), radius, accuracy: 1e-4, "星辰 \(idx) 必须位于星轨圆周上")
+        }
+        XCTAssertEqual(
+            ConstellationGeometry.hitStarLane(at: starPoints[4], center: center, radius: radius, pentatonicSafe: true),
+            4
+        )
+        XCTAssertNil(
+            ConstellationGeometry.hitStarLane(at: starPoints[3], center: center, radius: radius, pentatonicSafe: true),
+            "开启安心 5 音时第 4 音星辰不应被直接点中"
+        )
+        XCTAssertEqual(
+            ConstellationGeometry.hitStarLane(at: starPoints[3], center: center, radius: radius, pentatonicSafe: false),
+            3
+        )
+
+        let duetDoc = MelodyDocument(
+            title: "双星测试",
+            subtitle: "",
+            notes: [
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 1.0, rawDuration: 0.8),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 3.0, rawDuration: 0.8)
+            ]
+        )
+        let snapStart = ConstellationGeometry.cometSnapshot(
+            notes: duetDoc.notes,
+            grooveStrength: 0.0,
+            currentTime: 1.0,
+            center: center,
+            radius: radius
+        )
+        XCTAssertNotNil(snapStart)
+        XCTAssertEqual(snapStart?.position.x ?? 0, starPoints[0].x, accuracy: 1e-4)
+        XCTAssertEqual(snapStart?.position.y ?? 0, starPoints[0].y, accuracy: 1e-4)
+
+        let snapMid = ConstellationGeometry.cometSnapshot(
+            notes: duetDoc.notes,
+            grooveStrength: 0.0,
+            currentTime: 2.0,
+            center: center,
+            radius: radius
+        )
+        XCTAssertEqual(snapMid?.activeLaneIndex, 0)
+        XCTAssertEqual(snapMid?.nextLaneIndex, 4)
+        XCTAssertEqual(snapMid?.progress ?? -1, 0.5, accuracy: 1e-4)
+
+        // 3. 四幕情绪词 + StudioViewModel 影子对位/音乐触觉/呼吸倍速状态联动
+        for chord in DiatonicChord.allCases {
+            XCTAssertFalse(chord.shortMoodGlyph.isEmpty)
+        }
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v09-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.openSpecimen(SpecimenLibrary.saintSaensTheSwan, autoPlay: false)
+        XCTAssertFalse(vm.shadowNotes.isEmpty)
+
+        let initialShadow = vm.shadowCounterpointEnabled
+        vm.toggleShadowCounterpoint()
+        XCTAssertNotEqual(vm.shadowCounterpointEnabled, initialShadow)
+
+        let initialHaptics = vm.musicHapticsEnabled
+        vm.toggleMusicHaptics()
+        XCTAssertNotEqual(vm.musicHapticsEnabled, initialHaptics)
+
+        vm.setPlaybackRate(0.65)
+        XCTAssertEqual(vm.playbackRate, 0.65, accuracy: 1e-5)
+        XCTAssertEqual(vm.clock.playbackRate, 0.65, accuracy: 1e-5)
         vm.stopPlayback()
     }
 }

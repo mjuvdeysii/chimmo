@@ -1,4 +1,5 @@
 import Foundation
+import QuartzCore
 #if os(iOS)
 import CoreHaptics
 import UIKit
@@ -10,6 +11,8 @@ import UIKit
 @MainActor
 public final class AcousticHapticsEngine {
     public static let shared = AcousticHapticsEngine()
+
+    private var lastPlaybackPulseTime: Double = 0
 
     #if os(iOS)
     private var engine: CHHapticEngine?
@@ -99,6 +102,82 @@ public final class AcousticHapticsEngine {
             relativeTime: 0
         )
         playPattern(events: [ev], curves: [])
+        #endif
+    }
+
+    /// 音乐播放时的低功耗掌心触觉脉冲（已做 85ms 节流，兼顾听障无障碍节奏共振与电池寿命）
+    public func playPlaybackNotePulse(laneIndex: Int, isHome: Bool, isTension: Bool) {
+        let now = CACurrentMediaTime()
+        guard now - lastPlaybackPulseTime >= 0.085 else { return }
+        lastPlaybackPulseTime = now
+
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            softImpact.impactOccurred(intensity: isHome ? 0.65 : 0.40)
+            ensureEngineAsync()
+            return
+        }
+        if isTension {
+            let e0 = CHHapticEvent(
+                eventType: .hapticTransient,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.38),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.64)
+                ],
+                relativeTime: 0.0
+            )
+            let e1 = CHHapticEvent(
+                eventType: .hapticTransient,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.28),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.64)
+                ],
+                relativeTime: 0.055
+            )
+            playPattern(events: [e0, e1], curves: [])
+            return
+        }
+
+        let clamped = max(0, min(7, laneIndex))
+        let intensity: Float = isHome ? 0.62 : Float(0.34 + Double(clamped) * 0.03)
+        let sharpness: Float = isHome ? 0.20 : Float(0.18 + Double(clamped) * 0.08)
+        let ev = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+            ],
+            relativeTime: 0
+        )
+        playPattern(events: [ev], curves: [])
+        #endif
+    }
+
+    /// 乐句和弦情绪幕布切换时的温柔深呼吸震动
+    public func playChordShiftBreath() {
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            ensureEngineAsync()
+            return
+        }
+        let pIntensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.36)
+        let pSharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.12)
+        let ev = CHHapticEvent(
+            eventType: .hapticContinuous,
+            parameters: [pIntensity, pSharpness],
+            relativeTime: 0.0,
+            duration: 0.18
+        )
+        let curve = CHHapticParameterCurve(
+            parameterID: .hapticIntensityControl,
+            controlPoints: [
+                .init(relativeTime: 0.0, value: 0.25),
+                .init(relativeTime: 0.05, value: 1.0),
+                .init(relativeTime: 0.18, value: 0.0)
+            ],
+            relativeTime: 0.0
+        )
+        playPattern(events: [ev], curves: [curve])
         #endif
     }
 

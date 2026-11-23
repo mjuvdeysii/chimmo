@@ -7,12 +7,11 @@ import QuartzCore
 public final class PlaybackClock {
     public private(set) var isPlaying: Bool = false
     public private(set) var totalDuration: Double = 4.0
+    public private(set) var playbackRate: Double = 1.0
     public private(set) var anchorMediaTime: Double = 0
     public private(set) var anchorSongTime: Double = 0
     public var scrubTime: Double? = nil
     public var pauseTailSeconds: Double = 0.35
-
-    private var completedLoopsBaseTurns: Double = 0
 
     public init() {}
 
@@ -24,7 +23,15 @@ public final class PlaybackClock {
         self.anchorMediaTime = mediaTime
         self.scrubTime = nil
         self.isPlaying = true
-        self.completedLoopsBaseTurns = clampedOffset / safeDur
+    }
+
+    public func setRate(_ newRate: Double, at mediaTime: Double = CACurrentMediaTime()) {
+        let clamped = max(0.5, min(1.6, newRate))
+        if isPlaying {
+            anchorSongTime = anchorSongTime + max(0.0, mediaTime - anchorMediaTime) * playbackRate
+            anchorMediaTime = mediaTime
+        }
+        playbackRate = clamped
     }
 
     public func pause(preservingTime: Bool = false, at mediaTime: Double = CACurrentMediaTime()) {
@@ -40,7 +47,6 @@ public final class PlaybackClock {
         isPlaying = false
         scrubTime = nil
         anchorSongTime = 0
-        completedLoopsBaseTurns = 0
     }
 
     public func setScrubTime(_ time: Double?) {
@@ -65,8 +71,9 @@ public final class PlaybackClock {
         guard isPlaying else { return nil }
         let safeDur = max(0.5, totalDuration)
         let cycle = safeDur + max(0.0, pauseTailSeconds)
-        let elapsed = max(0, mediaTime - anchorMediaTime) + anchorSongTime
-        let inCycle = elapsed.truncatingRemainder(dividingBy: cycle)
+        let elapsed = max(0, mediaTime - anchorMediaTime) * playbackRate + anchorSongTime
+        let completedCycles = floor(elapsed / cycle)
+        let inCycle = elapsed - completedCycles * cycle
         return min(safeDur, inCycle)
     }
 
@@ -78,7 +85,7 @@ public final class PlaybackClock {
         }
         guard isPlaying else { return 0 }
         let cycle = safeDur + max(0.0, pauseTailSeconds)
-        let elapsed = max(0, mediaTime - anchorMediaTime) + anchorSongTime
+        let elapsed = max(0, mediaTime - anchorMediaTime) * playbackRate + anchorSongTime
         let completedCycles = floor(elapsed / cycle)
         let inCycle = elapsed - completedCycles * cycle
         let inSongTurns = min(1.0, inCycle / safeDur)

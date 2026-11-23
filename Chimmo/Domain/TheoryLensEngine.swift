@@ -126,6 +126,17 @@ public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable
         }
     }
 
+    public var shortMoodGlyph: String {
+        switch self {
+        case .I: return "归家"
+        case .ii: return "漫步"
+        case .iii: return "微光"
+        case .IV: return "托举"
+        case .V: return "推力"
+        case .vi: return "怀旧"
+        }
+    }
+
     public func color(isNight: Bool) -> Color {
         switch self {
         case .I: return isNight ? Color(hex: 0xFF7582) : Color(hex: 0xF25563)

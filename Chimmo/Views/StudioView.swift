@@ -15,6 +15,7 @@ public struct StageRippleEvent: Sendable {
     public let degree: Int
     public let onset: Double
     public let colorHex: UInt32
+    public let isShadow: Bool
 }
 
 /// 零视图重绘的高频涟漪总线（Canvas 直接按 `CACurrentMediaTime()` 读取，不触发 SwiftUI 视图树重排）。
@@ -22,6 +23,7 @@ public struct StageRippleEvent: Sendable {
 public final class StageRippleBus {
     public private(set) var events: [StageRippleEvent] = []
     public private(set) var lastLanePulseTime: [Int: Double] = [:]
+    public private(set) var lastShadowEvent: StageRippleEvent? = nil
 
     public init() {}
 
@@ -30,19 +32,24 @@ public final class StageRippleBus {
         degree: Int,
         onset: Double,
         colorHex: UInt32,
+        isShadow: Bool = false,
         at mediaTime: Double = CACurrentMediaTime()
     ) {
         events.removeAll { mediaTime - $0.birthMediaTime > 0.95 }
-        events.append(
-            StageRippleEvent(
-                birthMediaTime: mediaTime,
-                laneIndex: laneIndex,
-                degree: degree,
-                onset: onset,
-                colorHex: colorHex
-            )
+        let ev = StageRippleEvent(
+            birthMediaTime: mediaTime,
+            laneIndex: laneIndex,
+            degree: degree,
+            onset: onset,
+            colorHex: colorHex,
+            isShadow: isShadow
         )
-        lastLanePulseTime[laneIndex] = mediaTime
+        events.append(ev)
+        if isShadow {
+            lastShadowEvent = ev
+        } else {
+            lastLanePulseTime[laneIndex] = mediaTime
+        }
     }
 
     public func hasRecentRipples(at mediaTime: Double = CACurrentMediaTime()) -> Bool {
@@ -67,6 +74,9 @@ public final class StudioViewModel: ObservableObject {
     @Published public var chordPreset: ChordProgressionPreset = .autoMatch
     @Published public var chordOverrides: [Int: DiatonicChord] = [:]
     @Published public var pentatonicSafe: Bool = false
+    @Published public var shadowCounterpointEnabled: Bool = false
+    @Published public var musicHapticsEnabled: Bool = true
+    @Published public var playbackRate: Double = 1.0
     @Published public var followGlowActive: Bool = false
     @Published public var followGlowIndex: Int = 0
     @Published public var smartHintActive: Bool = false
@@ -119,6 +129,41 @@ public final class StudioViewModel: ObservableObject {
 
     public var cradleEnabled: Bool {
         chordPreset != .off
+    }
+
+    public var shadowNotes: [CounterpointNote] {
+        CounterpointShadowEngine.generateShadowVoice(document: document, spans: chordSpans)
+    }
+
+    public func toggleShadowCounterpoint() {
+        shadowCounterpointEnabled.toggle()
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.45)
+        showToast(
+            shadowCounterpointEnabled
+                ? "👥 已唤醒巴赫影子对位：副声部将在旋律留白处轻声对话"
+                : "已收起影子对位声部"
+        )
+    }
+
+    public func toggleMusicHaptics() {
+        musicHapticsEnabled.toggle()
+        if musicHapticsEnabled {
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+        }
+        showToast(
+            musicHapticsEnabled
+                ? "🫀 已开启掌心音乐触觉：播放时可感受每拍律动与和声呼吸"
+                : "已关闭播放期间的掌心触觉脉冲"
+        )
+    }
+
+    public func setPlaybackRate(_ rate: Double) {
+        let clamped = max(0.5, min(1.6, rate))
+        playbackRate = clamped
+        clock.setRate(clamped)
+        AcousticHapticsEngine.shared.playScrubTick()
+        let formatted = String(format: "%.2g×", clamped)
+        showToast("⏱ 播放呼吸速度已调至 \(formatted)")
     }
 
     public var smartHints: [SmartPitchHint] {
@@ -1045,6 +1090,7 @@ public final class StudioViewModel: ObservableObject {
             startOffset = 0.0
         }
 
+        clock.setRate(playbackRate)
         clock.start(totalDuration: total, from: startOffset)
         isPlaying = true
 
@@ -1054,8 +1100,14 @@ public final class StudioViewModel: ObservableObject {
             let sorted = self.document.notes.sorted {
                 $0.displayOnset(grooveStrength: self.document.grooveStrength) < $1.displayOnset(grooveStrength: self.document.grooveStrength)
             }
+            let sortedShadows = CounterpointShadowEngine.generateShadowVoice(
+                document: self.document,
+                spans: self.chordSpans
+            ).sorted { $0.onset < $1.onset }
+
             let totalDuration = self.document.totalDuration
             var nextNoteIdx = sorted.firstIndex(where: { $0.displayOnset(grooveStrength: self.document.grooveStrength) >= startOffset - 0.02 }) ?? sorted.count
+            var nextShadowIdx = sortedShadows.firstIndex(where: { $0.onset >= startOffset - 0.02 }) ?? sortedShadows.count
             var lastTriggeredSpanID = -1
             var prevElapsed = startOffset
 
@@ -1065,10 +1117,12 @@ public final class StudioViewModel: ObservableObject {
                 // 检测自然循环跨过零点，无缝衔接下一圈音符
                 if elapsed + 0.25 < prevElapsed {
                     nextNoteIdx = 0
+                    nextShadowIdx = 0
                     lastTriggeredSpanID = -1
                 }
                 prevElapsed = elapsed
 
+                let rateScale = 1.0 / max(0.5, self.playbackRate)
                 let spans = self.chordSpans
                 if let currentSpan = spans.first(where: { elapsed >= $0.startTime && elapsed < $0.endTime }),
                    currentSpan.id != lastTriggeredSpanID {
@@ -1081,9 +1135,12 @@ public final class StudioViewModel: ObservableObject {
                         mode: self.document.scaleMode,
                         chord: currentSpan.chord,
                         texture: self.accompanimentTexture,
-                        spanDuration: currentSpan.endTime - currentSpan.startTime,
+                        spanDuration: (currentSpan.endTime - currentSpan.startTime) * rateScale,
                         intensity: 0.78
                     )
+                    if self.musicHapticsEnabled {
+                        AcousticHapticsEngine.shared.playChordShiftBreath()
+                    }
                 }
 
                 if let nextMoment = self.document.activeGuidedMoment(at: elapsed),
@@ -1105,8 +1162,16 @@ public final class StudioViewModel: ObservableObject {
                         onset: onset,
                         colorHex: lane.member.bodyHex
                     )
-                    self.flashLane(laneIdx, degree: bead.degree, holdSeconds: max(0.20, min(0.45, dur * 0.85)))
+                    self.flashLane(laneIdx, degree: bead.degree, holdSeconds: max(0.16, min(0.45, dur * 0.85 * rateScale)))
                     self.updateHarmonyDescriptor(for: bead.degree, at: onset)
+
+                    if self.musicHapticsEnabled {
+                        AcousticHapticsEngine.shared.playPlaybackNotePulse(
+                            laneIndex: laneIdx,
+                            isHome: bead.degree == 1,
+                            isTension: lane.member.isTensionDegree
+                        )
+                    }
 
                     let hz = self.document.scaleMode.frequencyHz(
                         rootMIDI: self.document.rootMIDI,
@@ -1116,11 +1181,38 @@ public final class StudioViewModel: ObservableObject {
                     self.synth.playNote(
                         frequency: hz,
                         velocity: 0.62,
-                        decay: max(1.0, dur * 1.45),
+                        decay: max(0.85, dur * 1.45 * rateScale),
                         brightness: 0.96,
                         timbre: FeltPianoSynth.Timbre.from(voice: self.melodyVoice)
                     )
                     nextNoteIdx += 1
+                }
+
+                while nextShadowIdx < sortedShadows.count && sortedShadows[nextShadowIdx].onset <= elapsed {
+                    let shadow = sortedShadows[nextShadowIdx]
+                    nextShadowIdx += 1
+                    guard self.shadowCounterpointEnabled else { continue }
+                    let sLaneIdx = XylophoneLane.laneIndex(degree: shadow.degree, octaveOffset: shadow.octaveOffset)
+                    self.rippleBus.emit(
+                        laneIndex: sLaneIdx,
+                        degree: shadow.degree,
+                        onset: shadow.onset,
+                        colorHex: 0x7EC8E3,
+                        isShadow: true
+                    )
+                    let sHz = self.document.scaleMode.frequencyHz(
+                        rootMIDI: self.document.rootMIDI,
+                        degree: shadow.degree,
+                        octaveOffset: shadow.octaveOffset
+                    )
+                    let duetTimbre: FeltPianoSynth.Timbre = (self.melodyVoice == .liquidHarp) ? .celesta : .liquidHarp
+                    self.synth.playNote(
+                        frequency: sHz,
+                        velocity: 0.36,
+                        decay: max(0.85, shadow.duration * rateScale * 1.35),
+                        brightness: 0.85,
+                        timbre: duetTimbre
+                    )
                 }
 
                 // 25ms 调度步进：高节拍精度且不向 SwiftUI 广播逐帧重排

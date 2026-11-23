@@ -4,9 +4,11 @@ import SwiftUI
 /// 主画布显示模式：
 /// - `orbitalDisc`: 旋转音乐盒星盘（盘面随旋律顺滑旋转，每个发声的音符正好转到 12 点钟黄铜唱针下方绽放涟漪）
 /// - `flowingRiver`: 流动山河画卷（金色光束锚定在 28% 处，整片旋律山河随歌声平滑向左流淌，永远停在视线中心）
+/// - `resonanceNebula`: 星云万花筒（8 颗星辰环绕中央利萨如谐振星核，流星顺着旋律轨迹飞舞，点按或滑过即兴共鸣）
 public enum StageVisualMode: String, CaseIterable, Identifiable, Sendable {
     case orbitalDisc = "星盘"
     case flowingRiver = "山河"
+    case resonanceNebula = "星云"
 
     public var id: String { rawValue }
 
@@ -14,6 +16,7 @@ public enum StageVisualMode: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .orbitalDisc: return "record.circle"
         case .flowingRiver: return "water.waves"
+        case .resonanceNebula: return "sparkles"
         }
     }
 }
@@ -261,5 +264,107 @@ public enum ContourSketchSampler {
             out.append(h)
         }
         return out
+    }
+}
+
+/// 星云万花筒（Resonance Nebula）星座纯几何与流星轨迹插值引擎（100% 纯函数、可单测）
+public enum ConstellationGeometry {
+
+    public struct CometSnapshot: Equatable, Sendable {
+        public let position: CGPoint
+        public let activeLaneIndex: Int
+        public let nextLaneIndex: Int
+        public let progress: Double
+    }
+
+    /// 将 0...7 音阶轨道等角放置在圆周上（0 = 正上方 12 点钟 1·Do，顺时针排列）
+    public static func starAngle(laneIndex: Int) -> Double {
+        let clamped = max(0, min(7, laneIndex))
+        return -Double.pi / 2.0 + Double(clamped) * (2.0 * Double.pi / 8.0)
+    }
+
+    public static func starPoint(laneIndex: Int, center: CGPoint, radius: CGFloat) -> CGPoint {
+        let ang = starAngle(laneIndex: laneIndex)
+        return CGPoint(
+            x: center.x + CGFloat(cos(ang)) * radius,
+            y: center.y + CGFloat(sin(ang)) * radius
+        )
+    }
+
+    /// 命中距离触摸点最近且允许点击的星座音高星辰；未落入 `hitRadius` 返回 `nil`
+    public static func hitStarLane(
+        at point: CGPoint,
+        center: CGPoint,
+        radius: CGFloat,
+        hitRadius: CGFloat = 34,
+        pentatonicSafe: Bool
+    ) -> Int? {
+        var bestLane: Int? = nil
+        var bestDist = hitRadius
+        for i in 0..<8 {
+            if pentatonicSafe && !XylophoneLane.lane(at: i).isPentatonicSafe {
+                continue
+            }
+            let pt = starPoint(laneIndex: i, center: center, radius: radius)
+            let d = hypot(point.x - pt.x, point.y - pt.y)
+            if d <= bestDist {
+                bestDist = d
+                bestLane = i
+            }
+        }
+        return bestLane
+    }
+
+    /// 根据当前时间返回沿着星座轨迹在两颗音星间优雅滑翔的流星位置（绕开圆心利萨如核心）
+    public static func cometSnapshot(
+        notes: [NoteBead],
+        grooveStrength: Double,
+        currentTime: Double,
+        center: CGPoint,
+        radius: CGFloat
+    ) -> CometSnapshot? {
+        let sorted = notes.sorted {
+            $0.displayOnset(grooveStrength: grooveStrength) < $1.displayOnset(grooveStrength: grooveStrength)
+        }
+        guard !sorted.isEmpty else { return nil }
+
+        var curIdx = 0
+        for (idx, bead) in sorted.enumerated() {
+            if bead.displayOnset(grooveStrength: grooveStrength) <= currentTime + 0.0001 {
+                curIdx = idx
+            } else {
+                break
+            }
+        }
+
+        let curBead = sorted[curIdx]
+        let curOnset = curBead.displayOnset(grooveStrength: grooveStrength)
+        let curLane = XylophoneLane.laneIndex(degree: curBead.degree, octaveOffset: curBead.octaveOffset)
+        let p0 = starPoint(laneIndex: curLane, center: center, radius: radius)
+
+        if curIdx + 1 < sorted.count && currentTime >= curOnset {
+            let nextBead = sorted[curIdx + 1]
+            let nextOnset = nextBead.displayOnset(grooveStrength: grooveStrength)
+            let nextLane = XylophoneLane.laneIndex(degree: nextBead.degree, octaveOffset: nextBead.octaveOffset)
+            let p1 = starPoint(laneIndex: nextLane, center: center, radius: radius)
+            let span = max(0.08, nextOnset - curOnset)
+            let rawP = max(0.0, min(1.0, (currentTime - curOnset) / span))
+            let s = rawP * rawP * (3.0 - 2.0 * rawP)
+
+            let ctrl = CGPoint(
+                x: (p0.x + p1.x) * 0.39 + center.x * 0.22,
+                y: (p0.y + p1.y) * 0.39 + center.y * 0.22
+            )
+            let oneMinusS = CGFloat(1.0 - s)
+            let cs = CGFloat(s)
+            let pos = CGPoint(
+                x: oneMinusS * oneMinusS * p0.x + 2.0 * oneMinusS * cs * ctrl.x + cs * cs * p1.x,
+                y: oneMinusS * oneMinusS * p0.y + 2.0 * oneMinusS * cs * ctrl.y + cs * cs * p1.y
+            )
+            return CometSnapshot(position: pos, activeLaneIndex: curLane, nextLaneIndex: nextLane, progress: rawP)
+        }
+
+        let progress = currentTime < curOnset ? 0.0 : 1.0
+        return CometSnapshot(position: p0, activeLaneIndex: curLane, nextLaneIndex: curLane, progress: progress)
     }
 }
