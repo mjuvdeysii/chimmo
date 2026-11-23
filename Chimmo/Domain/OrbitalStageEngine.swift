@@ -6,9 +6,9 @@ import SwiftUI
 /// - `flowingRiver`: 流动山河画卷（金色光束锚定在 28% 处，整片旋律山河随歌声平滑向左流淌，永远停在视线中心）
 /// - `resonanceNebula`: 星云万花筒（8 颗星辰环绕中央利萨如谐振星核，流星顺着旋律轨迹飞舞，点按或滑过即兴共鸣）
 public enum StageVisualMode: String, CaseIterable, Identifiable, Sendable {
-    case orbitalDisc = "星盘"
-    case flowingRiver = "山河"
-    case resonanceNebula = "星云"
+    case orbitalDisc = "转盘"
+    case flowingRiver = "曲线"
+    case resonanceNebula = "星环"
 
     public var id: String { rawValue }
 

@@ -14,21 +14,21 @@ public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
 
     public var label: String {
         switch self {
-        case .cloudLydian: return "云端失重"
-        case .brightMajor: return "晴空大调"
-        case .goldenMixolydian: return "落日余晖"
-        case .forestDorian: return "森林晨雾"
-        case .wistfulMinor: return "暮雨小调"
+        case .cloudLydian: return "梦幻"
+        case .brightMajor: return "明亮"
+        case .goldenMixolydian: return "温暖"
+        case .forestDorian: return "清新"
+        case .wistfulMinor: return "忧郁"
         }
     }
 
     public var shortSkyLabel: String {
         switch self {
-        case .cloudLydian: return "云端"
-        case .brightMajor: return "晴空"
-        case .goldenMixolydian: return "落日"
-        case .forestDorian: return "晨雾"
-        case .wistfulMinor: return "暮雨"
+        case .cloudLydian: return "梦幻"
+        case .brightMajor: return "明亮"
+        case .goldenMixolydian: return "温暖"
+        case .forestDorian: return "清新"
+        case .wistfulMinor: return "忧郁"
         }
     }
 
@@ -53,14 +53,14 @@ public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
         }
     }
 
-    /// 用一句话讲清这片天空为何有这种情绪（生活直觉 + 哪只咩哞挪了半步）
+    /// 一句话说明当前调式的情绪特点
     public var skyPhilosophy: String {
         switch self {
-        case .cloudLydian: return "把 4·呜嘟 抬高半步，消除下坠引力，像漂浮在星海与云端。"
-        case .brightMajor: return "阳光最通透的标准比例，3-4 与 7-1↑ 藏着温柔的半音磁铁。"
-        case .goldenMixolydian: return "把 7·叮尖 放软半步，卸下急促张力，化作金黄暖橘的公路电影。"
-        case .forestDorian: return "3·拍咯 降半步带来微雨，但 6·钵莫 仍亮着——雨林里透出一束希望的光。"
-        case .wistfulMinor: return "3·拍咯、6·钵莫、7·叮尖 齐降半步，世界披上深邃浪漫的夜色。"
+        case .cloudLydian: return "轻盈漂浮，带一点梦幻感"
+        case .brightMajor: return "开朗明快，最常见的大调"
+        case .goldenMixolydian: return "松弛暖和，像傍晚散步"
+        case .forestDorian: return "微淡忧郁里透着一点亮色"
+        case .wistfulMinor: return "深沉抒情，经典小调"
         }
     }
 
@@ -112,10 +112,10 @@ public enum MelodyVoice: String, CaseIterable, Codable, Sendable, Identifiable {
 
     public var label: String {
         switch self {
-        case .singingCello: return "歌唱大提琴"
-        case .concertPiano: return "毛毡钢琴"
-        case .liquidHarp: return "湖面竖琴"
-        case .celestaGlass: return "星光钢片琴"
+        case .singingCello: return "大提琴"
+        case .concertPiano: return "钢琴"
+        case .liquidHarp: return "竖琴"
+        case .celestaGlass: return "八音盒"
         }
     }
 

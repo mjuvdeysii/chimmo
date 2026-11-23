@@ -25,9 +25,9 @@ public struct DreamCaptureSheet: View {
         NavigationStack {
             VStack(spacing: 14) {
                 Picker("创作方式", selection: $modeTab) {
-                    Text("拍节奏·画山坡").tag(0)
-                    Text("随口轻哼").tag(1)
-                    Text("魔法·跟弹").tag(2)
+                    Text("敲节奏·画线").tag(0)
+                    Text("哼唱").tag(1)
+                    Text("更多玩法").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
@@ -47,7 +47,7 @@ public struct DreamCaptureSheet: View {
                 }
             }
             .background(palette.paper.ignoresSafeArea())
-            .navigationTitle("捕梦创作")
+            .navigationTitle("写旋律")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -72,10 +72,10 @@ public struct DreamCaptureSheet: View {
 
     private var rhythmAndSketchSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // A. 拍节奏木鼓
+            // A. 敲节奏
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("第 1 步 · 随手敲出脑海里的快慢节奏")
+                    Text("第 1 步 · 敲出节奏")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                     Spacer()
@@ -91,7 +91,7 @@ public struct DreamCaptureSheet: View {
                 // 实时拍柱预览条
                 HStack(spacing: 5) {
                     if vm.liveTapTimestamps.isEmpty {
-                        Text("哒、哒、哒 — 敲几下试试（也可跳过直接画下方山坡）")
+                        Text("按心里快慢点几下，或直接画下方线条")
                             .font(.caption2)
                             .foregroundStyle(palette.secondaryInk)
                     } else {
@@ -126,10 +126,10 @@ public struct DreamCaptureSheet: View {
                             size: 46
                         )
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("轻敲这里定下节奏")
+                            Text("点这里敲节奏")
                                 .font(.headline.weight(.bold))
                                 .foregroundStyle(palette.primaryInk)
-                            Text("完全不用管音高，只按你心里的节拍点按")
+                            Text("不管音高，只敲快慢")
                                 .font(.caption2)
                                 .foregroundStyle(palette.secondaryInk)
                         }
@@ -149,10 +149,10 @@ public struct DreamCaptureSheet: View {
                 .buttonStyle(.plain)
             }
 
-            // B. 单指画一座旋律山坡
+            // B. 单指画高低线
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("第 2 步 · 用一根手指画出起伏山坡")
+                    Text("第 2 步 · 画一条高低线")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                     Spacer()
@@ -177,7 +177,7 @@ public struct DreamCaptureSheet: View {
                                 Image(systemName: "scribble.variable")
                                     .font(.title2)
                                     .foregroundStyle(palette.homeAnchor.opacity(0.65))
-                                Text("从左向右一笔画下高低走势，松手立刻飞上声盘")
+                                Text("从左往右画出起伏，松手即生成")
                                     .font(.caption2)
                                     .foregroundStyle(palette.secondaryInk)
                             }
@@ -226,9 +226,9 @@ public struct DreamCaptureSheet: View {
                 .frame(height: 132)
             }
 
-            // C. 或者一键套用 4 座现成山坡
+            // C. 或者套用预设起伏
             VStack(alignment: .leading, spacing: 8) {
-                Text("或直接选一座喜欢的山坡")
+                Text("或直接套用预设起伏")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(palette.secondaryInk)
 
@@ -268,7 +268,7 @@ public struct DreamCaptureSheet: View {
                         surface: palette.shelfSurface,
                         size: 32
                     )
-                    Text("闭上眼睛用掌心震动摸出音珠 · 进入夜灯触觉剧场")
+                    Text("闭眼滑音 · 靠震动选音高")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                     Spacer()
@@ -315,14 +315,14 @@ public struct DreamCaptureSheet: View {
                 }
             }
 
-            Text(vm.capturePipeline.isRecording ? "正在聆听… 哼完再点一下红色圆球" : "轻哼捉珠 · 完全不怕跑调")
+            Text(vm.capturePipeline.isRecording ? "正在录音，哼完点红色按钮停止" : "随口哼一段（跑调也没关系）")
                 .font(.headline.weight(.bold))
                 .foregroundStyle(palette.primaryInk)
 
             Text(
                 vm.document.notes.isEmpty
-                    ? "用轻柔的 da / la 哼出一小句，系统会自动吸附到当前好听的音阶星盘上。"
-                    : "只抓取你哼唱的相对高低走势，原封不动贴合到当前曲子的节奏上！"
+                    ? "轻声哼一句，自动转成旋律"
+                    : "按你哼的高低变化，套用到当前节奏"
             )
             .font(.caption)
             .foregroundStyle(palette.secondaryInk)
@@ -357,10 +357,10 @@ public struct DreamCaptureSheet: View {
                         size: 42
                     )
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("闭眼夜灯触觉剧场")
+                        Text("闭眼滑音")
                             .font(.headline.weight(.bold))
                             .foregroundStyle(Color(hex: 0xF4EBDD))
-                        Text("无需盯住屏幕，单指在磁吸脊线上靠掌心震动滑寻音高，松手即落珠")
+                        Text("不用看屏幕，上下滑动靠震动选音高，松手记下")
                             .font(.caption2)
                             .foregroundStyle(Color(hex: 0xAEB4CC))
                     }
@@ -401,10 +401,10 @@ public struct DreamCaptureSheet: View {
                         size: 38
                     )
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("亮灯跟弹当前曲目")
+                        Text("跟灯弹这首曲子")
                             .font(.headline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
-                        Text("转盘自动转到下一颗发光星珠，按你的速度跟着敲下方彩虹条即可亲自演奏！")
+                        Text("跟着亮起的彩条按自己的速度敲，就能弹完整首")
                             .font(.caption2)
                             .foregroundStyle(palette.secondaryInk)
                     }
@@ -415,12 +415,12 @@ public struct DreamCaptureSheet: View {
             }
             .buttonStyle(.plain)
 
-            // 旋律折纸生长（把短短 3 颗音长成完整乐章）
+            // 扩写旋律
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     ChimmoCraftMark(.origamiPrism, color: palette.homeAnchor)
                         .frame(width: 14, height: 14)
-                    Text("旋律折纸生长（零基础一键扩写完整乐章）")
+                    Text("把几颗音扩成完整旋律")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(palette.secondaryInk)
                 }
@@ -449,13 +449,13 @@ public struct DreamCaptureSheet: View {
                 }
             }
 
-            // 大师火种微调（改掉前 3 颗火种音，即刻生出专属个人变奏）
+            // 改开头 3 个音生成变奏
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     HStack(spacing: 6) {
                         ChimmoCraftMark(.seedBloom, color: palette.homeAnchor)
                             .frame(width: 14, height: 14)
-                        Text("改 3 颗火种 · 长出专属名曲变奏")
+                        Text("改开头 3 个音，生成新变奏")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(palette.secondaryInk)
                     }
@@ -470,7 +470,7 @@ public struct DreamCaptureSheet: View {
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { idx in
                         VStack(spacing: 6) {
-                            Text("火种 \(idx + 1)")
+                            Text("第 \(idx + 1) 音")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(palette.secondaryInk)
                             HStack(spacing: 8) {
@@ -514,7 +514,7 @@ public struct DreamCaptureSheet: View {
                     HStack(spacing: 6) {
                         Image(systemName: "wand.and.stars")
                             .font(.caption.weight(.bold))
-                        Text(seedShifts == [0, 0, 0] ? "随机轻改火种 · 生出我的变奏" : "按火种微调长出我的变奏")
+                        Text(seedShifts == [0, 0, 0] ? "随机改 3 个音" : "生成我的变奏")
                             .font(.caption.weight(.bold))
                     }
                     .frame(maxWidth: .infinity)
@@ -535,10 +535,10 @@ public struct DreamCaptureSheet: View {
                         .foregroundStyle(palette.homeAnchor)
                         .frame(width: 36)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("铺一张全新空白安心星盘")
+                        Text("新建空白画布")
                             .font(.headline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
-                        Text("清空当前音珠并打开「安心 5 音」，用手指直接在圆环上点亮属于你的星座旋律。")
+                        Text("清空当前音符，开启五音模式从头开始")
                             .font(.caption2)
                             .foregroundStyle(palette.secondaryInk)
                     }

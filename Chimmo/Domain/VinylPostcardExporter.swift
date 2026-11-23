@@ -28,7 +28,7 @@ public struct VinylPostcardSnapshot: Sendable {
         isNight: Bool = false,
         headline: String? = nil
     ) {
-        self.title = document.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "无名脑放唱片" : document.title
+        self.title = document.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "我的旋律" : document.title
         self.scaleMode = document.scaleMode
         self.notes = document.notes.sorted {
             $0.displayOnset(grooveStrength: document.grooveStrength) < $1.displayOnset(grooveStrength: document.grooveStrength)
@@ -106,9 +106,9 @@ public struct VinylPostcardCanvasView: View {
                 .padding(16)
 
             VStack(spacing: 16) {
-                // 顶部编辑部头栏
+                // 顶部栏
                 HStack(spacing: 8) {
-                    Text("CHIMMO · 咩哞声纹明信片")
+                    Text("咩哞 · CHIMMO")
                         .font(.system(size: 11, weight: .bold, design: .rounded))
                         .tracking(1.1)
                         .foregroundStyle(palette.secondaryInk)
@@ -132,13 +132,13 @@ public struct VinylPostcardCanvasView: View {
                 .padding(.horizontal, 34)
                 .padding(.top, 30)
 
-                // 中央黑胶声盘视觉
+                // 中央声盘视觉
                 Canvas { ctx, size in
                     drawPostcardDisc(ctx: &ctx, size: size, palette: palette)
                 }
                 .frame(width: 392, height: 392)
 
-                // 底部标题与诗意乐理解读
+                // 底部标题与说明
                 VStack(alignment: .leading, spacing: 8) {
                     Text(snapshot.title)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -152,15 +152,15 @@ public struct VinylPostcardCanvasView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     HStack(spacing: 8) {
-                        Label("\(snapshot.notes.count) 颗星珠", systemImage: "music.note")
+                        Label("\(snapshot.notes.count) 个音", systemImage: "music.note")
                         Text("·")
                         Text(String(format: "%.1fs", snapshot.totalDuration))
                         if snapshot.shadowEnabled {
                             Text("·")
-                            Text("含巴赫影子对位")
+                            Text("含伴唱")
                         }
                         Spacer()
-                        Text("Offline · App.Chimmo")
+                        Text("离线生成")
                             .foregroundStyle(palette.nightLampGold)
                     }
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -331,7 +331,7 @@ public struct VinylPostcardCanvasView: View {
         ctx.fill(Path(ellipseIn: pinRect), with: .color(palette.nightLampGold))
 
         if snapshot.notes.isEmpty {
-            let emptyLabel = Text("静待落笔")
+            let emptyLabel = Text("空白画布")
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(palette.secondaryInk.opacity(0.70))
             ctx.draw(emptyLabel, at: CGPoint(x: center.x, y: center.y + hubR + 22.0), anchor: .center)

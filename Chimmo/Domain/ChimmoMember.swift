@@ -63,13 +63,13 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
 
     public var voiceOverSummary: String {
         switch self {
-        case .taono: return "1号陶诺 Do，回家主音，稳重落地"
-        case .doko: return "2号豆叩 Re，迈步音，轻轻离开家"
-        case .plokko: return "3号拍咯 Mi，晴雨音，决定大调明朗或小调微酸"
-        case .udo: return "4号呜嘟 Fa，悬步音，微微向3号靠拢"
-        case .corllo: return "5号壳咯 Sol，远望支柱，撑起天空"
-        case .bomo: return "6号钵莫 La，怀旧微酸音"
-        case .tinki: return "7号叮尖 Ti，踮脚张力音，急切想回到1号家"
+        case .taono: return "1 Do，主音"
+        case .doko: return "2 Re"
+        case .plokko: return "3 Mi，决定明亮或忧郁"
+        case .udo: return "4 Fa"
+        case .corllo: return "5 Sol"
+        case .bomo: return "6 La，抒情音"
+        case .tinki: return "7 Si，倾向回到 1"
         }
     }
 

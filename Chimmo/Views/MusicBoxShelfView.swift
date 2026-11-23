@@ -57,9 +57,9 @@ public struct MusicBoxShelfView: View {
                 AmbientPaperBackdrop(palette: palette)
 
                 VStack(spacing: 0) {
-                    Picker("唱片馆", selection: $selectedSegment) {
-                        Text("我的唱片 (\(notebook.entries.count))").tag(0)
-                        Text("28 首名曲盘").tag(1)
+                    Picker("曲库", selection: $selectedSegment) {
+                        Text("我的作品 (\(notebook.entries.count))").tag(0)
+                        Text("经典曲库 (28)").tag(1)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 16)
@@ -100,7 +100,7 @@ public struct MusicBoxShelfView: View {
                     }
                 }
             }
-            .navigationTitle("唱片馆")
+            .navigationTitle("曲库")
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear { stopInlinePlay() }
         }
@@ -121,11 +121,11 @@ public struct MusicBoxShelfView: View {
                         .foregroundStyle(palette.homeAnchor)
                 }
 
-                Text("第一张旋转脑放唱片正等着你")
+                Text("还没有保存的作品")
                     .font(.headline.weight(.bold))
                     .foregroundStyle(palette.primaryInk)
 
-                Text("去星盘画板敲下节奏、一指画座山坡或随口轻哼，点右上角书签就会收进这里，随时在唱片上转动重温。")
+                Text("创作完点右上角书签，就会保存在这里。")
                     .font(.caption)
                     .foregroundStyle(palette.secondaryInk)
                     .multilineTextAlignment(.center)
@@ -133,7 +133,7 @@ public struct MusicBoxShelfView: View {
                 Button {
                     onStartNewTap()
                 } label: {
-                    Label("去声盘敲一段节奏", systemImage: "hand.tap.fill")
+                    Label("去写一段", systemImage: "hand.tap.fill")
                         .font(.subheadline.weight(.bold))
                         .padding(.horizontal, 18)
                         .padding(.vertical, 11)
@@ -154,7 +154,7 @@ public struct MusicBoxShelfView: View {
                 savedDiscCard(entry: entry, index: idx)
             }
 
-            Text("所有脑放唱片 100% 安静保存在本机，永不上传")
+            Text("所有作品仅保存在本机，不上传")
                 .font(.caption2)
                 .foregroundStyle(palette.secondaryInk)
                 .padding(.top, 4)
@@ -181,7 +181,7 @@ public struct MusicBoxShelfView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     ChimmoEditorialPill(
-                        text: entry.moodSticker ?? "星轨唱片",
+                        text: entry.moodSticker ?? "我的作品",
                         accent: entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
                         surface: palette.shelfSurface,
                         textColor: palette.primaryInk
@@ -201,7 +201,7 @@ public struct MusicBoxShelfView: View {
                     Button {
                         if isPlayingThis { stopInlinePlay() } else { playInline(entry) }
                     } label: {
-                        Label(isPlayingThis ? "停" : "试听", systemImage: isPlayingThis ? "pause.fill" : "play.fill")
+                        Label(isPlayingThis ? "停止" : "试听", systemImage: isPlayingThis ? "pause.fill" : "play.fill")
                             .font(.caption.weight(.bold))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
@@ -214,7 +214,7 @@ public struct MusicBoxShelfView: View {
                         stopInlinePlay()
                         onLoadSavedToBoard(entry)
                     } label: {
-                        Label("放上声盘", systemImage: "record.circle")
+                        Label("打开", systemImage: "record.circle")
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -352,7 +352,7 @@ public struct MusicBoxShelfView: View {
                             stopInlinePlay()
                             onPlayAlongSpecimen(spec)
                         } label: {
-                            Label("亮灯跟弹", systemImage: "sparkles")
+                            Label("跟灯弹", systemImage: "sparkles")
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
@@ -365,7 +365,7 @@ public struct MusicBoxShelfView: View {
                             stopInlinePlay()
                             onEditSpecimenOnBoard(spec)
                         } label: {
-                            Label("放上声盘", systemImage: "record.circle")
+                            Label("打开", systemImage: "record.circle")
                                 .font(.caption2.weight(.semibold))
                                 .padding(.horizontal, 9)
                                 .padding(.vertical, 6)
@@ -384,7 +384,7 @@ public struct MusicBoxShelfView: View {
                                     color: spec.scaleMode.skyAuroraColor(isNight: palette.isNight)
                                 )
                                 .frame(width: 11, height: 11)
-                                Text("借天光")
+                                Text("套用风格")
                             }
                             .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 9)

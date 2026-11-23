@@ -140,8 +140,8 @@ public final class StudioViewModel: ObservableObject {
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.45)
         showToast(
             shadowCounterpointEnabled
-                ? "已唤醒巴赫影子对位：副声部将在旋律留白处轻声对话"
-                : "已收起影子对位声部"
+                ? "已开启自动伴唱"
+                : "已关闭自动伴唱"
         )
     }
 
@@ -152,8 +152,8 @@ public final class StudioViewModel: ObservableObject {
         }
         showToast(
             musicHapticsEnabled
-                ? "已开启掌心音乐触觉：播放时可感受每拍律动与和声呼吸"
-                : "已关闭播放期间的掌心触觉脉冲"
+                ? "已开启节拍震动"
+                : "已关闭节拍震动"
         )
     }
 
@@ -163,7 +163,7 @@ public final class StudioViewModel: ObservableObject {
         clock.setRate(clamped)
         AcousticHapticsEngine.shared.playScrubTick()
         let formatted = String(format: "%.2g×", clamped)
-        showToast("播放呼吸速度已调至 \(formatted)")
+        showToast("播放速度：\(formatted)")
     }
 
     public var smartHints: [SmartPitchHint] {
@@ -253,7 +253,7 @@ public final class StudioViewModel: ObservableObject {
         liveTapTimestamps.removeAll()
         isTappingRhythm = true
         AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
-        showToast("不用管音高，按脑海里的快慢轻敲下方木鼓")
+        showToast("不管音高，按节奏快慢点敲即可")
     }
 
     public func recordRhythmDrumTap() {
@@ -321,8 +321,8 @@ public final class StudioViewModel: ObservableObject {
         }
 
         document = MelodyDocument(
-            title: "脑放星盘 #\(notebook.entries.count + 1)",
-            subtitle: "星盘已随节奏转动 · 轻点任意音珠或用下方彩虹条微调",
+            title: "我的旋律 #\(notebook.entries.count + 1)",
+            subtitle: "点音符或下方彩条可微调",
             rootMIDI: 60,
             scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
@@ -336,7 +336,7 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes.first?.id
         smartHintActive = true
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已凝结 \(shapedNotes.count) 颗星珠，转盘转动听听看！")
+        showToast("已生成 \(shapedNotes.count) 个音，点一下即可调整")
         togglePlayback()
     }
 
@@ -373,7 +373,7 @@ public final class StudioViewModel: ObservableObject {
             chordOverrides.removeAll()
             document = MelodyDocument(
                 title: "手绘旋律 #\(notebook.entries.count + 1)",
-                subtitle: "单指绘出的脑海起伏",
+                subtitle: "手画线条生成的旋律",
                 rootMIDI: document.isSpecimen ? 60 : document.rootMIDI,
                 scaleMode: document.scaleMode,
                 harmonyProfile: document.harmonyProfile,
@@ -391,7 +391,7 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes.first?.id
         smartHintActive = false
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("已把你画的山坡变成 \(shaped.count) 颗音珠！")
+        showToast("已生成 \(shaped.count) 个音")
         togglePlayback()
     }
 
@@ -440,7 +440,7 @@ public final class StudioViewModel: ObservableObject {
                     if let first = document.notes.first {
                         clock.setScrubTime(first.displayOnset(grooveStrength: document.grooveStrength))
                     }
-                    showToast("整首演奏完成！再跟着亮灯敲一遍，或退出自由改写")
+                    showToast("整首弹完啦，可再弹一遍或自由修改")
                 } else {
                     let next = document.notes[followGlowIndex]
                     let nextOnset = next.displayOnset(grooveStrength: document.grooveStrength)
@@ -452,7 +452,7 @@ public final class StudioViewModel: ObservableObject {
                 rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex)
                 AcousticHapticsEngine.shared.playPitchTouch(laneIndex: lane.index, isHome: lane.degree == 1, isTension: member.isTensionDegree)
                 let expected = XylophoneLane.lane(at: targetLane)
-                showToast("跟着亮金光的「\(expected.digitLabel) \(expected.glyphLabel)」敲哦")
+                showToast("请敲亮灯的「\(expected.digitLabel)」")
             }
             return
         }
@@ -544,7 +544,7 @@ public final class StudioViewModel: ObservableObject {
         pushUndo()
         if document.isSpecimen {
             document.isSpecimen = false
-            document.title = "\(document.title) · 山坡变奏"
+            document.title = "\(document.title) · 变奏"
         }
         document.notes = XylophoneRollEngine.applyHill(template, to: document.notes, pentatonicSafe: pentatonicSafe)
         clock.updateTotalDuration(document.totalDuration)
@@ -552,7 +552,7 @@ public final class StudioViewModel: ObservableObject {
             selectedBeadID = document.notes.first?.id
         }
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("已换成「\(template.label)」· 转盘正为你试听")
+        showToast("已套用「\(template.label)」")
         togglePlayback()
     }
 
@@ -569,7 +569,7 @@ public final class StudioViewModel: ObservableObject {
             currentSavedEntryID = nil
             chordOverrides.removeAll()
             document = MelodyDocument(
-                title: "折纸乐章 · \(operation.label)",
+                title: "扩展旋律 · \(operation.label)",
                 subtitle: operation.philosophyNote,
                 rootMIDI: 60,
                 scaleMode: document.scaleMode,
@@ -590,7 +590,7 @@ public final class StudioViewModel: ObservableObject {
         smartHintActive = false
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("已按「\(operation.label)」长出 \(document.notes.count) 颗星珠！")
+        showToast("已扩展为 \(document.notes.count) 个音")
         togglePlayback()
     }
 
@@ -611,7 +611,7 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = varied.notes.first?.id
         smartHintActive = false
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("3 颗火种微调已长成你的专属变奏！")
+        showToast("已生成你的新变奏")
         togglePlayback()
     }
 
@@ -629,8 +629,8 @@ public final class StudioViewModel: ObservableObject {
 
         pentatonicSafe = safe
         document = MelodyDocument(
-            title: "夜灯摸音 #\(notebook.entries.count + 1)",
-            subtitle: "在深夜掌心触觉里凝结的旋律",
+            title: "闭眼滑音 #\(notebook.entries.count + 1)",
+            subtitle: "通过滑动震动录下的旋律",
             rootMIDI: 60,
             scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
@@ -645,7 +645,7 @@ public final class StudioViewModel: ObservableObject {
         smartHintActive = false
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("夜灯触觉已凝结 \(beads.count) 颗星珠，开始转动试听")
+        showToast("已录下 \(beads.count) 个音")
         togglePlayback()
     }
 
@@ -682,13 +682,13 @@ public final class StudioViewModel: ObservableObject {
         if document.isSpecimen {
             document.isSpecimen = false
             currentSavedEntryID = nil
-            if !document.title.contains("借景") {
-                document.title = "\(document.title) · 借景"
+            if !document.title.contains("新风格") {
+                document.title = "\(document.title) · 新风格"
             }
         }
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已将《\(specimen.title)》的天光与音色披在你的旋律上！")
+        showToast("已套用《\(specimen.title)》的风格与音色")
         togglePlayback()
     }
 
@@ -699,7 +699,7 @@ public final class StudioViewModel: ObservableObject {
             if selectedBeadID == nil {
                 selectedBeadID = document.notes.first?.id
             }
-            showToast("盘面已点亮 3 圈最搭音轨，点一下试试")
+            showToast("已标出推荐的 3 个音高")
         }
     }
 
@@ -715,7 +715,7 @@ public final class StudioViewModel: ObservableObject {
                 clock.setScrubTime(first.displayOnset(grooveStrength: document.grooveStrength))
             }
             AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.6)
-            showToast("跟着亮金光的琴条敲，转盘会陪你转到下一拍")
+            showToast("跟着亮灯敲琴条，演奏完这一拍自动跳下一拍")
         } else {
             clock.setScrubTime(nil)
         }
@@ -726,8 +726,8 @@ public final class StudioViewModel: ObservableObject {
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         showToast(
             pentatonicSafe
-                ? "已开启安心 5 音：收起 4 和 7，怎么点都自然顺耳"
-                : "已解锁全部 8 音星轨（含 4 与 7 的情绪张力）"
+                ? "已隐藏 4 和 7，保留五声顺耳音"
+                : "已显示全部 8 个音（含 4 和 7）"
         )
     }
 
@@ -822,7 +822,7 @@ public final class StudioViewModel: ObservableObject {
             if let newIdx = document.notes.firstIndex(where: { $0.id == newBead.id }) {
                 playContextEcho(upToIndex: newIdx)
             }
-            showToast("已插入 1 拍，点下方彩虹条调整音高")
+            showToast("已插入 1 个音，点下方彩条改音高")
         } else {
             triggerLadderMember(.taono, octaveOffset: 0)
         }
@@ -836,7 +836,7 @@ public final class StudioViewModel: ObservableObject {
         followGlowActive = false
         AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
         capturePipeline.startRecording()
-        showToast(document.notes.isEmpty ? "轻轻哼出脑海里的旋律，哼完再点一次" : "不管跑不跑调，按大概高低起伏哼一遍就行！")
+        showToast(document.notes.isEmpty ? "开始录音，哼完再点一次停止" : "按高低起伏哼一遍就行")
     }
 
     public func finishRelativeContourHum() {
@@ -846,7 +846,7 @@ public final class StudioViewModel: ObservableObject {
                     pushUndo()
                     if document.isSpecimen {
                         document.isSpecimen = false
-                        document.title = "脑放星盘 #\(notebook.entries.count + 1)"
+                        document.title = "我的旋律 #\(notebook.entries.count + 1)"
                     }
                     document.notes = XylophoneRollEngine.applyRelativeContour(
                         to: document.notes,
@@ -856,7 +856,7 @@ public final class StudioViewModel: ObservableObject {
                     clock.updateTotalDuration(document.totalDuration)
                     selectedBeadID = document.notes.first?.id
                     AcousticHapticsEngine.shared.playResolutionExhale()
-                    showToast("已按你的哼唱高低排好音轨！转动听听像不像")
+                    showToast("已按你的哼唱调好音高")
                     togglePlayback()
                 } else if !capturePipeline.statusMessage.isEmpty {
                     showToast(capturePipeline.statusMessage)
@@ -867,8 +867,8 @@ public final class StudioViewModel: ObservableObject {
                     currentSavedEntryID = nil
                     chordOverrides.removeAll()
                     document = MelodyDocument(
-                        title: "轻哼星盘 #\(notebook.entries.count + 1)",
-                        subtitle: "点选音珠即可在星盘上精修",
+                        title: "哼唱旋律 #\(notebook.entries.count + 1)",
+                        subtitle: "点画布上的音即可微调",
                         rootMIDI: 60,
                         scaleMode: snapped.mode,
                         harmonyProfile: document.harmonyProfile,
@@ -882,7 +882,7 @@ public final class StudioViewModel: ObservableObject {
                     pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(document)
                     selectedBeadID = document.notes.first?.id
                     AcousticHapticsEngine.shared.playResolutionExhale()
-                    showToast("捉住 \(snapped.notes.count) 颗哼唱音珠！")
+                    showToast("已录下 \(snapped.notes.count) 个音")
                     togglePlayback()
                 } else if !capturePipeline.statusMessage.isEmpty {
                     showToast(capturePipeline.statusMessage)
@@ -978,7 +978,7 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         playContextEcho(upToIndex: idx)
-        showToast(delta > 0 ? "这拍拖音变长啦" : "这拍变得更利落")
+        showToast(delta > 0 ? "音符变长了" : "音符变短了")
     }
 
     public func deleteSelectedBead() {
@@ -993,7 +993,7 @@ public final class StudioViewModel: ObservableObject {
             selectedBeadID = document.notes[min(idx, document.notes.count - 1)].id
         }
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-        showToast("已删掉这一拍")
+        showToast("已删除")
     }
 
     public func cycleSpanChord(spanIndex: Int) {
@@ -1011,26 +1011,26 @@ public final class StudioViewModel: ObservableObject {
             spanDuration: max(1.0, currentSpan.endTime - currentSpan.startTime),
             intensity: 0.85
         )
-        showToast("第 \(spanIndex + 1) 幕底色换为「\(next.moodTitle)」(\(next.roman))")
+        showToast("第 \(spanIndex + 1) 段和弦换为「\(next.moodTitle)」")
     }
 
     public func setChordPreset(_ preset: ChordProgressionPreset) {
         chordPreset = preset
         chordOverrides.removeAll()
-        showToast(preset == .off ? "已关闭伴奏托底，只听纯净单旋律" : "已开启温柔和声伴奏")
+        showToast(preset == .off ? "已关闭伴奏" : "已开启伴奏")
     }
 
     public func setAccompanimentTexture(_ texture: AccompanimentTexture) {
         accompanimentTexture = texture
         if chordPreset == .off { chordPreset = .autoMatch }
-        showToast("伴奏水波：\(texture.label)")
+        showToast("伴奏：\(texture.label)")
     }
 
     public func setMelodyVoice(_ voice: MelodyVoice) {
         melodyVoice = voice
         let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: 3, octaveOffset: 0)
         synth.playNote(frequency: hz, velocity: 0.62, decay: 1.5, timbre: FeltPianoSynth.Timbre.from(voice: voice))
-        showToast("主乐器已换为：\(voice.label)")
+        showToast("音色：\(voice.label)")
     }
 
     public func startBlankCanvas() {
@@ -1046,8 +1046,8 @@ public final class StudioViewModel: ObservableObject {
         pentatonicSafe = true
         if chordPreset == .off { chordPreset = .autoMatch }
         document = MelodyDocument(
-            title: "新脑放星盘",
-            subtitle: "点盘面轨道直接种音珠，或点下方「捕梦创作」",
+            title: "空白画布",
+            subtitle: "点画布或下方「写旋律」开始创作",
             rootMIDI: 60,
             scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
@@ -1060,7 +1060,7 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         activeGuidedMoment = nil
         lastFreeNoteTime = nil
-        showToast("空白星盘已就绪，点圆环直接种植音珠")
+        showToast("空白画布已就绪")
     }
 
     public func openSpecimen(_ specimen: MelodyDocument, autoPlay: Bool = true) {
@@ -1092,7 +1092,7 @@ public final class StudioViewModel: ObservableObject {
         if let first = specimen.notes.first {
             clock.setScrubTime(first.displayOnset(grooveStrength: specimen.grooveStrength))
         }
-        showToast("跟着亮金光的琴条敲，演奏《\(specimen.title)》")
+        showToast("跟着亮灯敲，弹奏《\(specimen.title)》")
     }
 
     public func openSavedEntry(_ entry: SavedMelodyEntry, autoPlay: Bool = true) {
@@ -1118,12 +1118,12 @@ public final class StudioViewModel: ObservableObject {
 
     public func saveCurrentToNotebook(moodSticker: String? = nil) {
         guard !document.notes.isEmpty else {
-            showToast("先创作几颗音珠，再收进唱片馆吧")
+            showToast("先写几个音再保存")
             return
         }
         var docToSave = document
-        if docToSave.isSpecimen || docToSave.title == "新脑放星盘" || docToSave.title == "指尖即兴" {
-            docToSave.title = "脑放唱片 #\(notebook.entries.count + 1)"
+        if docToSave.isSpecimen || docToSave.title == "空白画布" || docToSave.title == "即兴创作" || docToSave.title == "新脑放星盘" || docToSave.title == "指尖即兴" {
+            docToSave.title = "我的作品 #\(notebook.entries.count + 1)"
         }
         docToSave.isSpecimen = false
         docToSave.preferredTexture = accompanimentTexture
@@ -1134,14 +1134,14 @@ public final class StudioViewModel: ObservableObject {
             chordPreset: chordPreset,
             chordOverrides: chordOverrides,
             accompanimentTexture: accompanimentTexture,
-            moodSticker: moodSticker ?? (document.scaleMode.isMinorFlavored ? "温柔夜曲" : "星轨唱片"),
+            moodSticker: moodSticker ?? (document.scaleMode.isMinorFlavored ? "抒情" : "我的作品"),
             summaryNote: currentInsight.headline,
             existingEntryID: currentSavedEntryID
         )
         currentSavedEntryID = saved.id
         document = saved.document
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已收进「唱片馆」：\(saved.document.title)")
+        showToast("已保存到曲库：\(saved.document.title)")
     }
 
     // MARK: - Playback Sequencer (Zero 60Hz SwiftUI Invalidation)
@@ -1349,8 +1349,8 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = nil
         chordOverrides.removeAll()
         document = MelodyDocument(
-            title: "指尖即兴",
-            subtitle: "在声盘上自由编织脑放",
+            title: "即兴创作",
+            subtitle: "自由写旋律",
             rootMIDI: 60,
             scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
@@ -1441,7 +1441,7 @@ public struct StudioView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("声盘", systemImage: "record.circle.fill", value: ChimmoTab.board) {
+            Tab("演奏", systemImage: "record.circle.fill", value: ChimmoTab.board) {
                 OrbitalStageView(
                     vm: vm,
                     palette: palette,
@@ -1461,7 +1461,7 @@ public struct StudioView: View {
                 )
             }
 
-            Tab("唱片馆", systemImage: "opticaldisc.fill", value: ChimmoTab.musicBox) {
+            Tab("曲库", systemImage: "opticaldisc.fill", value: ChimmoTab.musicBox) {
                 MusicBoxShelfView(
                     palette: palette,
                     synth: vm.synth,

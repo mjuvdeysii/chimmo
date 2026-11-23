@@ -506,8 +506,8 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: tempURL.path))
         XCTAssertTrue(tempURL.lastPathComponent.hasSuffix(".png"))
 
-        // 3. 夜灯触觉短句落盘 & 28 首名曲「借天光」氛围移植
-        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v010-\(UUID().uuidString)"))
+        // 3. 闭眼滑音短句保存 & 28 首曲库风格套用
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v011-\(UUID().uuidString)"))
         let vm = StudioViewModel(notebookStore: store)
         vm.applyNightLampPhrase(
             [
@@ -518,17 +518,21 @@ final class SpecimenIntegrityTests: XCTestCase {
         )
         XCTAssertEqual(vm.document.notes.count, 2)
         XCTAssertTrue(vm.pentatonicSafe)
-        XCTAssertTrue(vm.document.title.contains("夜灯摸音"))
+        XCTAssertTrue(vm.document.title.contains("闭眼滑音"))
 
         vm.borrowHarmonyAtmosphere(from: SpecimenLibrary.tchaikovskySwanLake)
-        XCTAssertEqual(vm.document.notes.count, 2, "借天光只能套用调式与织体，绝不可覆盖用户自己的音符旋律")
+        XCTAssertEqual(vm.document.notes.count, 2, "套用曲风只能替换调式与伴奏，不能覆盖用户的音符")
         XCTAssertEqual(vm.document.scaleMode, .wistfulMinor)
         XCTAssertEqual(vm.document.harmonyProfile, .filmGlow)
         XCTAssertEqual(vm.accompanimentTexture, .swanRipple)
         XCTAssertEqual(vm.melodyVoice, .singingCello)
         vm.stopPlayback()
 
-        // 4. 全局零 Emoji 门禁守卫
+        // 4. 大白话界面文案与视图模式校验
+        XCTAssertEqual(StageVisualMode.allCases.map(\.rawValue), ["转盘", "曲线", "星环"])
+        XCTAssertTrue(ScaleMode.allCases.allSatisfy { $0.shortSkyLabel.count <= 2 && $0.label.count <= 2 })
+
+        // 5. 全局零 Emoji 门禁守卫
         var inspectStrings: [String] = []
         inspectStrings.append(contentsOf: PitchGlyphShape.allCases.map(\.symbolName))
         inspectStrings.append(contentsOf: MelodyHillTemplate.allCases.map(\.shortLabel))

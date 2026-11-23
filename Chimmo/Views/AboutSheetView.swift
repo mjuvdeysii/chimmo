@@ -61,15 +61,15 @@ public struct VinylPostcardShareSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    // 昼夜两种画廊质感卡片切换
-                    Picker("明信片底色", selection: $useNightCard) {
-                        Text("日光暖瓷版").tag(false)
-                        Text("深夜曜蓝版").tag(true)
+                    // 浅色 / 深色图片样式切换
+                    Picker("图片样式", selection: $useNightCard) {
+                        Text("浅色").tag(false)
+                        Text("深色").tag(true)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 16)
 
-                    // 等比缩放呈现 540x680 美术馆实卡
+                    // 等比缩放呈现 540x680 卡片预览
                     VinylPostcardCanvasView(snapshot: snapshot)
                         .scaleEffect(0.5)
                         .frame(width: 270, height: 340)
@@ -85,7 +85,7 @@ public struct VinylPostcardShareSheet: View {
                                         color: palette.isNight ? Color(hex: 0x151B36) : .white
                                     )
                                     .frame(width: 17, height: 17)
-                                    Text("分享高清黑胶星轨明信片 (PNG)")
+                                    Text("分享图片 (PNG)")
                                         .font(.subheadline.weight(.bold))
                                 }
                                 .frame(maxWidth: .infinity)
@@ -101,7 +101,7 @@ public struct VinylPostcardShareSheet: View {
                                 HStack(spacing: 8) {
                                     Image(systemName: "pianokeys")
                                         .font(.subheadline.weight(.semibold))
-                                    Text("导出标准编曲工程 (.mid)")
+                                    Text("导出 MIDI (.mid)")
                                         .font(.subheadline.weight(.semibold))
                                 }
                                 .frame(maxWidth: .infinity)
@@ -115,14 +115,14 @@ public struct VinylPostcardShareSheet: View {
                     }
                     .padding(.horizontal, 16)
 
-                    Text("明信片图像与 MIDI 工程完全在本机离线渲染，不触碰任何网络服务")
+                    Text("图片和 MIDI 均在本机离线生成，不联网")
                         .font(.caption2)
                         .foregroundStyle(palette.secondaryInk)
                 }
                 .padding(.vertical, 16)
             }
             .background(palette.paper.ignoresSafeArea())
-            .navigationTitle("黑胶声纹明信片")
+            .navigationTitle("分享作品")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -209,7 +209,7 @@ public struct AboutSheetView: View {
                                 .font(.title3.weight(.bold))
                                 .foregroundStyle(palette.primaryInk)
                         }
-                        Text("把脑海里的旋律唱出来、看得见。七只哑光窑陶小偶（1陶诺、2豆叩、3拍咯、4呜嘟、5壳咯、6钵莫、7叮尖）对应调内七个音级，陪零基础的你捉住脑放旋律、看见编曲家眼中的引力与和声。")
+                        Text("不用懂五线谱，也能用转盘、曲线、哼唱和触觉把脑海里的旋律记下来。")
                             .font(.subheadline)
                             .foregroundStyle(palette.secondaryInk)
                     }
@@ -217,19 +217,19 @@ public struct AboutSheetView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface))
 
-                    // 高清明信片 PNG 与标准 MIDI 导出
+                    // 离线导出图片与 MIDI
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("离线导出当前乐思")
+                        Text("导出当前作品")
                             .font(.headline)
                             .foregroundStyle(palette.primaryInk)
-                        Text("可将当前星盘刻成离线高清黑胶明信片（PNG）分享给好友，或导出标准 MIDI（.mid）文件直接导入 GarageBand / Logic Pro 继续编曲。")
+                        Text("可导出图片分享给朋友，或导出标准 MIDI 文件导入 GarageBand / Logic Pro 继续编曲。")
                             .font(.caption)
                             .foregroundStyle(palette.secondaryInk)
 
                         HStack(spacing: 10) {
                             if let pngURL = exportedPNGURL {
                                 ShareLink(item: pngURL) {
-                                    Label("分享黑胶明信片", systemImage: "photo.on.rectangle")
+                                    Label("分享图片", systemImage: "photo.on.rectangle")
                                         .font(.caption.weight(.bold))
                                         .padding(.horizontal, 13)
                                         .padding(.vertical, 9)
@@ -247,7 +247,7 @@ public struct AboutSheetView: View {
                                         isNight: palette.isNight
                                     )
                                 } label: {
-                                    Label("生成黑胶明信片 (.png)", systemImage: "photo")
+                                    Label("生成图片 (.png)", systemImage: "photo")
                                         .font(.caption.weight(.bold))
                                         .padding(.horizontal, 13)
                                         .padding(.vertical, 9)
@@ -273,7 +273,7 @@ public struct AboutSheetView: View {
                                         includeHarmonyCradle: cradleEnabled
                                     )
                                 } label: {
-                                    Label("生成 .mid", systemImage: "pianokeys")
+                                    Label("生成 MIDI", systemImage: "pianokeys")
                                         .font(.caption.weight(.semibold))
                                         .padding(.horizontal, 13)
                                         .padding(.vertical, 9)
@@ -290,10 +290,10 @@ public struct AboutSheetView: View {
 
                     // 隐私承诺与开源致谢
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("隐私承诺")
+                        Text("隐私说明")
                             .font(.headline)
                             .foregroundStyle(palette.primaryInk)
-                        Text("咩哞 100% 在本机离线运行：不需要账号、不连接网络、不含广告或任何第三方统计 SDK。你的哼唱音频只在本机内存中实时转换为音珠，从不上传至任何服务器。")
+                        Text("100% 本机离线运行：无需登录、不联网、无广告、不上传任何录音。")
                             .font(.caption)
                             .foregroundStyle(palette.secondaryInk)
 

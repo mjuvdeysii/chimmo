@@ -14,8 +14,8 @@ public enum AppearancePreference: String, CaseIterable, Codable, Sendable, Ident
     public var label: String {
         switch self {
         case .auto: return "自动"
-        case .daylight: return "日光"
-        case .nightLamp: return "夜灯"
+        case .daylight: return "浅色"
+        case .nightLamp: return "深色"
         }
     }
 }

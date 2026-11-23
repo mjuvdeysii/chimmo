@@ -117,23 +117,23 @@ public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable
 
     public var moodTitle: String {
         switch self {
-        case .I: return "归家稳定"
-        case .ii: return "轻步过渡"
-        case .iii: return "温柔微光"
-        case .IV: return "宽阔托举"
-        case .V: return "张力推力"
-        case .vi: return "怀旧微酸"
+        case .I: return "稳定"
+        case .ii: return "过渡"
+        case .iii: return "微亮"
+        case .IV: return "开阔"
+        case .V: return "推高"
+        case .vi: return "柔和"
         }
     }
 
     public var shortMoodGlyph: String {
         switch self {
-        case .I: return "归家"
-        case .ii: return "漫步"
-        case .iii: return "微光"
-        case .IV: return "托举"
-        case .V: return "推力"
-        case .vi: return "怀旧"
+        case .I: return "稳定"
+        case .ii: return "过渡"
+        case .iii: return "微亮"
+        case .IV: return "开阔"
+        case .V: return "推高"
+        case .vi: return "柔和"
         }
     }
 
@@ -166,19 +166,19 @@ public enum AccompanimentTexture: String, CaseIterable, Codable, Sendable, Ident
 
     public var label: String {
         switch self {
-        case .swanRipple: return "天鹅水波"
-        case .feltWaltz: return "圆舞呼吸"
-        case .summerGlass: return "夏日清风"
+        case .swanRipple: return "流动琶音"
+        case .feltWaltz: return "三拍圆舞"
+        case .summerGlass: return "清透和弦"
         case .pureChorale: return "柔和长音"
         }
     }
 
     public var subtitle: String {
         switch self {
-        case .swanRipple: return "圣桑式流淌的波浪分解琶音，像湖面划过羽翼"
-        case .feltWaltz: return "低音轻落 + 轻盈摇曳的三拍子浪漫呼吸"
-        case .summerGlass: return "东亚治愈电影般的透明九和弦 + 八音盒泛音"
-        case .pureChorale: return "最纯净的三音叠加，清晰听出每个和弦骨架"
+        case .swanRipple: return "柔和流动的分解和弦"
+        case .feltWaltz: return "轻快摇曳的三拍子伴奏"
+        case .summerGlass: return "干净通透的柔和伴奏"
+        case .pureChorale: return "平稳托底的三和弦长音"
         }
     }
 
@@ -351,9 +351,9 @@ public enum TheoryLensEngine {
         }
         guard !notes.isEmpty else {
             return MelodyTheoryInsight(
-                headline: "空白音阶画卷已铺开",
-                detail: "点左侧的咩哞小偶、直接点画布，或按住「轻哼捉珠」把脑海里的旋律唱出来。",
-                tryNextTip: "先点几下左侧的 1·陶诺、3·拍咯、5·壳咯，听听发光泳道里的和谐感！",
+                headline: "空白画布",
+                detail: "直接点画面或下方彩条加音，也可以用写旋律功能录音或敲节奏。",
+                tryNextTip: "先点几下 1、3、5 听听基础音的和谐感。",
                 inChordRatio: 1.0,
                 highlightedTags: [document.scaleMode.label]
             )
@@ -369,7 +369,7 @@ public enum TheoryLensEngine {
         }
         let ratio = spans.isEmpty ? 1.0 : Double(inChordCount) / Double(notes.count)
 
-        // 2. 找出最大音程跳跃与半音牵引次数
+        // 2. 找出最大音程跳跃与半音次数
         var maxSemi = 0
         var maxJumpText = ""
         var semitoneSteps = 0
@@ -384,48 +384,48 @@ public enum TheoryLensEngine {
             }
         }
 
-        // 3. 尾音归宿解读
+        // 3. 尾音收束解读
         let last = notes.last!
         let endingDesc: String
         let tip: String
         switch last.degree {
         case 1:
-            endingDesc = "落回 1·陶诺（主音）收尾，像句号一样稳稳回家。"
-            tip = "试着点底部和弦卡片，把最后一个和弦换成 vi，听听「伪终止」的电影余韵！"
+            endingDesc = "收在 1 (Do)，听起来平稳完整。"
+            tip = "点一下外圈色环，可以换不同的和弦风格。"
         case 6:
-            endingDesc = "停在 6·钵莫（La）上，带有一丝温柔未完的怀旧微酸。"
-            tip = "试着把最后一颗音珠拖到 1·陶诺，对比「怀旧余味」和「完全回家」的区别。"
+            endingDesc = "停在 6 (La)，有一点淡淡的回味感。"
+            tip = "把最后一颗音拉到 1 (Do)，对比两种结尾的感觉。"
         case 5:
-            endingDesc = "停在 5·壳咯（Sol），像抛向天空的一个问号，期待下一句回应。"
-            tip = "在末尾补一颗 1·陶诺，听听问答瞬间闭合的畅快感！"
+            endingDesc = "停在 5 (Sol)，像把句子留了一点悬念。"
+            tip = "在结尾补一个 1 (Do)，整句会立刻安定下来。"
         case 7:
-            endingDesc = "悬在 7·叮尖（导音）上紧绷着，离高音 1 仅差半步！"
-            tip = "把最后的 7·叮尖往上轻推半格到高音 1，亲耳感受「导音解决」的释然。"
+            endingDesc = "停在 7 (Si)，差半步就能落回高音 1。"
+            tip = "把最后的 7 往上推到高音 1，听听释放的感觉。"
         case 4:
-            endingDesc = "停在 4·呜嘟（Fa），离 3·拍咯只有半音，带着悬浮的微风感。"
-            tip = "再加一颗 3·拍咯轻轻落下，这就是影视配乐最常用的「四度叹息」。"
+            endingDesc = "停在 4 (Fa)，带一点轻轻落下的倾向。"
+            tip = "后面接一颗 3 (Mi) 会很自然。"
         default:
-            endingDesc = "收在 \(last.degree)·\(last.member.chineseName)（\(last.member.roleLabel)），保持着轻轻行走的呼吸。"
-            tip = "点击画布底部的和弦光带卡片，试试不同和弦如何改写同一条旋律的情绪！"
+            endingDesc = "停在第 \(last.degree) 音，留着轻松的延续感。"
+            tip = "拖动任意音珠，就能实时调整高低和拍子。"
         }
 
         var tags: [String] = [document.scaleMode.label]
-        if maxSemi >= 5 { tags.append("亮点大跳 \(maxJumpText)") }
-        if semitoneSteps > 0 { tags.append("含 \(semitoneSteps) 处半音牵引") }
-        if !spans.isEmpty { tags.append("光带内音 \(Int((ratio * 100).rounded()))%") }
+        if maxSemi >= 5 { tags.append("大跨度 \(maxJumpText)") }
+        if semitoneSteps > 0 { tags.append("含 \(semitoneSteps) 处半音") }
+        if !spans.isEmpty { tags.append("协和音 \(Int((ratio * 100).rounded()))%") }
 
         let headline: String
         if let customInsight = document.composerInsight, document.isSpecimen {
             headline = customInsight
         } else if maxSemi >= 5 {
-            headline = "有张力的旋律线条：出现 \(maxJumpText) 跳跃，\(endingDesc)"
+            headline = "起伏丰富的旋律线条（\(maxJumpText)），\(endingDesc)"
         } else {
-            headline = "流畅级进的旋律：\(endingDesc)"
+            headline = "流畅自然的旋律线条，\(endingDesc)"
         }
 
         let detail = spans.isEmpty
-            ? "当前为纯清唱视图；切回「智能配和弦」即可点亮和弦泳道光带，看清每个音与和声的关系。"
-            : "共有 \(inChordCount)/\(notes.count) 颗音珠稳稳落在发光的和弦泳道内（和弦内音），泳道外的音珠则为旋律增添色彩。"
+            ? "当前仅播放单旋律；在声音设置里开启伴奏即可加上和弦衬托。"
+            : "共有 \(inChordCount)/\(notes.count) 个音落在伴奏和弦内，其余音带来色彩变化。"
 
         return MelodyTheoryInsight(
             headline: headline,

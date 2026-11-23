@@ -129,7 +129,7 @@ public struct OrbitalStageView: View {
                     } label: {
                         Image(systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark")
                     }
-                    .accessibilityLabel("保存到我的唱片馆")
+                    .accessibilityLabel("保存到我的曲库")
 
                     Button {
                         onOpenSharePostcard()
@@ -249,26 +249,26 @@ public struct OrbitalStageView: View {
         if let toast = vm.statusToast { return toast }
         if vm.followGlowActive {
             let cur = min(vm.followGlowIndex + 1, max(1, vm.document.notes.count))
-            return "跟着亮金光琴条敲 · 第 \(cur)/\(max(1, vm.document.notes.count)) 拍"
+            return "跟灯敲第 \(cur)/\(max(1, vm.document.notes.count)) 拍"
         }
         if vm.isPlaying, let m = vm.activeGuidedMoment {
-            return "【\(m.badge)】\(m.caption)"
+            return "\(m.badge)：\(m.caption)"
         }
         if let idx = selectedBeatIndex {
-            return "选中第 \(idx + 1) 拍 · 拖珠或点下方彩虹条微调"
+            return "第 \(idx + 1) 拍 · 拖动或点下方彩条改音高"
         }
         if vm.document.notes.isEmpty {
             return vm.visualMode == .resonanceNebula
-                ? "点任意星辰即兴弹奏，或点下方「捕梦创作」"
-                : "点圆盘种音珠，或点下方「捕梦创作」敲一段节奏"
+                ? "点圆环上的音演奏，或点下方写旋律"
+                : "点画布加音，或点下方写旋律"
         }
         switch vm.visualMode {
         case .orbitalDisc:
-            return "点▶转动听曲，或用手指拨转声盘"
+            return "点播放听曲，或拖动转盘"
         case .flowingRiver:
-            return "点▶山河随声流动，或左右滑动"
+            return "点播放看流动，或左右滑动"
         case .resonanceNebula:
-            return "点任意星辰即兴弹奏，点圆心开启星云流转"
+            return "点圆环上的音演奏，点中间播放"
         }
     }
 
@@ -359,7 +359,7 @@ public struct OrbitalStageView: View {
                     HStack(spacing: 3.5) {
                         ChimmoCraftMark(.counterpointMoons, color: Color(hex: 0x4EA8DE))
                             .frame(width: 11, height: 11)
-                        Text("对位")
+                        Text("伴唱")
                             .font(.system(size: 10, weight: .bold, design: .rounded))
                     }
                     .foregroundStyle(Color(hex: 0x4EA8DE))
@@ -389,11 +389,12 @@ public struct OrbitalStageView: View {
     private var harmonyBadgeOverlay: some View {
         let phys = vm.activeHarmonyPhysics
         let accent = phys.isTense ? palette.tensionFilament : palette.homeAnchor
+        let deg = vm.latestDegree ?? 1
         return HStack(spacing: 5) {
             Circle()
                 .fill(accent)
                 .frame(width: 6.5, height: 6.5)
-            Text(phys.intervalName)
+            Text("\(deg) · \(phys.simpleMoodLabel)")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(palette.primaryInk)
         }
@@ -405,7 +406,7 @@ public struct OrbitalStageView: View {
                 .shadow(color: Color.black.opacity(0.06), radius: 4, y: 1)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("当前音程：\(phys.intervalName)，\(phys.poeticEssence)")
+        .accessibilityLabel("第 \(deg) 音，\(phys.simpleMoodLabel)")
     }
 
     // MARK: - 2A. Orbital Turntable Disc Rendering
@@ -1800,7 +1801,7 @@ public struct OrbitalStageView: View {
                 Button {
                     vm.toggleSmartPitchHints()
                 } label: {
-                    Label(vm.smartHintActive ? "3灯开" : "亮3灯", systemImage: "lightbulb.fill")
+                    Label(vm.smartHintActive ? "推荐开" : "推荐音", systemImage: "lightbulb.fill")
                         .font(.caption2.weight(.bold))
                         .padding(.horizontal, 9)
                         .padding(.vertical, 6)
@@ -2052,23 +2053,23 @@ public struct OrbitalStageView: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("情绪天光、安心五音与乐器音色")
+            .accessibilityLabel("五音模式与声音设置")
         }
     }
 
     private var primaryDockLabel: String {
         if vm.capturePipeline.isRecording {
-            return "哼好了 · 贴到声盘"
+            return "哼好了"
         }
         if vm.followGlowActive {
             let cur = min(vm.followGlowIndex + 1, max(1, vm.document.notes.count))
             return "跟弹 \(cur)/\(max(1, vm.document.notes.count)) · 退出"
         }
-        return "捕梦创作"
+        return "写旋律"
     }
 }
 
-/// 精简柔和的情绪天光与乐器配置面板（以定制矢量几何印记取代 Emoji，把复杂旋钮收敛到按需抽屉）
+/// 清晰精简的声音、外观与辅助设置抽屉
 private struct MoodAndSoundSheet: View {
     @ObservedObject var vm: StudioViewModel
     let palette: ChimmoPalette
@@ -2079,12 +2080,12 @@ private struct MoodAndSoundSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    // 0. 昼夜外观天光模式
+                    // 0. 外观模式
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 6) {
                             ChimmoCraftMark(.appearanceDial, color: palette.primaryInk)
                                 .frame(width: 15, height: 15)
-                            Text("外观纸面与夜灯")
+                            Text("外观")
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(palette.secondaryInk)
                         }
@@ -2110,9 +2111,9 @@ private struct MoodAndSoundSheet: View {
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface.opacity(0.65)))
 
-                    // 1. 活体声场与无障碍共生开关（安心 5 音 · 巴赫影子对位 · 掌心音乐触觉 · 呼吸速度）
+                    // 1. 辅助与伴奏
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("护网、对位与掌心触觉")
+                        Text("辅助与伴奏")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
 
@@ -2128,10 +2129,10 @@ private struct MoodAndSoundSheet: View {
                                 )
 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("安心 5 音护网")
+                                    Text("五音模式")
                                         .font(.subheadline.weight(.bold))
                                         .foregroundStyle(palette.primaryInk)
-                                    Text(vm.pentatonicSafe ? "已收起 4 和 7，闭眼乱点也自然好听" : "已解锁全部 8 个彩虹音阶，含 4 与 7 的情感张力")
+                                    Text(vm.pentatonicSafe ? "隐藏半音，怎么按都好听" : "已显示全部 8 个音")
                                         .font(.caption2)
                                         .foregroundStyle(palette.secondaryInk)
                                 }
@@ -2160,10 +2161,10 @@ private struct MoodAndSoundSheet: View {
                                 )
 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("巴赫影子对位")
+                                    Text("自动伴唱")
                                         .font(.subheadline.weight(.bold))
                                         .foregroundStyle(palette.primaryInk)
-                                    Text("当主旋律停在长音呼吸时，盘面浮现银蓝新月并与竖琴轻声对话")
+                                    Text("停顿时自动补一段轻柔副旋律")
                                         .font(.caption2)
                                         .foregroundStyle(palette.secondaryInk)
                                 }
@@ -2192,10 +2193,10 @@ private struct MoodAndSoundSheet: View {
                                 )
 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("掌心音乐触觉")
+                                    Text("节拍震动")
                                         .font(.subheadline.weight(.bold))
                                         .foregroundStyle(palette.primaryInk)
-                                    Text("播放时实时把每拍音高质感与和声转折传递到掌心（听障友好）")
+                                    Text("播放时用手机轻震标出节拍")
                                         .font(.caption2)
                                         .foregroundStyle(palette.secondaryInk)
                                 }
@@ -2216,7 +2217,7 @@ private struct MoodAndSoundSheet: View {
                             HStack(spacing: 6) {
                                 ChimmoCraftMark(.tempoDial, color: palette.secondaryInk)
                                     .frame(width: 14, height: 14)
-                                Text("呼吸播放速度（慢放细品每颗音珠转动）")
+                                Text("播放速度")
                                     .font(.caption.weight(.bold))
                                     .foregroundStyle(palette.secondaryInk)
                             }
@@ -2224,10 +2225,10 @@ private struct MoodAndSoundSheet: View {
                             HStack(spacing: 8) {
                                 ForEach(
                                     [
-                                        (0.65, "0.65× 慢镜"),
-                                        (0.85, "0.85× 散步"),
-                                        (1.0, "1.0× 原速"),
-                                        (1.25, "1.25× 轻快")
+                                        (0.65, "0.65× 慢"),
+                                        (0.85, "0.85× 稍慢"),
+                                        (1.0, "1.0× 正常"),
+                                        (1.25, "1.25× 快")
                                     ],
                                     id: \.0
                                 ) { option in
@@ -2250,9 +2251,9 @@ private struct MoodAndSoundSheet: View {
                         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface.opacity(0.55)))
                     }
 
-                    // 2. 五色天光情绪光谱
+                    // 2. 情绪风格
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("五色天光情绪")
+                        Text("情绪风格")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
 
@@ -2297,9 +2298,9 @@ private struct MoodAndSoundSheet: View {
                         }
                     }
 
-                    // 3. 主奏乐器 & 伴奏水波
+                    // 3. 乐器音色 & 伴奏
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("主奏乐器")
+                        Text("乐器音色")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
 
@@ -2323,11 +2324,11 @@ private struct MoodAndSoundSheet: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Text("水波和声伴奏")
+                            Text("伴奏")
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(palette.primaryInk)
                             Spacer()
-                            Button(vm.cradleEnabled ? "切为纯清唱" : "开启温暖伴奏") {
+                            Button(vm.cradleEnabled ? "关闭伴奏" : "开启伴奏") {
                                 vm.setChordPreset(vm.cradleEnabled ? .off : .autoMatch)
                             }
                             .font(.caption.weight(.bold))
@@ -2355,7 +2356,7 @@ private struct MoodAndSoundSheet: View {
                 .padding(16)
             }
             .background(palette.paper.ignoresSafeArea())
-            .navigationTitle("情绪与声色")
+            .navigationTitle("声音设置")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

@@ -10,6 +10,11 @@ public struct HarmonicRatioDescriptor: Equatable, Sendable {
     public let consonance: Double // 0.0 (强烈摩擦) ... 1.0 (完美静止对称)
     public let poeticEssence: String
     public let isTense: Bool
+
+    public var simpleMoodLabel: String {
+        if isTense { return "紧张" }
+        return consonance >= 0.85 ? "和谐" : "柔和"
+    }
 }
 
 public enum HarmonicRatioPhysics {
@@ -67,10 +72,10 @@ public enum MotifGrowthOperation: String, CaseIterable, Identifiable, Sendable {
 
     public var label: String {
         switch self {
-        case .climbSequence: return "爬楼模进"
-        case .waterMirror: return "水面倒影"
-        case .tearfulSuspension: return "迟到半秒"
-        case .fullFourPhrasePoem: return "四句成诗"
+        case .climbSequence: return "升高重复"
+        case .waterMirror: return "倒过来唱"
+        case .tearfulSuspension: return "加温柔结尾"
+        case .fullFourPhrasePoem: return "扩成四句"
         }
     }
 
@@ -85,10 +90,10 @@ public enum MotifGrowthOperation: String, CaseIterable, Identifiable, Sendable {
 
     public var philosophyNote: String {
         switch self {
-        case .climbSequence: return "保留你的旋律形状，整体搬高一层楼再讲一遍，情绪自然层层推进。"
-        case .waterMirror: return "对着水面把你的旋律上下翻个身——往上走变成往下落，天然对称如巴赫。"
-        case .tearfulSuspension: return "故意让旋律在 4·呜嘟 上多赖半秒，摩擦出淡淡鼻酸再滑落到 3→1 回家。"
-        case .fullFourPhrasePoem: return "只用你这颗小种子，按「起·破土 → 承·攀爬 → 转·倒影 → 合·迟到归家」长成完整小诗！"
+        case .climbSequence: return "把这段旋律整体抬高一格再唱一遍"
+        case .waterMirror: return "把旋律的高低方向上下翻转"
+        case .tearfulSuspension: return "在末尾加上一段柔和收尾"
+        case .fullFourPhrasePoem: return "把开头几颗音自动扩展成完整四句"
         }
     }
 }

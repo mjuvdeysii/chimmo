@@ -53,10 +53,10 @@ public struct NightLampTactileSheet: View {
             )
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("闭眼夜灯触觉剧场")
+                Text("闭眼滑音")
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Color(hex: 0xF4EBDD))
-                Text("上下轻滑靠掌心震动找音高，松手即落下一颗星珠")
+                Text("上下滑动靠震动找音高，松手记下")
                     .font(.caption2)
                     .foregroundStyle(Color(hex: 0x9BA3BE))
             }
@@ -145,10 +145,10 @@ public struct NightLampTactileSheet: View {
                     VStack(spacing: 12) {
                         ChimmoCraftMark(.nightLampHalo, color: Color(hex: 0xFFB84D).opacity(0.75))
                             .frame(width: 38, height: 38)
-                        Text("闭上眼睛也可以 · 任意轻触并上下滑动")
+                        Text("按住并上下滑动")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color(hex: 0xD8D0C5).opacity(0.76))
-                        Text("在心仪音高停留越久再松手 = 越深长的拖音")
+                        Text("停留越久，音越长")
                             .font(.caption2)
                             .foregroundStyle(Color(hex: 0x8F98B4))
                     }
@@ -191,7 +191,7 @@ public struct NightLampTactileSheet: View {
                     }
             )
             .accessibilityElement()
-            .accessibilityLabel("闭眼夜灯触觉琴弦画布，当前已落入 \(capturedBeads.count) 颗星珠")
+            .accessibilityLabel("闭眼滑音画布，已录下 \(capturedBeads.count) 个音")
             .accessibilityValue(XylophoneLane.lane(at: allowed[max(0, min(allowed.count - 1, voiceOverLanePos))]).member.voiceOverSummary)
             .accessibilityHint("上下轻扫切换音高预览，使用转子操作记录这颗音珠，或直接单指滑动松手落珠")
             .accessibilityAdjustableAction { direction in
@@ -219,7 +219,7 @@ public struct NightLampTactileSheet: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 if capturedBeads.isEmpty {
-                    Text("松手录下的音珠会悄悄排成一列")
+                    Text("松手后，录下的音会排在这里")
                         .font(.caption)
                         .foregroundStyle(Color(hex: 0x8F98B4))
                         .padding(.horizontal, 8)
@@ -277,7 +277,7 @@ public struct NightLampTactileSheet: View {
                         color: localPentatonicSafe ? Color(hex: 0x69DB7C) : Color(hex: 0xF4EBDD)
                     )
                     .frame(width: 15, height: 15)
-                    Text(localPentatonicSafe ? "5音" : "8音")
+                    Text(localPentatonicSafe ? "五音" : "八音")
                         .font(.subheadline.weight(.bold))
                 }
                 .padding(.horizontal, 14)
@@ -299,7 +299,7 @@ public struct NightLampTactileSheet: View {
                         color: capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x151B36)
                     )
                     .frame(width: 15, height: 15)
-                    Text(capturedBeads.isEmpty ? "先摸出几颗音珠" : "放到星盘试听 (\(capturedBeads.count))")
+                    Text(capturedBeads.isEmpty ? "先滑出几个音" : "去试听 (\(capturedBeads.count))")
                         .lineLimit(1)
                 }
                 .font(.subheadline.weight(.bold))
@@ -362,7 +362,7 @@ public struct NightLampTactileSheet: View {
         capturedBeads.append(bead)
         AcousticHapticsEngine.shared.playBeatTap(isStrong: lane.degree == 1)
         #if os(iOS)
-        UIAccessibility.post(notification: .announcement, argument: "已记录 \(lane.digitLabel) \(lane.chineseName)")
+        UIAccessibility.post(notification: .announcement, argument: "已记录 \(lane.digitLabel) \(lane.solfege)")
         #endif
     }
 }
