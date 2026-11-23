@@ -788,6 +788,25 @@ public final class StudioViewModel: ObservableObject {
         }
     }
 
+    public var stageAccessibilitySummary: String {
+        var parts: [String] = []
+        if document.notes.isEmpty {
+            parts.append("空白画布")
+        } else {
+            parts.append("\(document.title)，\(visualMode.rawValue)，\(document.notes.count) 个音")
+        }
+        if let selID = selectedBeadID,
+           let idx = document.notes.firstIndex(where: { $0.id == selID }) {
+            let bead = document.notes[idx]
+            let lane = XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset))
+            parts.append("第 \(idx + 1) 拍，\(lane.digitLabel) \(lane.solfege)")
+        }
+        if isPlaying {
+            parts.append("正在播放")
+        }
+        return parts.joined(separator: "，")
+    }
+
     public func stepSelectedBeat(delta: Int) {
         guard !document.notes.isEmpty else { return }
         let cur = selectedBeadID.flatMap { id in document.notes.firstIndex { $0.id == id } } ?? 0
@@ -795,6 +814,37 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes[next].id
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         playContextEcho(upToIndex: next)
+    }
+
+    public func shiftSelectedBeadPitch(delta: Int) {
+        guard delta != 0, !document.notes.isEmpty else { return }
+        if selectedBeadID == nil, let first = document.notes.first {
+            selectedBeadID = first.id
+            playContextEcho(upToIndex: 0)
+            return
+        }
+        guard let selID = selectedBeadID,
+              let idx = document.notes.firstIndex(where: { $0.id == selID }) else { return }
+        let bead = document.notes[idx]
+        let curLane = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+        let allowed = XylophoneLane.allowedIndices(pentatonicSafe: pentatonicSafe)
+        guard !allowed.isEmpty else { return }
+        let curPos = allowed.firstIndex(of: curLane)
+            ?? allowed.enumerated().min(by: { abs($0.element - curLane) < abs($1.element - curLane) })?.offset
+            ?? 0
+        let nextPos = max(0, min(allowed.count - 1, curPos + delta))
+        let nextLaneIdx = allowed[nextPos]
+        guard nextLaneIdx != curLane else { return }
+
+        beginBeadEdit()
+        let lane = XylophoneLane.lane(at: nextLaneIdx)
+        updateBeadToLane(beadID: bead.id, lane: lane, playSinglePreview: false)
+        playContextEcho(upToIndex: idx)
+        AcousticHapticsEngine.shared.playPitchTouch(
+            laneIndex: lane.index,
+            isHome: lane.degree == 1,
+            isTension: lane.member.isTensionDegree
+        )
     }
 
     public func beginBeadEdit() {

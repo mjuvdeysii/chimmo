@@ -254,18 +254,42 @@ public struct VinylPostcardCanvasView: View {
         }
 
         if pts.count > 1 {
-            var line = Path()
-            line.move(to: pts[0].pt)
             for i in 1..<pts.count {
-                let p0 = pts[i - 1].pt
-                let p1 = pts[i].pt
+                let d0 = pts[i - 1]
+                let d1 = pts[i]
+                let p0 = d0.pt
+                let p1 = d1.pt
                 let ctrl = CGPoint(
                     x: (p0.x + p1.x) * 0.5 + (center.x - (p0.x + p1.x) * 0.5) * 0.14,
                     y: (p0.y + p1.y) * 0.5 + (center.y - (p0.y + p1.y) * 0.5) * 0.14
                 )
-                line.addQuadCurve(to: p1, control: ctrl)
+                var seg = Path()
+                seg.move(to: p0)
+                seg.addQuadCurve(to: p1, control: ctrl)
+                let c0 = XylophoneLane.lane(at: d0.laneIdx).barColor(isNight: snapshot.isNight)
+                let c1 = XylophoneLane.lane(at: d1.laneIdx).barColor(isNight: snapshot.isNight)
+                let style = IntervalSilkStyle.metrics(fromLane: d0.laneIdx, toLane: d1.laneIdx, isNight: snapshot.isNight)
+                if style.glowWidth > 0 {
+                    ctx.stroke(
+                        seg,
+                        with: .linearGradient(
+                            Gradient(colors: [c0.opacity(style.glowOpacity), c1.opacity(style.glowOpacity)]),
+                            startPoint: p0,
+                            endPoint: p1
+                        ),
+                        style: StrokeStyle(lineWidth: style.glowWidth, lineCap: .round)
+                    )
+                }
+                ctx.stroke(
+                    seg,
+                    with: .linearGradient(
+                        Gradient(colors: [c0.opacity(style.coreOpacity), c1.opacity(style.coreOpacity)]),
+                        startPoint: p0,
+                        endPoint: p1
+                    ),
+                    style: StrokeStyle(lineWidth: style.coreWidth, lineCap: .round)
+                )
             }
-            ctx.stroke(line, with: .color(palette.homeAnchor.opacity(0.40)), style: StrokeStyle(lineWidth: 2.0, lineCap: .round))
         }
 
         for item in pts {

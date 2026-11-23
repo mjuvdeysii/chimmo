@@ -257,6 +257,41 @@ public struct OrbitalStageView: View {
                         }
                     }
                 }
+                .accessibilityElement()
+                .accessibilityLabel(vm.stageAccessibilitySummary)
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment:
+                        if selectedBeatIndex == nil, let first = vm.document.notes.first {
+                            vm.selectBead(first.id, playContext: true)
+                        } else {
+                            vm.stepSelectedBeat(delta: 1)
+                        }
+                    case .decrement:
+                        if selectedBeatIndex == nil, let first = vm.document.notes.first {
+                            vm.selectBead(first.id, playContext: true)
+                        } else {
+                            vm.stepSelectedBeat(delta: -1)
+                        }
+                    @unknown default:
+                        break
+                    }
+                }
+                .accessibilityAction(named: vm.isPlaying ? "暂停" : "播放") {
+                    vm.togglePlayback()
+                }
+                .accessibilityAction(named: "升高一音") {
+                    vm.shiftSelectedBeadPitch(delta: 1)
+                }
+                .accessibilityAction(named: "降低一音") {
+                    vm.shiftSelectedBeadPitch(delta: -1)
+                }
+                .accessibilityAction(named: "插入一拍") {
+                    vm.insertBeatAfterSelected()
+                }
+                .accessibilityAction(named: "删除当前拍") {
+                    vm.deleteSelectedBead()
+                }
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -574,7 +609,6 @@ public struct OrbitalStageView: View {
         let notes = vm.document.notes.sorted {
             $0.displayOnset(grooveStrength: vm.document.grooveStrength) < $1.displayOnset(grooveStrength: vm.document.grooveStrength)
         }
-        var jewelPoints: [CGPoint] = []
         var jewelData: [(idx: Int, bead: NoteBead, pt: CGPoint, laneIdx: Int, angle: Double, r: CGFloat)] = []
 
         for (idx, bead) in notes.enumerated() {
@@ -583,27 +617,32 @@ public struct OrbitalStageView: View {
             let ang = -Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: onset, totalDuration: total) + discRot
             let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: m.innerRadius, outerRadius: m.outerRadius)
             let pt = CGPoint(x: m.center.x + CGFloat(cos(ang)) * r, y: m.center.y + CGFloat(sin(ang)) * r)
-            jewelPoints.append(pt)
             jewelData.append((idx, bead, pt, laneIdx, ang, r))
         }
 
-        if jewelPoints.count > 1 {
-            var line = Path()
-            line.move(to: jewelPoints[0])
-            for i in 1..<jewelPoints.count {
-                let p0 = jewelPoints[i - 1]
-                let p1 = jewelPoints[i]
+        if jewelData.count > 1 {
+            for i in 1..<jewelData.count {
+                let d0 = jewelData[i - 1]
+                let d1 = jewelData[i]
+                let p0 = d0.pt
+                let p1 = d1.pt
                 let mid = CGPoint(
                     x: (p0.x + p1.x) * 0.5 + (m.center.x - (p0.x + p1.x) * 0.5) * 0.14,
                     y: (p0.y + p1.y) * 0.5 + (m.center.y - (p0.y + p1.y) * 0.5) * 0.14
                 )
-                line.addQuadCurve(to: p1, control: mid)
+                var seg = Path()
+                seg.move(to: p0)
+                seg.addQuadCurve(to: p1, control: mid)
+                strokeChromaticSegment(
+                    ctx: &ctx,
+                    path: seg,
+                    startPt: p0,
+                    endPt: p1,
+                    fromLane: d0.laneIdx,
+                    toLane: d1.laneIdx,
+                    extraEnergy: acoustic.rmsEnergy
+                )
             }
-            ctx.stroke(
-                line,
-                with: .color(palette.homeAnchor.opacity(palette.isNight ? 0.38 : 0.34)),
-                style: StrokeStyle(lineWidth: 1.8, lineCap: .round)
-            )
         }
 
         // 5.4 选中音符的径向调音滑轨（无字提示沿半径拖移可切换音高）
@@ -776,6 +815,37 @@ public struct OrbitalStageView: View {
 
     private func notesIsEmptyPlaceholder(notes: [NoteBead]) -> Bool {
         notes.isEmpty
+    }
+
+    private func strokeChromaticSegment(
+        ctx: inout GraphicsContext,
+        path: Path,
+        startPt: CGPoint,
+        endPt: CGPoint,
+        fromLane: Int,
+        toLane: Int,
+        widthScale: CGFloat = 1.0,
+        extraEnergy: Double = 0.0
+    ) {
+        let c0 = XylophoneLane.lane(at: fromLane).barColor(isNight: palette.isNight)
+        let c1 = XylophoneLane.lane(at: toLane).barColor(isNight: palette.isNight)
+        let style = IntervalSilkStyle.metrics(fromLane: fromLane, toLane: toLane, isNight: palette.isNight)
+        if style.glowWidth > 0 {
+            let glowOp = min(0.55, style.glowOpacity + extraEnergy * 0.14)
+            let glowGrad = Gradient(colors: [c0.opacity(glowOp), c1.opacity(glowOp)])
+            ctx.stroke(
+                path,
+                with: .linearGradient(glowGrad, startPoint: startPt, endPoint: endPt),
+                style: StrokeStyle(lineWidth: style.glowWidth * widthScale + CGFloat(extraEnergy) * 2.5, lineCap: .round)
+            )
+        }
+        let coreOp = min(1.0, style.coreOpacity + extraEnergy * 0.20)
+        let coreGrad = Gradient(colors: [c0.opacity(coreOp), c1.opacity(coreOp)])
+        ctx.stroke(
+            path,
+            with: .linearGradient(coreGrad, startPoint: startPt, endPoint: endPt),
+            style: StrokeStyle(lineWidth: style.coreWidth * widthScale, lineCap: .round)
+        )
     }
 
     private func drawFollowLightBridge(
@@ -1124,7 +1194,24 @@ public struct OrbitalStageView: View {
                     style: StrokeStyle(lineWidth: 5.5 + CGFloat(acoustic.rmsEnergy) * 5.0, lineCap: .round)
                 )
             }
-            ctx.stroke(curve, with: .color(palette.homeAnchor.opacity(0.75)), style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
+            for i in 1..<pts.count {
+                let d0 = pts[i - 1]
+                let d1 = pts[i]
+                let midX = (d0.pt.x + d1.pt.x) * 0.5
+                var seg = Path()
+                seg.move(to: d0.pt)
+                seg.addCurve(to: d1.pt, control1: CGPoint(x: midX, y: d0.pt.y), control2: CGPoint(x: midX, y: d1.pt.y))
+                strokeChromaticSegment(
+                    ctx: &ctx,
+                    path: seg,
+                    startPt: d0.pt,
+                    endPt: d1.pt,
+                    fromLane: d0.laneIdx,
+                    toLane: d1.laneIdx,
+                    widthScale: 1.15,
+                    extraEnergy: acoustic.rmsEnergy
+                )
+            }
 
             // 湖面倒影轮廓（让《天鹅》等抒情曲线呈现在静水湖面之上）
             let horizonY = size.height - lay.padV * 0.8
@@ -1336,10 +1423,6 @@ public struct OrbitalStageView: View {
             $0.displayOnset(grooveStrength: vm.document.grooveStrength) < $1.displayOnset(grooveStrength: vm.document.grooveStrength)
         }
         if notes.count > 1 {
-            var constellation = Path()
-            let lane0 = XylophoneLane.laneIndex(degree: notes[0].degree, octaveOffset: notes[0].octaveOffset)
-            let pStart = ConstellationGeometry.starPoint(laneIndex: lane0, center: nm.center, radius: nm.ringRadius)
-            constellation.move(to: pStart)
             for i in 1..<notes.count {
                 let lPrev = XylophoneLane.laneIndex(degree: notes[i - 1].degree, octaveOffset: notes[i - 1].octaveOffset)
                 let lCur = XylophoneLane.laneIndex(degree: notes[i].degree, octaveOffset: notes[i].octaveOffset)
@@ -1349,13 +1432,19 @@ public struct OrbitalStageView: View {
                     x: (p0.x + p1.x) * 0.39 + nm.center.x * 0.22,
                     y: (p0.y + p1.y) * 0.39 + nm.center.y * 0.22
                 )
-                constellation.addQuadCurve(to: p1, control: ctrl)
+                var seg = Path()
+                seg.move(to: p0)
+                seg.addQuadCurve(to: p1, control: ctrl)
+                strokeChromaticSegment(
+                    ctx: &ctx,
+                    path: seg,
+                    startPt: p0,
+                    endPt: p1,
+                    fromLane: lPrev,
+                    toLane: lCur,
+                    extraEnergy: acoustic.rmsEnergy
+                )
             }
-            ctx.stroke(
-                constellation,
-                with: .color(palette.homeAnchor.opacity(palette.isNight ? 0.36 : 0.28)),
-                style: StrokeStyle(lineWidth: 2.0, lineCap: .round)
-            )
         }
 
         // 4. 中央大尺度利萨如谐振星核

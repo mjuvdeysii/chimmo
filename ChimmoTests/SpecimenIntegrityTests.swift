@@ -699,4 +699,57 @@ final class SpecimenIntegrityTests: XCTestCase {
         let pngData = VinylPostcardExporter.renderPNGData(document: emptyDoc, isNight: true)
         XCTAssertNotNil(pngData)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound8IntervalSilkAndVoiceOverStage() throws {
+        // 1. 棱镜音程丝线几何美学校验：级进轻盈无外晕，大跳加粗发光
+        let step = IntervalSilkStyle.metrics(fromLane: 0, toLane: 1, isNight: false)
+        let leap = IntervalSilkStyle.metrics(fromLane: 0, toLane: 4, isNight: true)
+        let wideLeap = IntervalSilkStyle.metrics(fromLane: 0, toLane: 7, isNight: false)
+        XCTAssertFalse(step.isExpressiveLeap)
+        XCTAssertEqual(step.glowWidth, 0.0, accuracy: 1e-5)
+        XCTAssertTrue(leap.isExpressiveLeap)
+        XCTAssertGreaterThan(leap.glowWidth, 0.0)
+        XCTAssertGreaterThan(leap.coreWidth, step.coreWidth)
+        XCTAssertTrue(wideLeap.isExpressiveLeap)
+        XCTAssertGreaterThanOrEqual(wideLeap.coreWidth, leap.coreWidth)
+
+        // 2. VoiceOver 主舞台逐音升降调与安全边界钳位
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v015-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.document = MelodyDocument(
+            title: "盲人可调旋律",
+            subtitle: "",
+            notes: [NoteBead(degree: 3, octaveOffset: 0, rawOnset: 0.2, rawDuration: 0.5)]
+        )
+        vm.pentatonicSafe = true
+        vm.selectedBeadID = vm.document.notes.first?.id
+
+        vm.shiftSelectedBeadPitch(delta: 1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 5, "五音模式升一音应自动跳过被屏蔽的 4 (Fa) 落入 5 (Sol)")
+        XCTAssertNil(vm.statusToast)
+
+        vm.shiftSelectedBeadPitch(delta: -1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 3)
+
+        vm.shiftSelectedBeadPitch(delta: 20)
+        XCTAssertEqual(vm.document.notes.first?.degree, 1)
+        XCTAssertEqual(vm.document.notes.first?.octaveOffset, 1)
+
+        vm.shiftSelectedBeadPitch(delta: -20)
+        XCTAssertEqual(vm.document.notes.first?.degree, 1)
+        XCTAssertEqual(vm.document.notes.first?.octaveOffset, 0)
+
+        // 3. 主舞台实时语义读音摘要校验（含曲名、音符数、选中拍且零 Emoji）
+        let summary = vm.stageAccessibilitySummary
+        XCTAssertTrue(summary.contains("盲人可调旋律"))
+        XCTAssertTrue(summary.contains("1 个音"))
+        XCTAssertTrue(summary.contains("第 1 拍"))
+        for scalar in summary.unicodeScalars {
+            let v = scalar.value
+            let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+            XCTAssertFalse(isEmoji)
+        }
+        vm.stopPlayback()
+    }
 }

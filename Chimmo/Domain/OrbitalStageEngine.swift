@@ -542,3 +542,50 @@ public enum HarmonicVibratoMapper {
         )
     }
 }
+
+/// 棱镜音程丝线几何美学映射器：依据两音符间跨越的音阶跨度动态调制连线线宽、外光晕与透光率（大跳明亮生辉、级进轻盈流淌）。
+public enum IntervalSilkStyle {
+    public struct SegmentMetrics: Equatable, Sendable {
+        public let laneSpan: Int
+        public let isExpressiveLeap: Bool
+        public let coreWidth: CGFloat
+        public let glowWidth: CGFloat
+        public let coreOpacity: Double
+        public let glowOpacity: Double
+
+        public init(
+            laneSpan: Int,
+            isExpressiveLeap: Bool,
+            coreWidth: CGFloat,
+            glowWidth: CGFloat,
+            coreOpacity: Double,
+            glowOpacity: Double
+        ) {
+            self.laneSpan = laneSpan
+            self.isExpressiveLeap = isExpressiveLeap
+            self.coreWidth = coreWidth
+            self.glowWidth = glowWidth
+            self.coreOpacity = coreOpacity
+            self.glowOpacity = glowOpacity
+        }
+    }
+
+    public static func metrics(fromLane: Int, toLane: Int, isNight: Bool) -> SegmentMetrics {
+        let clampedFrom = max(0, min(7, fromLane))
+        let clampedTo = max(0, min(7, toLane))
+        let span = abs(clampedTo - clampedFrom)
+        let isLeap = span >= 3
+        let coreW: CGFloat = span >= 5 ? 2.8 : (isLeap ? 2.4 : 1.8)
+        let glowW: CGFloat = isLeap ? coreW * 2.8 : 0.0
+        let coreOp = isNight ? (isLeap ? 0.68 : 0.46) : (isLeap ? 0.62 : 0.40)
+        let glowOp = isLeap ? (isNight ? 0.24 : 0.18) : 0.0
+        return SegmentMetrics(
+            laneSpan: span,
+            isExpressiveLeap: isLeap,
+            coreWidth: coreW,
+            glowWidth: glowW,
+            coreOpacity: coreOp,
+            glowOpacity: glowOp
+        )
+    }
+}
