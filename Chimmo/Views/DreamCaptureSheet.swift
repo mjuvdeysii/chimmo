@@ -16,6 +16,8 @@ public struct DreamCaptureSheet: View {
     @State private var sketchSize: CGSize = CGSize(width: 300, height: 140)
     @State private var seedShifts: [Int] = [0, 0, 0]
     @State private var showNightLampTheater: Bool = false
+    @State private var lastBrushLane: Int? = nil
+    @State private var lastBrushTime: Double = 0
 
     public init(vm: StudioViewModel, palette: ChimmoPalette) {
         self.vm = vm
@@ -62,6 +64,10 @@ public struct DreamCaptureSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .onDisappear {
+            lastBrushLane = nil
+            lastBrushTime = 0
+        }
         .fullScreenCover(isPresented: $showNightLampTheater) {
             NightLampTactileSheet(vm: vm) {
                 dismiss()
@@ -200,17 +206,47 @@ public struct DreamCaptureSheet: View {
                         }
                         .allowsHitTesting(false)
                     } else {
-                        Canvas { ctx, _ in
+                        Canvas { ctx, size in
                             var path = Path()
                             path.move(to: sketchPoints[0])
                             for pt in sketchPoints.dropFirst() {
                                 path.addLine(to: pt)
                             }
+                            let inkGrad = Gradient(colors: [
+                                palette.homeAnchor,
+                                palette.nightLampGold,
+                                palette.melodyTerracotta
+                            ])
+                            let sPt = CGPoint(x: 0, y: size.height * 0.5)
+                            let ePt = CGPoint(x: size.width, y: size.height * 0.5)
                             ctx.stroke(
                                 path,
-                                with: .color(palette.homeAnchor),
+                                with: .linearGradient(
+                                    Gradient(colors: [
+                                        palette.homeAnchor.opacity(0.22),
+                                        palette.nightLampGold.opacity(0.26),
+                                        palette.melodyTerracotta.opacity(0.24)
+                                    ]),
+                                    startPoint: sPt,
+                                    endPoint: ePt
+                                ),
+                                style: StrokeStyle(lineWidth: 10.0, lineCap: .round, lineJoin: .round)
+                            )
+                            ctx.stroke(
+                                path,
+                                with: .linearGradient(inkGrad, startPoint: sPt, endPoint: ePt),
                                 style: StrokeStyle(lineWidth: 4.0, lineCap: .round, lineJoin: .round)
                             )
+                            if let tip = sketchPoints.last {
+                                ctx.fill(
+                                    Path(ellipseIn: CGRect(x: tip.x - 6, y: tip.y - 6, width: 12, height: 12)),
+                                    with: .color(palette.nightLampGold.opacity(0.35))
+                                )
+                                ctx.fill(
+                                    Path(ellipseIn: CGRect(x: tip.x - 3, y: tip.y - 3, width: 6, height: 6)),
+                                    with: .color(.white.opacity(0.95))
+                                )
+                            }
                         }
                     }
                 }
@@ -228,8 +264,41 @@ public struct DreamCaptureSheet: View {
                             } else if hypot(clamped.x - sketchPoints.last!.x, clamped.y - sketchPoints.last!.y) > 4 {
                                 sketchPoints.append(clamped)
                             }
+                            let normY = Double(clamped.y / max(1, geo.size.height))
+                            let normX = Double(clamped.x / max(1, geo.size.width))
+                            let brushLane = SketchPitchBrushMapper.laneIndex(
+                                normalizedTopToBottomY: normY,
+                                pentatonicSafe: vm.pentatonicSafe
+                            )
+                            let now = Date().timeIntervalSinceReferenceDate
+                            if brushLane != lastBrushLane && SketchPitchBrushMapper.shouldTrigger(lastTriggerTime: lastBrushTime, now: now) {
+                                lastBrushLane = brushLane
+                                lastBrushTime = now
+                                let lane = XylophoneLane.lane(at: brushLane)
+                                let hz = vm.document.scaleMode.frequencyHz(
+                                    rootMIDI: vm.document.rootMIDI,
+                                    degree: lane.degree,
+                                    octaveOffset: lane.octaveOffset
+                                )
+                                let pan = SketchPitchBrushMapper.spatialPan(normalizedX: normX)
+                                vm.synth.playNote(
+                                    frequency: hz,
+                                    velocity: 0.34,
+                                    decay: 0.58,
+                                    brightness: 0.92,
+                                    timbre: FeltPianoSynth.Timbre.from(voice: vm.melodyVoice),
+                                    pan: pan
+                                )
+                                AcousticHapticsEngine.shared.playPitchTouch(
+                                    laneIndex: brushLane,
+                                    isHome: lane.degree == 1,
+                                    isTension: lane.member.isTensionDegree
+                                )
+                            }
                         }
                         .onEnded { _ in
+                            lastBrushLane = nil
+                            lastBrushTime = 0
                             let targetSlots = max(6, vm.liveTapTimestamps.count >= 2 ? vm.liveTapTimestamps.count : max(6, vm.document.notes.count))
                             let heights = ContourSketchSampler.sampleContour(points: sketchPoints, in: geo.size, slotCount: targetSlots)
                             if vm.liveTapTimestamps.count >= 2 {

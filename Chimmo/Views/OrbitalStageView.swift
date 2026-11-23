@@ -253,7 +253,13 @@ public struct OrbitalStageView: View {
 
     private var heroStageContainer: some View {
         let boardBg = palette.isNight ? Color(hex: 0x121936) : Color(hex: 0xFAF6EE)
-        let borderCol = palette.isNight ? palette.nightLampGold.opacity(0.20) : Color(hex: 0xCBB18D).opacity(0.32)
+        let activeCurtainColor: Color? = (vm.isPlaying && vm.cradleEnabled)
+            ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
+            : nil
+        let borderCol = activeCurtainColor?.opacity(palette.isNight ? 0.50 : 0.44)
+            ?? (palette.isNight ? palette.nightLampGold.opacity(0.20) : Color(hex: 0xCBB18D).opacity(0.32))
+        let stageShadowCol = activeCurtainColor?.opacity(palette.isNight ? 0.34 : 0.16)
+            ?? palette.primaryInk.opacity(palette.isNight ? 0.28 : 0.07)
 
         return GeometryReader { geo in
             ZStack {
@@ -375,9 +381,10 @@ public struct OrbitalStageView: View {
             .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .strokeBorder(borderCol, lineWidth: 1.2)
+                    .strokeBorder(borderCol, lineWidth: activeCurtainColor != nil ? 1.8 : 1.2)
             )
-            .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.28 : 0.07), radius: 14, y: 5)
+            .shadow(color: stageShadowCol, radius: activeCurtainColor != nil ? 18 : 14, y: 5)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
         }
         .frame(minHeight: 255, maxHeight: .infinity)
     }

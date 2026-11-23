@@ -775,3 +775,26 @@ public enum KeyRibbonExpressionMapper {
         return Expression(isVibratoActive: true, mercuryFraction: mercury, vibratoDX: dx, vibratoDY: dy)
     }
 }
+
+/// 单指手绘声画笔映射器：把画线轨迹实时转化为当前调式安全音高、双耳空间声像与防连响节流信号，让手指一边画线一边唱出旋律。
+public enum SketchPitchBrushMapper {
+    public static let minimumTriggerIntervalSeconds: Double = 0.055
+
+    public static func laneIndex(normalizedTopToBottomY: Double, pentatonicSafe: Bool) -> Int {
+        let clampedY = normalizedTopToBottomY.isFinite ? max(0.0, min(1.0, normalizedTopToBottomY)) : 0.5
+        let ascending = 1.0 - clampedY
+        let rawLane = max(0, min(7, Int((ascending * 7.0).rounded())))
+        return XylophoneLane.nearestAllowedIndex(rawLane, pentatonicSafe: pentatonicSafe)
+    }
+
+    public static func spatialPan(normalizedX: Double) -> Double {
+        let clampedX = normalizedX.isFinite ? max(0.0, min(1.0, normalizedX)) : 0.5
+        return (clampedX * 2.0 - 1.0) * 0.46
+    }
+
+    public static func shouldTrigger(lastTriggerTime: Double, now: Double) -> Bool {
+        guard now.isFinite else { return false }
+        if !lastTriggerTime.isFinite || lastTriggerTime <= 0 { return true }
+        return (now - lastTriggerTime) >= minimumTriggerIntervalSeconds
+    }
+}

@@ -18,6 +18,7 @@ public struct MusicBoxShelfView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSegment: Int = 1 // 默认也可在我的唱片(0)与28首名曲(1)间秒切；有保存作品自动先看0
     @State private var selectedCategory: String = "全部"
+    @State private var selectedMoodFilter: ScaleMode? = nil
     @State private var playingEntryID: UUID? = nil
     @State private var inlinePlayStart: Double = 0
     @State private var inlinePlayTask: Task<Void, Never>? = nil
@@ -50,8 +51,41 @@ public struct MusicBoxShelfView: View {
     }
 
     private var filteredSpecimens: [MelodyDocument] {
-        if selectedCategory == "全部" { return SpecimenLibrary.all }
-        return SpecimenLibrary.all.filter { $0.specimenCategory == selectedCategory }
+        SpecimenLibrary.all.filter { spec in
+            let catOK = (selectedCategory == "全部") || (spec.specimenCategory == selectedCategory)
+            let moodOK = (selectedMoodFilter == nil) || (spec.scaleMode == selectedMoodFilter)
+            return catOK && moodOK
+        }
+    }
+
+    private func toggleMoodFilter(_ mode: ScaleMode) {
+        if selectedMoodFilter == mode {
+            selectedMoodFilter = nil
+        } else {
+            selectedMoodFilter = mode
+            let hasMatchInCurrentCat = SpecimenLibrary.all.contains {
+                $0.scaleMode == mode && (selectedCategory == "全部" || $0.specimenCategory == selectedCategory)
+            }
+            if !hasMatchInCurrentCat {
+                selectedCategory = "全部"
+            }
+            synth.ensureRunning()
+            synth.applySpaceProfile(AcousticSpaceProfile.profile(for: mode))
+            let degs = mode.signaturePreviewDegrees
+            for (idx, deg) in degs.enumerated() {
+                let hz = mode.frequencyHz(rootMIDI: 60, degree: deg, octaveOffset: 0)
+                synth.playNote(
+                    frequency: hz,
+                    velocity: 0.44,
+                    decay: 1.0,
+                    brightness: 0.94,
+                    timbre: .liquidHarp,
+                    delaySeconds: Double(idx) * 0.055,
+                    pan: Double(idx - 1) * 0.12
+                )
+            }
+        }
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
     }
 
     public var body: some View {
@@ -69,26 +103,64 @@ public struct MusicBoxShelfView: View {
                     .padding(.vertical, 10)
 
                     if selectedSegment == 1 {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(SpecimenLibrary.categories, id: \.self) { cat in
-                                    let active = selectedCategory == cat
-                                    Button {
-                                        selectedCategory = cat
-                                    } label: {
-                                        Text(cat)
-                                            .font(.caption.weight(active ? .bold : .medium))
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                        VStack(spacing: 7) {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(SpecimenLibrary.categories, id: \.self) { cat in
+                                        let active = selectedCategory == cat
+                                        Button {
+                                            selectedCategory = cat
+                                            if cat != "全部",
+                                               let mood = selectedMoodFilter,
+                                               !SpecimenLibrary.all.contains(where: { $0.specimenCategory == cat && $0.scaleMode == mood }) {
+                                                selectedMoodFilter = nil
+                                            }
+                                        } label: {
+                                            Text(cat)
+                                                .font(.caption.weight(active ? .bold : .medium))
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 6)
+                                                .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                                                .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                                        }
+                                        .buttonStyle(.plain)
                                     }
-                                    .buttonStyle(.plain)
                                 }
+                                .padding(.horizontal, 16)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 8)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(ScaleMode.allCases) { mode in
+                                        let isSel = selectedMoodFilter == mode
+                                        let aurora = mode.skyAuroraColor(isNight: palette.isNight)
+                                        Button {
+                                            toggleMoodFilter(mode)
+                                        } label: {
+                                            HStack(spacing: 5) {
+                                                Circle()
+                                                    .fill(aurora)
+                                                    .frame(width: 8, height: 8)
+                                                Text(mode.shortSkyLabel)
+                                                    .font(.caption2.weight(isSel ? .bold : .medium))
+                                            }
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 5)
+                                            .background(Capsule().fill(isSel ? aurora.opacity(0.24) : palette.cardSurface))
+                                            .overlay(
+                                                Capsule().strokeBorder(isSel ? aurora : Color.clear, lineWidth: 1.2)
+                                            )
+                                            .foregroundStyle(isSel ? aurora : palette.secondaryInk)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel("筛选\(mode.label)风格")
+                                        .accessibilityValue(isSel ? "已选中" : "")
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                            }
                         }
+                        .padding(.bottom, 8)
                     }
 
                     ScrollView {
@@ -285,6 +357,7 @@ public struct MusicBoxShelfView: View {
         stopInlinePlay()
         onWillPlayInline()
         synth.ensureRunning()
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: doc.scaleMode))
         playingEntryID = id
         inlinePlayStart = CACurrentMediaTime()
         let spans = TheoryLensEngine.buildChordSpans(document: doc, preset: chordPreset, overrides: chordOverrides)
@@ -292,11 +365,12 @@ public struct MusicBoxShelfView: View {
         let voice = FeltPianoSynth.Timbre.from(voice: doc.preferredVoice ?? .singingCello)
 
         inlinePlayTask = Task { @MainActor in
-            let sorted = doc.notes.sorted { $0.rawOnset < $1.rawOnset }
+            let groove = doc.grooveStrength
+            let sorted = doc.notes.sorted { $0.displayOnset(grooveStrength: groove) < $1.displayOnset(grooveStrength: groove) }
             let start = Date()
             var nextIdx = 0
             var lastSpan = -1
-            let total = doc.totalDuration
+            let total = max(0.5, doc.totalDuration)
 
             while !Task.isCancelled && playingEntryID == id {
                 let elapsed = Date().timeIntervalSince(start)
@@ -311,10 +385,13 @@ public struct MusicBoxShelfView: View {
                         intensity: 0.72
                     )
                 }
-                while nextIdx < sorted.count && sorted[nextIdx].rawOnset <= elapsed {
+                while nextIdx < sorted.count && sorted[nextIdx].displayOnset(grooveStrength: groove) <= elapsed {
                     let b = sorted[nextIdx]
+                    let onset = b.displayOnset(grooveStrength: groove)
+                    let dur = b.displayDuration(grooveStrength: groove)
                     let hz = doc.scaleMode.frequencyHz(rootMIDI: doc.rootMIDI, degree: b.degree, octaveOffset: b.octaveOffset)
-                    synth.playNote(frequency: hz, velocity: 0.60, decay: max(1.0, b.rawDuration * 1.4), timbre: voice)
+                    let pan = AcousticSpatialPanMapper.pan(forBeatOnset: onset, totalDuration: total, visualMode: .orbitalDisc)
+                    synth.playNote(frequency: hz, velocity: 0.60, decay: max(1.0, dur * 1.4), timbre: voice, pan: pan)
                     nextIdx += 1
                 }
                 if elapsed >= total { break }
@@ -520,17 +597,20 @@ private struct MiniOrbitalDiscPreview: View {
                 }
 
                 // 音符星座与棱镜音程渐变丝线
-                let notes = document.notes.sorted { $0.rawOnset < $1.rawOnset }
+                let groove = document.grooveStrength
+                let notes = document.notes.sorted { $0.displayOnset(grooveStrength: groove) < $1.displayOnset(grooveStrength: groove) }
                 let innerR = maxR * 0.30
                 let outerR = maxR * 0.88
-                var pts: [(pt: CGPoint, col: Color, laneIdx: Int, bead: NoteBead)] = []
+                var pts: [(pt: CGPoint, col: Color, laneIdx: Int, onset: Double, dur: Double)] = []
                 for bead in notes {
+                    let onset = bead.displayOnset(grooveStrength: groove)
+                    let dur = bead.displayDuration(grooveStrength: groove)
                     let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
                     let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
-                    let ang = -Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: bead.rawOnset, totalDuration: total) + rot
+                    let ang = -Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: onset, totalDuration: total) + rot
                     let pt = CGPoint(x: c.x + CGFloat(cos(ang)) * r, y: c.y + CGFloat(sin(ang)) * r)
                     let col = XylophoneLane.lane(at: laneIdx).barColor(isNight: isNight)
-                    pts.append((pt, col, laneIdx, bead))
+                    pts.append((pt, col, laneIdx, onset, dur))
                 }
 
                 if pts.count > 1 {
@@ -554,8 +634,8 @@ private struct MiniOrbitalDiscPreview: View {
                 }
 
                 for item in pts {
-                    let durWin = max(0.18, item.bead.rawDuration * 0.85)
-                    let isActive = isPlaying && elapsed >= item.bead.rawOnset && elapsed < item.bead.rawOnset + durWin
+                    let durWin = max(0.18, item.dur * 0.85)
+                    let isActive = isPlaying && elapsed >= item.onset && elapsed < item.onset + durWin
                     if isActive {
                         ctx.fill(
                             Path(ellipseIn: CGRect(x: item.pt.x - 5.2, y: item.pt.y - 5.2, width: 10.4, height: 10.4)),

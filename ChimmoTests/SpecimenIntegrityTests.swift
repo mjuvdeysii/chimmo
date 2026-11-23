@@ -937,4 +937,40 @@ final class SpecimenIntegrityTests: XCTestCase {
         }
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound12LiveBrushShelfAcousticsAndCurtain() throws {
+        // 1. SketchPitchBrushMapper 单指画线即划即响音高、双耳声像与节流校验
+        let highLane = SketchPitchBrushMapper.laneIndex(normalizedTopToBottomY: 0.0, pentatonicSafe: true)
+        let lowLane = SketchPitchBrushMapper.laneIndex(normalizedTopToBottomY: 1.0, pentatonicSafe: true)
+        let midFaAvoid = SketchPitchBrushMapper.laneIndex(normalizedTopToBottomY: 0.56, pentatonicSafe: true)
+        XCTAssertEqual(highLane, 7)
+        XCTAssertEqual(lowLane, 0)
+        XCTAssertNotEqual(midFaAvoid, 3, "五音模式下画线声画笔同样不得落入易跑调的 4 (Fa)")
+        XCTAssertLessThan(SketchPitchBrushMapper.spatialPan(normalizedX: 0.0), 0.0)
+        XCTAssertGreaterThan(SketchPitchBrushMapper.spatialPan(normalizedX: 1.0), 0.0)
+        XCTAssertTrue(SketchPitchBrushMapper.shouldTrigger(lastTriggerTime: 0.0, now: 1.0))
+        XCTAssertFalse(SketchPitchBrushMapper.shouldTrigger(lastTriggerTime: 1.00, now: 1.02))
+        XCTAssertTrue(SketchPitchBrushMapper.shouldTrigger(lastTriggerTime: 1.00, now: 1.06))
+
+        // 2. 曲库 28 首作品与情绪光谱关联声学气候校验
+        XCTAssertEqual(SpecimenLibrary.all.count, 28)
+        for spec in SpecimenLibrary.all {
+            let prof = AcousticSpaceProfile.profile(for: spec.scaleMode)
+            XCTAssertGreaterThan(prof.reverbWetMix, 12.0)
+            let samplePan = AcousticSpatialPanMapper.pan(
+                forBeatOnset: spec.notes.first?.displayOnset(grooveStrength: spec.grooveStrength) ?? 0.0,
+                totalDuration: spec.totalDuration,
+                visualMode: .orbitalDisc
+            )
+            XCTAssertTrue(samplePan.isFinite)
+        }
+        for mode in ScaleMode.allCases {
+            for scalar in mode.shortSkyLabel.unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji)
+            }
+        }
+    }
 }
