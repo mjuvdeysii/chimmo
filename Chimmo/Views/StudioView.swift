@@ -96,6 +96,7 @@ public final class StudioViewModel: ObservableObject {
     @Published public var canUndo: Bool = false
     @Published public var currentSavedEntryID: UUID? = nil
     @Published public var lastSavedPulse: Int = 0
+    @Published public var activeVibratoLane: Int? = nil
 
     @Published public var activeChordSpanID: Int = 0
     @Published public var activeGuidedMoment: GuidedStoryMoment? = SpecimenLibrary.saintSaensTheSwan.guidedMoments?.first
@@ -503,6 +504,45 @@ public final class StudioViewModel: ObservableObject {
             isTension: member.isTensionDegree
         )
         updateHarmonyDescriptor(for: lane.degree, at: currentT)
+    }
+
+    /// 星环模式按住星辰并轻微揉晃时开启实时微揉弦与主音泛音共鸣。
+    public func beginOrUpdateStarVibrato(laneIndex: Int, dx: CGFloat, dy: CGFloat, hitRadius: CGFloat) {
+        guard !followGlowActive else { return }
+        let clampedLane = max(0, min(7, laneIndex))
+        let lane = XylophoneLane.lane(at: clampedLane)
+        if pentatonicSafe && !lane.isPentatonicSafe {
+            return
+        }
+        let baseHz = document.scaleMode.frequencyHz(
+            rootMIDI: document.rootMIDI,
+            degree: lane.degree,
+            octaveOffset: lane.octaveOffset
+        )
+        let anchorHz = document.scaleMode.frequencyHz(
+            rootMIDI: document.rootMIDI,
+            degree: 1,
+            octaveOffset: 0
+        )
+        let vib = HarmonicVibratoMapper.vibratoState(
+            dxFromStar: dx,
+            dyFromStar: dy,
+            radius: hitRadius,
+            baseHz: baseHz,
+            anchorHz: anchorHz
+        )
+        activeVibratoLane = clampedLane
+        synth.setContinuousPair(hzA: vib.frequencyHz, hzB: vib.sympatheticHz, gain: vib.swellGain)
+        if musicHapticsEnabled {
+            AcousticHapticsEngine.shared.playVibratoShimmerTick(intensity: 0.45 + vib.swellGain)
+        }
+    }
+
+    public func endStarVibrato() {
+        if activeVibratoLane != nil {
+            activeVibratoLane = nil
+        }
+        synth.stopContinuousPair()
     }
 
     /// 「前后连听」：调第 N 拍时把「前两拍 → 这一拍」连着唱一遍，人耳 0.2 秒就能听出高了还是低了！
@@ -1357,6 +1397,7 @@ public final class StudioViewModel: ObservableObject {
     public func stopPlayback() {
         previewArpeggioTask?.cancel()
         previewArpeggioTask = nil
+        endStarVibrato()
         playbackTask?.cancel()
         playbackTask = nil
         isPlaying = false

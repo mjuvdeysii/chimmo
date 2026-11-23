@@ -33,6 +33,7 @@ public struct OrbitalStageView: View {
     @State private var riverStartScrollX: CGFloat = 0
     @State private var struckRibbonLane: Int? = nil
     @State private var struckNebulaLane: Int? = nil
+    @State private var nebulaHoldCenter: CGPoint = .zero
     @State private var isActivelyDraggingStage: Bool = false
     @State private var scrubTick: Int = 0
     @State private var lastScrubTimestamp: Double = 0
@@ -77,7 +78,7 @@ public struct OrbitalStageView: View {
     }
 
     private var shouldRunCanvasTimeline: Bool {
-        !reduceMotion && (vm.isPlaying || rippleWakeActive || isActivelyDraggingStage || !vm.activeLaneIndices.isEmpty)
+        !reduceMotion && (vm.isPlaying || rippleWakeActive || isActivelyDraggingStage || vm.activeVibratoLane != nil || !vm.activeLaneIndices.isEmpty)
     }
 
     public var body: some View {
@@ -161,7 +162,16 @@ public struct OrbitalStageView: View {
             }
             .onChange(of: vm.document.id) { _, _ in
                 manualRiverScrollX = 0
+                vm.endStarVibrato()
                 wakeRippleTimeline()
+            }
+            .onChange(of: vm.visualMode) { _, _ in
+                struckNebulaLane = nil
+                vm.endStarVibrato()
+            }
+            .onDisappear {
+                struckNebulaLane = nil
+                vm.endStarVibrato()
             }
         }
     }
@@ -525,8 +535,11 @@ public struct OrbitalStageView: View {
             let isFollowTarget = targetFollowLaneIndex == laneIdx
             let col = lane.barColor(isNight: palette.isNight)
 
-            let lineW: CGFloat = (isActiveLane || isFollowTarget) ? 2.4 : (laneIdx == 0 ? 1.4 : 0.9)
-            let alpha: Double = isMuted ? 0.14 : ((isActiveLane || isFollowTarget) ? 0.85 : (palette.isNight ? 0.24 : 0.28))
+            let isAnchor = PreLinguisticGuideGeometry.isStructuralAnchorLane(laneIdx)
+            let baseW: CGFloat = laneIdx == 0 ? 1.55 : (isAnchor ? 1.25 : 0.85)
+            let lineW: CGFloat = (isActiveLane || isFollowTarget) ? 2.4 : baseW
+            let baseAlpha: Double = isAnchor ? (palette.isNight ? 0.34 : 0.38) : (palette.isNight ? 0.22 : 0.24)
+            let alpha: Double = isMuted ? 0.14 : ((isActiveLane || isFollowTarget) ? 0.85 : baseAlpha)
 
             if isMuted {
                 ctx.stroke(
@@ -1048,20 +1061,23 @@ public struct OrbitalStageView: View {
             ctx.fill(Path(rect), with: .color(span.chord.color(isNight: palette.isNight).opacity(isCurrent ? 0.12 : 0.045)))
         }
 
-        // 2. 8 条彩色地平线阶梯轨
+        // 2. 8 条彩色地平线阶梯轨（1 / 5 结构定锚略厚，助零乐理与色弱一眼定位）
         for rowFromTop in 0..<8 {
             let laneIdx = 7 - rowFromTop
             let lane = XylophoneLane.lane(at: laneIdx)
             let y = lay.padV + (CGFloat(rowFromTop) + 0.5) * lay.rowH
             let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
+            let isAnchor = PreLinguisticGuideGeometry.isStructuralAnchorLane(laneIdx)
             let col = lane.barColor(isNight: palette.isNight)
             var track = Path()
             track.move(to: CGPoint(x: 0, y: y))
             track.addLine(to: CGPoint(x: size.width, y: y))
+            let baseW: CGFloat = isMuted ? 0.7 : (laneIdx == 0 ? 1.60 : (isAnchor ? 1.32 : 0.95))
+            let baseAlpha: Double = isMuted ? 0.10 : (isAnchor ? 0.38 : 0.24)
             ctx.stroke(
                 track,
-                with: .color(col.opacity(isMuted ? 0.10 : 0.26)),
-                style: StrokeStyle(lineWidth: isMuted ? 0.7 : 1.1, dash: isMuted ? [3, 4] : [])
+                with: .color(col.opacity(baseAlpha)),
+                style: StrokeStyle(lineWidth: baseW, dash: isMuted ? [3, 4] : [])
             )
         }
 
@@ -1474,6 +1490,7 @@ public struct OrbitalStageView: View {
         }
 
         let hints = smartHintByLane
+        let chordDegrees = vm.activeChordToneDegrees
         for laneIdx in 0..<8 {
             let lane = XylophoneLane.lane(at: laneIdx)
             let col = lane.barColor(isNight: palette.isNight)
@@ -1481,17 +1498,48 @@ public struct OrbitalStageView: View {
             let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
             let isFollowTarget = targetFollowLaneIndex == laneIdx
             let isCometHome = comet?.activeLaneIndex == laneIdx && currentTime != nil
-            let isLit = vm.activeLaneIndices.contains(laneIdx) || struckNebulaLane == laneIdx || isFollowTarget || isCometHome
+            let isVibrating = vm.activeVibratoLane == laneIdx
+            let isLit = vm.activeLaneIndices.contains(laneIdx) || struckNebulaLane == laneIdx || isFollowTarget || isCometHome || isVibrating
             let hasHint = hints[laneIdx] != nil
+            let isChordResonant = !isMuted && !isFollowTarget && !hasHint && chordDegrees.contains(lane.degree)
 
             let starR: CGFloat = isLit ? 22.0 : (isMuted ? 14.5 : 18.0)
             let starRect = CGRect(x: pt.x - starR, y: pt.y - starR, width: starR * 2, height: starR * 2)
+
+            if isVibrating && !reduceMotion {
+                let pulseWave = CGFloat(0.5 + 0.5 * sin(mediaNow * 11.0))
+                for ringIdx in 0..<2 {
+                    let ringR = starR + 6.5 + CGFloat(ringIdx) * 6.0 + pulseWave * 4.0
+                    let rRect = CGRect(x: pt.x - ringR, y: pt.y - ringR, width: ringR * 2, height: ringR * 2)
+                    ctx.stroke(
+                        Path(ellipseIn: rRect),
+                        with: .color(palette.nightLampGold.opacity(ringIdx == 0 ? 0.72 : 0.36)),
+                        lineWidth: ringIdx == 0 ? 1.8 : 1.2
+                    )
+                }
+            }
+
+            if isChordResonant {
+                var symArc = Path()
+                symArc.addArc(
+                    center: pt,
+                    radius: starR + 3.8,
+                    startAngle: .degrees(36),
+                    endAngle: .degrees(144),
+                    clockwise: false
+                )
+                ctx.stroke(
+                    symArc,
+                    with: .color(Color.white.opacity(palette.isNight ? 0.58 : 0.78)),
+                    style: StrokeStyle(lineWidth: 2.4, lineCap: .round)
+                )
+            }
 
             if isLit || hasHint {
                 let haloR = starR + 6.5
                 ctx.fill(
                     Path(ellipseIn: CGRect(x: pt.x - haloR, y: pt.y - haloR, width: haloR * 2, height: haloR * 2)),
-                    with: .color((isFollowTarget || hasHint ? palette.nightLampGold : col).opacity(0.32))
+                    with: .color((isFollowTarget || hasHint || isVibrating ? palette.nightLampGold : col).opacity(0.32))
                 )
             }
 
@@ -1839,12 +1887,22 @@ public struct OrbitalStageView: View {
             pentatonicSafe: vm.pentatonicSafe && !vm.followGlowActive
         ) {
             if struckNebulaLane != laneIdx {
+                vm.endStarVibrato()
                 struckNebulaLane = laneIdx
+                nebulaHoldCenter = ConstellationGeometry.starPoint(laneIndex: laneIdx, center: nm.center, radius: nm.ringRadius)
                 wakeRippleTimeline()
                 vm.strikeXylophoneLane(XylophoneLane.lane(at: laneIdx))
+            } else if !vm.followGlowActive {
+                let dx = val.location.x - nebulaHoldCenter.x
+                let dy = val.location.y - nebulaHoldCenter.y
+                if hypot(dx, dy) > 6.0 {
+                    vm.beginOrUpdateStarVibrato(laneIndex: laneIdx, dx: dx, dy: dy, hitRadius: 36.0)
+                    wakeRippleTimeline()
+                }
             }
         } else {
             struckNebulaLane = nil
+            vm.endStarVibrato()
         }
     }
 
@@ -1854,6 +1912,7 @@ public struct OrbitalStageView: View {
             vm.togglePlayback()
         }
         struckNebulaLane = nil
+        vm.endStarVibrato()
         discInteractionMode = .none
     }
 

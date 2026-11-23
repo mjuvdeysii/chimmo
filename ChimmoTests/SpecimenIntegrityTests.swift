@@ -649,4 +649,54 @@ final class SpecimenIntegrityTests: XCTestCase {
         bus.emit(laneIndex: 2, degree: 3, onset: 0.5, colorHex: 0xE64980, intensity: 0.84)
         XCTAssertEqual(bus.events.last?.intensity ?? 0.0, 0.84, accuracy: 1e-5)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound7VibratoAndStructuralAnchors() throws {
+        // 1. HarmonicVibratoMapper：±24 音分钳位、音高偏移方向与越界安全
+        let sharp = HarmonicVibratoMapper.vibratoState(dxFromStar: 18, dyFromStar: 6, radius: 36, baseHz: 440.0, anchorHz: 261.63)
+        let flat = HarmonicVibratoMapper.vibratoState(dxFromStar: -18, dyFromStar: 6, radius: 36, baseHz: 440.0, anchorHz: 261.63)
+        let extreme = HarmonicVibratoMapper.vibratoState(dxFromStar: 500, dyFromStar: -500, radius: 0, baseHz: 440.0, anchorHz: 261.63)
+        XCTAssertGreaterThan(sharp.frequencyHz, 440.0)
+        XCTAssertLessThan(flat.frequencyHz, 440.0)
+        XCTAssertEqual(extreme.centsOffset, 24.0, accuracy: 1e-5)
+        XCTAssertGreaterThanOrEqual(sharp.swellGain, 0.08)
+        XCTAssertLessThanOrEqual(extreme.swellGain, 0.20)
+        XCTAssertTrue(extreme.frequencyHz.isFinite && extreme.sympatheticHz.isFinite)
+
+        // 2. 1 / 5 结构定锚轨道判断
+        let anchors = (0..<8).filter { PreLinguisticGuideGeometry.isStructuralAnchorLane($0) }
+        XCTAssertEqual(anchors, [0, 4, 7])
+
+        // 3. 连续双声波震荡器 48kHz 离线发声与安全收音清零
+        let synth = FeltPianoSynth()
+        let pairRes = try synth.verifyContinuousPairRenderTelemetry(sampleRate: 48_000.0, hzA: 329.63, hzB: 261.63, gain: 0.20)
+        XCTAssertTrue(pairRes.peak.isFinite)
+        XCTAssertGreaterThan(pairRes.peak, 0.03)
+        XCTAssertLessThanOrEqual(pairRes.peak, 1.0)
+        XCTAssertGreaterThan(pairRes.duringEnvelope.rmsEnergy, 0.0)
+        XCTAssertEqual(pairRes.afterStopEnvelope.rmsEnergy, 0.0, accuracy: 1e-6)
+
+        // 4. StudioViewModel 星环揉弦开关与防误触/防长鸣收尾保护
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v014-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.pentatonicSafe = false
+        vm.beginOrUpdateStarVibrato(laneIndex: 2, dx: 18, dy: 8, hitRadius: 36)
+        XCTAssertEqual(vm.activeVibratoLane, 2)
+        vm.endStarVibrato()
+        XCTAssertNil(vm.activeVibratoLane)
+
+        vm.pentatonicSafe = true
+        vm.beginOrUpdateStarVibrato(laneIndex: 3, dx: 12, dy: 4, hitRadius: 36)
+        XCTAssertNil(vm.activeVibratoLane, "五音模式屏蔽半音轨道时不得误触发持续揉弦")
+
+        vm.beginOrUpdateStarVibrato(laneIndex: 4, dx: -10, dy: 6, hitRadius: 36)
+        XCTAssertEqual(vm.activeVibratoLane, 4)
+        vm.stopPlayback()
+        XCTAssertNil(vm.activeVibratoLane)
+
+        // 5. 空明信片无字图形渲染校验
+        let emptyDoc = MelodyDocument(title: "空盘测试", subtitle: "", notes: [])
+        let pngData = VinylPostcardExporter.renderPNGData(document: emptyDoc, isNight: true)
+        XCTAssertNotNil(pngData)
+    }
 }

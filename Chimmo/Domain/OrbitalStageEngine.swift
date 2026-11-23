@@ -471,6 +471,11 @@ public enum PreLinguisticGuideGeometry {
         let outer = CGPoint(x: center.x + cosA * outerRadius, y: center.y + sinA * outerRadius)
         return (inner, outer)
     }
+
+    /// 音高坐标系视觉结构锚轨：`1` (0/7) 与 `5` (4) 作为主音/属音空间锚点给予略厚线条权重，帮助零乐理与色弱者一瞬辨认音高位置。
+    public static func isStructuralAnchorLane(_ laneIndex: Int) -> Bool {
+        laneIndex == 0 || laneIndex == 4 || laneIndex == 7
+    }
 }
 
 /// 彩虹琴键纵向触控表达映射器：顶部清亮强劲、底部轻柔温润，零文字直觉控制力度与涟漪大小。
@@ -494,6 +499,46 @@ public enum ExpressiveTouchMapper {
             velocity: 0.36 + energy * 0.48,
             brightness: 0.64 + energy * 0.54,
             rippleScale: 0.72 + energy * 0.56
+        )
+    }
+}
+
+/// 星环微揉弦与共鸣延音物理映射器：按住星辰轻微左右晃动触发 ±24 音分乐感揉弦，同时以根音泛音共鸣托底。
+public enum HarmonicVibratoMapper {
+    public struct VibratoState: Equatable, Sendable {
+        public let frequencyHz: Double
+        public let sympatheticHz: Double
+        public let centsOffset: Double
+        public let swellGain: Double
+
+        public init(frequencyHz: Double, sympatheticHz: Double, centsOffset: Double, swellGain: Double) {
+            self.frequencyHz = frequencyHz
+            self.sympatheticHz = sympatheticHz
+            self.centsOffset = centsOffset
+            self.swellGain = swellGain
+        }
+    }
+
+    public static func vibratoState(
+        dxFromStar: CGFloat,
+        dyFromStar: CGFloat,
+        radius: CGFloat,
+        baseHz: Double,
+        anchorHz: Double
+    ) -> VibratoState {
+        let safeR = max(8.0, Double(radius))
+        let dxNorm = max(-1.0, min(1.0, Double(dxFromStar) / safeR))
+        let cents = dxNorm * 24.0
+        let pitchFactor = pow(2.0, cents / 1200.0)
+        let distNorm = max(0.0, min(1.0, hypot(Double(dxFromStar), Double(dyFromStar)) / safeR))
+        let freqHz = max(40.0, baseHz) * pitchFactor
+        let sympHz = max(40.0, anchorHz)
+        let gain = 0.08 + distNorm * 0.12
+        return VibratoState(
+            frequencyHz: freqHz,
+            sympatheticHz: sympHz,
+            centsOffset: cents,
+            swellGain: gain
         )
     }
 }

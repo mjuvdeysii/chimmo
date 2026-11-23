@@ -13,6 +13,7 @@ public final class AcousticHapticsEngine {
     public static let shared = AcousticHapticsEngine()
 
     private var lastPlaybackPulseTime: Double = 0
+    private var lastVibratoPulseTime: Double = 0
 
     #if os(iOS)
     private var engine: CHHapticEngine?
@@ -312,6 +313,31 @@ public final class AcousticHapticsEngine {
             parameters: [
                 CHHapticEventParameter(parameterID: .hapticIntensity, value: isStrong ? 0.85 : 0.56),
                 CHHapticEventParameter(parameterID: .hapticSharpness, value: isStrong ? 0.45 : 0.35)
+            ],
+            relativeTime: 0
+        )
+        playPattern(events: [ev], curves: [])
+        #endif
+    }
+
+    /// 持续揉弦共鸣时的细微弓弦颤振反馈（严格 110ms 节流保护）
+    public func playVibratoShimmerTick(intensity: Double = 0.55) {
+        let now = CACurrentMediaTime()
+        guard now - lastVibratoPulseTime >= 0.11 else { return }
+        lastVibratoPulseTime = now
+
+        #if os(iOS)
+        let amp = Float(max(0.25, min(0.75, intensity)))
+        guard supportsHaptics && isEngineRunning else {
+            softImpact.impactOccurred(intensity: CGFloat(amp * 0.7))
+            ensureEngineAsync()
+            return
+        }
+        let ev = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: amp * 0.65),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.42)
             ],
             relativeTime: 0
         )

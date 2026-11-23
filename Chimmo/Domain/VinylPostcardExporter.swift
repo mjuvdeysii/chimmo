@@ -232,10 +232,13 @@ public struct VinylPostcardCanvasView: View {
         for laneIdx in 0..<8 {
             let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
             let col = XylophoneLane.lane(at: laneIdx).barColor(isNight: snapshot.isNight)
+            let isAnchor = PreLinguisticGuideGeometry.isStructuralAnchorLane(laneIdx)
+            let trackW: CGFloat = laneIdx == 0 ? 1.55 : (isAnchor ? 1.25 : 0.85)
+            let trackAlpha: Double = isAnchor ? (snapshot.isNight ? 0.34 : 0.38) : (snapshot.isNight ? 0.20 : 0.22)
             ctx.stroke(
                 Path(ellipseIn: CGRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2)),
-                with: .color(col.opacity(snapshot.isNight ? 0.22 : 0.24)),
-                lineWidth: 0.9
+                with: .color(col.opacity(trackAlpha)),
+                lineWidth: trackW
             )
         }
 
@@ -331,10 +334,14 @@ public struct VinylPostcardCanvasView: View {
         ctx.fill(Path(ellipseIn: pinRect), with: .color(palette.nightLampGold))
 
         if snapshot.notes.isEmpty {
-            let emptyLabel = Text("空白画布")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(palette.secondaryInk.opacity(0.70))
-            ctx.draw(emptyLabel, at: CGPoint(x: center.x, y: center.y + hubR + 22.0), anchor: .center)
+            for ring in PreLinguisticGuideGeometry.emptyCanvasPulseRadii(phase: 0.28, maxRadius: outerR * 0.85) {
+                let rRect = CGRect(x: center.x - ring.radius, y: center.y - ring.radius, width: ring.radius * 2, height: ring.radius * 2)
+                ctx.stroke(
+                    Path(ellipseIn: rRect),
+                    with: .color(palette.nightLampGold.opacity(ring.opacity * 0.72)),
+                    style: StrokeStyle(lineWidth: 1.5, dash: [4, 6])
+                )
+            }
         }
     }
 }

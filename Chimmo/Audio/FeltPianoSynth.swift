@@ -789,13 +789,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
         envelopeDuringRender: AcousticEnvelopeSnapshot,
         envelopeAfterSilence: AcousticEnvelopeSnapshot
     ) {
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
-            throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
-        }
-
-        silenceAll()
-        lock.withLock { state in
-            state.sampleRate = sampleRate
+        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
             state.voices[0] = Voice(
                 active: true,
                 timbre: timbre,
@@ -809,6 +803,52 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 decaySeconds: 1.2,
                 brightness: 0.95
             )
+        }
+        return res
+    }
+
+    public func verifyContinuousPairRenderTelemetry(
+        sampleRate: Double = 48_000.0,
+        hzA: Double = 329.63,
+        hzB: Double = 261.63,
+        gain: Double = 0.20
+    ) throws -> (
+        peak: Float,
+        duringEnvelope: AcousticEnvelopeSnapshot,
+        afterStopEnvelope: AcousticEnvelopeSnapshot
+    ) {
+        let clampedGain = max(0.05, min(0.42, gain))
+        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
+            state.pair.active = true
+            state.pair.currentHzA = max(40.0, hzA)
+            state.pair.targetHzA = max(40.0, hzA)
+            state.pair.currentHzB = max(40.0, hzB)
+            state.pair.targetHzB = max(40.0, hzB)
+            state.pair.currentGain = clampedGain
+            state.pair.targetGain = clampedGain
+        }
+        stopContinuousPair()
+        return (res.peak, res.envelopeDuringRender, res.envelopeAfterSilence)
+    }
+
+    private func runOfflineReverbRender(
+        sampleRate: Double,
+        configureAudioState: (inout AudioState) -> Void
+    ) throws -> (
+        peak: Float,
+        reverbInRate: Double,
+        reverbOutRate: Double,
+        envelopeDuringRender: AcousticEnvelopeSnapshot,
+        envelopeAfterSilence: AcousticEnvelopeSnapshot
+    ) {
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+            throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
+        }
+
+        silenceAll()
+        lock.withLock { state in
+            state.sampleRate = sampleRate
+            configureAudioState(&state)
         }
 
         let eng = AVAudioEngine()
