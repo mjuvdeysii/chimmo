@@ -150,4 +150,46 @@ final class SpecimenIntegrityTests: XCTestCase {
         let shadows = CounterpointShadowEngine.generateShadowVoice(document: swan, spans: spans)
         XCTAssertFalse(shadows.isEmpty)
     }
+
+    @MainActor
+    func testMasterpieceOnionPeelerAndPostcardStickerPersistence() {
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        XCTAssertEqual(MasterpieceOnionEngine.layer(forIndex: 0, totalCount: swan.notes.count), .seed)
+        XCTAssertEqual(MasterpieceOnionEngine.layer(forIndex: 1, totalCount: swan.notes.count), .seed)
+        XCTAssertEqual(MasterpieceOnionEngine.layer(forIndex: 2, totalCount: swan.notes.count), .seed)
+        XCTAssertEqual(MasterpieceOnionEngine.layer(forIndex: swan.notes.count - 1, totalCount: swan.notes.count), .skeleton)
+
+        // 零变动应原样返回
+        let unchanged = MasterpieceOnionEngine.applySeedShifts(document: swan, shifts: [0, 0, 0])
+        XCTAssertEqual(unchanged.notes, swan.notes)
+        XCTAssertTrue(unchanged.isSpecimen)
+
+        // 改写火种音应产生专属变奏，同时保持结尾归家音高稳定
+        let varied = MasterpieceOnionEngine.applySeedShifts(document: swan, shifts: [1, -1, 2])
+        XCTAssertFalse(varied.isSpecimen)
+        XCTAssertTrue(varied.title.contains("我的变奏"))
+        XCTAssertNotEqual(varied.notes[0].degree, swan.notes[0].degree)
+        XCTAssertEqual(varied.notes.last?.degree, swan.notes.last?.degree)
+        XCTAssertEqual(varied.notes.last?.octaveOffset, swan.notes.last?.octaveOffset)
+
+        // 声音明信片心情贴纸离线持久化
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v05-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let store = MelodyNotebookStore(directory: tmpDir)
+        let saved = store.save(
+            document: varied,
+            chordPreset: .autoMatch,
+            chordOverrides: [:],
+            accompanimentTexture: .swanRipple,
+            moodSticker: "✨ 我的名曲变奏",
+            summaryNote: "从《天鹅》3 颗火种中改写出的专属变奏"
+        )
+        XCTAssertEqual(saved.moodSticker, "✨ 我的名曲变奏")
+
+        let reloaded = MelodyNotebookStore(directory: tmpDir)
+        XCTAssertEqual(reloaded.entries.first?.moodSticker, "✨ 我的名曲变奏")
+        XCTAssertEqual(reloaded.entries.first?.document.title, varied.title)
+    }
 }

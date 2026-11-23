@@ -9,6 +9,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
     public var chordPreset: ChordProgressionPreset
     public var chordOverrides: [Int: DiatonicChord]
     public var accompanimentTexture: AccompanimentTexture?
+    public var moodSticker: String?
     public var summaryNote: String
 
     public init(
@@ -19,6 +20,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
         chordPreset: ChordProgressionPreset = .autoMatch,
         chordOverrides: [Int: DiatonicChord] = [:],
         accompanimentTexture: AccompanimentTexture? = .swanRipple,
+        moodSticker: String? = "🦢 湖畔微风",
         summaryNote: String = ""
     ) {
         self.id = id
@@ -28,6 +30,7 @@ public struct SavedMelodyEntry: Identifiable, Codable, Equatable, Sendable {
         self.chordPreset = chordPreset
         self.chordOverrides = chordOverrides
         self.accompanimentTexture = accompanimentTexture
+        self.moodSticker = moodSticker
         self.summaryNote = summaryNote
     }
 }
@@ -66,21 +69,24 @@ public final class MelodyNotebookStore: ObservableObject {
         chordPreset: ChordProgressionPreset,
         chordOverrides: [Int: DiatonicChord],
         accompanimentTexture: AccompanimentTexture = .swanRipple,
+        moodSticker: String? = nil,
         summaryNote: String,
         existingEntryID: UUID? = nil
     ) -> SavedMelodyEntry {
         var cleanDoc = document
         cleanDoc.isSpecimen = false
         if cleanDoc.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            cleanDoc.title = "脑放旋律 #\(entries.count + 1)"
+            cleanDoc.title = "脑放明信片 #\(entries.count + 1)"
         }
 
+        let resolvedSticker = moodSticker ?? defaultSticker(for: cleanDoc.scaleMode)
         let now = Date()
         if let targetID = existingEntryID, let idx = entries.firstIndex(where: { $0.id == targetID }) {
             entries[idx].document = cleanDoc
             entries[idx].chordPreset = chordPreset
             entries[idx].chordOverrides = chordOverrides
             entries[idx].accompanimentTexture = accompanimentTexture
+            entries[idx].moodSticker = resolvedSticker
             entries[idx].summaryNote = summaryNote
             entries[idx].updatedAt = now
             let updated = entries.remove(at: idx)
@@ -95,11 +101,22 @@ public final class MelodyNotebookStore: ObservableObject {
                 chordPreset: chordPreset,
                 chordOverrides: chordOverrides,
                 accompanimentTexture: accompanimentTexture,
+                moodSticker: resolvedSticker,
                 summaryNote: summaryNote
             )
             entries.insert(entry, at: 0)
             persist()
             return entry
+        }
+    }
+
+    private func defaultSticker(for mode: ScaleMode) -> String {
+        switch mode {
+        case .cloudLydian: return "✨ 云端发呆"
+        case .brightMajor: return "☀️ 晴空草坡"
+        case .goldenMixolydian: return "🌅 落日余晖"
+        case .forestDorian: return "🍃 林间晨雾"
+        case .wistfulMinor: return "🌙 深夜台灯"
         }
     }
 

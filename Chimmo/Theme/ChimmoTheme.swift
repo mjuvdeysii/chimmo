@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// 咩哞 · Chimmo 0.3 年轻明亮双态视觉体系：晴空奶白纸面 + 午夜星云清蓝。
-/// 保留高对比可读性（WCAG 2.1 正文 ≥ 4.5:1），整体更轻盈、鲜活、现代。
+/// 咩哞 · Chimmo 0.5 家族正典双态视觉体系（继承《摸索台灯》与《Mosto》三层法则，并保留年轻清亮的现代明度）：
+/// - 日光：清亮暖白纸面（#F8F9FC）+ 纯白纸片（#FFFFFF）+ 柔和投影 + 背景阳光光柱与轻飘微粒；
+/// - 夜灯：家族统一深夜蓝（#1B2245）+ 暖琥珀微光（#FFB84D）+ 月白文字（#F4EBDD），深夜不刺眼；
+/// - 体积感与鲜活色彩只留给哑光七只咩哞与声学教具本身。
 public enum AppearancePreference: String, CaseIterable, Codable, Sendable, Identifiable {
     case auto
     case daylight
@@ -12,8 +14,8 @@ public enum AppearancePreference: String, CaseIterable, Codable, Sendable, Ident
     public var label: String {
         switch self {
         case .auto: return "自动"
-        case .daylight: return "晴空"
-        case .nightLamp: return "星夜"
+        case .daylight: return "日光"
+        case .nightLamp: return "夜灯"
         }
     }
 }
@@ -21,7 +23,7 @@ public enum AppearancePreference: String, CaseIterable, Codable, Sendable, Ident
 public struct ChimmoPalette: Sendable {
     public let isNight: Bool
 
-    // Stage & typography
+    // Paper & ink (WCAG 2.1 ≥ 4.5:1 solid inks, never washed-out translucent secondary)
     public let paper: Color
     public let shelfSurface: Color
     public let cardSurface: Color
@@ -29,42 +31,42 @@ public struct ChimmoPalette: Sendable {
     public let secondaryInk: Color
     public let divider: Color
 
-    // Semantic music encoding (Fresh, youthful, energetic)
-    public let homeAnchor: Color       // Fresh Mint-Teal (#0CA678 / #38E4C0)
-    public let bassRibbon: Color       // Crisp Azure (#228BE6 / #63B3FF)
-    public let harmonyWash: Color      // Dreamy Iris-Violet (#7950F2 / #A98BFF)
-    public let melodyTerracotta: Color // Vivid Coral-Pop (#FF5A5F / #FF7A7E)
-    public let tensionFilament: Color  // Juicy Tangerine-Amber (#F06529 / #FFB24D)
-    public let nightLampGold: Color    // Sunny Lemon-Gold (#F5B82E / #FFE066)
+    // Family-harmonized youthful accents
+    public let homeAnchor: Color       // 家族蓝绿强调色 (#0B7D74 / #4FD8CB)
+    public let bassRibbon: Color       // 晴空清蓝 (#228BE6 / #63B3FF)
+    public let harmonyWash: Color      // 鸢尾柔紫 (#7048E8 / #A98BFF)
+    public let melodyTerracotta: Color // 鲜活珊瑚 (#F24E5B / #FF7A7E)
+    public let tensionFilament: Color  // 暖橘张力 (#E8590C / #FFB24D)
+    public let nightLampGold: Color    // Otto 同款台灯暖金 (#D99E32 / #FFB84D)
 
     public init(isNight: Bool) {
         self.isNight = isNight
         if isNight {
-            self.paper = Color(hex: 0x10172A)
-            self.shelfSurface = Color(hex: 0x18223D)
-            self.cardSurface = Color(hex: 0x1E2947)
-            self.primaryInk = Color(hex: 0xF4F7FF)
-            self.secondaryInk = Color(hex: 0x9BA9C9)
-            self.divider = Color(hex: 0xE2ECFF).opacity(0.11)
-            self.homeAnchor = Color(hex: 0x38E4C0)
+            self.paper = Color(hex: 0x1B2245)
+            self.shelfSurface = Color(hex: 0x222B56)
+            self.cardSurface = Color(hex: 0x26305E)
+            self.primaryInk = Color(hex: 0xF4EBDD)
+            self.secondaryInk = Color(hex: 0xAEB4CC)
+            self.divider = Color(hex: 0xF4EBDD).opacity(0.11)
+            self.homeAnchor = Color(hex: 0x4FD8CB)
             self.bassRibbon = Color(hex: 0x63B3FF)
-            self.harmonyWash = Color(hex: 0xA98BFF)
+            self.harmonyWash = Color(hex: 0xB197FC)
             self.melodyTerracotta = Color(hex: 0xFF7A7E)
             self.tensionFilament = Color(hex: 0xFFB24D)
-            self.nightLampGold = Color(hex: 0xFFE066)
+            self.nightLampGold = Color(hex: 0xFFB84D)
         } else {
-            self.paper = Color(hex: 0xF7F9FE)
-            self.shelfSurface = Color(hex: 0xEEF3FB)
+            self.paper = Color(hex: 0xF8F9FC)
+            self.shelfSurface = Color(hex: 0xEEF2F8)
             self.cardSurface = Color(hex: 0xFFFFFF)
-            self.primaryInk = Color(hex: 0x182135)
-            self.secondaryInk = Color(hex: 0x5A6680)
-            self.divider = Color(hex: 0x182135).opacity(0.08)
-            self.homeAnchor = Color(hex: 0x0B9970)
+            self.primaryInk = Color(hex: 0x1C1D19)
+            self.secondaryInk = Color(hex: 0x5E5F66)
+            self.divider = Color(hex: 0x1C1D19).opacity(0.08)
+            self.homeAnchor = Color(hex: 0x0B7D74)
             self.bassRibbon = Color(hex: 0x228BE6)
             self.harmonyWash = Color(hex: 0x7048E8)
             self.melodyTerracotta = Color(hex: 0xF24E5B)
             self.tensionFilament = Color(hex: 0xE8590C)
-            self.nightLampGold = Color(hex: 0xE6A100)
+            self.nightLampGold = Color(hex: 0xD99E32)
         }
     }
 }
