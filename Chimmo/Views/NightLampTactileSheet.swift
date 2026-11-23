@@ -21,6 +21,8 @@ public struct NightLampTactileSheet: View {
     @State private var sustainPollTask: Task<Void, Never>? = nil
     @State private var capturedBeads: [NoteBead] = []
     @State private var voiceOverLanePos: Int = 0
+    @State private var auditioningIndex: Int? = nil
+    @State private var auditionTask: Task<Void, Never>? = nil
 
     public init(vm: StudioViewModel, onCommitted: @escaping () -> Void = {}) {
         self.vm = vm
@@ -46,6 +48,7 @@ public struct NightLampTactileSheet: View {
         .interactiveDismissDisabled(!capturedBeads.isEmpty)
         .onDisappear {
             stopSustainPulseWatcher()
+            stopAudition()
         }
     }
 
@@ -193,6 +196,7 @@ public struct NightLampTactileSheet: View {
                             pentatonicSafe: localPentatonicSafe
                         )
                         if currentHoverLane == nil {
+                            stopAudition()
                             touchStartTime = CACurrentMediaTime()
                             currentHoverLane = snapped
                             previewTactileLane(snapped)
@@ -247,6 +251,9 @@ public struct NightLampTactileSheet: View {
                 let longDur = TactileSustainStage.stage(forHeldSeconds: 1.00).targetDuration
                 commitTactileBead(laneIndex: allowed[safePos], duration: longDur)
             }
+            .accessibilityAction(named: "试听已录旋律") {
+                toggleAudition()
+            }
         }
         .frame(maxHeight: .infinity)
     }
@@ -263,21 +270,45 @@ public struct NightLampTactileSheet: View {
                     ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
                         let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
                         let lane = XylophoneLane.lane(at: laneIdx)
-                        HStack(spacing: 5) {
-                            PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
-                                .frame(width: 9, height: 9)
-                            Text(lane.digitLabel)
-                                .font(.caption.weight(.heavy).monospacedDigit())
+                        let isAuditioning = auditioningIndex == idx
+                        let chipFill = isAuditioning
+                            ? Color(hex: 0xFFB84D).opacity(0.38)
+                            : lane.barColor(isNight: true).opacity(idx == capturedBeads.count - 1 ? 0.34 : 0.20)
+                        let chipStroke = isAuditioning
+                            ? Color(hex: 0xFFB84D)
+                            : lane.barColor(isNight: true).opacity(0.65)
+                        Button {
+                            stopAudition()
+                            previewCapturedBead(bead, index: idx)
+                        } label: {
+                            HStack(spacing: 5) {
+                                PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
+                                    .frame(width: 9, height: 9)
+                                Text(lane.digitLabel)
+                                    .font(.caption.weight(.heavy).monospacedDigit())
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Capsule().fill(chipFill))
+                            .overlay(
+                                Capsule().strokeBorder(chipStroke, lineWidth: isAuditioning ? 1.8 : 1.0)
+                            )
+                            .foregroundStyle(Color(hex: 0xF4EBDD))
+                            .scaleEffect(isAuditioning && !reduceMotion ? 1.08 : 1.0)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule().fill(lane.barColor(isNight: true).opacity(idx == capturedBeads.count - 1 ? 0.34 : 0.20))
-                        )
-                        .overlay(
-                            Capsule().strokeBorder(lane.barColor(isNight: true).opacity(0.65), lineWidth: 1.0)
-                        )
-                        .foregroundStyle(Color(hex: 0xF4EBDD))
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                removeCapturedBead(at: idx)
+                            } label: {
+                                Label("删除此音", systemImage: "trash")
+                            }
+                        }
+                        .accessibilityLabel("\(lane.digitLabel) \(lane.solfege)")
+                        .accessibilityHint("轻点试听单音，长按或使用转子可删除")
+                        .accessibilityAction(named: "删除此音") {
+                            removeCapturedBead(at: idx)
+                        }
                     }
                 }
             }
@@ -290,18 +321,38 @@ public struct NightLampTactileSheet: View {
         HStack(spacing: 10) {
             Button {
                 guard !capturedBeads.isEmpty else { return }
+                stopAudition()
                 capturedBeads.removeLast()
                 AcousticHapticsEngine.shared.playScrubTick()
             } label: {
                 Image(systemName: "arrow.uturn.backward")
                     .font(.subheadline.weight(.bold))
-                    .frame(width: 48, height: 48)
+                    .frame(width: 44, height: 44)
                     .background(Circle().fill(Color(hex: 0x192140)))
                     .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x5B6482) : Color(hex: 0xF4EBDD))
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(.plain)
             .accessibilityLabel("撤销")
+
+            Button {
+                toggleAudition()
+            } label: {
+                Image(systemName: auditioningIndex != nil ? "stop.fill" : "play.fill")
+                    .font(.subheadline.weight(.bold))
+                    .frame(width: 44, height: 44)
+                    .background(
+                        Circle().fill(auditioningIndex != nil ? Color(hex: 0xFFB84D) : Color(hex: 0x192140))
+                    )
+                    .foregroundStyle(
+                        capturedBeads.isEmpty
+                            ? Color(hex: 0x5B6482)
+                            : (auditioningIndex != nil ? Color(hex: 0x151B36) : Color(hex: 0xFFB84D))
+                    )
+            }
+            .disabled(capturedBeads.isEmpty)
+            .buttonStyle(.plain)
+            .accessibilityLabel(auditioningIndex != nil ? "停止试听" : "试听已录旋律")
 
             Button {
                 localPentatonicSafe.toggle()
@@ -316,7 +367,7 @@ public struct NightLampTactileSheet: View {
                     Text(localPentatonicSafe ? "5" : "8")
                         .font(.subheadline.weight(.bold).monospacedDigit())
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 14)
                 .frame(height: 48)
                 .background(Capsule().fill(localPentatonicSafe ? Color(hex: 0x2F9E44).opacity(0.25) : Color(hex: 0x192140)))
                 .foregroundStyle(localPentatonicSafe ? Color(hex: 0x69DB7C) : Color(hex: 0xF4EBDD))
@@ -326,6 +377,8 @@ public struct NightLampTactileSheet: View {
 
             Button {
                 guard !capturedBeads.isEmpty else { return }
+                stopAudition()
+                stopSustainPulseWatcher()
                 vm.applyNightLampPhrase(capturedBeads, pentatonicSafe: localPentatonicSafe)
                 dismiss()
                 onCommitted()
@@ -395,23 +448,85 @@ public struct NightLampTactileSheet: View {
         sustainPollTask = nil
     }
 
-    private func commitTactileBead(laneIndex: Int, duration: Double) {
-        let lane = XylophoneLane.lane(at: laneIndex)
-        let nextOnset: Double
-        if let last = capturedBeads.last {
-            nextOnset = last.rawOnset + max(0.36, last.rawDuration + 0.08)
-        } else {
-            nextOnset = 0.14
+    private func previewCapturedBead(_ bead: NoteBead, index: Int) {
+        let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+        let lane = XylophoneLane.lane(at: laneIdx)
+        AcousticHapticsEngine.shared.playPlaybackNotePulse(
+            laneIndex: laneIdx,
+            isHome: lane.degree == 1,
+            isTension: lane.member.isTensionDegree,
+            isDownbeat: index == 0
+        )
+        let totalDur = NightLampPhraseHelper.totalAuditionDuration(of: capturedBeads)
+        let pan = AcousticSpatialPanMapper.pan(
+            forBeatOnset: bead.rawOnset,
+            totalDuration: max(0.8, totalDur),
+            visualMode: vm.visualMode
+        )
+        let hz = vm.document.scaleMode.frequencyHz(
+            rootMIDI: vm.document.rootMIDI,
+            degree: bead.degree,
+            octaveOffset: bead.octaveOffset
+        )
+        vm.synth.playNote(
+            frequency: hz,
+            velocity: 0.56,
+            decay: max(0.8, bead.rawDuration * 1.35),
+            timbre: FeltPianoSynth.Timbre.from(voice: vm.melodyVoice),
+            pan: pan
+        )
+    }
+
+    private func removeCapturedBead(at index: Int) {
+        stopAudition()
+        capturedBeads = NightLampPhraseHelper.removingBead(at: index, from: capturedBeads)
+        AcousticHapticsEngine.shared.playScrubTick()
+    }
+
+    private func stopAudition() {
+        auditionTask?.cancel()
+        auditionTask = nil
+        auditioningIndex = nil
+    }
+
+    private func toggleAudition() {
+        if auditionTask != nil || auditioningIndex != nil {
+            stopAudition()
+            AcousticHapticsEngine.shared.playScrubTick()
+            return
         }
-        if capturedBeads.count >= 20 {
-            capturedBeads.removeFirst()
-            if let shift = capturedBeads.first?.rawOnset, shift > 0.14 {
-                let delta = shift - 0.14
-                for idx in capturedBeads.indices {
-                    capturedBeads[idx].rawOnset = max(0.14, capturedBeads[idx].rawOnset - delta)
+        let snapshot = capturedBeads
+        guard !snapshot.isEmpty else { return }
+        stopSustainPulseWatcher()
+        auditionTask = Task { @MainActor in
+            for (idx, bead) in snapshot.enumerated() {
+                if idx > 0 {
+                    let gapSec = max(0.18, min(1.8, bead.rawOnset - snapshot[idx - 1].rawOnset))
+                    try? await Task.sleep(nanoseconds: UInt64(gapSec * 1_000_000_000))
                 }
+                guard !Task.isCancelled else { break }
+                auditioningIndex = idx
+                previewCapturedBead(bead, index: idx)
+            }
+            if !Task.isCancelled {
+                let tailSec = max(0.32, min(0.95, (snapshot.last?.rawDuration ?? 0.4) * 0.75))
+                try? await Task.sleep(nanoseconds: UInt64(tailSec * 1_000_000_000))
+            }
+            if !Task.isCancelled {
+                auditioningIndex = nil
+                auditionTask = nil
             }
         }
+    }
+
+    private func commitTactileBead(laneIndex: Int, duration: Double) {
+        stopAudition()
+        let lane = XylophoneLane.lane(at: laneIndex)
+        if capturedBeads.count >= 20 {
+            capturedBeads.removeFirst()
+            capturedBeads = NightLampPhraseHelper.repackSequentialTimings(capturedBeads)
+        }
+        let nextOnset = NightLampPhraseHelper.nextOnset(after: capturedBeads)
         let bead = NoteBead(
             degree: lane.degree,
             octaveOffset: lane.octaveOffset,

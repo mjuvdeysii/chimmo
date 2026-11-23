@@ -1121,4 +1121,48 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertGreaterThan(discPng?.count ?? 0, 1000)
         XCTAssertGreaterThan(riverPng?.count ?? 0, 1000)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound16NightLampAuditionAndStarDynamics() {
+        // 1. 闭眼滑音排拍与删除无缝重排验证
+        XCTAssertEqual(NightLampPhraseHelper.nextOnset(after: []), 0.14, accuracy: 1e-6)
+        XCTAssertEqual(NightLampPhraseHelper.totalAuditionDuration(of: []), 0.0, accuracy: 1e-6)
+
+        let draft: [NoteBead] = [
+            NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.14, rawDuration: 0.40),
+            NoteBead(degree: 3, octaveOffset: 0, rawOnset: 0.62, rawDuration: 0.70),
+            NoteBead(degree: 5, octaveOffset: 0, rawOnset: 1.40, rawDuration: 0.50)
+        ]
+        let removedMiddle = NightLampPhraseHelper.removingBead(at: 1, from: draft)
+        XCTAssertEqual(removedMiddle.count, 2)
+        XCTAssertEqual(removedMiddle[0].degree, 1)
+        XCTAssertEqual(removedMiddle[0].rawOnset, 0.14, accuracy: 1e-6)
+        XCTAssertEqual(removedMiddle[1].degree, 5)
+        // 第一音 duration=0.40 -> max(0.36, 0.40 + 0.08) = 0.48 -> 第二音起点无缝衔接至 0.62
+        XCTAssertEqual(removedMiddle[1].rawOnset, 0.62, accuracy: 1e-6)
+        XCTAssertNil(removedMiddle[1].quantizedOnset)
+        XCTAssertGreaterThan(NightLampPhraseHelper.totalAuditionDuration(of: removedMiddle), 1.2)
+        // 越界索引保持原队列不变
+        XCTAssertEqual(NightLampPhraseHelper.removingBead(at: 9, from: draft).count, 3)
+
+        // 2. 星环偏心距力学响度与亮度响应 + 非法浮点防护
+        let centerHit = StarHitDynamicsMapper.hitDynamics(distancePt: 0.0, hitRadius: 36.0)
+        let rimHit = StarHitDynamicsMapper.hitDynamics(distancePt: 34.0, hitRadius: 36.0)
+        XCTAssertGreaterThan(centerHit.velocity, rimHit.velocity)
+        XCTAssertGreaterThan(centerHit.brightness, rimHit.brightness)
+        XCTAssertTrue((0.35...0.90).contains(centerHit.velocity))
+        XCTAssertTrue((0.60...1.25).contains(centerHit.brightness))
+
+        let nanGuard = StarHitDynamicsMapper.hitDynamics(distancePt: .nan, hitRadius: 0.0)
+        XCTAssertFalse(nanGuard.velocity.isNaN)
+        XCTAssertFalse(nanGuard.brightness.isNaN)
+
+        // 3. 主音胸腔移调裁剪与标签校验
+        XCTAssertEqual(RootTranspositionHelper.clampedRootMIDI(10), 48)
+        XCTAssertEqual(RootTranspositionHelper.clampedRootMIDI(99), 72)
+        XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 60), "0")
+        XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 65), "+5")
+        XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 55), "-5")
+        XCTAssertEqual(RootTranspositionHelper.accessibilityLabel(forRootMIDI: 62), "升高 2 半音")
+    }
 }

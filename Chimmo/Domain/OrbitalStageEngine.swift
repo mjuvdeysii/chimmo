@@ -887,3 +887,47 @@ public enum RootTranspositionHelper {
         return delta > 0 ? "升高 \(delta) 半音" : "降低 \(-delta) 半音"
     }
 }
+
+/// 闭眼滑音草稿乐句排拍与试听时长辅助：保证任意插入、单拍删改后时序紧密连贯，绝不残留断裂空洞。
+public enum NightLampPhraseHelper {
+    public static func nextOnset(after beads: [NoteBead]) -> Double {
+        guard let last = beads.last else { return 0.14 }
+        return last.rawOnset + max(0.36, last.rawDuration + 0.08)
+    }
+
+    public static func repackSequentialTimings(_ beads: [NoteBead]) -> [NoteBead] {
+        var result: [NoteBead] = []
+        result.reserveCapacity(beads.count)
+        for bead in beads {
+            var next = bead
+            next.rawOnset = nextOnset(after: result)
+            next.quantizedOnset = nil
+            result.append(next)
+        }
+        return result
+    }
+
+    public static func removingBead(at index: Int, from beads: [NoteBead]) -> [NoteBead] {
+        guard beads.indices.contains(index) else { return beads }
+        var copy = beads
+        copy.remove(at: index)
+        return repackSequentialTimings(copy)
+    }
+
+    public static func totalAuditionDuration(of beads: [NoteBead]) -> Double {
+        guard let last = beads.last else { return 0.0 }
+        return max(0.6, last.rawOnset + last.rawDuration + 0.25)
+    }
+}
+
+/// 星环星辰命中偏心距力学映射：正中星心奏出饱满清亮共鸣，掠过星缘发出温柔轻声余韵。
+public enum StarHitDynamicsMapper {
+    public static func hitDynamics(distancePt: CGFloat, hitRadius: CGFloat) -> (velocity: Double, brightness: Double) {
+        let safeR = max(8.0, Double(hitRadius.isFinite ? hitRadius : 36.0))
+        let safeDist = max(0.0, Double(distancePt.isFinite ? distancePt : 0.0))
+        let closeness = max(0.0, min(1.0, 1.0 - safeDist / safeR))
+        let velocity = 0.42 + closeness * 0.36
+        let brightness = 0.78 + closeness * 0.34
+        return (velocity, brightness)
+    }
+}

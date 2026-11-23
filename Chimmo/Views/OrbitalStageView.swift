@@ -353,10 +353,13 @@ public struct OrbitalStageView: View {
                         }
                 )
 
-                // 顶部极简声学状态标（无文字堆砌；仅展示伴唱月弧与数值倍速，及麦克风异常提示）
+                // 顶部极简声学状态标（无文字堆砌；展示伴唱、倍速、音区移调与律动状态，及麦克风异常提示）
                 VStack {
                     HStack(alignment: .top) {
-                        if vm.shadowCounterpointEnabled || abs(vm.playbackRate - 1.0) > 0.01 {
+                        if vm.shadowCounterpointEnabled
+                            || abs(vm.playbackRate - 1.0) > 0.01
+                            || vm.document.rootMIDI != 60
+                            || vm.document.grooveStrength > 0.08 {
                             activeFeaturesOverlay
                         }
                         Spacer(minLength: 8)
@@ -407,6 +410,20 @@ public struct OrbitalStageView: View {
                     }
                     .foregroundStyle(palette.nightLampGold)
                 }
+                if vm.document.rootMIDI != 60 {
+                    HStack(spacing: 2) {
+                        Image(systemName: "tuningfork")
+                            .font(.system(size: 9, weight: .bold))
+                        Text(RootTranspositionHelper.compactLabel(forRootMIDI: vm.document.rootMIDI))
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(palette.harmonyWash)
+                }
+                if vm.document.grooveStrength > 0.08 {
+                    Image(systemName: "metronome")
+                        .font(.system(size: 9.5, weight: .bold))
+                        .foregroundStyle(palette.homeAnchor)
+                }
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
@@ -417,7 +434,7 @@ public struct OrbitalStageView: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("打开声音设置调整伴唱与播放速度")
+        .accessibilityLabel("打开声音设置调整伴唱、音区与节奏")
     }
 
     // MARK: - 2A. Orbital Turntable Disc Rendering
@@ -2080,9 +2097,16 @@ public struct OrbitalStageView: View {
             if struckNebulaLane != laneIdx {
                 vm.endStarVibrato()
                 struckNebulaLane = laneIdx
-                nebulaHoldCenter = ConstellationGeometry.starPoint(laneIndex: laneIdx, center: nm.center, radius: nm.ringRadius)
+                let hitPt = ConstellationGeometry.starPoint(laneIndex: laneIdx, center: nm.center, radius: nm.ringRadius)
+                nebulaHoldCenter = hitPt
+                let distPt = hypot(val.location.x - hitPt.x, val.location.y - hitPt.y)
+                let dyn = StarHitDynamicsMapper.hitDynamics(distancePt: distPt, hitRadius: 36.0)
                 wakeRippleTimeline()
-                vm.strikeXylophoneLane(XylophoneLane.lane(at: laneIdx))
+                vm.strikeXylophoneLane(
+                    XylophoneLane.lane(at: laneIdx),
+                    touchIntensity: dyn.velocity,
+                    touchBrightness: dyn.brightness
+                )
             } else if !vm.followGlowActive {
                 let dx = val.location.x - nebulaHoldCenter.x
                 let dy = val.location.y - nebulaHoldCenter.y
