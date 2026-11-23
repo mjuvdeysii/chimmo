@@ -264,4 +264,94 @@ final class SpecimenIntegrityTests: XCTestCase {
         vm.strikeXylophoneLane(firstLane)
         XCTAssertEqual(vm.followGlowIndex, 1)
     }
+
+    func testOrbitalRotationKeepsActiveNoteAtTwelveOClock() {
+        let total = 12.0
+        for onset in [0.0, 2.5, 6.0, 9.75] {
+            let angle = OrbitalGeometry.screenAngle(onset: onset, playheadTime: onset, totalDuration: total)
+            let normalized = atan2(sin(angle), cos(angle))
+            XCTAssertEqual(normalized, -Double.pi / 2.0, accuracy: 1e-6, "在 onset=\(onset) 时刻音珠应准确转到正上方 12 点钟唱针处")
+        }
+
+        // 极坐标逆向点击映射应能准确还原出轨道索引与时间点
+        let center = CGPoint(x: 200, y: 200)
+        let innerR: CGFloat = 50
+        let outerR: CGFloat = 155
+        let rot = OrbitalGeometry.discRotationRadians(playheadTime: 3.0, totalDuration: total)
+        let targetOnset = 5.4
+        let targetLane = 4 // 5·Sol
+        let r = OrbitalGeometry.orbitRadius(laneIndex: targetLane, innerRadius: innerR, outerRadius: outerR)
+        let screenAng = OrbitalGeometry.screenAngle(onset: targetOnset, playheadTime: 3.0, totalDuration: total)
+        let pt = CGPoint(x: center.x + CGFloat(cos(screenAng)) * r, y: center.y + CGFloat(sin(screenAng)) * r)
+
+        let recoveredLane = OrbitalGeometry.laneIndex(forRadius: r, innerRadius: innerR, outerRadius: outerR, pentatonicSafe: true)
+        let recoveredOnset = OrbitalGeometry.onset(forScreenPoint: pt, center: center, discRotation: rot, totalDuration: total)
+        XCTAssertEqual(recoveredLane, targetLane)
+        XCTAssertEqual(recoveredOnset, targetOnset, accuracy: 1e-3)
+    }
+
+    func testFlowingRiverKeepsActiveNoteLockedOnBeam() {
+        let anchorX: CGFloat = 112.0
+        let pxPerSec: CGFloat = 84.0
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        XCTAssertGreaterThan(swan.totalDuration, 18.0)
+
+        for note in swan.notes {
+            let t = note.rawOnset
+            let scrollX = FlowingRiverGeometry.worldScrollX(playheadTime: t, manualScrollX: 0, pxPerSecond: pxPerSec)
+            let x = FlowingRiverGeometry.screenX(onset: t, scrollX: scrollX, anchorX: anchorX, pxPerSecond: pxPerSec)
+            XCTAssertEqual(x, anchorX, accuracy: 1e-5, "流动山河模式下当前发声音珠必须稳稳锁定在固定金光束位置")
+        }
+    }
+
+    func testContourSketchSamplerAndColorblindGlyphs() {
+        let glyphs = (0..<8).map { PitchGlyphShape.glyph(forLaneIndex: $0) }
+        XCTAssertEqual(Set(glyphs).count, 8, "8 条音高轨道必须对应 8 种完全不同的色盲友好几何图腾")
+        for g in glyphs {
+            XCTAssertFalse(g.path(in: CGRect(x: 0, y: 0, width: 16, height: 16)).isEmpty)
+        }
+
+        // 从左下画到右上的爬坡曲线应生成单调上升的归一化高度 [0...1]
+        let stroke = [
+            CGPoint(x: 0, y: 120),
+            CGPoint(x: 100, y: 70),
+            CGPoint(x: 200, y: 10)
+        ]
+        let heights = ContourSketchSampler.sampleContour(points: stroke, in: CGSize(width: 200, height: 120), slotCount: 6)
+        XCTAssertEqual(heights.count, 6)
+        XCTAssertLessThan(heights.first ?? 1, heights.last ?? 0)
+        XCTAssertGreaterThanOrEqual(heights.first ?? -1, 0.0)
+        XCTAssertLessThanOrEqual(heights.last ?? 2, 1.0)
+    }
+
+    @MainActor
+    func testPlaybackClockAndScrubbing() {
+        let clock = PlaybackClock()
+        clock.start(totalDuration: 8.0, from: 2.0, at: 100.0)
+        XCTAssertTrue(clock.isPlaying)
+        XCTAssertEqual(clock.currentTime(at: 102.5) ?? -1, 4.5, accuracy: 1e-5)
+        XCTAssertGreaterThan(clock.continuousRotationTurns(at: 109.0), 1.0)
+
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v07-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.scrubToTime(4.2, triggerNotes: false)
+        XCTAssertEqual(vm.clock.scrubTime ?? -1, 4.2, accuracy: 1e-5)
+        vm.endScrubbing()
+
+        vm.startBlankCanvas()
+        XCTAssertTrue(vm.document.notes.isEmpty)
+        vm.applyDrawnHillContour([0.1, 0.5, 0.9, 0.6, 0.2, 0.0])
+        XCTAssertEqual(vm.document.notes.count, 6)
+
+        // Creative Alchemy Round 1: 折纸成诗 + 大师火种微调变奏
+        vm.growCurrentWithOrigami(.fullFourPhrasePoem)
+        XCTAssertEqual(vm.document.notes.count, 12)
+
+        vm.openSpecimen(SpecimenLibrary.saintSaensTheSwan, autoPlay: false)
+        let originalTitle = vm.document.title
+        vm.applyMasterpieceSeedShifts([1, -1, 2])
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertTrue(vm.document.title.contains(originalTitle))
+        vm.stopPlayback()
+    }
 }

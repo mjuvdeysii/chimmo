@@ -19,6 +19,10 @@ public struct XylophoneLane: Identifiable, Equatable, Sendable {
 
     public var member: ChimmoMember { ChimmoMember.from(degree: degree) }
 
+    public var glyphLabel: String {
+        PitchGlyphShape.glyph(forLaneIndex: index).symbolName
+    }
+
     public func barColor(isNight: Bool) -> Color {
         Color(hex: isNight ? nightHex : dayHex)
     }

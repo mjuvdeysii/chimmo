@@ -306,6 +306,29 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
     }
 }
 
+/// 每次音珠发声时在画布与声盘上激起的物理涟漪与飞珠轨迹。
+public struct VisualImpulse: Identifiable, Sendable {
+    public let id: UUID
+    public let birth: TimeInterval
+    public let degree: Int
+    public let octaveOffset: Int
+    public let xNorm: Double
+
+    public init(
+        id: UUID = UUID(),
+        birth: TimeInterval = Date().timeIntervalSinceReferenceDate,
+        degree: Int,
+        octaveOffset: Int = 0,
+        xNorm: Double
+    ) {
+        self.id = id
+        self.birth = birth
+        self.degree = degree
+        self.octaveOffset = octaveOffset
+        self.xNorm = max(0.05, min(0.95, xNorm))
+    }
+}
+
 public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public var title: String

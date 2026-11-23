@@ -5,8 +5,8 @@ import UIKit
 #endif
 
 /// 跨感官声学触觉引擎（Core Haptics）：
-/// 把音乐物理规律直接翻译到指尖——和谐音程如静水颂钵般温润平顺，半音/延留张力如细碎拍频震颤，解决瞬间如长舒一口气般绽放。
-/// 让完全不懂乐理、甚至存在听觉障碍的用户，也能在掌心里「摸懂」音乐的张力与释然。
+/// - 全异步启动与零主线程阻塞：绝不在 `init()` 或主线程同步调用 `CHHapticEngine.start()`，杜绝首屏 XPC 卡顿；
+/// - 音高-质地双映射：低音浑厚沉稳、高音清脆明亮，张力音级微颤、回家主音长舒释然，让听障或零乐理用户也能在掌心里「摸懂」旋律与和声。
 @MainActor
 public final class AcousticHapticsEngine {
     public static let shared = AcousticHapticsEngine()
@@ -14,45 +14,122 @@ public final class AcousticHapticsEngine {
     #if os(iOS)
     private var engine: CHHapticEngine?
     private var supportsHaptics: Bool = false
+    private var isEngineRunning: Bool = false
+    private var isStarting: Bool = false
+
+    private lazy var softImpact = UIImpactFeedbackGenerator(style: .soft)
+    private lazy var lightImpact = UIImpactFeedbackGenerator(style: .light)
+    private lazy var mediumImpact = UIImpactFeedbackGenerator(style: .medium)
+    private lazy var rigidImpact = UIImpactFeedbackGenerator(style: .rigid)
+    private lazy var notifyGenerator = UINotificationFeedbackGenerator()
     #endif
 
     private init() {
-        #if os(iOS)
-        supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
-        prepareEngineIfNeeded()
-        #endif
+        // 延迟检测与异步启动，确保启动首帧 < 0.1ms
     }
 
-    private func prepareEngineIfNeeded() {
-        #if os(iOS)
-        guard supportsHaptics else { return }
+    #if os(iOS)
+    private func ensureEngineAsync() {
+        if !supportsHaptics && engine == nil {
+            supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
+        }
+        guard supportsHaptics, !isEngineRunning, !isStarting else { return }
+        isStarting = true
+
         if engine == nil {
             do {
                 let eng = try CHHapticEngine()
                 eng.isAutoShutdownEnabled = true
+                eng.playsHapticsOnly = true
                 eng.resetHandler = { [weak self] in
-                    Task { @MainActor in
-                        try? self?.engine?.start()
+                    Task { @MainActor [weak self] in
+                        self?.isEngineRunning = false
+                        self?.isStarting = false
                     }
                 }
-                eng.stoppedHandler = { _ in }
+                eng.stoppedHandler = { [weak self] _ in
+                    Task { @MainActor [weak self] in
+                        self?.isEngineRunning = false
+                        self?.isStarting = false
+                    }
+                }
                 self.engine = eng
             } catch {
-                self.supportsHaptics = false
+                supportsHaptics = false
+                isStarting = false
+                return
             }
         }
-        try? engine?.start()
+
+        engine?.start { [weak self] error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.isStarting = false
+                self.isEngineRunning = (error == nil)
+            }
+        }
+    }
+    #endif
+
+    /// 音高触感：把 0...7 音阶轨道映射为细腻的质地与清脆度，指尖直接摸出高低起伏与张力解决。
+    public func playPitchTouch(laneIndex: Int, isHome: Bool, isTension: Bool) {
+        #if os(iOS)
+        if isTension {
+            playTensionFlutter(intensity: 0.48)
+            return
+        }
+        guard supportsHaptics && isEngineRunning else {
+            if isHome {
+                mediumImpact.impactOccurred()
+            } else {
+                softImpact.impactOccurred()
+            }
+            ensureEngineAsync()
+            return
+        }
+        let clamped = max(0, min(7, laneIndex))
+        let sharpness = Float(0.18 + Double(clamped) * 0.08)
+        let intensity: Float = isHome ? 0.78 : Float(0.52 + Double(clamped) * 0.03)
+        let ev = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+            ],
+            relativeTime: 0
+        )
+        playPattern(events: [ev], curves: [])
+        #endif
+    }
+
+    /// 手拨音乐盒转盘经过音珠时的轻巧机械棘轮滴答感。
+    public func playScrubTick() {
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            lightImpact.impactOccurred(intensity: 0.65)
+            ensureEngineAsync()
+            return
+        }
+        let ev = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.48),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.62)
+            ],
+            relativeTime: 0
+        )
+        playPattern(events: [ev], curves: [])
         #endif
     }
 
     /// 温润平顺的和谐共振（八度 2:1、纯五度 3:2、大三度 5:4）
     public func playConsonantGlow(intensity: Float = 0.62) {
         #if os(iOS)
-        guard supportsHaptics else {
-            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        guard supportsHaptics && isEngineRunning else {
+            softImpact.impactOccurred()
+            ensureEngineAsync()
             return
         }
-        prepareEngineIfNeeded()
         let pIntensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: max(0.2, min(1.0, intensity)))
         let pSharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.16)
         let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [pIntensity, pSharpness], relativeTime: 0, duration: 0.24)
@@ -72,11 +149,11 @@ public final class AcousticHapticsEngine {
     /// 细碎拍频摩擦微颤（半音 16:15、导音 7 或延留音 4 悬停时）
     public func playTensionFlutter(intensity: Float = 0.55) {
         #if os(iOS)
-        guard supportsHaptics else {
-            UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        guard supportsHaptics && isEngineRunning else {
+            rigidImpact.impactOccurred()
+            ensureEngineAsync()
             return
         }
-        prepareEngineIfNeeded()
         var events: [CHHapticEvent] = []
         for i in 0..<5 {
             let t = Double(i) * 0.055
@@ -97,11 +174,11 @@ public final class AcousticHapticsEngine {
     /// 释然归家绽放（7→1↑ 或 4→3 延留落地的那一瞬间）
     public func playResolutionExhale() {
         #if os(iOS)
-        guard supportsHaptics else {
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        guard supportsHaptics && isEngineRunning else {
+            notifyGenerator.notificationOccurred(.success)
+            ensureEngineAsync()
             return
         }
-        prepareEngineIfNeeded()
         let hit = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [
@@ -134,11 +211,15 @@ public final class AcousticHapticsEngine {
     /// 敲击心跳节拍时的温润木鱼敲击感
     public func playBeatTap(isStrong: Bool = false) {
         #if os(iOS)
-        guard supportsHaptics else {
-            UIImpactFeedbackGenerator(style: isStrong ? .medium : .light).impactOccurred()
+        guard supportsHaptics && isEngineRunning else {
+            if isStrong {
+                mediumImpact.impactOccurred()
+            } else {
+                lightImpact.impactOccurred()
+            }
+            ensureEngineAsync()
             return
         }
-        prepareEngineIfNeeded()
         let ev = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [
@@ -154,11 +235,11 @@ public final class AcousticHapticsEngine {
     /// 种子折纸绽放时的逐颗轻盈连振
     public func playSeedBloom() {
         #if os(iOS)
-        guard supportsHaptics else {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        guard supportsHaptics && isEngineRunning else {
+            mediumImpact.impactOccurred()
+            ensureEngineAsync()
             return
         }
-        prepareEngineIfNeeded()
         let events: [CHHapticEvent] = [0.0, 0.09, 0.19].enumerated().map { idx, t in
             CHHapticEvent(
                 eventType: .hapticTransient,
@@ -175,13 +256,16 @@ public final class AcousticHapticsEngine {
 
     #if os(iOS)
     private func playPattern(events: [CHHapticEvent], curves: [CHHapticParameterCurve]) {
-        guard let engine else { return }
+        guard let engine else {
+            isEngineRunning = false
+            return
+        }
         do {
             let pattern = try CHHapticPattern(events: events, parameterCurves: curves)
             let player = try engine.makePlayer(with: pattern)
             try player.start(atTime: CHHapticTimeImmediate)
         } catch {
-            // 静默兜底，永不打断音频体验
+            isEngineRunning = false
         }
     }
     #endif
