@@ -52,26 +52,19 @@ public struct NightLampTactileSheet: View {
                 size: 38
             )
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("闭眼滑音")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: 0xF4EBDD))
-                Text("上下滑动靠震动找音高，松手记下")
-                    .font(.caption2)
-                    .foregroundStyle(Color(hex: 0x9BA3BE))
-            }
-
             Spacer()
 
-            Button("关闭") {
+            Button {
                 dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.subheadline.weight(.bold))
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color(hex: 0x192140)))
+                    .foregroundStyle(Color(hex: 0xF4EBDD))
             }
-            .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(Capsule().fill(Color(hex: 0x192140)))
-            .foregroundStyle(Color(hex: 0xF4EBDD))
             .buttonStyle(.plain)
+            .accessibilityLabel("关闭")
         }
     }
 
@@ -142,15 +135,22 @@ public struct NightLampTactileSheet: View {
                         .position(pt)
                         .allowsHitTesting(false)
                 } else {
-                    VStack(spacing: 12) {
-                        ChimmoCraftMark(.nightLampHalo, color: Color(hex: 0xFFB84D).opacity(0.75))
-                            .frame(width: 38, height: 38)
-                        Text("按住并上下滑动")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color(hex: 0xD8D0C5).opacity(0.76))
-                        Text("停留越久，音越长")
-                            .font(.caption2)
-                            .foregroundStyle(Color(hex: 0x8F98B4))
+                    VStack(spacing: 10) {
+                        Circle()
+                            .fill(Color(hex: 0xFFB84D).opacity(0.60))
+                            .frame(width: 7, height: 7)
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: 0xFFB84D).opacity(0.18), Color(hex: 0xFFB84D).opacity(0.55), Color(hex: 0xFFB84D).opacity(0.18)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: 3, height: 52)
+                        Circle()
+                            .fill(Color(hex: 0xFFB84D).opacity(0.60))
+                            .frame(width: 7, height: 7)
                     }
                     .allowsHitTesting(false)
                 }
@@ -219,9 +219,9 @@ public struct NightLampTactileSheet: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 if capturedBeads.isEmpty {
-                    Text("松手后，录下的音会排在这里")
-                        .font(.caption)
-                        .foregroundStyle(Color(hex: 0x8F98B4))
+                    Rectangle()
+                        .fill(Color(hex: 0x222B4E).opacity(0.55))
+                        .frame(width: 140, height: 1.5)
                         .padding(.horizontal, 8)
                 } else {
                     ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
@@ -257,35 +257,36 @@ public struct NightLampTactileSheet: View {
                 capturedBeads.removeLast()
                 AcousticHapticsEngine.shared.playScrubTick()
             } label: {
-                Label("退回", systemImage: "arrow.uturn.backward")
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 14)
-                    .background(Capsule().fill(Color(hex: 0x192140)))
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.subheadline.weight(.bold))
+                    .frame(width: 48, height: 48)
+                    .background(Circle().fill(Color(hex: 0x192140)))
                     .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x5B6482) : Color(hex: 0xF4EBDD))
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(.plain)
+            .accessibilityLabel("撤销")
 
             Button {
                 localPentatonicSafe.toggle()
                 AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
                     ChimmoCraftMark(
                         .pentatonicArc,
                         color: localPentatonicSafe ? Color(hex: 0x69DB7C) : Color(hex: 0xF4EBDD)
                     )
                     .frame(width: 15, height: 15)
-                    Text(localPentatonicSafe ? "五音" : "八音")
-                        .font(.subheadline.weight(.bold))
+                    Text(localPentatonicSafe ? "5" : "8")
+                        .font(.subheadline.weight(.bold).monospacedDigit())
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 14)
+                .padding(.horizontal, 16)
+                .frame(height: 48)
                 .background(Capsule().fill(localPentatonicSafe ? Color(hex: 0x2F9E44).opacity(0.25) : Color(hex: 0x192140)))
                 .foregroundStyle(localPentatonicSafe ? Color(hex: 0x69DB7C) : Color(hex: 0xF4EBDD))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(localPentatonicSafe ? "五音模式" : "八音模式")
 
             Button {
                 guard !capturedBeads.isEmpty else { return }
@@ -294,17 +295,15 @@ public struct NightLampTactileSheet: View {
                 onCommitted()
             } label: {
                 HStack(spacing: 7) {
-                    ChimmoCraftMark(
-                        .followBeacon,
-                        color: capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x151B36)
-                    )
-                    .frame(width: 15, height: 15)
-                    Text(capturedBeads.isEmpty ? "先滑出几个音" : "去试听 (\(capturedBeads.count))")
-                        .lineLimit(1)
+                    Image(systemName: "checkmark")
+                        .font(.subheadline.weight(.bold))
+                    if !capturedBeads.isEmpty {
+                        Text("\(capturedBeads.count)")
+                            .font(.subheadline.weight(.heavy).monospacedDigit())
+                    }
                 }
-                .font(.subheadline.weight(.bold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .frame(height: 48)
                 .background(
                     Capsule().fill(capturedBeads.isEmpty ? Color(hex: 0x242C4A) : Color(hex: 0xFFB84D))
                 )
@@ -312,6 +311,7 @@ public struct NightLampTactileSheet: View {
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(.plain)
+            .accessibilityLabel("完成并试听")
         }
     }
 

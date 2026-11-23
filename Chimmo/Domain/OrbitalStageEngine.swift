@@ -418,3 +418,57 @@ public enum TactileFieldMapper {
         return Double(pos) / Double(allowed.count - 1)
     }
 }
+
+/// 无字交互声光引导几何算法（以光弧牵引、空盘呼吸圈与径向调音标尺取代文字说教）。
+public enum PreLinguisticGuideGeometry {
+
+    /// 跟灯弹模式下，从画布上发光音符引向底部对应彩虹琴条的光桥曲线控制点。
+    public static func followLightBridgePath(
+        from stagePoint: CGPoint,
+        toLaneIndex laneIndex: Int,
+        canvasSize: CGSize
+    ) -> (start: CGPoint, control: CGPoint, end: CGPoint) {
+        let clampedLane = max(0, min(7, laneIndex))
+        let safeW = max(1.0, canvasSize.width)
+        let safeH = max(1.0, canvasSize.height)
+        let end = CGPoint(
+            x: (CGFloat(clampedLane) + 0.5) / 8.0 * safeW,
+            y: safeH - 2.0
+        )
+        let control = CGPoint(
+            x: stagePoint.x * 0.38 + end.x * 0.62,
+            y: min(safeH - 4.0, (stagePoint.y + end.y) * 0.54 + 14.0)
+        )
+        return (stagePoint, control, end)
+    }
+
+    /// 空画布轻柔呼吸同心环（按半径升序排列，随相位扩展渐隐）。
+    public static func emptyCanvasPulseRadii(
+        phase: Double,
+        maxRadius: CGFloat
+    ) -> [(radius: CGFloat, opacity: Double)] {
+        let safeR = max(1.0, maxRadius)
+        let rings: [(radius: CGFloat, opacity: Double)] = (0..<3).map { idx in
+            let shifted = (phase + Double(idx) / 3.0).truncatingRemainder(dividingBy: 1.0)
+            let p = shifted < 0 ? shifted + 1.0 : shifted
+            let radius = safeR * CGFloat(0.24 + p * 0.76)
+            let opacity = max(0.0, min(1.0, (1.0 - p) * 0.45))
+            return (radius, opacity)
+        }
+        return rings.sorted { $0.radius < $1.radius }
+    }
+
+    /// 选中音符后沿半径方向延展的滑轨端点（直观示意上下拖拽改音高）。
+    public static func selectionTractionTicks(
+        center: CGPoint,
+        angle: Double,
+        innerRadius: CGFloat,
+        outerRadius: CGFloat
+    ) -> (inner: CGPoint, outer: CGPoint) {
+        let cosA = CGFloat(cos(angle))
+        let sinA = CGFloat(sin(angle))
+        let inner = CGPoint(x: center.x + cosA * innerRadius, y: center.y + sinA * innerRadius)
+        let outer = CGPoint(x: center.x + cosA * outerRadius, y: center.y + sinA * outerRadius)
+        return (inner, outer)
+    }
+}

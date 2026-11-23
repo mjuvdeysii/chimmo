@@ -13,6 +13,7 @@ public struct MusicBoxShelfView: View {
     public let onBorrowAtmosphere: (MelodyDocument) -> Void
     public let onShareSavedEntry: (SavedMelodyEntry) -> Void
     public let onStartNewTap: () -> Void
+    public let onWillPlayInline: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSegment: Int = 1 // 默认也可在我的唱片(0)与28首名曲(1)间秒切；有保存作品自动先看0
@@ -31,7 +32,8 @@ public struct MusicBoxShelfView: View {
         onEditSpecimenOnBoard: @escaping (MelodyDocument) -> Void,
         onBorrowAtmosphere: @escaping (MelodyDocument) -> Void = { _ in },
         onShareSavedEntry: @escaping (SavedMelodyEntry) -> Void = { _ in },
-        onStartNewTap: @escaping () -> Void
+        onStartNewTap: @escaping () -> Void,
+        onWillPlayInline: @escaping () -> Void = {}
     ) {
         self.palette = palette
         self.synth = synth
@@ -43,6 +45,7 @@ public struct MusicBoxShelfView: View {
         self.onBorrowAtmosphere = onBorrowAtmosphere
         self.onShareSavedEntry = onShareSavedEntry
         self.onStartNewTap = onStartNewTap
+        self.onWillPlayInline = onWillPlayInline
         self._selectedSegment = State(initialValue: notebook.entries.isEmpty ? 1 : 0)
     }
 
@@ -111,7 +114,7 @@ public struct MusicBoxShelfView: View {
     @ViewBuilder
     private var mySavedDiscsSection: some View {
         if notebook.entries.isEmpty {
-            VStack(spacing: 14) {
+            VStack(spacing: 16) {
                 ZStack {
                     Circle()
                         .fill(palette.shelfSurface)
@@ -121,28 +124,23 @@ public struct MusicBoxShelfView: View {
                         .foregroundStyle(palette.homeAnchor)
                 }
 
-                Text("还没有保存的作品")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(palette.primaryInk)
-
-                Text("创作完点右上角书签，就会保存在这里。")
-                    .font(.caption)
+                Text("暂无作品")
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(palette.secondaryInk)
-                    .multilineTextAlignment(.center)
 
                 Button {
                     onStartNewTap()
                 } label: {
-                    Label("去写一段", systemImage: "hand.tap.fill")
-                        .font(.subheadline.weight(.bold))
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 11)
+                    Image(systemName: "plus")
+                        .font(.headline.weight(.bold))
+                        .frame(width: 56, height: 42)
                         .background(Capsule().fill(palette.homeAnchor))
                         .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("去写一段")
             }
-            .padding(24)
+            .padding(26)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -153,11 +151,6 @@ public struct MusicBoxShelfView: View {
             ForEach(Array(notebook.entries.enumerated()), id: \.element.id) { idx, entry in
                 savedDiscCard(entry: entry, index: idx)
             }
-
-            Text("所有作品仅保存在本机，不上传")
-                .font(.caption2)
-                .foregroundStyle(palette.secondaryInk)
-                .padding(.top, 4)
         }
     }
 
@@ -166,26 +159,39 @@ public struct MusicBoxShelfView: View {
         let dateStr = entry.updatedAt.formatted(date: .abbreviated, time: .shortened)
 
         return HStack(spacing: 14) {
-            // 旋转迷你唱片预览（播放时平滑转动！）
-            MiniOrbitalDiscPreview(
-                document: entry.document,
-                isNight: palette.isNight,
-                isSpinning: isPlayingThis && !reduceMotion,
-                spinStartTime: inlinePlayStart
-            )
-            .frame(width: 78, height: 78)
+            ZStack {
+                MiniOrbitalDiscPreview(
+                    document: entry.document,
+                    isNight: palette.isNight,
+                    isSpinning: isPlayingThis && !reduceMotion,
+                    spinStartTime: inlinePlayStart
+                )
+                .frame(width: 74, height: 74)
+
+                Circle()
+                    .fill(palette.cardSurface.opacity(0.88))
+                    .frame(width: 24, height: 24)
+                    .overlay(
+                        Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(palette.homeAnchor)
+                    )
+            }
             .onTapGesture {
+                if isPlayingThis { stopInlinePlay() } else { playInline(entry) }
+            }
+            .accessibilityElement()
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(isPlayingThis ? "停止试听 \(entry.document.title)" : "试听 \(entry.document.title)")
+            .accessibilityAction {
                 if isPlayingThis { stopInlinePlay() } else { playInline(entry) }
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
-                    ChimmoEditorialPill(
-                        text: entry.moodSticker ?? "我的作品",
-                        accent: entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
-                        surface: palette.shelfSurface,
-                        textColor: palette.primaryInk
-                    )
+                    Circle()
+                        .fill(entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
+                        .frame(width: 7, height: 7)
                     Text(dateStr)
                         .font(.caption2)
                         .foregroundStyle(palette.secondaryInk)
@@ -201,27 +207,27 @@ public struct MusicBoxShelfView: View {
                     Button {
                         if isPlayingThis { stopInlinePlay() } else { playInline(entry) }
                     } label: {
-                        Label(isPlayingThis ? "停止" : "试听", systemImage: isPlayingThis ? "pause.fill" : "play.fill")
+                        Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
                             .font(.caption.weight(.bold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
+                            .frame(width: 34, height: 28)
                             .background(Capsule().fill(palette.homeAnchor))
                             .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(isPlayingThis ? "停止试听" : "试听")
 
                     Button {
                         stopInlinePlay()
                         onLoadSavedToBoard(entry)
                     } label: {
-                        Label("打开", systemImage: "record.circle")
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                        Image(systemName: "record.circle")
+                            .font(.caption.weight(.bold))
+                            .frame(width: 34, height: 28)
                             .background(Capsule().fill(palette.shelfSurface))
                             .foregroundStyle(palette.primaryInk)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("在主舞台打开 \(entry.document.title)")
 
                     Spacer()
 
@@ -234,7 +240,7 @@ public struct MusicBoxShelfView: View {
                             .padding(6)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("分享 \(entry.document.title) 黑胶明信片")
+                    .accessibilityLabel("分享 \(entry.document.title)")
 
                     Button(role: .destructive) {
                         if isPlayingThis { stopInlinePlay() }
@@ -259,12 +265,29 @@ public struct MusicBoxShelfView: View {
     }
 
     private func playInline(_ entry: SavedMelodyEntry) {
+        playInlineDocument(
+            entry.document,
+            id: entry.id,
+            chordPreset: entry.chordPreset,
+            chordOverrides: entry.chordOverrides,
+            texture: entry.accompanimentTexture
+        )
+    }
+
+    private func playInlineDocument(
+        _ doc: MelodyDocument,
+        id: UUID,
+        chordPreset: ChordProgressionPreset,
+        chordOverrides: [Int: DiatonicChord],
+        texture: AccompanimentTexture?
+    ) {
         stopInlinePlay()
-        playingEntryID = entry.id
+        onWillPlayInline()
+        synth.ensureRunning()
+        playingEntryID = id
         inlinePlayStart = CACurrentMediaTime()
-        let doc = entry.document
-        let spans = TheoryLensEngine.buildChordSpans(document: doc, preset: entry.chordPreset, overrides: entry.chordOverrides)
-        let tex = entry.accompanimentTexture ?? doc.preferredTexture ?? .swanRipple
+        let spans = TheoryLensEngine.buildChordSpans(document: doc, preset: chordPreset, overrides: chordOverrides)
+        let tex = texture ?? doc.preferredTexture ?? .swanRipple
         let voice = FeltPianoSynth.Timbre.from(voice: doc.preferredVoice ?? .singingCello)
 
         inlinePlayTask = Task { @MainActor in
@@ -274,7 +297,7 @@ public struct MusicBoxShelfView: View {
             var lastSpan = -1
             let total = doc.totalDuration
 
-            while !Task.isCancelled && playingEntryID == entry.id {
+            while !Task.isCancelled && playingEntryID == id {
                 let elapsed = Date().timeIntervalSince(start)
                 if let sp = spans.first(where: { elapsed >= $0.startTime && elapsed < $0.endTime }), sp.id != lastSpan {
                     lastSpan = sp.id
@@ -296,7 +319,9 @@ public struct MusicBoxShelfView: View {
                 if elapsed >= total { break }
                 try? await Task.sleep(nanoseconds: 25_000_000)
             }
-            if !Task.isCancelled { playingEntryID = nil }
+            if !Task.isCancelled && playingEntryID == id {
+                playingEntryID = nil
+            }
         }
     }
 
@@ -306,21 +331,64 @@ public struct MusicBoxShelfView: View {
         playingEntryID = nil
     }
 
-    // MARK: - 2. 28 Masterpiece Disc Cards
+    // MARK: - 2. 28 Playable Masterpiece Vinyl Cards (Zero Essay Clutter)
 
     private var masterpieceDiscsSection: some View {
         ForEach(filteredSpecimens) { spec in
             let voice = spec.preferredVoice ?? .concertPiano
-            HStack(alignment: .center, spacing: 14) {
-                MiniOrbitalDiscPreview(
-                    document: spec,
-                    isNight: palette.isNight,
-                    isSpinning: false,
-                    spinStartTime: 0
-                )
-                .frame(width: 72, height: 72)
+            let isPlayingThis = playingEntryID == spec.id
+            let modeColor = spec.scaleMode.skyAuroraColor(isNight: palette.isNight)
 
-                VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    MiniOrbitalDiscPreview(
+                        document: spec,
+                        isNight: palette.isNight,
+                        isSpinning: isPlayingThis && !reduceMotion,
+                        spinStartTime: inlinePlayStart
+                    )
+                    .frame(width: 72, height: 72)
+
+                    Circle()
+                        .fill(palette.cardSurface.opacity(0.88))
+                        .frame(width: 24, height: 24)
+                        .overlay(
+                            Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(isPlayingThis ? palette.nightLampGold : palette.homeAnchor)
+                        )
+                }
+                .onTapGesture {
+                    if isPlayingThis {
+                        stopInlinePlay()
+                    } else {
+                        playInlineDocument(
+                            spec,
+                            id: spec.id,
+                            chordPreset: .autoMatch,
+                            chordOverrides: [:],
+                            texture: spec.preferredTexture
+                        )
+                    }
+                }
+                .accessibilityElement()
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(isPlayingThis ? "停止试听 \(spec.title)" : "试听 \(spec.title)")
+                .accessibilityAction {
+                    if isPlayingThis {
+                        stopInlinePlay()
+                    } else {
+                        playInlineDocument(
+                            spec,
+                            id: spec.id,
+                            chordPreset: .autoMatch,
+                            chordOverrides: [:],
+                            texture: spec.preferredTexture
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         Text(spec.title)
                             .font(.subheadline.weight(.bold))
@@ -340,59 +408,66 @@ public struct MusicBoxShelfView: View {
                         }
                     }
 
-                    if let insight = spec.composerInsight {
-                        Text(insight)
-                            .font(.caption2)
-                            .foregroundStyle(palette.secondaryInk)
-                            .lineLimit(2)
-                    }
+                    HStack(spacing: 8) {
+                        Button {
+                            if isPlayingThis {
+                                stopInlinePlay()
+                            } else {
+                                playInlineDocument(
+                                    spec,
+                                    id: spec.id,
+                                    chordPreset: .autoMatch,
+                                    chordOverrides: [:],
+                                    texture: spec.preferredTexture
+                                )
+                            }
+                        } label: {
+                            Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
+                                .font(.caption.weight(.bold))
+                                .frame(width: 34, height: 28)
+                                .background(Capsule().fill(isPlayingThis ? palette.nightLampGold : palette.homeAnchor))
+                                .foregroundStyle((isPlayingThis || palette.isNight) ? Color(hex: 0x1B2245) : .white)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isPlayingThis ? "停止试听" : "试听 \(spec.title)")
 
-                    HStack(spacing: 7) {
                         Button {
                             stopInlinePlay()
                             onPlayAlongSpecimen(spec)
                         } label: {
-                            Label("跟灯弹", systemImage: "sparkles")
-                                .font(.caption2.weight(.bold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Capsule().fill(palette.homeAnchor))
-                                .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
+                            Image(systemName: "sparkles")
+                                .font(.caption.weight(.bold))
+                                .frame(width: 34, height: 28)
+                                .background(Capsule().fill(palette.nightLampGold.opacity(0.18)))
+                                .foregroundStyle(palette.nightLampGold)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("跟灯弹 \(spec.title)")
 
                         Button {
                             stopInlinePlay()
                             onEditSpecimenOnBoard(spec)
                         } label: {
-                            Label("打开", systemImage: "record.circle")
-                                .font(.caption2.weight(.semibold))
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 6)
+                            Image(systemName: "record.circle")
+                                .font(.caption.weight(.bold))
+                                .frame(width: 34, height: 28)
                                 .background(Capsule().fill(palette.shelfSurface))
                                 .foregroundStyle(palette.primaryInk)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("在主舞台打开 \(spec.title)")
 
                         Button {
                             stopInlinePlay()
                             onBorrowAtmosphere(spec)
                         } label: {
-                            HStack(spacing: 4) {
-                                ChimmoCraftMark(
-                                    .atmosphereHorizon,
-                                    color: spec.scaleMode.skyAuroraColor(isNight: palette.isNight)
-                                )
-                                .frame(width: 11, height: 11)
-                                Text("套用风格")
-                            }
-                            .font(.caption2.weight(.semibold))
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(spec.scaleMode.skyAuroraColor(isNight: palette.isNight).opacity(0.14)))
-                            .foregroundStyle(spec.scaleMode.skyAuroraColor(isNight: palette.isNight))
+                            ChimmoCraftMark(.atmosphereHorizon, color: modeColor)
+                                .frame(width: 13, height: 13)
+                                .frame(width: 34, height: 28)
+                                .background(Capsule().fill(modeColor.opacity(0.14)))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("套用 \(spec.title) 风格")
                     }
                 }
             }

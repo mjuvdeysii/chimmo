@@ -183,7 +183,7 @@ public struct VinylPostcardCanvasView: View {
         let outerR = platterR * 0.90
         let total = snapshot.totalDuration
 
-        // 1. 4 幕情绪外弧 + 情绪锚词
+        // 1. 4 幕情绪外弧 + 珍珠锚点（无绕圈文字）
         for span in snapshot.chordSpans {
             let a0 = -Double.pi / 2.0 + (span.startTime / total) * 2.0 * Double.pi + 0.04
             let a1 = -Double.pi / 2.0 + (span.endTime / total) * 2.0 * Double.pi - 0.04
@@ -191,17 +191,17 @@ public struct VinylPostcardCanvasView: View {
             let col = span.chord.color(isNight: snapshot.isNight)
             var arc = Path()
             arc.addArc(center: center, radius: haloR, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false)
-            ctx.stroke(arc, with: .color(col.opacity(0.75)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
+            ctx.stroke(arc, with: .color(col.opacity(0.22)), style: StrokeStyle(lineWidth: 9.0, lineCap: .round))
+            ctx.stroke(arc, with: .color(col.opacity(0.80)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
 
             let midA = (a0 + a1) * 0.5
             let lPt = CGPoint(
-                x: center.x + CGFloat(cos(midA)) * (haloR + 14.0),
-                y: center.y + CGFloat(sin(midA)) * (haloR + 14.0)
+                x: center.x + CGFloat(cos(midA)) * haloR,
+                y: center.y + CGFloat(sin(midA)) * haloR
             )
-            let txt = Text(span.chord.shortMoodGlyph)
-                .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                .foregroundStyle(col.opacity(0.92))
-            ctx.draw(txt, at: lPt, anchor: .center)
+            let pearlRect = CGRect(x: lPt.x - 3.0, y: lPt.y - 3.0, width: 6.0, height: 6.0)
+            ctx.fill(Path(ellipseIn: pearlRect), with: .color(.white.opacity(0.92)))
+            ctx.stroke(Path(ellipseIn: pearlRect), with: .color(col), lineWidth: 1.3)
         }
 
         // 2. 陶瓷/黑胶底盘 + 微音槽 + 12 刻度

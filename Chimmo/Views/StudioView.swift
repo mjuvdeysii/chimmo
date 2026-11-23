@@ -92,6 +92,7 @@ public final class StudioViewModel: ObservableObject {
     @Published public var statusToast: String? = nil
     @Published public var canUndo: Bool = false
     @Published public var currentSavedEntryID: UUID? = nil
+    @Published public var lastSavedPulse: Int = 0
 
     @Published public var activeChordSpanID: Int = 0
     @Published public var activeGuidedMoment: GuidedStoryMoment? = SpecimenLibrary.saintSaensTheSwan.guidedMoments?.first
@@ -111,6 +112,7 @@ public final class StudioViewModel: ObservableObject {
     private var undoStack: [MelodyDocument] = []
     private var playbackTask: Task<Void, Never>?
     private var contextEchoTask: Task<Void, Never>?
+    private var previewArpeggioTask: Task<Void, Never>?
     private var lastFreeNoteTime: Date?
     private var toastTask: Task<Void, Never>?
     private var lastScrubTime: Double? = nil
@@ -138,11 +140,6 @@ public final class StudioViewModel: ObservableObject {
     public func toggleShadowCounterpoint() {
         shadowCounterpointEnabled.toggle()
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.45)
-        showToast(
-            shadowCounterpointEnabled
-                ? "已开启自动伴唱"
-                : "已关闭自动伴唱"
-        )
     }
 
     public func toggleMusicHaptics() {
@@ -150,11 +147,6 @@ public final class StudioViewModel: ObservableObject {
         if musicHapticsEnabled {
             AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         }
-        showToast(
-            musicHapticsEnabled
-                ? "已开启节拍震动"
-                : "已关闭节拍震动"
-        )
     }
 
     public func setPlaybackRate(_ rate: Double) {
@@ -162,8 +154,6 @@ public final class StudioViewModel: ObservableObject {
         playbackRate = clamped
         clock.setRate(clamped)
         AcousticHapticsEngine.shared.playScrubTick()
-        let formatted = String(format: "%.2g×", clamped)
-        showToast("播放速度：\(formatted)")
     }
 
     public var smartHints: [SmartPitchHint] {
@@ -253,7 +243,6 @@ public final class StudioViewModel: ObservableObject {
         liveTapTimestamps.removeAll()
         isTappingRhythm = true
         AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
-        showToast("不管音高，按节奏快慢点敲即可")
     }
 
     public func recordRhythmDrumTap() {
@@ -336,7 +325,6 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes.first?.id
         smartHintActive = true
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已生成 \(shapedNotes.count) 个音，点一下即可调整")
         togglePlayback()
     }
 
@@ -391,7 +379,6 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes.first?.id
         smartHintActive = false
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("已生成 \(shaped.count) 个音")
         togglePlayback()
     }
 
@@ -440,7 +427,6 @@ public final class StudioViewModel: ObservableObject {
                     if let first = document.notes.first {
                         clock.setScrubTime(first.displayOnset(grooveStrength: document.grooveStrength))
                     }
-                    showToast("整首弹完啦，可再弹一遍或自由修改")
                 } else {
                     let next = document.notes[followGlowIndex]
                     let nextOnset = next.displayOnset(grooveStrength: document.grooveStrength)
@@ -451,8 +437,6 @@ public final class StudioViewModel: ObservableObject {
                 synth.playNote(frequency: hz, velocity: 0.45, decay: 1.0, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
                 rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex)
                 AcousticHapticsEngine.shared.playPitchTouch(laneIndex: lane.index, isHome: lane.degree == 1, isTension: member.isTensionDegree)
-                let expected = XylophoneLane.lane(at: targetLane)
-                showToast("请敲亮灯的「\(expected.digitLabel)」")
             }
             return
         }
@@ -552,7 +536,6 @@ public final class StudioViewModel: ObservableObject {
             selectedBeadID = document.notes.first?.id
         }
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("已套用「\(template.label)」")
         togglePlayback()
     }
 
@@ -590,7 +573,6 @@ public final class StudioViewModel: ObservableObject {
         smartHintActive = false
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("已扩展为 \(document.notes.count) 个音")
         togglePlayback()
     }
 
@@ -611,7 +593,6 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = varied.notes.first?.id
         smartHintActive = false
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已生成你的新变奏")
         togglePlayback()
     }
 
@@ -645,7 +626,6 @@ public final class StudioViewModel: ObservableObject {
         smartHintActive = false
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已录下 \(beads.count) 个音")
         togglePlayback()
     }
 
@@ -688,18 +668,14 @@ public final class StudioViewModel: ObservableObject {
         }
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已套用《\(specimen.title)》的风格与音色")
         togglePlayback()
     }
 
     public func toggleSmartPitchHints() {
         smartHintActive.toggle()
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-        if smartHintActive {
-            if selectedBeadID == nil {
-                selectedBeadID = document.notes.first?.id
-            }
-            showToast("已标出推荐的 3 个音高")
+        if smartHintActive && selectedBeadID == nil {
+            selectedBeadID = document.notes.first?.id
         }
     }
 
@@ -715,7 +691,6 @@ public final class StudioViewModel: ObservableObject {
                 clock.setScrubTime(first.displayOnset(grooveStrength: document.grooveStrength))
             }
             AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.6)
-            showToast("跟着亮灯敲琴条，演奏完这一拍自动跳下一拍")
         } else {
             clock.setScrubTime(nil)
         }
@@ -724,11 +699,6 @@ public final class StudioViewModel: ObservableObject {
     public func togglePentatonicSafe() {
         pentatonicSafe.toggle()
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-        showToast(
-            pentatonicSafe
-                ? "已隐藏 4 和 7，保留五声顺耳音"
-                : "已显示全部 8 个音（含 4 和 7）"
-        )
     }
 
     public func selectBead(_ id: UUID, playContext: Bool = true) {
@@ -822,7 +792,6 @@ public final class StudioViewModel: ObservableObject {
             if let newIdx = document.notes.firstIndex(where: { $0.id == newBead.id }) {
                 playContextEcho(upToIndex: newIdx)
             }
-            showToast("已插入 1 个音，点下方彩条改音高")
         } else {
             triggerLadderMember(.taono, octaveOffset: 0)
         }
@@ -836,7 +805,6 @@ public final class StudioViewModel: ObservableObject {
         followGlowActive = false
         AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
         capturePipeline.startRecording()
-        showToast(document.notes.isEmpty ? "开始录音，哼完再点一次停止" : "按高低起伏哼一遍就行")
     }
 
     public func finishRelativeContourHum() {
@@ -856,7 +824,6 @@ public final class StudioViewModel: ObservableObject {
                     clock.updateTotalDuration(document.totalDuration)
                     selectedBeadID = document.notes.first?.id
                     AcousticHapticsEngine.shared.playResolutionExhale()
-                    showToast("已按你的哼唱调好音高")
                     togglePlayback()
                 } else if !capturePipeline.statusMessage.isEmpty {
                     showToast(capturePipeline.statusMessage)
@@ -882,7 +849,6 @@ public final class StudioViewModel: ObservableObject {
                     pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(document)
                     selectedBeadID = document.notes.first?.id
                     AcousticHapticsEngine.shared.playResolutionExhale()
-                    showToast("已录下 \(snapped.notes.count) 个音")
                     togglePlayback()
                 } else if !capturePipeline.statusMessage.isEmpty {
                     showToast(capturePipeline.statusMessage)
@@ -894,13 +860,51 @@ public final class StudioViewModel: ObservableObject {
     // MARK: - Core Actions (Preserves 100% Unit-Test Compatibility)
 
     public func setScaleMode(_ mode: ScaleMode) {
-        guard document.scaleMode != mode else { return }
-        pushUndo()
-        document.scaleMode = mode
+        if document.scaleMode != mode {
+            pushUndo()
+            document.scaleMode = mode
+        }
+        previewArpeggioTask?.cancel()
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
-        let hz = mode.frequencyHz(rootMIDI: document.rootMIDI, degree: 3, octaveOffset: 0)
-        synth.playNote(frequency: hz, velocity: 0.58, decay: 1.4, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
-        showToast("\(mode.label)：\(mode.skyPhilosophy)")
+
+        let degrees = mode.signaturePreviewDegrees
+        let rootMIDI = document.rootMIDI
+        let timbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+        let shouldShimmer = cradleEnabled
+        let tex = accompanimentTexture
+
+        if shouldShimmer {
+            synth.playDiatonicChord(
+                rootMIDI: rootMIDI,
+                mode: mode,
+                chord: .I,
+                texture: tex,
+                spanDuration: 1.15,
+                intensity: 0.52
+            )
+        }
+        if let firstDeg = degrees.first {
+            let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: firstDeg, octaveOffset: 0)
+            synth.playNote(frequency: hz, velocity: 0.56, decay: 1.05, timbre: timbre)
+        }
+        let rest = Array(degrees.dropFirst())
+        if !rest.isEmpty {
+            previewArpeggioTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                for (offset, deg) in rest.enumerated() {
+                    try? await Task.sleep(nanoseconds: 105_000_000)
+                    if Task.isCancelled { return }
+                    let isLast = offset == rest.count - 1
+                    let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: 0)
+                    self.synth.playNote(
+                        frequency: hz,
+                        velocity: isLast ? 0.62 : 0.52,
+                        decay: isLast ? 1.35 : 0.95,
+                        timbre: timbre
+                    )
+                }
+            }
+        }
     }
 
     public func triggerLadderMember(_ member: ChimmoMember, octaveOffset: Int = 0) {
@@ -978,7 +982,6 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         playContextEcho(upToIndex: idx)
-        showToast(delta > 0 ? "音符变长了" : "音符变短了")
     }
 
     public func deleteSelectedBead() {
@@ -993,7 +996,6 @@ public final class StudioViewModel: ObservableObject {
             selectedBeadID = document.notes[min(idx, document.notes.count - 1)].id
         }
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-        showToast("已删除")
     }
 
     public func cycleSpanChord(spanIndex: Int) {
@@ -1011,26 +1013,42 @@ public final class StudioViewModel: ObservableObject {
             spanDuration: max(1.0, currentSpan.endTime - currentSpan.startTime),
             intensity: 0.85
         )
-        showToast("第 \(spanIndex + 1) 段和弦换为「\(next.moodTitle)」")
     }
 
     public func setChordPreset(_ preset: ChordProgressionPreset) {
         chordPreset = preset
         chordOverrides.removeAll()
-        showToast(preset == .off ? "已关闭伴奏" : "已开启伴奏")
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
     }
 
     public func setAccompanimentTexture(_ texture: AccompanimentTexture) {
         accompanimentTexture = texture
         if chordPreset == .off { chordPreset = .autoMatch }
-        showToast("伴奏：\(texture.label)")
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.35)
+        synth.playDiatonicChord(
+            rootMIDI: document.rootMIDI,
+            mode: document.scaleMode,
+            chord: .I,
+            texture: texture,
+            spanDuration: 1.35,
+            intensity: 0.78
+        )
     }
 
     public func setMelodyVoice(_ voice: MelodyVoice) {
         melodyVoice = voice
-        let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: 3, octaveOffset: 0)
-        synth.playNote(frequency: hz, velocity: 0.62, decay: 1.5, timbre: FeltPianoSynth.Timbre.from(voice: voice))
-        showToast("音色：\(voice.label)")
+        previewArpeggioTask?.cancel()
+        let timbre = FeltPianoSynth.Timbre.from(voice: voice)
+        let mode = document.scaleMode
+        let rootMIDI = document.rootMIDI
+        let hz1 = mode.frequencyHz(rootMIDI: rootMIDI, degree: 1, octaveOffset: 0)
+        synth.playNote(frequency: hz1, velocity: 0.58, decay: 1.15, timbre: timbre)
+        previewArpeggioTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 110_000_000)
+            guard let self, !Task.isCancelled else { return }
+            let hz5 = mode.frequencyHz(rootMIDI: rootMIDI, degree: 5, octaveOffset: 0)
+            self.synth.playNote(frequency: hz5, velocity: 0.64, decay: 1.45, timbre: timbre)
+        }
     }
 
     public func startBlankCanvas() {
@@ -1060,7 +1078,6 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         activeGuidedMoment = nil
         lastFreeNoteTime = nil
-        showToast("空白画布已就绪")
     }
 
     public func openSpecimen(_ specimen: MelodyDocument, autoPlay: Bool = true) {
@@ -1092,7 +1109,6 @@ public final class StudioViewModel: ObservableObject {
         if let first = specimen.notes.first {
             clock.setScrubTime(first.displayOnset(grooveStrength: specimen.grooveStrength))
         }
-        showToast("跟着亮灯敲，弹奏《\(specimen.title)》")
     }
 
     public func openSavedEntry(_ entry: SavedMelodyEntry, autoPlay: Bool = true) {
@@ -1118,7 +1134,7 @@ public final class StudioViewModel: ObservableObject {
 
     public func saveCurrentToNotebook(moodSticker: String? = nil) {
         guard !document.notes.isEmpty else {
-            showToast("先写几个音再保存")
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
             return
         }
         var docToSave = document
@@ -1140,8 +1156,8 @@ public final class StudioViewModel: ObservableObject {
         )
         currentSavedEntryID = saved.id
         document = saved.document
+        lastSavedPulse &+= 1
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已保存到曲库：\(saved.document.title)")
     }
 
     // MARK: - Playback Sequencer (Zero 60Hz SwiftUI Invalidation)
@@ -1304,6 +1320,8 @@ public final class StudioViewModel: ObservableObject {
     }
 
     public func stopPlayback() {
+        previewArpeggioTask?.cancel()
+        previewArpeggioTask = nil
         playbackTask?.cancel()
         playbackTask = nil
         isPlaying = false
@@ -1496,6 +1514,9 @@ public struct StudioView: View {
                     onStartNewTap: {
                         selectedTab = .board
                         vm.startRhythmTap()
+                    },
+                    onWillPlayInline: {
+                        vm.stopPlayback()
                     }
                 )
             }

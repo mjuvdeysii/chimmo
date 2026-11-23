@@ -68,6 +68,17 @@ public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
         self == .forestDorian || self == .wistfulMinor
     }
 
+    /// 每种情绪风格的辨识度听觉试听音阶（点击即用耳朵区分，无需读文字解释）
+    public var signaturePreviewDegrees: [Int] {
+        switch self {
+        case .cloudLydian:      return [1, 3, 4, 5]
+        case .brightMajor:      return [1, 3, 5]
+        case .goldenMixolydian: return [1, 3, 5, 7]
+        case .forestDorian:     return [1, 3, 5, 6]
+        case .wistfulMinor:     return [1, 3, 5, 6]
+        }
+    }
+
     /// 相对主音 Do = 0 的 7 阶半音偏移
     public var semitoneOffsets: [Int] {
         switch self {

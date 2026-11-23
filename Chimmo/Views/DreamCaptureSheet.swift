@@ -25,9 +25,9 @@ public struct DreamCaptureSheet: View {
         NavigationStack {
             VStack(spacing: 14) {
                 Picker("创作方式", selection: $modeTab) {
-                    Text("敲节奏·画线").tag(0)
+                    Text("节奏").tag(0)
                     Text("哼唱").tag(1)
-                    Text("更多玩法").tag(2)
+                    Text("更多").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
@@ -68,46 +68,12 @@ public struct DreamCaptureSheet: View {
         }
     }
 
-    // MARK: - Tab 0: Drum Tap + 1-Finger Mountain Sketch + 4 Instant Hills
+    // MARK: - Tab 0: Sculptural Drum Pad + Ghost-Wave Sketch Canvas + Pure Curve Presets
 
     private var rhythmAndSketchSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // A. 敲节奏
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("第 1 步 · 敲出节奏")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                    Spacer()
-                    if !vm.liveTapTimestamps.isEmpty {
-                        Button("重敲") {
-                            vm.resetRhythmTaps()
-                        }
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.secondaryInk)
-                    }
-                }
-
-                // 实时拍柱预览条
-                HStack(spacing: 5) {
-                    if vm.liveTapTimestamps.isEmpty {
-                        Text("按心里快慢点几下，或直接画下方线条")
-                            .font(.caption2)
-                            .foregroundStyle(palette.secondaryInk)
-                    } else {
-                        ForEach(0..<vm.liveTapTimestamps.count, id: \.self) { idx in
-                            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                .fill(palette.homeAnchor.opacity(idx == vm.liveTapTimestamps.count - 1 ? 1.0 : 0.65))
-                                .frame(width: 12, height: idx == 0 ? 28 : 20)
-                        }
-                        Spacer()
-                        Text("\(vm.liveTapTimestamps.count) 拍")
-                            .font(.caption.weight(.bold).monospacedDigit())
-                            .foregroundStyle(palette.homeAnchor)
-                    }
-                }
-                .frame(height: 30)
-
+            // A. 雕塑感敲节奏鼓面（无文字说明）
+            VStack(spacing: 10) {
                 Button {
                     if !vm.isTappingRhythm {
                         vm.startRhythmTap()
@@ -118,361 +84,435 @@ public struct DreamCaptureSheet: View {
                         drumScale = 1.0
                     }
                 } label: {
-                    HStack(spacing: 12) {
-                        ChimmoCraftBadge(
-                            .drumPulse,
-                            accent: palette.nightLampGold,
-                            surface: palette.shelfSurface,
-                            size: 46
-                        )
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("点这里敲节奏")
-                                .font(.headline.weight(.bold))
-                                .foregroundStyle(palette.primaryInk)
-                            Text("不管音高，只敲快慢")
-                                .font(.caption2)
-                                .foregroundStyle(palette.secondaryInk)
-                        }
-                        Spacer()
-                    }
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(palette.cardSurface)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .strokeBorder(palette.homeAnchor.opacity(0.5), lineWidth: 1.8)
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .strokeBorder(palette.homeAnchor.opacity(0.42), lineWidth: 1.6)
                             )
-                    )
+
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .strokeBorder(palette.nightLampGold.opacity(0.24), lineWidth: 1.5)
+                                    .frame(width: 60, height: 60)
+                                Circle()
+                                    .strokeBorder(palette.homeAnchor.opacity(0.32), lineWidth: 1.2)
+                                    .frame(width: 48, height: 48)
+                                ChimmoCraftBadge(
+                                    .drumPulse,
+                                    accent: palette.nightLampGold,
+                                    surface: palette.shelfSurface,
+                                    size: 42
+                                )
+                            }
+
+                            if vm.liveTapTimestamps.isEmpty {
+                                HStack(spacing: 6) {
+                                    ForEach(0..<4, id: \.self) { idx in
+                                        Circle()
+                                            .fill(palette.homeAnchor.opacity(idx == 0 ? 0.55 : 0.22))
+                                            .frame(width: idx == 0 ? 9 : 6.5, height: idx == 0 ? 9 : 6.5)
+                                    }
+                                }
+                            } else {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 5) {
+                                        ForEach(0..<vm.liveTapTimestamps.count, id: \.self) { idx in
+                                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                                .fill(palette.homeAnchor.opacity(idx == vm.liveTapTimestamps.count - 1 ? 1.0 : 0.65))
+                                                .frame(width: 10, height: idx == 0 ? 28 : 20)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(minLength: 4)
+
+                            if !vm.liveTapTimestamps.isEmpty {
+                                Text("\(vm.liveTapTimestamps.count)")
+                                    .font(.caption.weight(.heavy).monospacedDigit())
+                                    .foregroundStyle(palette.homeAnchor)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
                     .scaleEffect(drumScale)
                 }
                 .buttonStyle(.plain)
-            }
-
-            // B. 单指画高低线
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("第 2 步 · 画一条高低线")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                    Spacer()
-                    if !sketchPoints.isEmpty {
-                        Button("重写") { sketchPoints.removeAll() }
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(palette.secondaryInk)
-                    }
-                }
-
-                GeometryReader { geo in
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(palette.cardSurface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .strokeBorder(palette.divider, lineWidth: 1.2)
-                            )
-
-                        if sketchPoints.isEmpty {
-                            VStack(spacing: 4) {
-                                Image(systemName: "scribble.variable")
-                                    .font(.title2)
-                                    .foregroundStyle(palette.homeAnchor.opacity(0.65))
-                                Text("从左往右画出起伏，松手即生成")
-                                    .font(.caption2)
-                                    .foregroundStyle(palette.secondaryInk)
-                            }
-                        } else {
-                            Canvas { ctx, _ in
-                                var path = Path()
-                                path.move(to: sketchPoints[0])
-                                for pt in sketchPoints.dropFirst() {
-                                    path.addLine(to: pt)
-                                }
-                                ctx.stroke(
-                                    path,
-                                    with: .color(palette.homeAnchor),
-                                    style: StrokeStyle(lineWidth: 4.0, lineCap: .round, lineJoin: .round)
-                                )
-                            }
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { val in
-                                sketchSize = geo.size
-                                let clamped = CGPoint(
-                                    x: max(0, min(geo.size.width, val.location.x)),
-                                    y: max(0, min(geo.size.height, val.location.y))
-                                )
-                                if sketchPoints.isEmpty {
-                                    sketchPoints = [clamped]
-                                } else if hypot(clamped.x - sketchPoints.last!.x, clamped.y - sketchPoints.last!.y) > 4 {
-                                    sketchPoints.append(clamped)
-                                }
-                            }
-                            .onEnded { _ in
-                                let targetSlots = max(6, vm.liveTapTimestamps.count >= 2 ? vm.liveTapTimestamps.count : max(6, vm.document.notes.count))
-                                let heights = ContourSketchSampler.sampleContour(points: sketchPoints, in: geo.size, slotCount: targetSlots)
-                                if vm.liveTapTimestamps.count >= 2 {
-                                    vm.commitRhythmTaps(withDrawnHeights: heights)
-                                } else {
-                                    vm.applyDrawnHillContour(heights)
-                                }
-                                dismiss()
-                            }
-                    )
-                }
-                .frame(height: 132)
-            }
-
-            // C. 或者套用预设起伏
-            VStack(alignment: .leading, spacing: 8) {
-                Text("或直接套用预设起伏")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(palette.secondaryInk)
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    ForEach(MelodyHillTemplate.allCases) { hill in
+                .overlay(alignment: .topTrailing) {
+                    if !vm.liveTapTimestamps.isEmpty {
                         Button {
-                            if vm.liveTapTimestamps.count >= 2 {
-                                vm.commitRhythmTaps()
-                            }
-                            vm.applyHillTemplate(hill)
-                            dismiss()
+                            vm.resetRhythmTaps()
                         } label: {
-                            HStack(spacing: 8) {
-                                DreamMiniHillShape(profile: hill.previewProfile, color: palette.homeAnchor)
-                                    .frame(width: 28, height: 14)
-                                Text(hill.label)
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(palette.primaryInk)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 11)
-                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(palette.cardSurface))
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.caption2.weight(.bold))
+                                .padding(7)
+                                .background(Circle().fill(palette.shelfSurface))
+                                .foregroundStyle(palette.secondaryInk)
                         }
                         .buttonStyle(.plain)
+                        .offset(x: -8, y: 8)
+                        .accessibilityLabel("重敲节奏")
+                    }
+                }
+                .accessibilityLabel("敲击鼓面输入节奏")
+            }
+
+            // B. 单指画线板（虚线呼吸导引波形，零文字说明）
+            GeometryReader { geo in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(palette.cardSurface)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .strokeBorder(palette.divider, lineWidth: 1.2)
+                        )
+
+                    if sketchPoints.isEmpty {
+                        Canvas { ctx, size in
+                            let padX: CGFloat = 28
+                            let w = max(1, size.width - padX * 2)
+                            let midY = size.height * 0.52
+                            let amp = size.height * 0.24
+                            var ghost = Path()
+                            let steps = 40
+                            for i in 0...steps {
+                                let t = Double(i) / Double(steps)
+                                let x = padX + CGFloat(t) * w
+                                let y = midY - CGFloat(sin(t * Double.pi * 2.0 - 0.35)) * amp
+                                if i == 0 { ghost.move(to: CGPoint(x: x, y: y)) }
+                                else { ghost.addLine(to: CGPoint(x: x, y: y)) }
+                            }
+                            ctx.stroke(
+                                ghost,
+                                with: .color(palette.homeAnchor.opacity(0.32)),
+                                style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [5, 7])
+                            )
+                            let startPt = CGPoint(x: padX, y: midY - CGFloat(sin(-0.35)) * amp)
+                            ctx.fill(
+                                Path(ellipseIn: CGRect(x: startPt.x - 5.5, y: startPt.y - 5.5, width: 11, height: 11)),
+                                with: .color(palette.nightLampGold.opacity(0.75))
+                            )
+                        }
+                        .allowsHitTesting(false)
+                    } else {
+                        Canvas { ctx, _ in
+                            var path = Path()
+                            path.move(to: sketchPoints[0])
+                            for pt in sketchPoints.dropFirst() {
+                                path.addLine(to: pt)
+                            }
+                            ctx.stroke(
+                                path,
+                                with: .color(palette.homeAnchor),
+                                style: StrokeStyle(lineWidth: 4.0, lineCap: .round, lineJoin: .round)
+                            )
+                        }
+                    }
+                }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { val in
+                            sketchSize = geo.size
+                            let clamped = CGPoint(
+                                x: max(0, min(geo.size.width, val.location.x)),
+                                y: max(0, min(geo.size.height, val.location.y))
+                            )
+                            if sketchPoints.isEmpty {
+                                sketchPoints = [clamped]
+                            } else if hypot(clamped.x - sketchPoints.last!.x, clamped.y - sketchPoints.last!.y) > 4 {
+                                sketchPoints.append(clamped)
+                            }
+                        }
+                        .onEnded { _ in
+                            let targetSlots = max(6, vm.liveTapTimestamps.count >= 2 ? vm.liveTapTimestamps.count : max(6, vm.document.notes.count))
+                            let heights = ContourSketchSampler.sampleContour(points: sketchPoints, in: geo.size, slotCount: targetSlots)
+                            if vm.liveTapTimestamps.count >= 2 {
+                                vm.commitRhythmTaps(withDrawnHeights: heights)
+                            } else {
+                                vm.applyDrawnHillContour(heights)
+                            }
+                            dismiss()
+                        }
+                )
+                .overlay(alignment: .topTrailing) {
+                    if !sketchPoints.isEmpty {
+                        Button {
+                            sketchPoints.removeAll()
+                        } label: {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.caption2.weight(.bold))
+                                .padding(7)
+                                .background(Circle().fill(palette.shelfSurface))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(8)
+                        .accessibilityLabel("重画线条")
                     }
                 }
             }
+            .frame(height: 138)
+            .accessibilityLabel("单指绘制高低旋律线")
 
-            // D. 一键切入闭眼夜灯触觉剧场
+            // C. 纯曲线预设起伏（2×2 矢量曲线卡）
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(MelodyHillTemplate.allCases) { hill in
+                    Button {
+                        if vm.liveTapTimestamps.count >= 2 {
+                            vm.commitRhythmTaps()
+                        }
+                        vm.applyHillTemplate(hill)
+                        dismiss()
+                    } label: {
+                        DreamMiniHillShape(profile: hill.previewProfile, color: palette.homeAnchor)
+                            .frame(width: 76, height: 28)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(hill.label)
+                }
+            }
+
+            // D. 闭眼滑音入口
             Button {
                 showNightLampTheater = true
             } label: {
                 HStack(spacing: 10) {
                     ChimmoCraftBadge(
                         .nightLampHalo,
-                        accent: palette.nightLampGold,
-                        surface: palette.shelfSurface,
+                        accent: Color(hex: 0xFFB84D),
+                        surface: Color(hex: 0x151D3B),
                         size: 32
                     )
-                    Text("闭眼滑音 · 靠震动选音高")
+                    Text("闭眼滑音")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
+                        .foregroundStyle(Color(hex: 0xF4EBDD))
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(palette.secondaryInk)
+                        .foregroundStyle(Color(hex: 0xFFB84D))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(hex: 0x121A37)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(palette.nightLampGold.opacity(0.32), lineWidth: 1.0)
+                        .strokeBorder(Color(hex: 0xFFB84D).opacity(0.35), lineWidth: 1.0)
                 )
             }
             .buttonStyle(.plain)
         }
     }
 
-    // MARK: - Tab 1: Forgiving Hum Capture
+    // MARK: - Tab 1: Audio-Reactive Hum Capture (Zero Instruction Paragraphs)
 
     private var forgivingHumSection: some View {
-        VStack(spacing: 16) {
+        let level = CGFloat(vm.capturePipeline.inputLevel)
+        let isRec = vm.capturePipeline.isRecording
+
+        return VStack(spacing: 22) {
             ZStack {
                 Circle()
-                    .fill(palette.melodyTerracotta.opacity(0.14))
-                    .frame(width: 118, height: 118)
-                    .scaleEffect(1.0 + CGFloat(vm.capturePipeline.inputLevel) * 0.35)
+                    .strokeBorder(
+                        (isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(0.18),
+                        lineWidth: 1.5
+                    )
+                    .frame(width: 148, height: 148)
+                    .scaleEffect(1.0 + level * 0.25)
 
                 Circle()
-                    .fill(vm.capturePipeline.isRecording ? palette.melodyTerracotta : palette.homeAnchor)
-                    .frame(width: 78, height: 78)
+                    .fill((isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(0.14))
+                    .frame(width: 118, height: 118)
+                    .scaleEffect(1.0 + level * 0.35)
 
-                Image(systemName: vm.capturePipeline.isRecording ? "stop.fill" : "mic.fill")
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(.white)
+                Button {
+                    if isRec {
+                        vm.finishRelativeContourHum()
+                        dismiss()
+                    } else {
+                        vm.startHumCapture()
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(isRec ? palette.melodyTerracotta : palette.homeAnchor)
+                            .frame(width: 82, height: 82)
+                            .shadow(color: (isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(0.32), radius: 12, y: 4)
+
+                        Image(systemName: isRec ? "stop.fill" : "mic.fill")
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isRec ? "停止录音" : "开始哼唱录音")
             }
-            .onTapGesture {
-                if vm.capturePipeline.isRecording {
-                    vm.finishRelativeContourHum()
-                    dismiss()
-                } else {
-                    vm.startHumCapture()
+
+            HStack(spacing: 7) {
+                ForEach(0..<7, id: \.self) { idx in
+                    let weight = 1.0 - abs(Double(idx) - 3.0) * 0.18
+                    let h = isRec
+                        ? max(8.0, CGFloat(8.0 + Double(level) * 32.0 * weight))
+                        : CGFloat(10.0 + weight * 10.0)
+                    Capsule()
+                        .fill((isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(isRec ? 0.88 : 0.35))
+                        .frame(width: 5, height: h)
+                        .animation(.spring(response: 0.16, dampingFraction: 0.7), value: h)
                 }
             }
-
-            Text(vm.capturePipeline.isRecording ? "正在录音，哼完点红色按钮停止" : "随口哼一段（跑调也没关系）")
-                .font(.headline.weight(.bold))
-                .foregroundStyle(palette.primaryInk)
-
-            Text(
-                vm.document.notes.isEmpty
-                    ? "轻声哼一句，自动转成旋律"
-                    : "按你哼的高低变化，套用到当前节奏"
-            )
-            .font(.caption)
-            .foregroundStyle(palette.secondaryInk)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 12)
+            .frame(height: 36)
 
             if !vm.capturePipeline.statusMessage.isEmpty {
                 Text(vm.capturePipeline.statusMessage)
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(palette.homeAnchor)
+                    .foregroundStyle(palette.melodyTerracotta)
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(20)
+        .padding(.vertical, 32)
+        .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(palette.cardSurface))
     }
 
-    // MARK: - Tab 2: Night-Lamp Theater, Magic Origami, Seed Variations, Follow-the-Glow & Blank Canvas
+    // MARK: - Tab 2: Compact Action Tiles + Visual Seed Bars
+
+    private func shortMotifLabel(_ op: MotifGrowthOperation) -> String {
+        switch op {
+        case .climbSequence: return "升高"
+        case .waterMirror: return "倒影"
+        case .tearfulSuspension: return "收尾"
+        case .fullFourPhrasePoem: return "扩四句"
+        }
+    }
 
     private var followAndBlankSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // 闭眼夜灯触觉剧场入口卡片（深曜夜色 × 温暖琥珀矢量夜灯图标）
-            Button {
-                showNightLampTheater = true
-            } label: {
-                HStack(spacing: 12) {
-                    ChimmoCraftBadge(
-                        .nightLampHalo,
-                        accent: Color(hex: 0xFFB84D),
-                        surface: Color(hex: 0x151D3B),
-                        size: 42
-                    )
-                    VStack(alignment: .leading, spacing: 3) {
+            // 顶部三联紧凑动作卡
+            HStack(spacing: 10) {
+                Button {
+                    showNightLampTheater = true
+                } label: {
+                    VStack(spacing: 8) {
+                        ChimmoCraftBadge(
+                            .nightLampHalo,
+                            accent: Color(hex: 0xFFB84D),
+                            surface: Color(hex: 0x1B244B),
+                            size: 38
+                        )
                         Text("闭眼滑音")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(Color(hex: 0xF4EBDD))
-                        Text("不用看屏幕，上下滑动靠震动选音高，松手记下")
-                            .font(.caption2)
-                            .foregroundStyle(Color(hex: 0xAEB4CC))
-                    }
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: 0xFFB84D))
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: 0x121A37), Color(hex: 0x1B244B)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .strokeBorder(Color(hex: 0xFFB84D).opacity(0.40), lineWidth: 1.1)
-                        )
-                )
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                if !vm.followGlowActive {
-                    vm.toggleFollowGlow()
-                }
-                dismiss()
-            } label: {
-                HStack(spacing: 12) {
-                    ChimmoCraftBadge(
-                        .followBeacon,
-                        accent: palette.nightLampGold,
-                        surface: palette.shelfSurface,
-                        size: 38
-                    )
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("跟灯弹这首曲子")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(palette.primaryInk)
-                        Text("跟着亮起的彩条按自己的速度敲，就能弹完整首")
-                            .font(.caption2)
-                            .foregroundStyle(palette.secondaryInk)
-                    }
-                    Spacer()
-                }
-                .padding(16)
-                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
-            }
-            .buttonStyle(.plain)
-
-            // 扩写旋律
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    ChimmoCraftMark(.origamiPrism, color: palette.homeAnchor)
-                        .frame(width: 14, height: 14)
-                    Text("把几颗音扩成完整旋律")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.secondaryInk)
-                }
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    ForEach(MotifGrowthOperation.allCases) { op in
-                        Button {
-                            vm.growCurrentWithOrigami(op)
-                            dismiss()
-                        } label: {
-                            HStack(spacing: 7) {
-                                Image(systemName: op.iconName)
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(palette.homeAnchor)
-                                Text(op.label)
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(palette.primaryInk)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(palette.cardSurface))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-
-            // 改开头 3 个音生成变奏
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    HStack(spacing: 6) {
-                        ChimmoCraftMark(.seedBloom, color: palette.homeAnchor)
-                            .frame(width: 14, height: 14)
-                        Text("改开头 3 个音，生成新变奏")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(palette.secondaryInk)
+                            .foregroundStyle(Color(hex: 0xF4EBDD))
                     }
-                    Spacer()
-                    if seedShifts != [0, 0, 0] {
-                        Button("重置") { seedShifts = [0, 0, 0] }
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(palette.secondaryInk)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color(hex: 0x121A37))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .strokeBorder(Color(hex: 0xFFB84D).opacity(0.35), lineWidth: 1.0)
+                            )
+                    )
                 }
+                .buttonStyle(.plain)
 
+                Button {
+                    if !vm.followGlowActive {
+                        vm.toggleFollowGlow()
+                    }
+                    dismiss()
+                } label: {
+                    VStack(spacing: 8) {
+                        ChimmoCraftBadge(
+                            .followBeacon,
+                            accent: palette.nightLampGold,
+                            surface: palette.shelfSurface,
+                            size: 38
+                        )
+                        Text("跟灯弹")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(palette.primaryInk)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    vm.startBlankCanvas()
+                    dismiss()
+                } label: {
+                    VStack(spacing: 8) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(palette.homeAnchor.opacity(0.14))
+                                .frame(width: 38, height: 38)
+                            Image(systemName: "plus")
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(palette.homeAnchor)
+                        }
+                        Text("新画布")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(palette.primaryInk)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
+                }
+                .buttonStyle(.plain)
+            }
+
+            // 扩写旋律 2×2 精简瓷砖
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(MotifGrowthOperation.allCases) { op in
+                    Button {
+                        vm.growCurrentWithOrigami(op)
+                        dismiss()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: op.iconName)
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(palette.homeAnchor)
+                            Text(shortMotifLabel(op))
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(palette.primaryInk)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 13)
+                        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(op.label)
+                }
+            }
+
+            // 开头三音变奏高度条（纯视觉高度表达音高偏移）
+            VStack(spacing: 10) {
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { idx in
-                        VStack(spacing: 6) {
-                            Text("第 \(idx + 1) 音")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(palette.secondaryInk)
+                        let shift = seedShifts[idx]
+                        let norm = Double(shift + 3) / 6.0
+                        VStack(spacing: 8) {
+                            ZStack(alignment: .bottom) {
+                                Capsule()
+                                    .fill(palette.shelfSurface)
+                                    .frame(width: 10, height: 34)
+                                Capsule()
+                                    .fill(shift == 0 ? palette.secondaryInk.opacity(0.55) : palette.homeAnchor)
+                                    .frame(width: 10, height: CGFloat(10.0 + norm * 24.0))
+                            }
+                            .animation(.spring(response: 0.22, dampingFraction: 0.72), value: shift)
+
                             HStack(spacing: 8) {
                                 Button {
                                     seedShifts[idx] = max(-3, seedShifts[idx] - 1)
@@ -483,10 +523,11 @@ public struct DreamCaptureSheet: View {
                                         .background(Circle().fill(palette.shelfSurface))
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("第 \(idx + 1) 音降低")
 
-                                Text(seedShifts[idx] == 0 ? "0" : (seedShifts[idx] > 0 ? "+\(seedShifts[idx])" : "\(seedShifts[idx])"))
+                                Text(shift == 0 ? "0" : (shift > 0 ? "+\(shift)" : "\(shift)"))
                                     .font(.caption.weight(.heavy).monospacedDigit())
-                                    .foregroundStyle(seedShifts[idx] == 0 ? palette.primaryInk : palette.homeAnchor)
+                                    .foregroundStyle(shift == 0 ? palette.primaryInk : palette.homeAnchor)
                                     .frame(minWidth: 20)
 
                                 Button {
@@ -498,56 +539,46 @@ public struct DreamCaptureSheet: View {
                                         .background(Circle().fill(palette.shelfSurface))
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("第 \(idx + 1) 音升高")
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(palette.cardSurface))
+                        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
                     }
                 }
 
-                Button {
-                    let applied = seedShifts == [0, 0, 0] ? [1, -1, 2] : seedShifts
-                    vm.applyMasterpieceSeedShifts(applied)
-                    dismiss()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "wand.and.stars")
-                            .font(.caption.weight(.bold))
-                        Text(seedShifts == [0, 0, 0] ? "随机改 3 个音" : "生成我的变奏")
-                            .font(.caption.weight(.bold))
+                HStack(spacing: 8) {
+                    if seedShifts != [0, 0, 0] {
+                        Button {
+                            seedShifts = [0, 0, 0]
+                        } label: {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.caption.weight(.bold))
+                                .padding(12)
+                                .background(Circle().fill(palette.cardSurface))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("重置变奏")
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(Capsule().fill(palette.homeAnchor))
-                    .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
-                }
-                .buttonStyle(.plain)
-            }
 
-            Button {
-                vm.startBlankCanvas()
-                dismiss()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(palette.homeAnchor)
-                        .frame(width: 36)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("新建空白画布")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(palette.primaryInk)
-                        Text("清空当前音符，开启五音模式从头开始")
-                            .font(.caption2)
-                            .foregroundStyle(palette.secondaryInk)
+                    Button {
+                        let applied = seedShifts == [0, 0, 0] ? [1, -1, 2] : seedShifts
+                        vm.applyMasterpieceSeedShifts(applied)
+                        dismiss()
+                    } label: {
+                        Label("变奏", systemImage: "wand.and.stars")
+                            .font(.subheadline.weight(.bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 11)
+                            .background(Capsule().fill(palette.homeAnchor))
+                            .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
                     }
-                    Spacer()
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("生成变奏")
                 }
-                .padding(16)
-                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
             }
-            .buttonStyle(.plain)
         }
     }
 }

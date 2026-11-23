@@ -546,4 +546,62 @@ final class SpecimenIntegrityTests: XCTestCase {
             }
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound5PreLinguisticInstrument() throws {
+        // 1. 每种调式具备不少于 3 个音的听觉签名试听琶音
+        for mode in ScaleMode.allCases {
+            let preview = mode.signaturePreviewDegrees
+            XCTAssertGreaterThanOrEqual(preview.count, 3)
+            XCTAssertTrue(preview.allSatisfy { (1...7).contains($0) })
+        }
+
+        // 2. 无字声光引导几何：跟灯弹光桥、空画布呼吸引导环、选中音符径向滑轨
+        let bridge = PreLinguisticGuideGeometry.followLightBridgePath(
+            from: CGPoint(x: 160, y: 120),
+            toLaneIndex: 3,
+            canvasSize: CGSize(width: 320, height: 300)
+        )
+        XCTAssertEqual(bridge.start, CGPoint(x: 160, y: 120))
+        XCTAssertEqual(bridge.end.x, (3.5 / 8.0) * 320.0, accuracy: 1e-4)
+        XCTAssertEqual(bridge.end.y, 298.0, accuracy: 1e-4)
+
+        let rings = PreLinguisticGuideGeometry.emptyCanvasPulseRadii(phase: 0.28, maxRadius: 120)
+        XCTAssertEqual(rings.count, 3)
+        XCTAssertLessThan(rings[0].radius, rings[1].radius)
+        XCTAssertLessThan(rings[1].radius, rings[2].radius)
+        XCTAssertTrue(rings.allSatisfy { (0.0...1.0).contains($0.opacity) })
+
+        let ticks = PreLinguisticGuideGeometry.selectionTractionTicks(
+            center: CGPoint(x: 100, y: 100),
+            angle: 0.0,
+            innerRadius: 30,
+            outerRadius: 90
+        )
+        XCTAssertEqual(ticks.inner.x, 130.0, accuracy: 1e-4)
+        XCTAssertEqual(ticks.inner.y, 100.0, accuracy: 1e-4)
+        XCTAssertEqual(ticks.outer.x, 190.0, accuracy: 1e-4)
+        XCTAssertEqual(ticks.outer.y, 100.0, accuracy: 1e-4)
+
+        // 3. 声音先行，零文字说教弹窗：切换风格/伴奏/音色静默无 Toast，保存触发图标脉冲
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v012-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.setScaleMode(.cloudLydian)
+        XCTAssertEqual(vm.document.scaleMode, .cloudLydian)
+        XCTAssertNil(vm.statusToast)
+
+        vm.setAccompanimentTexture(.feltWaltz)
+        XCTAssertEqual(vm.accompanimentTexture, .feltWaltz)
+        XCTAssertNil(vm.statusToast)
+
+        vm.setMelodyVoice(.celestaGlass)
+        XCTAssertEqual(vm.melodyVoice, .celestaGlass)
+        XCTAssertNil(vm.statusToast)
+
+        let pulseBefore = vm.lastSavedPulse
+        vm.saveCurrentToNotebook()
+        XCTAssertEqual(vm.lastSavedPulse, pulseBefore + 1)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }
