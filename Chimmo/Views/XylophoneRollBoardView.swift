@@ -257,7 +257,7 @@ public struct XylophoneRollBoardView: View {
             )
             .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.06), radius: 12, y: 4)
         }
-        .frame(maxHeight: .infinity, minHeight: 245)
+        .frame(minHeight: 245, maxHeight: .infinity)
     }
 
     private func woodenXylophoneColumn(width: CGFloat, padV: CGFloat, rowH: CGFloat, totalH: CGFloat) -> some View {
