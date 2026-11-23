@@ -798,3 +798,81 @@ public enum SketchPitchBrushMapper {
         return (now - lastTriggerTime) >= minimumTriggerIntervalSeconds
     }
 }
+
+/// 无损弹性节拍吸附引擎：在不改动原始自由时间轴（rawOnset/rawDuration）的基础上估算舒适律动网格并生成转盘辐射拍线。
+public enum GrooveAlignmentEngine {
+    public static func estimatedBeatStep(for notes: [NoteBead]) -> Double {
+        let sorted = notes.sorted { $0.rawOnset < $1.rawOnset }
+        guard sorted.count >= 2 else { return 0.36 }
+        var gaps: [Double] = []
+        gaps.reserveCapacity(sorted.count - 1)
+        for i in 1..<sorted.count {
+            let g = sorted[i].rawOnset - sorted[i - 1].rawOnset
+            if g.isFinite && g >= 0.08 {
+                gaps.append(g)
+            }
+        }
+        guard !gaps.isEmpty else { return 0.36 }
+        let ordered = gaps.sorted()
+        let mid = ordered[ordered.count / 2]
+        return max(0.18, min(0.72, mid))
+    }
+
+    public static func populateQuantizedTargets(for notes: [NoteBead]) -> [NoteBead] {
+        guard notes.count >= 2 else { return notes }
+        let baseStep = estimatedBeatStep(for: notes)
+        let grid = max(0.10, baseStep * 0.5)
+        let sorted = notes.sorted { $0.rawOnset < $1.rawOnset }
+        let anchor = max(0.08, sorted[0].rawOnset)
+        var out: [NoteBead] = []
+        out.reserveCapacity(sorted.count)
+        var prevSnapped = -1.0
+
+        for (idx, var bead) in sorted.enumerated() {
+            let candidate = anchor + ((bead.rawOnset - anchor) / grid).rounded() * grid
+            var snapped = max(0.08, candidate)
+            if idx > 0 {
+                snapped = max(prevSnapped + 0.10, snapped)
+            }
+            prevSnapped = snapped
+            let snappedDur = max(0.16, min(2.40, max(1.0, (bead.rawDuration / grid).rounded()) * grid))
+            bead.quantizedOnset = snapped
+            bead.quantizedDuration = snappedDur
+            out.append(bead)
+        }
+        return out
+    }
+
+    public static func beatSpokeAngles(totalDuration: Double, grooveStrength: Double, beatStep: Double) -> [Double] {
+        guard totalDuration.isFinite && totalDuration > 0.4,
+              grooveStrength.isFinite && grooveStrength > 0.05 else {
+            return []
+        }
+        let step = max(0.22, min(1.0, beatStep.isFinite ? beatStep : 0.36))
+        let count = max(4, min(24, Int((totalDuration / step).rounded())))
+        return (0..<count).map { Double($0) / Double(count) * 2.0 * Double.pi }
+    }
+}
+
+/// 音区胸腔移调辅助：在不破坏简谱级数前提下将主音基准限制在舒适听觉音区（48...72 MIDI）。
+public enum RootTranspositionHelper {
+    public static let minMIDI: Int = 48
+    public static let maxMIDI: Int = 72
+    public static let presetOffsets: [Int] = [-5, -2, 0, 2, 5]
+
+    public static func clampedRootMIDI(_ midi: Int) -> Int {
+        max(minMIDI, min(maxMIDI, midi))
+    }
+
+    public static func compactLabel(forRootMIDI midi: Int) -> String {
+        let delta = clampedRootMIDI(midi) - 60
+        if delta == 0 { return "0" }
+        return delta > 0 ? "+\(delta)" : "\(delta)"
+    }
+
+    public static func accessibilityLabel(forRootMIDI midi: Int) -> String {
+        let delta = clampedRootMIDI(midi) - 60
+        if delta == 0 { return "原调" }
+        return delta > 0 ? "升高 \(delta) 半音" : "降低 \(-delta) 半音"
+    }
+}

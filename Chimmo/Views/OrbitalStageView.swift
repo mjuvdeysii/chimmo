@@ -593,6 +593,30 @@ public struct OrbitalStageView: View {
         diamond.closeSubpath()
         ctx.fill(diamond, with: .color(palette.nightLampGold.opacity(0.92)))
 
+        // 节拍律动辐射引力线（仅当开启「微稳/整齐」律动吸附时温柔显影，随转盘共转）
+        if vm.document.grooveStrength > 0.08 {
+            let beatStep = GrooveAlignmentEngine.estimatedBeatStep(for: vm.document.notes)
+            let spokes = GrooveAlignmentEngine.beatSpokeAngles(
+                totalDuration: total,
+                grooveStrength: vm.document.grooveStrength,
+                beatStep: beatStep
+            )
+            for (idx, baseAng) in spokes.enumerated() {
+                let ang = -Double.pi / 2.0 + baseAng + discRot
+                let isMajor = idx % 4 == 0
+                let rIn = m.innerRadius * 0.96
+                let rOut = m.outerRadius * 1.03
+                var spoke = Path()
+                spoke.move(to: CGPoint(x: m.center.x + CGFloat(cos(ang)) * rIn, y: m.center.y + CGFloat(sin(ang)) * rIn))
+                spoke.addLine(to: CGPoint(x: m.center.x + CGFloat(cos(ang)) * rOut, y: m.center.y + CGFloat(sin(ang)) * rOut))
+                ctx.stroke(
+                    spoke,
+                    with: .color(palette.nightLampGold.opacity(vm.document.grooveStrength * (palette.isNight ? (isMajor ? 0.24 : 0.12) : (isMajor ? 0.22 : 0.11)))),
+                    style: StrokeStyle(lineWidth: isMajor ? 1.2 : 0.65, lineCap: .round)
+                )
+            }
+        }
+
         // 3. 8 条同心彩虹音高轨道
         for laneIdx in 0..<8 {
             let lane = XylophoneLane.lane(at: laneIdx)
@@ -2558,6 +2582,62 @@ private struct MoodAndSoundSheet: View {
                     }
                     .padding(6)
                     .background(Capsule().fill(palette.shelfSurface.opacity(0.60)))
+
+                    // 律动贴合度（自由 ⇄ 整齐）与全曲音区重心（−5 … +5）双行胶囊
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "metronome")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(palette.secondaryInk)
+                                .frame(width: 22)
+                                .accessibilityHidden(true)
+
+                            ForEach([(0.0, "自由"), (0.5, "微稳"), (1.0, "整齐")], id: \.0) { val, label in
+                                let active = abs(vm.document.grooveStrength - val) < 0.25
+                                Button {
+                                    vm.setGrooveStrength(val)
+                                } label: {
+                                    Text(label)
+                                        .font(.caption.weight(.bold))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("节奏\(label)")
+                                .accessibilityValue(active ? "已选中" : "")
+                            }
+                        }
+
+                        HStack(spacing: 6) {
+                            Image(systemName: "tuningfork")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(palette.secondaryInk)
+                                .frame(width: 22)
+                                .accessibilityHidden(true)
+
+                            ForEach(RootTranspositionHelper.presetOffsets, id: \.self) { offset in
+                                let targetMIDI = 60 + offset
+                                let active = vm.document.rootMIDI == targetMIDI
+                                Button {
+                                    vm.setRootMIDI(targetMIDI)
+                                } label: {
+                                    Text(RootTranspositionHelper.compactLabel(forRootMIDI: targetMIDI))
+                                        .font(.caption.weight(.bold).monospacedDigit())
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("音区\(RootTranspositionHelper.accessibilityLabel(forRootMIDI: targetMIDI))")
+                                .accessibilityValue(active ? "已选中" : "")
+                            }
+                        }
+                    }
+                    .padding(6)
+                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface.opacity(0.60)))
 
                     // 2. 情绪风格（5 格色光磁砖，点一下立刻响起特征琶音，靠耳朵选）
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 94), spacing: 8)], spacing: 8) {

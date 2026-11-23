@@ -114,15 +114,15 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 音乐播放时的低功耗掌心触觉脉冲（已做 85ms 节流，兼顾听障无障碍节奏共振与电池寿命）
-    public func playPlaybackNotePulse(laneIndex: Int, isHome: Bool, isTension: Bool) {
+    /// 音乐播放时的低功耗掌心触觉脉冲（已做 85ms 节流，支持小节重拍温和强震，兼顾听障无障碍节奏共振与电池寿命）
+    public func playPlaybackNotePulse(laneIndex: Int, isHome: Bool, isTension: Bool, isDownbeat: Bool = false) {
         let now = CACurrentMediaTime()
         guard now - lastPlaybackPulseTime >= 0.085 else { return }
         lastPlaybackPulseTime = now
 
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
-            softImpact.impactOccurred(intensity: isHome ? 0.65 : 0.40)
+            softImpact.impactOccurred(intensity: isDownbeat ? 0.78 : (isHome ? 0.65 : 0.40))
             ensureEngineAsync()
             return
         }
@@ -148,8 +148,10 @@ public final class AcousticHapticsEngine {
         }
 
         let clamped = max(0, min(7, laneIndex))
-        let intensity: Float = isHome ? 0.62 : Float(0.34 + Double(clamped) * 0.03)
-        let sharpness: Float = isHome ? 0.20 : Float(0.18 + Double(clamped) * 0.08)
+        let intensity: Float = isDownbeat
+            ? (isHome ? 0.76 : 0.62)
+            : (isHome ? 0.62 : Float(0.34 + Double(clamped) * 0.03))
+        let sharpness: Float = isDownbeat ? 0.15 : (isHome ? 0.20 : Float(0.18 + Double(clamped) * 0.08))
         let ev = CHHapticEvent(
             eventType: .hapticTransient,
             parameters: [

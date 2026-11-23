@@ -973,4 +973,61 @@ final class SpecimenIntegrityTests: XCTestCase {
             }
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound13TranspositionGrooveAndDownbeat() throws {
+        // 1. GrooveAlignmentEngine 无损节拍吸附与辐射拍线校验
+        let unaligned = [
+            NoteBead(degree: 1, rawOnset: 0.12, rawDuration: 0.32),
+            NoteBead(degree: 3, rawOnset: 0.49, rawDuration: 0.29),
+            NoteBead(degree: 5, rawOnset: 0.87, rawDuration: 0.34),
+            NoteBead(degree: 1, rawOnset: 1.24, rawDuration: 0.62)
+        ]
+        let aligned = GrooveAlignmentEngine.populateQuantizedTargets(for: unaligned)
+        XCTAssertEqual(aligned.count, 4)
+        for i in 0..<4 {
+            XCTAssertEqual(aligned[i].rawOnset, unaligned[i].rawOnset, accuracy: 1e-6, "原始呼吸时间戳不得被抹除")
+            XCTAssertNotNil(aligned[i].quantizedOnset)
+            if i > 0 {
+                XCTAssertGreaterThanOrEqual((aligned[i].quantizedOnset ?? 0) - (aligned[i - 1].quantizedOnset ?? 0), 0.10)
+            }
+            XCTAssertEqual(aligned[i].displayOnset(grooveStrength: 0.0), aligned[i].rawOnset, accuracy: 1e-6)
+            XCTAssertEqual(aligned[i].displayOnset(grooveStrength: 1.0), aligned[i].quantizedOnset ?? -1.0, accuracy: 1e-6)
+        }
+        XCTAssertTrue(GrooveAlignmentEngine.beatSpokeAngles(totalDuration: 3.0, grooveStrength: 0.0, beatStep: 0.36).isEmpty)
+        let spokes = GrooveAlignmentEngine.beatSpokeAngles(totalDuration: 3.0, grooveStrength: 1.0, beatStep: 0.36)
+        XCTAssertTrue((4...24).contains(spokes.count))
+
+        // 2. RootTranspositionHelper 音区钳位、简标与零 Emoji 无障碍文案校验
+        XCTAssertEqual(RootTranspositionHelper.clampedRootMIDI(30), 48)
+        XCTAssertEqual(RootTranspositionHelper.clampedRootMIDI(99), 72)
+        XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 60), "0")
+        XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 65), "+5")
+        XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 55), "-5")
+        for offset in RootTranspositionHelper.presetOffsets {
+            let lbl = RootTranspositionHelper.accessibilityLabel(forRootMIDI: 60 + offset)
+            XCTAssertFalse(lbl.isEmpty)
+            for scalar in lbl.unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji)
+            }
+        }
+
+        // 3. StudioViewModel 全曲音区移调与律动混合（不改简谱级数且零日常 Toast）
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v020-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.document = MelodyDocument(title: "移调测试", subtitle: "", rootMIDI: 60, grooveStrength: 0.0, notes: unaligned)
+        let originalDegrees = vm.document.notes.map(\.degree)
+
+        vm.setRootMIDI(65)
+        XCTAssertEqual(vm.document.rootMIDI, 65)
+        XCTAssertEqual(vm.document.notes.map(\.degree), originalDegrees, "移调不得更改原有简谱相对数字")
+        XCTAssertNil(vm.statusToast)
+
+        vm.setGrooveStrength(1.0)
+        XCTAssertEqual(vm.document.grooveStrength, 1.0, accuracy: 1e-5)
+        XCTAssertTrue(vm.document.notes.allSatisfy { $0.quantizedOnset != nil })
+        vm.stopPlayback()
+    }
 }

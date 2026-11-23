@@ -1179,6 +1179,37 @@ public final class StudioViewModel: ObservableObject {
         }
     }
 
+    public func setRootMIDI(_ midi: Int) {
+        let clamped = RootTranspositionHelper.clampedRootMIDI(midi)
+        if document.rootMIDI != clamped {
+            pushUndo()
+            document.rootMIDI = clamped
+        }
+        previewArpeggioTask?.cancel()
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: clamped == 60)
+        let timbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+        let mode = document.scaleMode
+        let hz1 = mode.frequencyHz(rootMIDI: clamped, degree: 1, octaveOffset: 0)
+        synth.playNote(frequency: hz1, velocity: 0.58, decay: 1.15, timbre: timbre, pan: -0.08)
+        previewArpeggioTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 95_000_000)
+            guard let self, !Task.isCancelled else { return }
+            let hz5 = mode.frequencyHz(rootMIDI: clamped, degree: 5, octaveOffset: 0)
+            self.synth.playNote(frequency: hz5, velocity: 0.62, decay: 1.35, timbre: timbre, pan: 0.10)
+        }
+    }
+
+    public func setGrooveStrength(_ strength: Double) {
+        let clamped = strength.isFinite ? max(0.0, min(1.0, strength)) : 0.0
+        pushUndo()
+        if clamped > 0.01 {
+            document.notes = GrooveAlignmentEngine.populateQuantizedTargets(for: document.notes)
+        }
+        document.grooveStrength = clamped
+        clock.updateTotalDuration(document.totalDuration)
+        AcousticHapticsEngine.shared.playScrubTick()
+    }
+
     public func startBlankCanvas() {
         stopPlayback()
         contextEchoTask?.cancel()
@@ -1388,10 +1419,12 @@ public final class StudioViewModel: ObservableObject {
                     self.updateHarmonyDescriptor(for: bead.degree, at: onset)
 
                     if self.musicHapticsEnabled {
+                        let isDownbeat = (nextNoteIdx == 0) || (nextNoteIdx % 4 == 0)
                         AcousticHapticsEngine.shared.playPlaybackNotePulse(
                             laneIndex: laneIdx,
                             isHome: bead.degree == 1,
-                            isTension: lane.member.isTensionDegree
+                            isTension: lane.member.isTensionDegree,
+                            isDownbeat: isDownbeat
                         )
                     }
 
