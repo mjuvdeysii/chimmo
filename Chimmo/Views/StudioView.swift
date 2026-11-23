@@ -267,10 +267,21 @@ public final class StudioViewModel: ObservableObject {
             liveTapTimestamps.removeFirst()
         }
         liveTapTimestamps.append(now)
-        let isFirst = liveTapTimestamps.count == 1
-        AcousticHapticsEngine.shared.playBeatTap(isStrong: isFirst)
-        let hz = document.scaleMode.frequencyHz(rootMIDI: 60, degree: isFirst ? 1 : 5, octaveOffset: 0)
-        synth.playNote(frequency: hz, velocity: isFirst ? 0.54 : 0.36, decay: 0.42, timbre: .liquidHarp)
+        let tapIdx = max(0, liveTapTimestamps.count - 1)
+        let voice = RhythmDrumAccentMapper.tapVoice(forTapIndex: tapIdx)
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: voice.isDownbeat)
+        let hz = document.scaleMode.frequencyHz(
+            rootMIDI: document.rootMIDI,
+            degree: voice.degree,
+            octaveOffset: 0
+        )
+        synth.playNote(
+            frequency: hz,
+            velocity: voice.velocity,
+            decay: voice.isDownbeat ? 0.56 : 0.38,
+            timbre: .liquidHarp,
+            pan: voice.pan
+        )
     }
 
     public func resetRhythmTaps() {
@@ -717,6 +728,41 @@ public final class StudioViewModel: ObservableObject {
         smartHintActive = false
         AcousticHapticsEngine.shared.playResolutionExhale()
         togglePlayback()
+    }
+
+    /// 在「更多 · 变奏」调节开头三音高度柱时即点即响试听音高变化。
+    public func previewSeedShift(index: Int, shift: Int) {
+        guard index >= 0 && index < 3 else { return }
+        let baseDoc = document.notes.isEmpty ? SpecimenLibrary.saintSaensTheSwan : document
+        let defaultDegrees = [1, 3, 5]
+        let (baseDeg, baseOct): (Int, Int) = baseDoc.notes.indices.contains(index)
+            ? (baseDoc.notes[index].degree, baseDoc.notes[index].octaveOffset)
+            : (defaultDegrees[index], 0)
+        let linear = baseOct * 7 + (baseDeg - 1) + shift
+        let clamped = max(-3, min(8, linear))
+        let newOct = Int(floor(Double(clamped) / 7.0))
+        let newDeg = max(1, min(7, clamped - newOct * 7 + 1))
+        let safeOct = max(-1, min(1, newOct))
+        let hz = baseDoc.scaleMode.frequencyHz(
+            rootMIDI: baseDoc.rootMIDI,
+            degree: newDeg,
+            octaveOffset: safeOct
+        )
+        let laneIdx = XylophoneLane.laneIndex(degree: newDeg, octaveOffset: safeOct)
+        let lane = XylophoneLane.lane(at: laneIdx)
+        let pan = Double(index - 1) * 0.24
+        synth.playNote(
+            frequency: hz,
+            velocity: 0.56,
+            decay: 0.95,
+            timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice),
+            pan: pan
+        )
+        AcousticHapticsEngine.shared.playPitchTouch(
+            laneIndex: laneIdx,
+            isHome: newDeg == 1,
+            isTension: lane.member.isTensionDegree
+        )
     }
 
     /// 将「闭眼夜灯触觉剧场」录下的星珠序列贴到星盘并立刻旋转试听。

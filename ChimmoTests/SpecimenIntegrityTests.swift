@@ -1252,4 +1252,50 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound18DrumAccentsSeedPreviewAndShelfHalo() {
+        // 1. 节奏鼓四拍重音/次重音/左右声像映射与安全边界
+        let beat1 = RhythmDrumAccentMapper.tapVoice(forTapIndex: 0)
+        let beat2 = RhythmDrumAccentMapper.tapVoice(forTapIndex: 1)
+        let beat3 = RhythmDrumAccentMapper.tapVoice(forTapIndex: 2)
+        let beat5 = RhythmDrumAccentMapper.tapVoice(forTapIndex: 4)
+        XCTAssertTrue(beat1.isDownbeat)
+        XCTAssertEqual(beat1.degree, 1)
+        XCTAssertGreaterThan(beat1.velocity, 0.5)
+        XCTAssertEqual(beat1.pan, 0.0, accuracy: 1e-6)
+        XCTAssertTrue(beat5.isDownbeat)
+        XCTAssertLessThan(beat2.pan, 0.0)
+        XCTAssertEqual(beat3.degree, 5)
+        XCTAssertGreaterThan(beat3.pan, 0.0)
+        XCTAssertEqual(RhythmDrumAccentMapper.tapVoice(forTapIndex: -3), beat1)
+
+        // 2. 动态间距节奏柱宽度映射与 NaN 防护
+        XCTAssertTrue(RhythmDrumAccentMapper.barVisualMetrics(timestamps: []).isEmpty)
+        let taps: [TimeInterval] = [10.0, 10.20, 11.15, 11.35, 11.80]
+        let bars = RhythmDrumAccentMapper.barVisualMetrics(timestamps: taps)
+        XCTAssertEqual(bars.count, 5)
+        XCTAssertTrue(bars[0].isDownbeat)
+        XCTAssertTrue(bars[4].isDownbeat)
+        XCTAssertLessThan(bars[0].widthPt, bars[1].widthPt) // 0.20s 比 0.95s 更窄
+        XCTAssertTrue((8.0...26.0).contains(bars[1].widthPt))
+
+        let nanBars = RhythmDrumAccentMapper.barVisualMetrics(timestamps: [1.0, .nan, .infinity])
+        XCTAssertEqual(nanBars.count, 3)
+        XCTAssertFalse(nanBars.contains(where: { $0.widthPt.isNaN || $0.heightPt.isNaN }))
+
+        // 3. 鼓点强弱声部录入 + 开头三音变奏即点试听（含空白文档回退）
+        let vm = StudioViewModel()
+        vm.startRhythmTap()
+        vm.recordRhythmDrumTap()
+        vm.recordRhythmDrumTap()
+        XCTAssertEqual(vm.liveTapTimestamps.count, 2)
+        vm.previewSeedShift(index: 0, shift: 2)
+        vm.previewSeedShift(index: 2, shift: -3)
+        vm.previewSeedShift(index: 9, shift: 1) // 越界保护
+        vm.startBlankCanvas()
+        vm.previewSeedShift(index: 1, shift: 1) // 空白画布回退试听不崩溃
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

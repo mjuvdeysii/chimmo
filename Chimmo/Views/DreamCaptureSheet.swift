@@ -12,6 +12,8 @@ public struct DreamCaptureSheet: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var modeTab: Int = 0
     @State private var drumScale: CGFloat = 1.0
+    @State private var drumShockwaveScale: CGFloat = 1.0
+    @State private var drumShockwaveOpacity: Double = 0.0
     @State private var sketchPoints: [CGPoint] = []
     @State private var sketchSize: CGSize = CGSize(width: 300, height: 140)
     @State private var seedShifts: [Int] = [0, 0, 0]
@@ -79,7 +81,7 @@ public struct DreamCaptureSheet: View {
 
     private var rhythmAndSketchSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // A. 雕塑感敲节奏鼓面（无文字说明）
+            // A. 雕塑感敲节奏鼓面（无文字说明，支持 4 拍重音/次重音环震波与动态时距柱）
             VStack(spacing: 10) {
                 Button {
                     if !vm.isTappingRhythm {
@@ -87,11 +89,20 @@ public struct DreamCaptureSheet: View {
                     }
                     vm.recordRhythmDrumTap()
                     drumScale = 0.94
-                    withAnimation(.spring(response: 0.22, dampingFraction: 0.6)) {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.6)) {
                         drumScale = 1.0
                     }
+                    if !reduceMotion {
+                        drumShockwaveScale = 0.85
+                        drumShockwaveOpacity = 0.55
+                        withAnimation(.easeOut(duration: 0.38)) {
+                            drumShockwaveScale = 1.42
+                            drumShockwaveOpacity = 0.0
+                        }
+                    }
                 } label: {
-                    ZStack {
+                    let barMetrics = RhythmDrumAccentMapper.barVisualMetrics(timestamps: vm.liveTapTimestamps)
+                    ZStack(alignment: .bottomTrailing) {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(palette.cardSurface)
                             .overlay(
@@ -101,6 +112,10 @@ public struct DreamCaptureSheet: View {
 
                         HStack(spacing: 14) {
                             ZStack {
+                                Circle()
+                                    .strokeBorder(palette.nightLampGold.opacity(drumShockwaveOpacity), lineWidth: 2.0)
+                                    .frame(width: 60, height: 60)
+                                    .scaleEffect(drumShockwaveScale)
                                 Circle()
                                     .strokeBorder(palette.nightLampGold.opacity(0.24), lineWidth: 1.5)
                                     .frame(width: 60, height: 60)
@@ -115,7 +130,7 @@ public struct DreamCaptureSheet: View {
                                 )
                             }
 
-                            if vm.liveTapTimestamps.isEmpty {
+                            if barMetrics.isEmpty {
                                 HStack(spacing: 6) {
                                     ForEach(0..<4, id: \.self) { idx in
                                         Circle()
@@ -125,47 +140,74 @@ public struct DreamCaptureSheet: View {
                                 }
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 5) {
-                                        ForEach(0..<vm.liveTapTimestamps.count, id: \.self) { idx in
+                                    HStack(alignment: .bottom, spacing: 4) {
+                                        ForEach(Array(barMetrics.enumerated()), id: \.offset) { idx, bar in
+                                            let isLatest = idx == barMetrics.count - 1
+                                            let barColor = bar.isDownbeat ? palette.nightLampGold : palette.homeAnchor
                                             RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                                .fill(palette.homeAnchor.opacity(idx == vm.liveTapTimestamps.count - 1 ? 1.0 : 0.65))
-                                                .frame(width: 10, height: idx == 0 ? 28 : 20)
+                                                .fill(barColor.opacity(isLatest ? 1.0 : 0.70))
+                                                .frame(width: bar.widthPt, height: bar.heightPt)
                                         }
                                     }
                                 }
+                                .padding(.trailing, 54)
                             }
 
                             Spacer(minLength: 4)
-
-                            if !vm.liveTapTimestamps.isEmpty {
-                                Text("\(vm.liveTapTimestamps.count)")
-                                    .font(.caption.weight(.heavy).monospacedDigit())
-                                    .foregroundStyle(palette.homeAnchor)
-                            }
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
+
+                        if !vm.liveTapTimestamps.isEmpty {
+                            Text("\(vm.liveTapTimestamps.count)")
+                                .font(.caption.weight(.heavy).monospacedDigit())
+                                .foregroundStyle(palette.homeAnchor)
+                                .padding(.trailing, 14)
+                                .padding(.bottom, 10)
+                        }
                     }
                     .scaleEffect(drumScale)
                 }
                 .buttonStyle(.plain)
                 .overlay(alignment: .topTrailing) {
                     if !vm.liveTapTimestamps.isEmpty {
-                        Button {
-                            vm.resetRhythmTaps()
-                        } label: {
-                            Image(systemName: "arrow.counterclockwise")
-                                .font(.caption2.weight(.bold))
-                                .padding(7)
-                                .background(Circle().fill(palette.shelfSurface))
-                                .foregroundStyle(palette.secondaryInk)
+                        HStack(spacing: 6) {
+                            if vm.liveTapTimestamps.count >= 2 {
+                                Button {
+                                    vm.commitRhythmTaps()
+                                    dismiss()
+                                } label: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.caption.weight(.bold))
+                                        .padding(6)
+                                        .background(Circle().fill(palette.shelfSurface))
+                                        .foregroundStyle(palette.homeAnchor)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("按当前节奏生成旋律")
+                            }
+                            Button {
+                                vm.resetRhythmTaps()
+                            } label: {
+                                Image(systemName: "arrow.counterclockwise")
+                                    .font(.caption2.weight(.bold))
+                                    .padding(7)
+                                    .background(Circle().fill(palette.shelfSurface))
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("重敲节奏")
                         }
-                        .buttonStyle(.plain)
-                        .offset(x: -8, y: 8)
-                        .accessibilityLabel("重敲节奏")
+                        .padding(8)
                     }
                 }
                 .accessibilityLabel("敲击鼓面输入节奏")
+                .accessibilityAction(named: "按当前节奏生成旋律") {
+                    if vm.liveTapTimestamps.count >= 2 {
+                        vm.commitRhythmTaps()
+                        dismiss()
+                    }
+                }
             }
 
             // B. 单指画线板（虚线呼吸导引波形，零文字说明）
@@ -328,6 +370,7 @@ public struct DreamCaptureSheet: View {
             }
             .frame(height: 138)
             .accessibilityLabel("单指绘制高低旋律线")
+            .accessibilityHint("也可使用下方预设旋律弧线或进入闭眼滑音逐音录制")
 
             // C. 纯曲线预设起伏（2×2 矢量曲线卡）
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -668,7 +711,9 @@ public struct DreamCaptureSheet: View {
 
                             HStack(spacing: 8) {
                                 Button {
-                                    seedShifts[idx] = max(-3, seedShifts[idx] - 1)
+                                    let next = max(-3, seedShifts[idx] - 1)
+                                    seedShifts[idx] = next
+                                    vm.previewSeedShift(index: idx, shift: next)
                                 } label: {
                                     Image(systemName: "minus")
                                         .font(.caption2.weight(.bold))
@@ -684,7 +729,9 @@ public struct DreamCaptureSheet: View {
                                     .frame(minWidth: 20)
 
                                 Button {
-                                    seedShifts[idx] = min(3, seedShifts[idx] + 1)
+                                    let next = min(3, seedShifts[idx] + 1)
+                                    seedShifts[idx] = next
+                                    vm.previewSeedShift(index: idx, shift: next)
                                 } label: {
                                     Image(systemName: "plus")
                                         .font(.caption2.weight(.bold))
@@ -705,6 +752,7 @@ public struct DreamCaptureSheet: View {
                     if seedShifts != [0, 0, 0] {
                         Button {
                             seedShifts = [0, 0, 0]
+                            AcousticHapticsEngine.shared.playScrubTick()
                         } label: {
                             Image(systemName: "arrow.counterclockwise")
                                 .font(.caption.weight(.bold))

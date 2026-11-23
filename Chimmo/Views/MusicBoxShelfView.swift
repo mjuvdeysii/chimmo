@@ -229,6 +229,7 @@ public struct MusicBoxShelfView: View {
     private func savedDiscCard(entry: SavedMelodyEntry, index: Int) -> some View {
         let isPlayingThis = playingEntryID == entry.id
         let dateStr = entry.updatedAt.formatted(date: .abbreviated, time: .shortened)
+        let entryModeColor = entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
 
         return HStack(spacing: 14) {
             ZStack {
@@ -237,7 +238,9 @@ public struct MusicBoxShelfView: View {
                     isNight: palette.isNight,
                     isPlaying: isPlayingThis,
                     reduceMotion: reduceMotion,
-                    spinStartTime: inlinePlayStart
+                    spinStartTime: inlinePlayStart,
+                    chordPreset: entry.chordPreset,
+                    chordOverrides: entry.chordOverrides
                 )
                 .frame(width: 74, height: 74)
 
@@ -247,7 +250,7 @@ public struct MusicBoxShelfView: View {
                     .overlay(
                         Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(palette.homeAnchor)
+                            .foregroundStyle(isPlayingThis ? palette.nightLampGold : palette.homeAnchor)
                     )
             }
             .onTapGesture {
@@ -263,7 +266,7 @@ public struct MusicBoxShelfView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
+                        .fill(entryModeColor)
                         .frame(width: 7, height: 7)
                     Text(dateStr)
                         .font(.caption2)
@@ -283,8 +286,8 @@ public struct MusicBoxShelfView: View {
                         Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
                             .font(.caption.weight(.bold))
                             .frame(width: 34, height: 28)
-                            .background(Capsule().fill(palette.homeAnchor))
-                            .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
+                            .background(Capsule().fill(isPlayingThis ? palette.nightLampGold : palette.homeAnchor))
+                            .foregroundStyle((isPlayingThis || palette.isNight) ? Color(hex: 0x1B2245) : .white)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(isPlayingThis ? "停止试听" : "试听")
@@ -333,8 +336,19 @@ public struct MusicBoxShelfView: View {
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(palette.cardSurface)
-                .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.25 : 0.06), radius: 10, y: 4)
+                .shadow(
+                    color: isPlayingThis
+                        ? entryModeColor.opacity(palette.isNight ? 0.34 : 0.16)
+                        : palette.primaryInk.opacity(palette.isNight ? 0.25 : 0.06),
+                    radius: isPlayingThis ? 13 : 10,
+                    y: 4
+                )
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(isPlayingThis ? entryModeColor.opacity(0.60) : Color.clear, lineWidth: 1.5)
+        )
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.28), value: isPlayingThis)
     }
 
     private func playInline(_ entry: SavedMelodyEntry) {
@@ -389,6 +403,14 @@ public struct MusicBoxShelfView: View {
                     let b = sorted[nextIdx]
                     let onset = b.displayOnset(grooveStrength: groove)
                     let dur = b.displayDuration(grooveStrength: groove)
+                    let bLaneIdx = XylophoneLane.laneIndex(degree: b.degree, octaveOffset: b.octaveOffset)
+                    let bLane = XylophoneLane.lane(at: bLaneIdx)
+                    AcousticHapticsEngine.shared.playPlaybackNotePulse(
+                        laneIndex: bLaneIdx,
+                        isHome: b.degree == 1,
+                        isTension: bLane.member.isTensionDegree,
+                        isDownbeat: nextIdx == 0 || nextIdx % 4 == 0
+                    )
                     let hz = doc.scaleMode.frequencyHz(rootMIDI: doc.rootMIDI, degree: b.degree, octaveOffset: b.octaveOffset)
                     let pan = AcousticSpatialPanMapper.pan(forBeatOnset: onset, totalDuration: total, visualMode: .orbitalDisc)
                     synth.playNote(frequency: hz, velocity: 0.60, decay: max(1.0, dur * 1.4), timbre: voice, pan: pan)
@@ -554,19 +576,52 @@ public struct MusicBoxShelfView: View {
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(palette.cardSurface)
-                    .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.2 : 0.04), radius: 8, y: 3)
+                    .shadow(
+                        color: isPlayingThis
+                            ? modeColor.opacity(palette.isNight ? 0.34 : 0.16)
+                            : palette.primaryInk.opacity(palette.isNight ? 0.2 : 0.04),
+                        radius: isPlayingThis ? 13 : 8,
+                        y: 3
+                    )
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(isPlayingThis ? modeColor.opacity(0.60) : Color.clear, lineWidth: 1.5)
+            )
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.28), value: isPlayingThis)
         }
     }
 }
 
-/// 迷你陶瓷星盘唱片缩略图（试听播放时同步转动、点亮正在唱出的音符并沿盘缘推进金弧进度环）
+/// 迷你陶瓷星盘唱片缩略图（试听播放时同步转动、点亮正在唱出的音符并沿盘缘推进和弦彩环与金弧进度）
 private struct MiniOrbitalDiscPreview: View {
     let document: MelodyDocument
     let isNight: Bool
     let isPlaying: Bool
     let reduceMotion: Bool
     let spinStartTime: Double
+    private let cachedSpans: [ChordSpan]
+
+    init(
+        document: MelodyDocument,
+        isNight: Bool,
+        isPlaying: Bool,
+        reduceMotion: Bool,
+        spinStartTime: Double,
+        chordPreset: ChordProgressionPreset = .autoMatch,
+        chordOverrides: [Int: DiatonicChord] = [:]
+    ) {
+        self.document = document
+        self.isNight = isNight
+        self.isPlaying = isPlaying
+        self.reduceMotion = reduceMotion
+        self.spinStartTime = spinStartTime
+        self.cachedSpans = TheoryLensEngine.buildChordSpans(
+            document: document,
+            preset: chordPreset,
+            overrides: chordOverrides
+        )
+    }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isPlaying)) { _ in
@@ -585,6 +640,25 @@ private struct MiniOrbitalDiscPreview: View {
 
                 ctx.fill(Path(ellipseIn: discRect), with: .color(discBg))
                 ctx.stroke(Path(ellipseIn: discRect), with: .color(rimCol.opacity(0.7)), lineWidth: 1.8)
+
+                // 盘缘四幕彩环（预缓存 ChordSpan 零高频重建）
+                if !cachedSpans.isEmpty {
+                    let rimArcR = maxR - 0.8
+                    for span in cachedSpans {
+                        let a0 = -Double.pi / 2.0 + (span.startTime / total) * 2.0 * Double.pi + rot + 0.04
+                        let a1 = -Double.pi / 2.0 + (span.endTime / total) * 2.0 * Double.pi + rot - 0.04
+                        guard a1 > a0 else { continue }
+                        var arc = Path()
+                        arc.addArc(center: c, radius: rimArcR, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false)
+                        let activeSpan = isPlaying && elapsed >= span.startTime && elapsed < span.endTime
+                        let spanCol = span.chord.color(isNight: isNight)
+                        ctx.stroke(
+                            arc,
+                            with: .color(spanCol.opacity(activeSpan ? 0.90 : 0.42)),
+                            style: StrokeStyle(lineWidth: activeSpan ? 2.4 : 1.5, lineCap: .round)
+                        )
+                    }
+                }
 
                 // 淡淡纹路
                 for ring in [0.46, 0.66, 0.84] {

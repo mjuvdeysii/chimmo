@@ -1027,3 +1027,54 @@ public enum PhraseNavigationMapper {
         min(4, notes.count)
     }
 }
+
+/// 节奏鼓双声部强弱声像与动态间距柱映射：让「拍节奏」像敲真手鼓般自带重拍胸腔感与长短时距轮廓。
+public enum RhythmDrumAccentMapper {
+    public struct TapVoice: Sendable, Equatable {
+        public let degree: Int
+        public let velocity: Double
+        public let pan: Double
+        public let isDownbeat: Bool
+    }
+
+    public struct BarMetric: Sendable, Equatable {
+        public let widthPt: CGFloat
+        public let heightPt: CGFloat
+        public let isDownbeat: Bool
+    }
+
+    public static func tapVoice(forTapIndex tapIndex: Int) -> TapVoice {
+        let idx = max(0, tapIndex)
+        switch idx % 4 {
+        case 0:
+            return TapVoice(degree: 1, velocity: 0.58, pan: 0.0, isDownbeat: true)
+        case 2:
+            return TapVoice(degree: 5, velocity: 0.44, pan: 0.18, isDownbeat: false)
+        case 1:
+            return TapVoice(degree: 3, velocity: 0.38, pan: -0.18, isDownbeat: false)
+        default:
+            return TapVoice(degree: 3, velocity: 0.36, pan: 0.14, isDownbeat: false)
+        }
+    }
+
+    public static func barVisualMetrics(timestamps: [TimeInterval]) -> [BarMetric] {
+        guard !timestamps.isEmpty else { return [] }
+        return timestamps.indices.map { i in
+            let isDownbeat = (i % 4 == 0)
+            let rawGap: Double
+            if i + 1 < timestamps.count {
+                let diff = timestamps[i + 1] - timestamps[i]
+                rawGap = diff.isFinite ? diff : 0.42
+            } else if i > 0 {
+                let diff = timestamps[i] - timestamps[i - 1]
+                rawGap = diff.isFinite ? diff : 0.42
+            } else {
+                rawGap = 0.42
+            }
+            let clampedGap = max(0.14, min(1.40, rawGap))
+            let widthPt = CGFloat(8.0 + ((clampedGap - 0.14) / 1.26) * 18.0)
+            let heightPt: CGFloat = isDownbeat ? 30.0 : (i % 4 == 2 ? 23.0 : 18.0)
+            return BarMetric(widthPt: widthPt, heightPt: heightPt, isDownbeat: isDownbeat)
+        }
+    }
+}
