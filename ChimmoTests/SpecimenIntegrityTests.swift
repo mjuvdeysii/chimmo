@@ -1030,4 +1030,37 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertTrue(vm.document.notes.allSatisfy { $0.quantizedOnset != nil })
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound14RoomReflectionsAndRiverBeatGrid() throws {
+        // 1. GrooveAlignmentEngine 曲线视图垂直拍线生成与零律动退化
+        XCTAssertTrue(GrooveAlignmentEngine.beatTimestamps(totalDuration: 3.2, grooveStrength: 0.0, beatStep: 0.36).isEmpty)
+        let stamps = GrooveAlignmentEngine.beatTimestamps(totalDuration: 3.2, grooveStrength: 0.5, beatStep: 0.40)
+        XCTAssertEqual(stamps.count, 8)
+        XCTAssertEqual(stamps.first ?? -1.0, 0.0, accuracy: 1e-6)
+        XCTAssertTrue(zip(stamps, stamps.dropFirst()).allSatisfy { $0 < $1 })
+
+        // 2. 早期木质琴房交叉反射 + 48kHz 离线立体声分离与清零校验
+        let synth = FeltPianoSynth()
+        let leftSpatial = try synth.verifySpatialPanOfflineTelemetry(
+            sampleRate: 48_000.0,
+            frequency: 392.0,
+            pan: -0.55,
+            spaceProfile: AcousticSpaceProfile.profile(for: .forestDorian)
+        )
+        XCTAssertGreaterThan(leftSpatial.peakL, leftSpatial.peakR, "加入早期木质交叉反射后左声像直达能量仍须清晰高于右侧")
+        XCTAssertLessThanOrEqual(max(leftSpatial.peakL, leftSpatial.peakR), 1.0)
+
+        let postEnv = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 261.63, timbre: .singingCello)
+        XCTAssertEqual(postEnv.envelopeAfterSilence.rmsEnergy, 0.0, accuracy: 1e-6, "silenceAll 必须同步清零早期反射环形缓冲")
+
+        // 3. 打开任意名曲与借风格时即时同步空间声学气候
+        let store = MelodyNotebookStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v021-\(UUID().uuidString)"))
+        let vm = StudioViewModel(notebookStore: store)
+        vm.openSpecimenForFollowGlow(SpecimenLibrary.lisztLiebestraum)
+        XCTAssertEqual(vm.synth.currentSpaceProfile(), AcousticSpaceProfile.profile(for: SpecimenLibrary.lisztLiebestraum.scaleMode))
+        vm.borrowHarmonyAtmosphere(from: SpecimenLibrary.debussyClairDeLune)
+        XCTAssertEqual(vm.synth.currentSpaceProfile(), AcousticSpaceProfile.profile(for: SpecimenLibrary.debussyClairDeLune.scaleMode))
+        vm.stopPlayback()
+    }
 }

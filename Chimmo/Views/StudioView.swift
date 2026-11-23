@@ -573,11 +573,17 @@ public final class StudioViewModel: ObservableObject {
                 self.rippleBus.emit(laneIndex: laneIdx, degree: bead.degree, onset: onset, colorHex: lane.member.bodyHex)
                 self.updateHarmonyDescriptor(for: bead.degree, at: onset)
 
+                let pan = AcousticSpatialPanMapper.pan(
+                    forBeatOnset: onset,
+                    totalDuration: self.document.totalDuration,
+                    visualMode: self.visualMode
+                )
                 self.synth.playNote(
                     frequency: hz,
                     velocity: isTarget ? 0.68 : 0.44,
                     decay: isTarget ? 1.55 : 0.72,
-                    timbre: voiceTimbre
+                    timbre: voiceTimbre,
+                    pan: pan
                 )
 
                 if !isTarget {
@@ -720,6 +726,7 @@ public final class StudioViewModel: ObservableObject {
         pushUndo()
         document.scaleMode = specimen.scaleMode
         document.harmonyProfile = specimen.harmonyProfile
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: specimen.scaleMode))
         if let tex = specimen.preferredTexture {
             accompanimentTexture = tex
             document.preferredTexture = tex
@@ -1255,6 +1262,7 @@ public final class StudioViewModel: ObservableObject {
         melodyVoice = specimen.preferredVoice ?? .concertPiano
         pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(specimen)
         document = specimen
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: specimen.scaleMode))
         clock.updateTotalDuration(specimen.totalDuration)
         activeGuidedMoment = specimen.guidedMoments?.first
         if autoPlay { togglePlayback() }
@@ -1281,6 +1289,7 @@ public final class StudioViewModel: ObservableObject {
         currentSavedEntryID = entry.id
         selectedBeadID = entry.document.notes.first?.id
         document = entry.document
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: entry.document.scaleMode))
         clock.updateTotalDuration(entry.document.totalDuration)
         chordPreset = entry.chordPreset
         chordOverrides = entry.chordOverrides

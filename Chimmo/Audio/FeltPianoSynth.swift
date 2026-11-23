@@ -77,6 +77,11 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var warmthDamping: Double = 1.0
         var stereoSpread: Double = 1.0
         var reverbWetMix: Float = 28.0
+        var reflectionBufL: [Double] = Array(repeating: 0.0, count: 2048)
+        var reflectionBufR: [Double] = Array(repeating: 0.0, count: 2048)
+        var reflectionIdx: Int = 0
+        var reflectionLPL: Double = 0.0
+        var reflectionLPR: Double = 0.0
     }
 
     private let router: HalfDuplexAudioRouter
@@ -191,6 +196,13 @@ public final class FeltPianoSynth: @unchecked Sendable {
             state.envShimmer = 0.0
             state.lpWarmthState = 0.0
             state.prevMono = 0.0
+            state.reflectionIdx = 0
+            state.reflectionLPL = 0.0
+            state.reflectionLPR = 0.0
+            for idx in 0..<state.reflectionBufL.count {
+                state.reflectionBufL[idx] = 0.0
+                state.reflectionBufR[idx] = 0.0
+            }
         }
         telemetryLock.withLockIfAvailable { $0 = .silent }
     }
@@ -557,6 +569,10 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 var sumDiffSq = 0.0
                 var lpWarm = state.lpWarmthState
                 var prevMono = state.prevMono
+                let refCap = state.reflectionBufL.count
+                let refDelayL = min(refCap - 2, max(64, Int(0.011 * sr)))
+                let refDelayR = min(refCap - 2, max(96, Int(0.017 * sr)))
+                let refGain = 0.085 * max(0.7, min(1.3, Double(state.reverbWetMix) / 28.0))
 
                 for i in 0..<count {
                     var mixL = 0.0
@@ -706,8 +722,22 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         if state.pair.phaseB > twoPi * 1024.0 { state.pair.phaseB.formTruncatingRemainder(dividingBy: twoPi) }
                     }
 
-                    let outL = tanh(mixL * 0.84)
-                    let outR = tanh(mixR * 0.84)
+                    // 3. 零堆分配木质沙龙早期声学反射（11ms/17ms 柔和低通交叉回响）
+                    let wIdx = state.reflectionIdx
+                    let rL = (wIdx + refCap - refDelayL) % refCap
+                    let rR = (wIdx + refCap - refDelayR) % refCap
+                    let delayedL = state.reflectionBufL[rL]
+                    let delayedR = state.reflectionBufR[rR]
+                    state.reflectionLPL += (delayedL - state.reflectionLPL) * 0.28
+                    state.reflectionLPR += (delayedR - state.reflectionLPR) * 0.28
+                    state.reflectionBufL[wIdx] = mixL
+                    state.reflectionBufR[wIdx] = mixR
+                    state.reflectionIdx = (wIdx + 1) % refCap
+
+                    let spatialL = mixL + state.reflectionLPR * refGain
+                    let spatialR = mixR + state.reflectionLPL * refGain
+                    let outL = tanh(spatialL * 0.84)
+                    let outR = tanh(spatialR * 0.84)
                     leftPtr[i] = Float(outL)
                     rightPtr?[i] = Float(outR)
 

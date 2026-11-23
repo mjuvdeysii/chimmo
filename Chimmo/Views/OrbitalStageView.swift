@@ -1188,6 +1188,29 @@ public struct OrbitalStageView: View {
             ctx.fill(Path(rect), with: .color(span.chord.color(isNight: palette.isNight).opacity(isCurrent ? 0.12 : 0.045)))
         }
 
+        // 1.5 节拍律动对齐竖线（当开启微稳/整齐模式时随旋律滚动显现）
+        if vm.document.grooveStrength > 0.08 {
+            let beatStep = GrooveAlignmentEngine.estimatedBeatStep(for: vm.document.notes)
+            let stamps = GrooveAlignmentEngine.beatTimestamps(
+                totalDuration: max(0.5, vm.document.totalDuration),
+                grooveStrength: vm.document.grooveStrength,
+                beatStep: beatStep
+            )
+            for (idx, ts) in stamps.enumerated() {
+                let bx = FlowingRiverGeometry.screenX(onset: ts, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
+                guard bx >= -4 && bx <= size.width + 4 else { continue }
+                let isMajor = idx % 4 == 0
+                var bar = Path()
+                bar.move(to: CGPoint(x: bx, y: lay.padV * 0.6))
+                bar.addLine(to: CGPoint(x: bx, y: size.height - lay.padV * 0.6))
+                ctx.stroke(
+                    bar,
+                    with: .color(palette.nightLampGold.opacity(vm.document.grooveStrength * (isMajor ? 0.24 : 0.11))),
+                    style: StrokeStyle(lineWidth: isMajor ? 1.2 : 0.7, dash: isMajor ? [] : [3, 4])
+                )
+            }
+        }
+
         // 2. 8 条彩色地平线阶梯轨（1 / 5 结构定锚略厚，助零乐理与色弱一眼定位）
         for rowFromTop in 0..<8 {
             let laneIdx = 7 - rowFromTop

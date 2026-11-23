@@ -852,6 +852,17 @@ public enum GrooveAlignmentEngine {
         let count = max(4, min(24, Int((totalDuration / step).rounded())))
         return (0..<count).map { Double($0) / Double(count) * 2.0 * Double.pi }
     }
+
+    public static func beatTimestamps(totalDuration: Double, grooveStrength: Double, beatStep: Double) -> [Double] {
+        guard totalDuration.isFinite && totalDuration > 0.4,
+              grooveStrength.isFinite && grooveStrength > 0.05 else {
+            return []
+        }
+        let step = max(0.22, min(1.0, beatStep.isFinite ? beatStep : 0.36))
+        let count = max(4, min(24, Int((totalDuration / step).rounded())))
+        let spacing = totalDuration / Double(count)
+        return (0..<count).map { Double($0) * spacing }
+    }
 }
 
 /// 音区胸腔移调辅助：在不破坏简谱级数前提下将主音基准限制在舒适听觉音区（48...72 MIDI）。
