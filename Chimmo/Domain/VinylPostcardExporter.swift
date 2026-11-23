@@ -19,6 +19,7 @@ public struct VinylPostcardSnapshot: Sendable {
     public let melodyVoiceLabel: String
     public let isNight: Bool
     public let visualMode: StageVisualMode
+    public let rootMIDI: Int
 
     public init(
         document: MelodyDocument,
@@ -62,6 +63,7 @@ public struct VinylPostcardSnapshot: Sendable {
         self.melodyVoiceLabel = (melodyVoice ?? document.preferredVoice ?? .singingCello).label
         self.isNight = isNight
         self.visualMode = visualMode
+        self.rootMIDI = document.rootMIDI
     }
 }
 
@@ -165,6 +167,10 @@ public struct VinylPostcardCanvasView: View {
                         Label("\(snapshot.notes.count) 个音", systemImage: "music.note")
                         Text("·")
                         Text(String(format: "%.1fs", snapshot.totalDuration))
+                        if snapshot.rootMIDI != 60 {
+                            Text("·")
+                            Text(RootTranspositionHelper.compactLabel(forRootMIDI: snapshot.rootMIDI))
+                        }
                         if snapshot.shadowEnabled {
                             Text("·")
                             Text("含伴唱")
@@ -250,6 +256,29 @@ public struct VinylPostcardCanvasView: View {
                 with: .color(col.opacity(trackAlpha)),
                 lineWidth: trackW
             )
+        }
+
+        if snapshot.grooveStrength > 0.08 {
+            let step = GrooveAlignmentEngine.estimatedBeatStep(for: snapshot.notes)
+            let spokes = GrooveAlignmentEngine.beatSpokeAngles(
+                totalDuration: total,
+                grooveStrength: snapshot.grooveStrength,
+                beatStep: step
+            )
+            for (idx, baseAng) in spokes.enumerated() {
+                let ang = -Double.pi / 2.0 + baseAng
+                let isMajor = idx % 4 == 0
+                let rIn = innerR * 0.96
+                let rOut = outerR * 1.03
+                var spoke = Path()
+                spoke.move(to: CGPoint(x: center.x + CGFloat(cos(ang)) * rIn, y: center.y + CGFloat(sin(ang)) * rIn))
+                spoke.addLine(to: CGPoint(x: center.x + CGFloat(cos(ang)) * rOut, y: center.y + CGFloat(sin(ang)) * rOut))
+                ctx.stroke(
+                    spoke,
+                    with: .color(palette.nightLampGold.opacity(snapshot.grooveStrength * (snapshot.isNight ? (isMajor ? 0.24 : 0.12) : (isMajor ? 0.22 : 0.11)))),
+                    style: StrokeStyle(lineWidth: isMajor ? 1.15 : 0.65, lineCap: .round)
+                )
+            }
         }
 
         // 3. 音符星座连线 + 色盲几何宝石音珠
@@ -412,6 +441,27 @@ public struct VinylPostcardCanvasView: View {
             ctx.fill(RoundedRectangle(cornerRadius: 10).path(in: bandRect), with: .color(col.opacity(snapshot.isNight ? 0.14 : 0.09)))
             let barRect = CGRect(x: x0 + 6, y: topY - 12, width: max(6, x1 - x0 - 12), height: 4)
             ctx.fill(Capsule().path(in: barRect), with: .color(col.opacity(0.80)))
+        }
+
+        if snapshot.grooveStrength > 0.08 {
+            let step = GrooveAlignmentEngine.estimatedBeatStep(for: snapshot.notes)
+            let stamps = GrooveAlignmentEngine.beatTimestamps(
+                totalDuration: total,
+                grooveStrength: snapshot.grooveStrength,
+                beatStep: step
+            )
+            for (idx, ts) in stamps.enumerated() {
+                let bx = padX + CGFloat(max(0.0, min(1.0, ts / total))) * usableW
+                let isMajor = idx % 4 == 0
+                var bar = Path()
+                bar.move(to: CGPoint(x: bx, y: topY - 4))
+                bar.addLine(to: CGPoint(x: bx, y: bottomY + 4))
+                ctx.stroke(
+                    bar,
+                    with: .color(palette.nightLampGold.opacity(snapshot.grooveStrength * (isMajor ? 0.24 : 0.11))),
+                    style: StrokeStyle(lineWidth: isMajor ? 1.2 : 0.7, dash: isMajor ? [] : [3, 4])
+                )
+            }
         }
 
         // 2. 8 道水平音高线与 1/5 结构锚定

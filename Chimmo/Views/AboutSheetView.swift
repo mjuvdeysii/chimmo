@@ -187,7 +187,11 @@ public struct VinylPostcardShareSheet: View {
         refreshPostcardOnly()
         exportedMIDIURL = try? MIDIExporter.writeTemporaryMIDIFile(
             document: request.document,
-            includeHarmonyCradle: request.chordPreset != .off
+            includeHarmonyCradle: request.chordPreset != .off,
+            melodyVoice: request.melodyVoice,
+            includeShadowCounterpoint: request.shadowEnabled,
+            chordPreset: request.chordPreset,
+            chordOverrides: request.chordOverrides
         )
     }
 }
@@ -306,7 +310,11 @@ public struct AboutSheetView: View {
                                 Button {
                                     exportedMIDIURL = try? MIDIExporter.writeTemporaryMIDIFile(
                                         document: currentDocument,
-                                        includeHarmonyCradle: cradleEnabled
+                                        includeHarmonyCradle: cradleEnabled,
+                                        melodyVoice: melodyVoice,
+                                        includeShadowCounterpoint: shadowEnabled,
+                                        chordPreset: cradleEnabled ? chordPreset : .off,
+                                        chordOverrides: chordOverrides
                                     )
                                 } label: {
                                     Label("生成 MIDI", systemImage: "pianokeys")

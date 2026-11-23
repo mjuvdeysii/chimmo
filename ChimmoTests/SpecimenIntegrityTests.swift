@@ -1063,4 +1063,62 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(vm.synth.currentSpaceProfile(), AcousticSpaceProfile.profile(for: SpecimenLibrary.debussyClairDeLune.scaleMode))
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound15StudioMIDIAndPostcardSync() throws {
+        // 1. GM 乐器映射与多通道 MIDI 导出契约（主奏通道 0 + 伴奏通道 1 + 伴唱通道 2）
+        XCTAssertEqual(MIDIExporter.generalMIDIProgram(for: .concertPiano), 0)
+        XCTAssertEqual(MIDIExporter.generalMIDIProgram(for: .singingCello), 42)
+        XCTAssertEqual(MIDIExporter.generalMIDIProgram(for: .liquidHarp), 46)
+        XCTAssertEqual(MIDIExporter.generalMIDIProgram(for: .celestaGlass), 8)
+
+        let doc = MelodyDocument(
+            title: "多轨乐器测试",
+            subtitle: "",
+            rootMIDI: 65,
+            scaleMode: .cloudLydian,
+            grooveStrength: 1.0,
+            notes: GrooveAlignmentEngine.populateQuantizedTargets(for: [
+                NoteBead(degree: 1, rawOnset: 0.14, rawDuration: 0.5),
+                NoteBead(degree: 5, rawOnset: 1.80, rawDuration: 0.6)
+            ])
+        )
+        let plainMIDI = MIDIExporter.encodeSMF(
+            document: doc,
+            includeHarmonyCradle: true,
+            melodyVoice: .singingCello,
+            includeShadowCounterpoint: false
+        )
+        let duetMIDI = MIDIExporter.encodeSMF(
+            document: doc,
+            includeHarmonyCradle: true,
+            melodyVoice: .singingCello,
+            includeShadowCounterpoint: true
+        )
+        let bytes = [UInt8](duetMIDI)
+        XCTAssertEqual(Array(bytes.prefix(4)), [0x4D, 0x54, 0x68, 0x64])
+        XCTAssertEqual(Array(bytes.suffix(3)), [0xFF, 0x2F, 0x00])
+        // 验证写入了大提琴 Program Change [0xC0, 42] 与伴唱通道 [0x92]
+        XCTAssertTrue(zip(bytes, bytes.dropFirst()).contains { $0 == 0xC0 && $1 == 42 })
+        XCTAssertTrue(bytes.contains(0x92), "开启巴赫伴唱导出时必须写入独立第 2 通道音符事件")
+        XCTAssertGreaterThan(duetMIDI.count, plainMIDI.count)
+
+        // 2. 黑胶明信片律动拍线与移调印章离线渲染校验
+        let discPng = VinylPostcardExporter.renderPNGData(
+            document: doc,
+            melodyVoice: .singingCello,
+            shadowEnabled: true,
+            isNight: true,
+            visualMode: .orbitalDisc
+        )
+        let riverPng = VinylPostcardExporter.renderPNGData(
+            document: doc,
+            melodyVoice: .singingCello,
+            shadowEnabled: true,
+            isNight: false,
+            visualMode: .flowingRiver
+        )
+        XCTAssertGreaterThan(discPng?.count ?? 0, 1000)
+        XCTAssertGreaterThan(riverPng?.count ?? 0, 1000)
+    }
 }

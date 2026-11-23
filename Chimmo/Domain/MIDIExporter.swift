@@ -8,51 +8,117 @@ public enum MIDIExporter {
 
     private struct RawMIDIEvent {
         let tick: Int
-        let sortPriority: Int // noteOff (0) 先于同 tick 的 noteOn (1)
+        let sortPriority: Int // programChange (-1), noteOff (0), noteOn (1)
         let bytes: [UInt8]
     }
 
-    public static func encodeSMF(document: MelodyDocument, includeHarmonyCradle: Bool = true) -> Data {
+    public static func generalMIDIProgram(for voice: MelodyVoice) -> UInt8 {
+        switch voice {
+        case .concertPiano: return 0   // Acoustic Grand Piano
+        case .singingCello: return 42  // Cello
+        case .liquidHarp:   return 46  // Orchestral Harp
+        case .celestaGlass: return 8   // Celesta
+        }
+    }
+
+    public static func encodeSMF(
+        document: MelodyDocument,
+        includeHarmonyCradle: Bool = true,
+        melodyVoice: MelodyVoice? = nil,
+        includeShadowCounterpoint: Bool = false,
+        chordPreset: ChordProgressionPreset = .autoMatch,
+        chordOverrides: [Int: DiatonicChord] = [:]
+    ) -> Data {
         let bpm = max(40.0, min(240.0, document.estimatedBPM))
         let microsecondsPerBeat = UInt32((60_000_000.0 / bpm).rounded())
         let ticksPerSecond = Double(ticksPerQuarterNote) * (bpm / 60.0)
 
-        var events: [RawMIDIEvent] = []
+        let resolvedVoice = melodyVoice ?? document.preferredVoice ?? .concertPiano
+        let shadowProgram: UInt8 = (resolvedVoice == .liquidHarp) ? 8 : 46
 
-        for bead in document.notes {
+        var events: [RawMIDIEvent] = [
+            RawMIDIEvent(tick: 0, sortPriority: -1, bytes: [0xC0, generalMIDIProgram(for: resolvedVoice)]),
+            RawMIDIEvent(tick: 0, sortPriority: -1, bytes: [0xC1, 0]),
+            RawMIDIEvent(tick: 0, sortPriority: -1, bytes: [0xC2, shadowProgram])
+        ]
+
+        let sortedNotes = document.notes.sorted {
+            $0.displayOnset(grooveStrength: document.grooveStrength) < $1.displayOnset(grooveStrength: document.grooveStrength)
+        }
+        var prevLaneIdx: Int? = nil
+
+        for (idx, bead) in sortedNotes.enumerated() {
             let onsetSec = bead.displayOnset(grooveStrength: document.grooveStrength)
             let durSec = bead.displayDuration(grooveStrength: document.grooveStrength)
             let startTick = max(0, Int((onsetSec * ticksPerSecond).rounded()))
             let endTick = max(startTick + 1, Int(((onsetSec + durSec) * ticksPerSecond).rounded()))
+
+            let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+            let vel: UInt8
+            if idx == 0 || idx % 4 == 0 {
+                vel = 96
+            } else if let prev = prevLaneIdx, laneIdx > prev + 2 {
+                vel = 92
+            } else {
+                vel = 82
+            }
+            prevLaneIdx = laneIdx
 
             let melodyMIDI = UInt8(clamping: document.scaleMode.midiNote(
                 rootMIDI: document.rootMIDI,
                 degree: bead.degree,
                 octaveOffset: bead.octaveOffset
             ))
-            events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x90, melodyMIDI, 88]))
+            events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x90, melodyMIDI, vel]))
             events.append(RawMIDIEvent(tick: endTick, sortPriority: 0, bytes: [0x80, melodyMIDI, 0]))
+        }
 
-            if includeHarmonyCradle {
-                let voicing = document.harmonyProfile.voicing(for: bead.degree)
+        let effectivePreset: ChordProgressionPreset = includeHarmonyCradle ? (chordPreset == .off ? .autoMatch : chordPreset) : .off
+        let spans = TheoryLensEngine.buildChordSpans(
+            document: document,
+            preset: effectivePreset,
+            overrides: chordOverrides
+        )
+
+        if includeHarmonyCradle && effectivePreset != .off {
+            for span in spans {
+                let startTick = max(0, Int((span.startTime * ticksPerSecond).rounded()))
+                let endTick = max(startTick + 1, Int((span.endTime * ticksPerSecond).rounded()))
+                let rDeg = span.chord.rootDegree
                 let bassMIDI = UInt8(clamping: document.scaleMode.midiNote(
                     rootMIDI: document.rootMIDI,
-                    degree: voicing.bassDegree,
-                    octaveOffset: voicing.bassOctave
+                    degree: rDeg,
+                    octaveOffset: -1
                 ))
-                events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x91, bassMIDI, 62]))
+                events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x91, bassMIDI, 64]))
                 events.append(RawMIDIEvent(tick: endTick, sortPriority: 0, bytes: [0x81, bassMIDI, 0]))
 
-                for (idx, deg) in voicing.upperDegrees.enumerated() {
-                    let oct = idx == 0 ? -1 : 0
+                for (idx, deg) in span.chord.chordToneDegrees.enumerated() {
+                    let oct = (idx > 0 && deg < rDeg) ? 0 : (idx == 0 ? -1 : 0)
                     let padMIDI = UInt8(clamping: document.scaleMode.midiNote(
                         rootMIDI: document.rootMIDI,
                         degree: deg,
                         octaveOffset: oct
                     ))
-                    events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x91, padMIDI, 52]))
+                    events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x91, padMIDI, 54]))
                     events.append(RawMIDIEvent(tick: endTick, sortPriority: 0, bytes: [0x81, padMIDI, 0]))
                 }
+            }
+        }
+
+        if includeShadowCounterpoint {
+            let shadowSpans = TheoryLensEngine.buildChordSpans(document: document, preset: chordPreset, overrides: chordOverrides)
+            let shadowNotes = CounterpointShadowEngine.generateShadowVoice(document: document, spans: shadowSpans)
+            for s in shadowNotes {
+                let startTick = max(0, Int((s.onset * ticksPerSecond).rounded()))
+                let endTick = max(startTick + 1, Int(((s.onset + s.duration) * ticksPerSecond).rounded()))
+                let sMIDI = UInt8(clamping: document.scaleMode.midiNote(
+                    rootMIDI: document.rootMIDI,
+                    degree: s.degree,
+                    octaveOffset: s.octaveOffset
+                ))
+                events.append(RawMIDIEvent(tick: startTick, sortPriority: 1, bytes: [0x92, sMIDI, 60]))
+                events.append(RawMIDIEvent(tick: endTick, sortPriority: 0, bytes: [0x82, sMIDI, 0]))
             }
         }
 
@@ -112,8 +178,22 @@ public enum MIDIExporter {
         return Data(fileBytes)
     }
 
-    public static func writeTemporaryMIDIFile(document: MelodyDocument, includeHarmonyCradle: Bool = true) throws -> URL {
-        let data = encodeSMF(document: document, includeHarmonyCradle: includeHarmonyCradle)
+    public static func writeTemporaryMIDIFile(
+        document: MelodyDocument,
+        includeHarmonyCradle: Bool = true,
+        melodyVoice: MelodyVoice? = nil,
+        includeShadowCounterpoint: Bool = false,
+        chordPreset: ChordProgressionPreset = .autoMatch,
+        chordOverrides: [Int: DiatonicChord] = [:]
+    ) throws -> URL {
+        let data = encodeSMF(
+            document: document,
+            includeHarmonyCradle: includeHarmonyCradle,
+            melodyVoice: melodyVoice,
+            includeShadowCounterpoint: includeShadowCounterpoint,
+            chordPreset: chordPreset,
+            chordOverrides: chordOverrides
+        )
         let safeName = document.title
             .replacingOccurrences(of: "/", with: "-")
             .replacingOccurrences(of: ":", with: "-")

@@ -1336,8 +1336,30 @@ public struct OrbitalStageView: View {
             }
 
             let tailW = max(14.0, CGFloat(dur) * lay.pxPerSec * 0.85)
-            let tailRect = CGRect(x: item.pt.x, y: item.pt.y - 3.2, width: tailW, height: 6.4)
-            ctx.fill(Path(roundedRect: tailRect, cornerRadius: 3.2), with: .color(col.opacity(0.46)))
+            let tailCenterY = item.pt.y
+            let tailStart = CGPoint(x: item.pt.x, y: tailCenterY)
+            let tailEnd = CGPoint(x: item.pt.x + tailW, y: tailCenterY)
+            if isSingingNow {
+                let glowRect = CGRect(x: item.pt.x, y: tailCenterY - 5.5, width: tailW, height: 11.0)
+                ctx.fill(
+                    Path(roundedRect: glowRect, cornerRadius: 5.5),
+                    with: .linearGradient(
+                        Gradient(colors: [col.opacity(0.34), .clear]),
+                        startPoint: tailStart,
+                        endPoint: tailEnd
+                    )
+                )
+            }
+            let tailH: CGFloat = isSingingNow ? 6.8 : 5.4
+            let tailRect = CGRect(x: item.pt.x, y: tailCenterY - tailH * 0.5, width: tailW, height: tailH)
+            ctx.fill(
+                Path(roundedRect: tailRect, cornerRadius: tailH * 0.5),
+                with: .linearGradient(
+                    Gradient(colors: [col.opacity(isSingingNow ? 0.88 : 0.62), col.opacity(0.08)]),
+                    startPoint: tailStart,
+                    endPoint: tailEnd
+                )
+            )
 
             let orbR: CGFloat = (isSingingNow || isFollowCur) ? 12.5 : (isSelected ? 11.5 : 9.6)
             let orbRect = CGRect(x: item.pt.x - orbR, y: item.pt.y - orbR, width: orbR * 2, height: orbR * 2)
