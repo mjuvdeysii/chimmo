@@ -4,34 +4,34 @@ import UIKit
 #endif
 
 public enum ChimmoTab: Int, Hashable, Sendable {
-    case desk = 0
-    case rooms = 1
-    case book = 2
+    case board = 0
+    case musicBox = 1
 }
 
 @MainActor
 public final class StudioViewModel: ObservableObject {
     @Published public var document: MelodyDocument = SpecimenLibrary.saintSaensTheSwan
-    @Published public var featuredDeskIndex: Int = 0
     @Published public var appearance: AppearancePreference = .auto
-    @Published public var cognitiveLens: CognitiveLens = .philosophy
     @Published public var melodyVoice: MelodyVoice = .singingCello
     @Published public var accompanimentTexture: AccompanimentTexture = .swanRipple
     @Published public var chordPreset: ChordProgressionPreset = .autoMatch
     @Published public var chordOverrides: [Int: DiatonicChord] = [:]
-    @Published public var shadowCounterpointEnabled: Bool = false
-    @Published public var slowMotion: Bool = false
+    @Published public var pentatonicSafe: Bool = false // 默认载入圣桑《天鹅》含7音，敲新节奏时自动打开安心5音
+    @Published public var followGlowActive: Bool = false
+    @Published public var followGlowIndex: Int = 0
+    @Published public var smartHintActive: Bool = false
+    @Published public var isTappingRhythm: Bool = false
+    @Published public var liveTapTimestamps: [TimeInterval] = []
     @Published public var isPlaying: Bool = false
     @Published public var playheadTime: Double? = nil
     @Published public var activeDegrees: Set<Int> = []
+    @Published public var activeLaneIndices: Set<Int> = []
     @Published public var latestDegree: Int? = 1
     @Published public var selectedBeadID: UUID? = nil
     @Published public var impulses: [VisualImpulse] = []
     @Published public var statusToast: String? = nil
     @Published public var canUndo: Bool = false
     @Published public var currentSavedEntryID: UUID? = nil
-    @Published public var solvedRooms: Set<Int>
-    @Published public var visitedInstallations: Set<Int>
 
     public let synth: FeltPianoSynth
     public let capturePipeline: HumCapturePipeline
@@ -40,22 +40,9 @@ public final class StudioViewModel: ObservableObject {
     private let router = HalfDuplexAudioRouter()
     private var undoStack: [MelodyDocument] = []
     private var playbackTask: Task<Void, Never>?
+    private var contextEchoTask: Task<Void, Never>?
     private var lastFreeNoteTime: Date?
     private var toastTask: Task<Void, Never>?
-
-    public static let deskRotationPieces: [MelodyDocument] = [
-        SpecimenLibrary.saintSaensTheSwan,
-        SpecimenLibrary.lisztLiebestraum,
-        SpecimenLibrary.bachPreludeSeed,
-        SpecimenLibrary.tchaikovskySwanLake,
-        SpecimenLibrary.dvorakGoingHome,
-        SpecimenLibrary.debussyClairDeLune,
-        SpecimenLibrary.summerSuspension
-    ]
-
-    public var featuredDeskPiece: MelodyDocument {
-        Self.deskRotationPieces[featuredDeskIndex % Self.deskRotationPieces.count]
-    }
 
     public var chordSpans: [ChordSpan] {
         TheoryLensEngine.buildChordSpans(
@@ -63,10 +50,6 @@ public final class StudioViewModel: ObservableObject {
             preset: chordPreset,
             overrides: chordOverrides
         )
-    }
-
-    public var shadowNotes: [CounterpointNote] {
-        CounterpointShadowEngine.generateShadowVoice(document: document, spans: chordSpans)
     }
 
     public var currentInsight: MelodyTheoryInsight {
@@ -77,128 +60,453 @@ public final class StudioViewModel: ObservableObject {
         chordPreset != .off
     }
 
+    public var smartHints: [SmartPitchHint] {
+        guard smartHintActive,
+              let selID = selectedBeadID,
+              let idx = document.notes.firstIndex(where: { $0.id == selID }) else {
+            return []
+        }
+        return XylophoneRollEngine.suggestThreeLanes(
+            forBeatIndex: idx,
+            in: document.notes,
+            pentatonicSafe: pentatonicSafe
+        )
+    }
+
     public init(notebookStore: MelodyNotebookStore? = nil) {
         let s = FeltPianoSynth(router: router)
         self.synth = s
         self.capturePipeline = HumCapturePipeline(router: router, synth: s)
         self.notebook = notebookStore ?? MelodyNotebookStore()
-        let rooms = UserDefaults.standard.array(forKey: "chimmo_solved_rooms") as? [Int] ?? []
-        self.solvedRooms = Set(rooms)
-        let visited = UserDefaults.standard.array(forKey: "chimmo_visited_philosophy") as? [Int] ?? []
-        self.visitedInstallations = Set(visited)
+        self.pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(SpecimenLibrary.saintSaensTheSwan)
     }
 
-    // MARK: - Home Desk Live Shelf & Rotation
+    // MARK: - Inline Wooden Rhythm Drum Capture (Live Beat Pillars on Roll)
 
-    public func rotateFeaturedDeskPiece() {
-        featuredDeskIndex = (featuredDeskIndex + 1) % Self.deskRotationPieces.count
+    public func startRhythmTap() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        smartHintActive = false
+        selectedBeadID = nil
+        liveTapTimestamps.removeAll()
+        isTappingRhythm = true
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
+        showToast("不用管音高，按脑海里的快慢轻敲下方木鼓")
+    }
+
+    public func recordRhythmDrumTap() {
+        let now = Date().timeIntervalSinceReferenceDate
+        if liveTapTimestamps.count >= 16 {
+            liveTapTimestamps.removeFirst()
+        }
+        liveTapTimestamps.append(now)
+        let isFirst = liveTapTimestamps.count == 1
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: isFirst)
+        let hz = document.scaleMode.frequencyHz(rootMIDI: 60, degree: isFirst ? 1 : 5, octaveOffset: 0)
+        synth.playNote(frequency: hz, velocity: isFirst ? 0.54 : 0.36, decay: 0.42, timbre: .liquidHarp)
+    }
+
+    public func resetRhythmTaps() {
+        liveTapTimestamps.removeAll()
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
     }
 
-    /// 首页桌边七小只自由轻点发声（不污染文档，只用清澈声与眼神温柔陪伴）
-    public func chimeDeskMember(_ member: ChimmoMember) {
-        latestDegree = member.degree
-        if member.isTensionDegree {
-            AcousticHapticsEngine.shared.playTensionFlutter(intensity: 0.42)
-        } else {
-            AcousticHapticsEngine.shared.playBeatTap(isStrong: member.degree == 1)
-        }
-        let hz = document.scaleMode.frequencyHz(rootMIDI: 60, degree: member.degree, octaveOffset: 0)
-        synth.playNote(frequency: hz, velocity: 0.58, decay: 1.5, timbre: .liquidHarp)
+    public func cancelRhythmTap() {
+        isTappingRhythm = false
+        liveTapTimestamps.removeAll()
+    }
 
-        activeDegrees.insert(member.degree)
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 280_000_000)
-            self?.activeDegrees.remove(member.degree)
+    public func commitRhythmTaps() {
+        stopPlayback()
+        isTappingRhythm = false
+        pushUndo()
+        currentSavedEntryID = nil
+        chordOverrides.removeAll()
+        if chordPreset == .off { chordPreset = .autoMatch }
+
+        let rawNotes: [NoteBead]
+        if liveTapTimestamps.count < 2 {
+            // 未敲满 2 下时提供 6 拍舒展呼吸示范节奏，马上能玩选山坡和调木琴
+            let defaults: [Double] = [0.15, 0.62, 1.08, 1.65, 2.20, 2.82]
+            rawNotes = defaults.enumerated().map { idx, t in
+                let nextT = idx + 1 < defaults.count ? defaults[idx + 1] : t + 0.72
+                return NoteBead(degree: 3, rawOnset: t, rawDuration: max(0.30, (nextT - t) * 0.88))
+            }
+        } else {
+            let t0 = liveTapTimestamps[0]
+            var rels = liveTapTimestamps.map { max(0.0, $0 - t0) }
+            if let last = rels.last, last > 8.0 {
+                let scale = 7.6 / last
+                rels = rels.map { $0 * scale }
+            }
+            rawNotes = rels.enumerated().map { idx, t in
+                let nextT = idx + 1 < rels.count ? rels[idx + 1] : t + 0.68
+                let dur = max(0.22, min(1.45, (nextT - t) * 0.90))
+                return NoteBead(degree: 3, rawOnset: 0.14 + t, rawDuration: dur)
+            }
+        }
+        liveTapTimestamps.removeAll()
+
+        // 敲新节奏默认开启「安心5音」并先给一座温柔的拱桥轮廓，用户可一键换 4 座山坡或哼走势或点左侧木琴精调！
+        pentatonicSafe = true
+        let archNotes = XylophoneRollEngine.applyHill(.arch, to: rawNotes, pentatonicSafe: true)
+        document = MelodyDocument(
+            title: "脑放纸带 #\(notebook.entries.count + 1)",
+            subtitle: "点「山坡」或「哼走势」大调轮廓，再点左侧木琴条逐拍精调",
+            rootMIDI: 60,
+            scaleMode: document.scaleMode,
+            harmonyProfile: document.harmonyProfile,
+            grooveStrength: 0.0,
+            notes: archNotes,
+            isSpecimen: false,
+            preferredTexture: accompanimentTexture,
+            preferredVoice: melodyVoice
+        )
+        selectedBeadID = document.notes.first?.id
+        smartHintActive = true
+        AcousticHapticsEngine.shared.playResolutionExhale()
+        showToast("已定型 \(archNotes.count) 拍！先试试上方 4 座「山坡」或「哼高低走势」")
+        togglePlayback()
+    }
+
+    // MARK: - Rainbow Wooden Xylophone Interaction & Context Echo (前后连听)
+
+    public func strikeXylophoneLane(_ lane: XylophoneLane) {
+        flashLane(lane.index, degree: lane.degree)
+
+        // 模式 1：亮灯跟弹（Follow-the-Glow，像《摸索台灯》木琴玩具一样跟着亮灯敲！）
+        if followGlowActive && followGlowIndex < document.notes.count {
+            let target = document.notes[followGlowIndex]
+            let targetLane = XylophoneLane.laneIndex(degree: target.degree, octaveOffset: target.octaveOffset)
+            if lane.index == targetLane {
+                let hz = document.scaleMode.frequencyHz(
+                    rootMIDI: document.rootMIDI,
+                    degree: target.degree,
+                    octaveOffset: target.octaveOffset
+                )
+                synth.playNote(
+                    frequency: hz,
+                    velocity: 0.64,
+                    decay: max(1.1, target.rawDuration * 1.55),
+                    timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice)
+                )
+                if let ch = TheoryLensEngine.chord(at: target.rawOnset, in: chordSpans) {
+                    synth.playDiatonicChord(
+                        rootMIDI: document.rootMIDI,
+                        mode: document.scaleMode,
+                        chord: ch,
+                        texture: accompanimentTexture,
+                        spanDuration: 1.35,
+                        intensity: 0.62
+                    )
+                }
+                AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.56)
+                followGlowIndex += 1
+                if followGlowIndex >= document.notes.count {
+                    AcousticHapticsEngine.shared.playResolutionExhale()
+                    followGlowIndex = 0
+                    showToast("✨ 整首跟弹完成！再敲一遍，或点「退出跟弹」自由改写")
+                }
+            } else {
+                // 敲了旁边别的木条也会自然发声，绝不冷冰冰报错，温柔提示亮灯条
+                let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
+                synth.playNote(frequency: hz, velocity: 0.45, decay: 1.0, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+                AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+                let expected = XylophoneLane.lane(at: targetLane)
+                showToast("跟着亮暖金灯的「\(expected.digitLabel)」条敲哦")
+            }
+            return
+        }
+
+        // 模式 2：正在调某一拍的音高（点左侧木琴条立刻改这拍 + 自动「前后连听」！）
+        if let selID = selectedBeadID,
+           let idx = document.notes.firstIndex(where: { $0.id == selID }) {
+            stopPlayback()
+            pushUndo()
+            if document.isSpecimen {
+                document.isSpecimen = false
+                document.title = "\(document.title) · 我的改写"
+            }
+            document.notes[idx].degree = lane.degree
+            document.notes[idx].octaveOffset = lane.octaveOffset
+            document.notes[idx].ghostCandidates.removeAll()
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: lane.index == 0 || lane.index == 7)
+            playContextEcho(upToIndex: idx)
+            return
+        }
+
+        // 模式 3：纯粹像实体木琴一样自由划奏玩耍
+        let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
+        synth.playNote(frequency: hz, velocity: 0.60, decay: 1.45, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: lane.index == 0 || lane.index == 7)
+    }
+
+    /// 创意 A 核心：「前后连听」—— 调第 N 拍时自动把「前两拍 → 这一拍」连着唱一遍，人耳 0.2 秒就能听出高了还是低了！
+    public func playContextEcho(upToIndex targetIdx: Int) {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        guard document.notes.indices.contains(targetIdx) else { return }
+
+        let startIdx = max(0, targetIdx - 2)
+        let slice = Array(document.notes[startIdx...targetIdx])
+        let mode = document.scaleMode
+        let rootMIDI = document.rootMIDI
+        let voiceTimbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+
+        contextEchoTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for (offset, bead) in slice.enumerated() {
+                if Task.isCancelled { return }
+                let isTarget = (offset == slice.count - 1)
+                let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: bead.degree, octaveOffset: bead.octaveOffset)
+                let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+                self.flashLane(laneIdx, degree: bead.degree)
+                self.playheadTime = bead.displayOnset(grooveStrength: self.document.grooveStrength)
+
+                self.synth.playNote(
+                    frequency: hz,
+                    velocity: isTarget ? 0.68 : 0.44,
+                    decay: isTarget ? 1.55 : 0.72,
+                    timbre: voiceTimbre
+                )
+
+                if !isTarget {
+                    let next = slice[offset + 1]
+                    let rawGap = next.rawOnset - bead.rawOnset
+                    let crispGap = max(0.20, min(0.46, rawGap))
+                    try? await Task.sleep(nanoseconds: UInt64(crispGap * 1_000_000_000))
+                }
+            }
+            try? await Task.sleep(nanoseconds: 420_000_000)
+            if !Task.isCancelled && !self.isPlaying {
+                self.playheadTime = nil
+            }
         }
     }
 
-    // MARK: - 5-Sky Modal Spectrum & Motif Origami Growth
+    // MARK: - 4 Hill Templates, Optometrist 3-Bar Hints, Relative Contour Hum & Flexible Bead Edits
+
+    public func applyHillTemplate(_ template: MelodyHillTemplate) {
+        guard !document.notes.isEmpty else { return }
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        pushUndo()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 山坡变奏"
+        }
+        document.notes = XylophoneRollEngine.applyHill(template, to: document.notes, pentatonicSafe: pentatonicSafe)
+        if selectedBeadID == nil {
+            selectedBeadID = document.notes.first?.id
+        }
+        AcousticHapticsEngine.shared.playSeedBloom()
+        showToast("已换成「\(template.label)」山坡 · 试听看看最像哪段，再微调 1～2 拍")
+        togglePlayback()
+    }
+
+    public func toggleSmartPitchHints() {
+        smartHintActive.toggle()
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+        if smartHintActive {
+            if selectedBeadID == nil {
+                selectedBeadID = document.notes.first?.id
+            }
+            showToast("💡 左侧已点亮 3 根最搭的木琴条，点点听哪个最像脑海里那声")
+        }
+    }
+
+    public func toggleFollowGlow() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive.toggle()
+        followGlowIndex = 0
+        if followGlowActive {
+            selectedBeadID = nil
+            smartHintActive = false
+            AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.6)
+            showToast("✨ 跟着左侧发暖金光的木琴条敲，按你的节奏亲自演奏")
+        }
+    }
+
+    public func togglePentatonicSafe() {
+        pentatonicSafe.toggle()
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+        showToast(
+            pentatonicSafe
+                ? "🎋 已开启安心 5 音：收起 4 和 7，怎么点都自然顺耳"
+                : "🎼 已解锁全部 8 根彩虹木琴条（含 4 与 7 的情感张力）"
+        )
+    }
+
+    public func selectBead(_ id: UUID, playContext: Bool = true) {
+        selectedBeadID = id
+        if playContext, let idx = document.notes.firstIndex(where: { $0.id == id }) {
+            playContextEcho(upToIndex: idx)
+        }
+    }
+
+    public func stepSelectedBeat(delta: Int) {
+        guard !document.notes.isEmpty else { return }
+        let cur = selectedBeadID.flatMap { id in document.notes.firstIndex { $0.id == id } } ?? 0
+        let next = max(0, min(document.notes.count - 1, cur + delta))
+        selectedBeadID = document.notes[next].id
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+        playContextEcho(upToIndex: next)
+    }
+
+    public func beginBeadEdit() {
+        pushUndo()
+    }
+
+    public func updateBeadToLane(beadID: UUID, lane: XylophoneLane, playSinglePreview: Bool) {
+        guard let idx = document.notes.firstIndex(where: { $0.id == beadID }) else { return }
+        if document.notes[idx].degree == lane.degree && document.notes[idx].octaveOffset == lane.octaveOffset {
+            return
+        }
+        stopPlayback()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 我的改写"
+        }
+        document.notes[idx].degree = lane.degree
+        document.notes[idx].octaveOffset = lane.octaveOffset
+        document.notes[idx].ghostCandidates.removeAll()
+        flashLane(lane.index, degree: lane.degree)
+        if playSinglePreview {
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: lane.index == 0 || lane.index == 7)
+            let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
+            synth.playNote(frequency: hz, velocity: 0.56, decay: 0.85, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+        }
+    }
+
+    public func updateBeatTiming(beadID: UUID, newOnset: Double) {
+        guard let idx = document.notes.firstIndex(where: { $0.id == beadID }) else { return }
+        document.notes[idx].rawOnset = max(0.08, newOnset)
+        if document.notes[idx].quantizedOnset != nil {
+            document.notes[idx].quantizedOnset = max(0.08, newOnset)
+        }
+        document.notes.sort { $0.rawOnset < $1.rawOnset }
+    }
+
+    public func insertBeatAfterSelected() {
+        stopPlayback()
+        pushUndo()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 我的改写"
+        }
+        if let selID = selectedBeadID,
+           let idx = document.notes.firstIndex(where: { $0.id == selID }) {
+            let cur = document.notes[idx]
+            let nextOnset: Double
+            if idx + 1 < document.notes.count {
+                let gap = document.notes[idx + 1].rawOnset - cur.rawOnset
+                if gap >= 0.34 {
+                    nextOnset = cur.rawOnset + gap * 0.5
+                } else {
+                    // 后面拍子温柔右移 0.42 秒腾出空位
+                    for j in (idx + 1)..<document.notes.count {
+                        document.notes[j].rawOnset += 0.42
+                    }
+                    nextOnset = cur.rawOnset + 0.42
+                }
+            } else {
+                nextOnset = cur.rawOnset + max(0.45, cur.rawDuration)
+            }
+            let newBead = NoteBead(degree: cur.degree, octaveOffset: cur.octaveOffset, rawOnset: nextOnset, rawDuration: 0.42)
+            document.notes.append(newBead)
+            document.notes.sort { $0.rawOnset < $1.rawOnset }
+            selectedBeadID = newBead.id
+            if let newIdx = document.notes.firstIndex(where: { $0.id == newBead.id }) {
+                playContextEcho(upToIndex: newIdx)
+            }
+            showToast("已插入 1 拍，点左侧木琴条选它的高低")
+        } else {
+            triggerLadderMember(.taono, octaveOffset: 0)
+        }
+    }
+
+    // MARK: - Relative Hum Contour (创意 G: 只听高低走势、无视跑调)
+
+    public func startHumCapture() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
+        capturePipeline.startRecording()
+        showToast(document.notes.isEmpty ? "轻轻哼出脑海里的旋律，哼完再点一次" : "不管跑不跑调，按拍子哼出大概高低起伏就行！")
+    }
+
+    public func finishRelativeContourHum() {
+        Task {
+            if !document.notes.isEmpty {
+                // 已有敲好的节奏：只抽取相对高低走势贴合上去，保留 100% 原始节奏！
+                if let heights = await capturePipeline.stopAndExtractRelativeContour(slotCount: document.notes.count) {
+                    pushUndo()
+                    if document.isSpecimen {
+                        document.isSpecimen = false
+                        document.title = "脑放纸带 #\(notebook.entries.count + 1)"
+                    }
+                    document.notes = XylophoneRollEngine.applyRelativeContour(
+                        to: document.notes,
+                        normalizedHeights: heights,
+                        pentatonicSafe: pentatonicSafe
+                    )
+                    selectedBeadID = document.notes.first?.id
+                    AcousticHapticsEngine.shared.playResolutionExhale()
+                    showToast("已按你的哼唱高低贴好台阶！微调 1～2 拍就完美")
+                    togglePlayback()
+                } else if !capturePipeline.statusMessage.isEmpty {
+                    showToast(capturePipeline.statusMessage)
+                }
+            } else {
+                // 空白画板：直接录成新旋律珠
+                if let snapped = await capturePipeline.stopAndTranscribe(preferredMode: nil), !snapped.notes.isEmpty {
+                    pushUndo()
+                    currentSavedEntryID = nil
+                    chordOverrides.removeAll()
+                    document = MelodyDocument(
+                        title: "轻哼纸带 #\(notebook.entries.count + 1)",
+                        subtitle: "点选音珠可继续在木琴画板上精修",
+                        rootMIDI: 60,
+                        scaleMode: snapped.mode,
+                        harmonyProfile: document.harmonyProfile,
+                        grooveStrength: 0.0,
+                        notes: snapped.notes,
+                        isSpecimen: false,
+                        preferredTexture: accompanimentTexture,
+                        preferredVoice: melodyVoice
+                    )
+                    pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(document)
+                    selectedBeadID = document.notes.first?.id
+                    AcousticHapticsEngine.shared.playResolutionExhale()
+                    showToast("捉住 \(snapped.notes.count) 颗哼唱音珠！")
+                    togglePlayback()
+                } else if !capturePipeline.statusMessage.isEmpty {
+                    showToast(capturePipeline.statusMessage)
+                }
+            }
+        }
+    }
+
+    // MARK: - Core Actions (Preserves 100% Unit-Test Compatibility)
 
     public func setScaleMode(_ mode: ScaleMode) {
         guard document.scaleMode != mode else { return }
         pushUndo()
         document.scaleMode = mode
-        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.55)
-        playSingleNoteWithChord(degree: 3, octaveOffset: 0, atTime: 0.2, xNorm: 0.45)
-        showToast("\(mode.label)：\(mode.skyPhilosophy)")
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
+        let hz = mode.frequencyHz(rootMIDI: document.rootMIDI, degree: 3, octaveOffset: 0)
+        synth.playNote(frequency: hz, velocity: 0.58, decay: 1.4, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+        showToast(mode.isMinorFlavored ? "🌙 切换为「微酸温柔」夜曲色彩" : "☀️ 切换为「晴朗温暖」色彩")
     }
-
-    public func applyMotifGrowth(_ operation: MotifGrowthOperation) {
-        stopPlayback()
-        pushUndo()
-        if document.isSpecimen {
-            document.isSpecimen = false
-            document.title = "种子折纸乐章"
-            currentSavedEntryID = nil
-        }
-        document.notes = MotifOrigamiEngine.grow(notes: document.notes, operation: operation)
-        selectedBeadID = nil
-        AcousticHapticsEngine.shared.playSeedBloom()
-        showToast("\(operation.label)：\(operation.philosophyNote)")
-        togglePlayback()
-    }
-
-    public func commitCapturedMelody(
-        beads: [NoteBead],
-        mode: ScaleMode? = nil,
-        titlePrefix: String = "敲拍脑放",
-        autoSaveSticker: String? = nil
-    ) {
-        stopPlayback()
-        guard !beads.isEmpty else { return }
-        pushUndo()
-        currentSavedEntryID = nil
-        selectedBeadID = nil
-        chordOverrides.removeAll()
-        if chordPreset == .off { chordPreset = .autoMatch }
-        document = MelodyDocument(
-            title: "\(titlePrefix) #\(notebook.entries.count + 1)",
-            subtitle: "试试底部「种子生长」或切换「歌唱大提琴 / 天鹅水波」",
-            rootMIDI: 60,
-            scaleMode: mode ?? document.scaleMode,
-            harmonyProfile: document.harmonyProfile,
-            grooveStrength: 0.0,
-            notes: beads,
-            isSpecimen: false,
-            preferredTexture: accompanimentTexture,
-            preferredVoice: melodyVoice
-        )
-        if let sticker = autoSaveSticker {
-            let saved = notebook.save(
-                document: document,
-                chordPreset: chordPreset,
-                chordOverrides: chordOverrides,
-                accompanimentTexture: accompanimentTexture,
-                moodSticker: sticker,
-                summaryNote: currentInsight.headline
-            )
-            currentSavedEntryID = saved.id
-            document = saved.document
-        }
-        AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已记下 \(beads.count) 颗脑放音珠！")
-    }
-
-    public func savePeelerVariation(document variation: MelodyDocument, texture: AccompanimentTexture, sticker: String) {
-        let saved = notebook.save(
-            document: variation,
-            chordPreset: .autoMatch,
-            chordOverrides: [:],
-            accompanimentTexture: texture,
-            moodSticker: sticker,
-            summaryNote: variation.composerInsight ?? "从名曲火种中改写出的专属变奏"
-        )
-        currentSavedEntryID = saved.id
-        showToast("已贴进胶带手账册：\(saved.document.title)")
-    }
-
-    // MARK: - Direct Tactile Ladder & Canvas Editing
 
     public func triggerLadderMember(_ member: ChimmoMember, octaveOffset: Int = 0) {
         stopPlayback()
         if member.isTensionDegree {
-            AcousticHapticsEngine.shared.playTensionFlutter(intensity: 0.48)
+            AcousticHapticsEngine.shared.playTensionFlutter(intensity: 0.45)
         } else {
             AcousticHapticsEngine.shared.playBeatTap(isStrong: member.degree == 1)
         }
@@ -240,21 +548,20 @@ public final class StudioViewModel: ObservableObject {
     public func placeNoteOnCanvas(degree: Int, octaveOffset: Int, atTime: Double) {
         stopPlayback()
         AcousticHapticsEngine.shared.playBeatTap(isStrong: degree == 1)
-
         if document.isSpecimen {
             forkIntoFreeDraft()
         }
 
         let clampedTime = max(0.08, atTime)
         pushUndo()
-        let bead = NoteBead(degree: degree, octaveOffset: octaveOffset, rawOnset: clampedTime, rawDuration: 0.50)
+        let bead = NoteBead(degree: degree, octaveOffset: octaveOffset, rawOnset: clampedTime, rawDuration: 0.48)
         document.notes.append(bead)
         document.notes.sort { $0.rawOnset < $1.rawOnset }
         selectedBeadID = bead.id
 
-        let totalSec = max(3.2, document.totalDuration)
-        let xNorm = min(0.94, max(0.06, clampedTime / totalSec))
-        playSingleNoteWithChord(degree: degree, octaveOffset: octaveOffset, atTime: clampedTime, xNorm: xNorm)
+        if let idx = document.notes.firstIndex(where: { $0.id == bead.id }) {
+            playContextEcho(upToIndex: idx)
+        }
     }
 
     public func adjustSelectedBeadDuration(delta: Double) {
@@ -267,17 +574,22 @@ public final class StudioViewModel: ObservableObject {
             document.notes[idx].quantizedDuration = next
         }
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-        previewBead(document.notes[idx])
-        showToast(delta > 0 ? "音珠呼吸已拉长" : "音珠已变短促")
+        playContextEcho(upToIndex: idx)
+        showToast(delta > 0 ? "这拍拖音变长啦" : "这拍变得更利落")
     }
 
     public func deleteSelectedBead() {
-        guard let targetID = selectedBeadID else { return }
+        guard let targetID = selectedBeadID,
+              let idx = document.notes.firstIndex(where: { $0.id == targetID }) else { return }
         pushUndo()
-        document.notes.removeAll { $0.id == targetID }
-        selectedBeadID = nil
+        document.notes.remove(at: idx)
+        if document.notes.isEmpty {
+            selectedBeadID = nil
+        } else {
+            selectedBeadID = document.notes[min(idx, document.notes.count - 1)].id
+        }
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-        showToast("已删去该音珠")
+        showToast("已删掉这一拍")
     }
 
     public func cycleSpanChord(spanIndex: Int) {
@@ -285,79 +597,53 @@ public final class StudioViewModel: ObservableObject {
         guard let currentSpan = spans.first(where: { $0.id == spanIndex }) else { return }
         let next = currentSpan.chord.nextChord()
         chordOverrides[spanIndex] = next
-        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.52)
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
         synth.playDiatonicChord(
             rootMIDI: document.rootMIDI,
             mode: document.scaleMode,
             chord: next,
             texture: accompanimentTexture,
             spanDuration: max(1.0, currentSpan.endTime - currentSpan.startTime),
-            intensity: 0.88
+            intensity: 0.85
         )
-        showToast("第 \(spanIndex + 1) 小节脚下光影已换为 \(next.roman)（\(next.moodTitle)）")
     }
 
     public func setChordPreset(_ preset: ChordProgressionPreset) {
         chordPreset = preset
         chordOverrides.removeAll()
-        if let firstChord = chordSpans.first?.chord {
-            synth.playDiatonicChord(
-                rootMIDI: document.rootMIDI,
-                mode: document.scaleMode,
-                chord: firstChord,
-                texture: accompanimentTexture,
-                intensity: 0.84
-            )
-        }
-        showToast("和弦光带：\(preset.label)")
+        showToast(preset == .off ? "已关闭伴奏托底，只听纯净单旋律" : "已开启温柔和声伴奏")
     }
 
     public func setAccompanimentTexture(_ texture: AccompanimentTexture) {
         accompanimentTexture = texture
         if chordPreset == .off { chordPreset = .autoMatch }
-        if let firstChord = chordSpans.first?.chord {
-            synth.playDiatonicChord(
-                rootMIDI: document.rootMIDI,
-                mode: document.scaleMode,
-                chord: firstChord,
-                texture: texture,
-                spanDuration: 1.4,
-                intensity: 0.88
-            )
-        }
-        showToast("左手伴奏织体：\(texture.label)")
+        showToast("伴奏水波：\(texture.label)")
     }
 
     public func setMelodyVoice(_ voice: MelodyVoice) {
         melodyVoice = voice
         let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: 3, octaveOffset: 0)
-        synth.playNote(frequency: hz, velocity: 0.62, decay: 1.6, timbre: FeltPianoSynth.Timbre.from(voice: voice))
-        showToast("主旋律乐器：\(voice.label)")
+        synth.playNote(frequency: hz, velocity: 0.62, decay: 1.5, timbre: FeltPianoSynth.Timbre.from(voice: voice))
+        showToast("主乐器已换为：\(voice.label)")
     }
 
-    public func toggleShadowCounterpoint() {
-        shadowCounterpointEnabled.toggle()
-        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
-        showToast(
-            shadowCounterpointEnabled
-                ? "👥 已召唤影子对位：当你停在长音喘息时，另一个灵魂在留白里轻声接唱"
-                : "已关闭影子对位"
-        )
-    }
-
-    public func startBlankCanvas(preferredTexture: AccompanimentTexture? = nil, preferredMode: ScaleMode? = nil) {
+    public func startBlankCanvas() {
         stopPlayback()
+        contextEchoTask?.cancel()
         pushUndo()
+        followGlowActive = false
+        smartHintActive = false
+        isTappingRhythm = false
         currentSavedEntryID = nil
         selectedBeadID = nil
         chordOverrides.removeAll()
-        if let tex = preferredTexture { accompanimentTexture = tex }
+        pentatonicSafe = true
         if chordPreset == .off { chordPreset = .autoMatch }
         document = MelodyDocument(
-            title: "新脑放草图",
-            subtitle: "点左侧阶梯、敲拍画坡，或按住「轻哼捉珠」",
+            title: "新脑放纸带",
+            subtitle: "点下方「敲下脑海节奏」，或直接在画板上落珠",
             rootMIDI: 60,
-            scaleMode: preferredMode ?? document.scaleMode,
+            scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
             grooveStrength: 0.0,
             notes: [],
@@ -366,44 +652,63 @@ public final class StudioViewModel: ObservableObject {
             preferredVoice: melodyVoice
         )
         lastFreeNoteTime = nil
-        impulses.removeAll()
-        showToast("空白声学画卷已铺好")
+        showToast("新空白纸带已铺好，点「敲下脑海节奏」开始！")
     }
 
     public func openSpecimen(_ specimen: MelodyDocument, autoPlay: Bool = true) {
         stopPlayback()
+        contextEchoTask?.cancel()
         pushUndo()
+        followGlowActive = false
+        followGlowIndex = 0
+        smartHintActive = false
+        isTappingRhythm = false
         currentSavedEntryID = nil
-        selectedBeadID = nil
+        selectedBeadID = specimen.notes.first?.id
         chordOverrides.removeAll()
         chordPreset = .autoMatch
         accompanimentTexture = specimen.preferredTexture ?? .swanRipple
         melodyVoice = specimen.preferredVoice ?? .concertPiano
+        pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(specimen)
         document = specimen
         if autoPlay { togglePlayback() }
     }
 
+    public func openSpecimenForFollowGlow(_ specimen: MelodyDocument) {
+        openSpecimen(specimen, autoPlay: false)
+        selectedBeadID = nil
+        followGlowActive = true
+        followGlowIndex = 0
+        showToast("✨ 跟着左侧发暖金光的木琴条敲，演奏《\(specimen.title)》")
+    }
+
     public func openSavedEntry(_ entry: SavedMelodyEntry, autoPlay: Bool = true) {
         stopPlayback()
+        contextEchoTask?.cancel()
         pushUndo()
+        followGlowActive = false
+        followGlowIndex = 0
+        smartHintActive = false
+        isTappingRhythm = false
         currentSavedEntryID = entry.id
-        selectedBeadID = nil
+        selectedBeadID = entry.document.notes.first?.id
         document = entry.document
         chordPreset = entry.chordPreset
         chordOverrides = entry.chordOverrides
         accompanimentTexture = entry.accompanimentTexture ?? entry.document.preferredTexture ?? .swanRipple
-        melodyVoice = entry.document.preferredVoice ?? .concertPiano
+        melodyVoice = entry.document.preferredVoice ?? .singingCello
+        pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(entry.document)
         if autoPlay { togglePlayback() }
     }
 
     public func saveCurrentToNotebook(moodSticker: String? = nil) {
         guard !document.notes.isEmpty else {
-            showToast("先哼一句、敲拍画坡或点几颗音珠，再贴进手账吧")
+            showToast("先敲下几拍脑放，再收进音乐盒吧")
             return
         }
         var docToSave = document
-        if docToSave.isSpecimen || docToSave.title == "新脑放草图" || docToSave.title == "指尖即兴" || docToSave.title == "种子折纸乐章" {
-            docToSave.title = "脑放明信片 #\(notebook.entries.count + 1)"
+        if docToSave.isSpecimen || docToSave.title == "新脑放纸带" || docToSave.title == "指尖即兴" {
+            docToSave.title = "脑放纸带 #\(notebook.entries.count + 1)"
         }
         docToSave.isSpecimen = false
         docToSave.preferredTexture = accompanimentTexture
@@ -414,77 +719,17 @@ public final class StudioViewModel: ObservableObject {
             chordPreset: chordPreset,
             chordOverrides: chordOverrides,
             accompanimentTexture: accompanimentTexture,
-            moodSticker: moodSticker,
+            moodSticker: moodSticker ?? (document.scaleMode.isMinorFlavored ? "🌙 温柔夜曲" : "🌈 彩虹木琴"),
             summaryNote: currentInsight.headline,
             existingEntryID: currentSavedEntryID
         )
         currentSavedEntryID = saved.id
         document = saved.document
         AcousticHapticsEngine.shared.playResolutionExhale()
-        showToast("已贴进手账册：\(saved.document.title)")
+        showToast("已贴进「音乐盒」：\(saved.document.title)")
     }
 
-    // MARK: - Bead & Ghost Editing
-
-    public func applyGhost(beadID: UUID, ghost: GhostCandidate) {
-        guard let idx = document.notes.firstIndex(where: { $0.id == beadID }) else { return }
-        pushUndo()
-        document.notes[idx].degree = ghost.degree
-        document.notes[idx].octaveOffset = ghost.octaveOffset
-        document.notes[idx].ghostCandidates.removeAll()
-        selectedBeadID = beadID
-        AcousticHapticsEngine.shared.playResolutionExhale()
-        let onset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
-        let xNorm = onset / max(3.2, document.totalDuration)
-        playSingleNoteWithChord(degree: ghost.degree, octaveOffset: ghost.octaveOffset, atTime: onset, xNorm: xNorm)
-    }
-
-    public func updateBeadPitch(beadID: UUID, degree: Int, octaveOffset: Int) {
-        guard let idx = document.notes.firstIndex(where: { $0.id == beadID }) else { return }
-        if document.notes[idx].degree == degree && document.notes[idx].octaveOffset == octaveOffset { return }
-        pushUndo()
-        document.notes[idx].degree = degree
-        document.notes[idx].octaveOffset = octaveOffset
-        document.notes[idx].ghostCandidates.removeAll()
-        selectedBeadID = beadID
-        if ChimmoMember.from(degree: degree).isTensionDegree {
-            AcousticHapticsEngine.shared.playTensionFlutter(intensity: 0.45)
-        } else {
-            AcousticHapticsEngine.shared.playBeatTap(isStrong: degree == 1)
-        }
-        let onset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
-        let xNorm = onset / max(3.2, document.totalDuration)
-        playSingleNoteWithChord(degree: degree, octaveOffset: octaveOffset, atTime: onset, xNorm: xNorm)
-    }
-
-    public func previewBead(_ bead: NoteBead) {
-        selectedBeadID = bead.id
-        let onset = bead.displayOnset(grooveStrength: document.grooveStrength)
-        let xNorm = onset / max(3.2, document.totalDuration)
-        playSingleNoteWithChord(degree: bead.degree, octaveOffset: bead.octaveOffset, atTime: onset, xNorm: xNorm)
-    }
-
-    // MARK: - Hum Capture
-
-    public func startHumCapture() {
-        stopPlayback()
-        AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
-        capturePipeline.startRecording()
-    }
-
-    public func finishHumCapture(onCaptured: (() -> Void)? = nil) {
-        Task {
-            if let snapped = await capturePipeline.stopAndTranscribe(preferredMode: nil), !snapped.notes.isEmpty {
-                commitCapturedMelody(beads: snapped.notes, mode: snapped.mode, titlePrefix: "轻哼明信片", autoSaveSticker: "🎙 轻哼灵感")
-                onCaptured?()
-                togglePlayback()
-            } else if !capturePipeline.statusMessage.isEmpty {
-                showToast(capturePipeline.statusMessage)
-            }
-        }
-    }
-
-    // MARK: - Looping Chamber Ensemble Sequencer
+    // MARK: - Playback Sequencer
 
     public func togglePlayback() {
         if isPlaying {
@@ -492,9 +737,10 @@ public final class StudioViewModel: ObservableObject {
             return
         }
         guard !document.notes.isEmpty else {
-            triggerLadderMember(.taono, octaveOffset: 0)
+            strikeXylophoneLane(XylophoneLane.allLanes[0])
             return
         }
+        contextEchoTask?.cancel()
         synth.ensureRunning()
         isPlaying = true
 
@@ -502,65 +748,53 @@ public final class StudioViewModel: ObservableObject {
             guard let self else { return }
 
             while !Task.isCancelled && self.isPlaying {
-                let speed = self.slowMotion ? 0.6 : 1.0
                 let total = self.document.totalDuration
-                let totalCanvasSec = max(3.2, total)
                 let sorted = self.document.notes.sorted {
                     $0.displayOnset(grooveStrength: self.document.grooveStrength) < $1.displayOnset(grooveStrength: self.document.grooveStrength)
                 }
-                let shadows = self.shadowNotes
 
                 let startDate = Date()
                 var nextNoteIdx = 0
-                var nextShadowIdx = 0
                 var lastTriggeredSpanID: Int = -1
 
                 while !Task.isCancelled && self.isPlaying {
-                    let elapsed = Date().timeIntervalSince(startDate) * speed
+                    let elapsed = Date().timeIntervalSince(startDate)
                     self.playheadTime = elapsed
 
                     let spans = self.chordSpans
                     if let currentSpan = spans.first(where: { elapsed >= $0.startTime && elapsed < $0.endTime }),
                        currentSpan.id != lastTriggeredSpanID {
                         lastTriggeredSpanID = currentSpan.id
-                        let spanDur = (currentSpan.endTime - currentSpan.startTime) / speed
                         self.synth.playDiatonicChord(
                             rootMIDI: self.document.rootMIDI,
                             mode: self.document.scaleMode,
                             chord: currentSpan.chord,
                             texture: self.accompanimentTexture,
-                            spanDuration: spanDur,
-                            intensity: 0.80
+                            spanDuration: currentSpan.endTime - currentSpan.startTime,
+                            intensity: 0.78
                         )
                     }
 
                     while nextNoteIdx < sorted.count &&
                             sorted[nextNoteIdx].displayOnset(grooveStrength: self.document.grooveStrength) <= elapsed {
                         let bead = sorted[nextNoteIdx]
-                        let onset = bead.displayOnset(grooveStrength: self.document.grooveStrength)
-                        let dur = bead.displayDuration(grooveStrength: self.document.grooveStrength) / speed
-                        let xNorm = min(0.94, max(0.06, onset / totalCanvasSec))
-                        self.performScheduledBead(bead, durationSec: dur, xNorm: xNorm)
-                        nextNoteIdx += 1
-                    }
+                        let dur = bead.displayDuration(grooveStrength: self.document.grooveStrength)
+                        let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+                        self.flashLane(laneIdx, degree: bead.degree, holdSeconds: max(0.22, min(0.50, dur * 0.85)))
 
-                    if self.shadowCounterpointEnabled {
-                        while nextShadowIdx < shadows.count && shadows[nextShadowIdx].onset <= elapsed {
-                            let sh = shadows[nextShadowIdx]
-                            let hz = self.document.scaleMode.frequencyHz(
-                                rootMIDI: self.document.rootMIDI,
-                                degree: sh.degree,
-                                octaveOffset: sh.octaveOffset
-                            )
-                            self.synth.playNote(
-                                frequency: hz,
-                                velocity: 0.30,
-                                decay: max(0.85, (sh.duration / speed) * 1.35),
-                                brightness: 0.9,
-                                timbre: self.melodyVoice == .singingCello ? .celesta : .liquidHarp
-                            )
-                            nextShadowIdx += 1
-                        }
+                        let hz = self.document.scaleMode.frequencyHz(
+                            rootMIDI: self.document.rootMIDI,
+                            degree: bead.degree,
+                            octaveOffset: bead.octaveOffset
+                        )
+                        self.synth.playNote(
+                            frequency: hz,
+                            velocity: 0.62,
+                            decay: max(1.0, dur * 1.45),
+                            brightness: 0.96,
+                            timbre: FeltPianoSynth.Timbre.from(voice: self.melodyVoice)
+                        )
+                        nextNoteIdx += 1
                     }
 
                     if elapsed >= total { break }
@@ -568,7 +802,7 @@ public final class StudioViewModel: ObservableObject {
                 }
 
                 if Task.isCancelled || !self.isPlaying { break }
-                try? await Task.sleep(nanoseconds: 450_000_000)
+                try? await Task.sleep(nanoseconds: 420_000_000)
             }
 
             if !Task.isCancelled {
@@ -583,13 +817,14 @@ public final class StudioViewModel: ObservableObject {
         isPlaying = false
         playheadTime = nil
         activeDegrees.removeAll()
+        activeLaneIndices.removeAll()
     }
 
     public func undo() {
         guard let prev = undoStack.popLast() else { return }
         stopPlayback()
         document = prev
-        selectedBeadID = nil
+        selectedBeadID = document.notes.first?.id
         canUndo = !undoStack.isEmpty
         showToast("已撤销上一步")
     }
@@ -603,7 +838,7 @@ public final class StudioViewModel: ObservableObject {
         chordOverrides.removeAll()
         document = MelodyDocument(
             title: "指尖即兴",
-            subtitle: "点左侧阶梯、敲拍画坡，或用「种子生长」展开成诗",
+            subtitle: "在木琴画板上自由编织脑放",
             rootMIDI: 60,
             scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
@@ -622,57 +857,23 @@ public final class StudioViewModel: ObservableObject {
         canUndo = true
     }
 
-    private func spawnImpulse(degree: Int, octaveOffset: Int, xNorm: Double) {
-        let now = Date().timeIntervalSinceReferenceDate
-        impulses.removeAll { now - $0.birth > 1.8 }
-        impulses.append(VisualImpulse(birth: now, degree: degree, octaveOffset: octaveOffset, xNorm: xNorm))
-    }
-
-    private func performScheduledBead(_ bead: NoteBead, durationSec: Double, xNorm: Double) {
-        let member = bead.member
-        latestDegree = member.degree
-        spawnImpulse(degree: bead.degree, octaveOffset: bead.octaveOffset, xNorm: xNorm)
-
-        let hz = document.scaleMode.frequencyHz(
-            rootMIDI: document.rootMIDI,
-            degree: bead.degree,
-            octaveOffset: bead.octaveOffset
-        )
-        let expressiveVel = min(0.72, 0.56 + (bead.octaveOffset > 0 ? 0.08 : 0.0) + (durationSec > 0.9 ? 0.05 : 0.0))
-        synth.playNote(
-            frequency: hz,
-            velocity: expressiveVel,
-            decay: max(1.05, durationSec * 1.48),
-            brightness: 0.96,
-            timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice)
-        )
-
-        activeDegrees.insert(member.degree)
-        let holdNs = UInt64(max(0.20, min(0.55, durationSec * 0.85)) * 1_000_000_000)
-        Task { [weak self] in
+    private func flashLane(_ laneIdx: Int, degree: Int, holdSeconds: Double = 0.28) {
+        latestDegree = degree
+        activeDegrees.insert(degree)
+        activeLaneIndices.insert(laneIdx)
+        let holdNs = UInt64(holdSeconds * 1_000_000_000)
+        Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: holdNs)
-            self?.activeDegrees.remove(member.degree)
+            self?.activeDegrees.remove(degree)
+            self?.activeLaneIndices.remove(laneIdx)
         }
     }
 
     private func playSingleNoteWithChord(degree: Int, octaveOffset: Int, atTime: Double, xNorm: Double) {
-        let member = ChimmoMember.from(degree: degree)
-        latestDegree = member.degree
-        spawnImpulse(degree: degree, octaveOffset: octaveOffset, xNorm: xNorm)
-
-        let hz = document.scaleMode.frequencyHz(
-            rootMIDI: document.rootMIDI,
-            degree: degree,
-            octaveOffset: octaveOffset
-        )
-        synth.playNote(
-            frequency: hz,
-            velocity: 0.62,
-            decay: 1.65,
-            brightness: 0.96,
-            timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice)
-        )
-
+        let laneIdx = XylophoneLane.laneIndex(degree: degree, octaveOffset: octaveOffset)
+        flashLane(laneIdx, degree: degree)
+        let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: degree, octaveOffset: octaveOffset)
+        synth.playNote(frequency: hz, velocity: 0.62, decay: 1.5, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
         if let ch = TheoryLensEngine.chord(at: atTime, in: chordSpans) {
             synth.playDiatonicChord(
                 rootMIDI: document.rootMIDI,
@@ -682,12 +883,6 @@ public final class StudioViewModel: ObservableObject {
                 spanDuration: 1.15,
                 intensity: 0.52
             )
-        }
-
-        activeDegrees.insert(member.degree)
-        Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 280_000_000)
-            self?.activeDegrees.remove(member.degree)
         }
     }
 
@@ -703,22 +898,14 @@ public final class StudioViewModel: ObservableObject {
     }
 }
 
-/// 咩哞 v0.5 主入口（Moss & Otto 家族正典架构）：
-/// - 首次打开 4 秒无字点灯开场（连点首页陶诺 3 次可随时重温）
-/// - 三大极简无压标签：桌面（矮桌今日三件套 + 活体七小只木架）· 声学房（6 间 OTTOSSOM 式无字解谜房）· 手账册（胶带声学明信片 + 28 首藏书）
+/// 咩哞 v0.6 极简实体玩具入口：
+/// 砍掉 80% 弥漫抽象菜单，打开即用「木琴画板」与「音乐盒」双标签极简架构。
 public struct StudioView: View {
     @StateObject private var vm = StudioViewModel()
     @Environment(\.colorScheme) private var systemScheme
 
-    @State private var selectedTab: ChimmoTab = .desk
-    @State private var showOpening: Bool = !UserDefaults.standard.bool(forKey: "chimmo_seen_opening_v05")
-    @State private var peelerPiece: MelodyDocument? = nil
-    @State private var showWorkbench: Bool = false
-    @State private var showDecoupledCapture: Bool = false
-    @State private var showNightLampTouch: Bool = false
-    @State private var showAdvancedPavilion: Bool = false
+    @State private var selectedTab: ChimmoTab = .board
     @State private var showAbout: Bool = false
-    @State private var taonoEasterTapCount: Int = 0
 
     public init() {}
 
@@ -733,753 +920,54 @@ public struct StudioView: View {
     private var palette: ChimmoPalette { ChimmoPalette(isNight: isNight) }
 
     public var body: some View {
-        ZStack {
-            TabView(selection: $selectedTab) {
-                homeDeskTab
-                    .tabItem {
-                        Label("桌面", systemImage: "sun.and.horizon")
-                    }
-                    .tag(ChimmoTab.desk)
-
-                AcousticRoomsView(
-                    palette: palette,
-                    synth: vm.synth,
-                    solvedRooms: $vm.solvedRooms,
-                    onSendRoomMelodyToBook: { beads, mode in
-                        vm.commitCapturedMelody(beads: beads, mode: mode, titlePrefix: "镜子湖回声", autoSaveSticker: "🪞 镜子湖")
-                        selectedTab = .book
-                    },
-                    onOpenSwanPeeler: {
-                        peelerPiece = SpecimenLibrary.saintSaensTheSwan
-                    },
-                    onOpenAdvancedLab: {
-                        showAdvancedPavilion = true
-                    }
-                )
-                .tabItem {
-                    Label("声学房", systemImage: "sparkles")
-                }
-                .tag(ChimmoTab.rooms)
-
-                SoundPostcardBookView(
-                    palette: palette,
-                    synth: vm.synth,
-                    notebook: vm.notebook,
-                    currentDocumentID: vm.document.id,
-                    onOpenSavedInWorkbench: { entry in
-                        vm.openSavedEntry(entry, autoPlay: true)
-                        showWorkbench = true
-                    },
-                    onOpenPeelerForSpecimen: { spec in
-                        peelerPiece = spec
-                    },
-                    onOpenSpecimenInWorkbench: { spec in
-                        vm.openSpecimen(spec, autoPlay: true)
-                        showWorkbench = true
-                    },
-                    onStartNewCapture: {
-                        showDecoupledCapture = true
-                    }
-                )
-                .tabItem {
-                    Label("手账册", systemImage: "book.pages")
-                }
-                .tag(ChimmoTab.book)
-            }
-            .tint(palette.homeAnchor)
-
-            // 首次打开的 4 秒无字点灯开场（可随时轻点进入）
-            if showOpening {
-                ChimmoOpeningView(synth: vm.synth) {
-                    UserDefaults.standard.set(true, forKey: "chimmo_seen_opening_v05")
-                    withAnimation(.easeInOut(duration: 0.45)) {
-                        showOpening = false
-                    }
-                }
-                .transition(.opacity)
-                .zIndex(10)
-            }
-        }
-        .preferredColorScheme(vm.appearance == .auto ? nil : (isNight ? .dark : .light))
-        .fullScreenCover(item: $peelerPiece) { piece in
-            MasterpiecePeelerView(
-                initialPiece: piece,
-                palette: palette,
-                synth: vm.synth,
-                onSaveVariationToBook: { variedDoc, tex, sticker in
-                    vm.savePeelerVariation(document: variedDoc, texture: tex, sticker: sticker)
-                },
-                onOpenInWorkbench: { variedDoc in
-                    peelerPiece = nil
-                    vm.openSpecimen(variedDoc, autoPlay: true)
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 360_000_000)
-                        showWorkbench = true
-                    }
-                }
-            )
-            .id(piece.id)
-        }
-        .fullScreenCover(isPresented: $showWorkbench) {
-            WorkbenchModalView(
+        TabView(selection: $selectedTab) {
+            XylophoneRollBoardView(
                 vm: vm,
                 palette: palette,
-                onOpenDecoupledCapture: {
-                    showDecoupledCapture = true
-                },
                 onOpenAbout: {
                     showAbout = true
                 }
             )
-        }
-        .fullScreenCover(isPresented: $showNightLampTouch) {
-            NightLampTouchStageView(
-                synth: vm.synth,
-                initialMode: vm.document.scaleMode,
-                onSaveMidnightDream: { beads, mode in
-                    vm.commitCapturedMelody(beads: beads, mode: mode, titlePrefix: "夜灯梦境", autoSaveSticker: "🌙 深夜台灯")
-                    selectedTab = .book
-                }
-            )
-        }
-        .sheet(isPresented: $showDecoupledCapture) {
-            RhythmContourCaptureSheet(
-                palette: palette,
-                scaleMode: vm.document.scaleMode,
-                voice: vm.melodyVoice,
-                texture: vm.accompanimentTexture,
-                synth: vm.synth,
-                onCommitMelody: { beads, _ in
-                    vm.commitCapturedMelody(beads: beads, titlePrefix: "敲拍明信片", autoSaveSticker: "🥁 敲拍灵感")
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 360_000_000)
-                        showWorkbench = true
-                    }
-                }
-            )
-        }
-        .sheet(isPresented: $showAdvancedPavilion) {
-            PhilosophyPavilionView(
+            .tabItem {
+                Label("木琴画板", systemImage: "pianokeys")
+            }
+            .tag(ChimmoTab.board)
+
+            MusicBoxShelfView(
                 palette: palette,
                 synth: vm.synth,
-                visitedInstallations: $vm.visitedInstallations,
-                onSendOrigamiToWorkbench: { beads, mode in
-                    showAdvancedPavilion = false
-                    vm.commitCapturedMelody(beads: beads, mode: mode, titlePrefix: "折纸明信片", autoSaveSticker: "🌱 种子折纸")
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 360_000_000)
-                        showWorkbench = true
-                    }
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                onLoadSavedToBoard: { entry in
+                    vm.openSavedEntry(entry, autoPlay: true)
+                    selectedTab = .board
                 },
-                onOpenSwanInWorkbench: {
-                    showAdvancedPavilion = false
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 360_000_000)
-                        peelerPiece = SpecimenLibrary.saintSaensTheSwan
-                    }
+                onPlayAlongSpecimen: { spec in
+                    vm.openSpecimenForFollowGlow(spec)
+                    selectedTab = .board
                 },
-                onOpenDecoupledCapture: {
-                    showAdvancedPavilion = false
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 360_000_000)
-                        showDecoupledCapture = true
-                    }
+                onEditSpecimenOnBoard: { spec in
+                    vm.openSpecimen(spec, autoPlay: true)
+                    selectedTab = .board
+                },
+                onStartNewTap: {
+                    selectedTab = .board
+                    vm.startRhythmTap()
                 }
             )
+            .tabItem {
+                Label("音乐盒", systemImage: "music.note.list")
+            }
+            .tag(ChimmoTab.musicBox)
         }
+        .tint(palette.homeAnchor)
+        .preferredColorScheme(vm.appearance == .auto ? nil : (isNight ? .dark : .light))
         .sheet(isPresented: $showAbout) {
             AboutSheetView(
                 palette: palette,
                 currentDocument: vm.document,
                 cradleEnabled: vm.cradleEnabled
             )
-        }
-    }
-
-    // MARK: - Tab 1: Moss & Otto Inspired Serene Home Desk (矮桌三件套)
-
-    private var homeDeskTab: some View {
-        NavigationStack {
-            ZStack {
-                AmbientPaperBackdrop(palette: palette)
-
-                VStack(spacing: 0) {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 14) {
-                            // 1. 主角大卡：今日剥洋葱名曲（默认圣桑《天鹅》，一键可换）
-                            featuredPeelerDeskCard
-
-                            // 2. 并排双纸片：今日声学小房 + 闭眼夜灯摸音（无半行空白）
-                            HStack(spacing: 12) {
-                                todayRoomMiniCard
-                                nightLampMiniCard
-                            }
-
-                            // 3. 整行脑放捕捉台：轻哼 / 敲拍画坡 / 展开创作精修台
-                            captureBrainMelodyDeskCard
-
-                            if let toast = vm.statusToast {
-                                Text(toast)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(palette.homeAnchor)
-                                    .padding(.horizontal, 4)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10)
-                        .padding(.bottom, 14)
-                    }
-
-                    // 4. 矮桌底部：全尺寸活体呼吸七只咩哞木架（点按/横滑即唱歌，全员转眼相看！）
-                    TroupeShelfView(
-                        palette: palette,
-                        isMinor: vm.document.scaleMode.isMinorFlavored,
-                        activeDegrees: vm.activeDegrees,
-                        latestDegree: vm.latestDegree,
-                        listeningTilt: vm.capturePipeline.isRecording ? (vm.capturePipeline.inputLevel - 0.35) : 0,
-                        onTriggerMember: { member in
-                            vm.chimeDeskMember(member)
-                            if member == .taono {
-                                taonoEasterTapCount += 1
-                                if taonoEasterTapCount >= 3 {
-                                    taonoEasterTapCount = 0
-                                    withAnimation(.easeInOut(duration: 0.4)) {
-                                        showOpening = true
-                                    }
-                                }
-                            } else {
-                                taonoEasterTapCount = 0
-                            }
-                        }
-                    )
-                }
-            }
-            .navigationTitle("咩哞")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        let next: AppearancePreference = isNight ? .daylight : .nightLamp
-                        vm.appearance = next
-                    } label: {
-                        Image(systemName: isNight ? "sun.max" : "lamp.desk")
-                    }
-                    .accessibilityLabel(isNight ? "切换日光纸面" : "切换夜灯台灯")
-
-                    Button {
-                        showAbout = true
-                    } label: {
-                        Image(systemName: "info.circle")
-                    }
-                    .accessibilityLabel("关于咩哞与导出 MIDI")
-                }
-            }
-        }
-    }
-
-    private var featuredPeelerDeskCard: some View {
-        let piece = vm.featuredDeskPiece
-        let voice = piece.preferredVoice ?? .singingCello
-        let tex = piece.preferredTexture ?? .swanRipple
-
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("今天一起听 · 剥洋葱倒拆")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(palette.homeAnchor)
-                Spacer()
-                Button {
-                    vm.rotateFeaturedDeskPiece()
-                } label: {
-                    Label("换一首", systemImage: "arrow.triangle.2.circlepath")
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.secondaryInk)
-                }
-                .buttonStyle(.plain)
-            }
-
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(piece.title)
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                    Text("\(voice.label) × \(tex.label)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(palette.bassRibbon)
-                    Text(piece.composerInsight ?? piece.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(palette.secondaryInk)
-                        .lineLimit(2)
-                }
-
-                Spacer(minLength: 4)
-
-                // 三只核心咩哞在卡面右侧安静陪伴（不说话，只呼吸看你）
-                HStack(spacing: -8) {
-                    ChimmoFigureView(member: .taono, isNight: palette.isNight, isMinor: piece.scaleMode.isMinorFlavored, isSinging: false, time: 0, listeningTilt: 0)
-                        .frame(width: 44, height: 44)
-                    ChimmoFigureView(member: .plokko, isNight: palette.isNight, isMinor: piece.scaleMode.isMinorFlavored, isSinging: false, time: 0, listeningTilt: 0)
-                        .frame(width: 42, height: 42)
-                        .offset(y: 6)
-                }
-            }
-
-            HStack(spacing: 10) {
-                Button {
-                    peelerPiece = piece
-                } label: {
-                    Label("一层层剥开听", systemImage: "play.fill")
-                        .font(.subheadline.weight(.bold))
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 11)
-                        .background(Capsule().fill(palette.homeAnchor))
-                        .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
-                }
-
-                Button {
-                    vm.openSpecimen(piece, autoPlay: true)
-                    showWorkbench = true
-                } label: {
-                    Text("在工作台看全谱")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 11)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
-                }
-            }
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(palette.cardSurface)
-                .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.06), radius: 14, y: 5)
-        )
-    }
-
-    private var todayRoomMiniCard: some View {
-        let nextRoom = AcousticRoom.allCases.first { !vm.solvedRooms.contains($0.rawValue) } ?? .homeBeforeDark
-        return Button {
-            selectedTab = .rooms
-        } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ChimmoFigureView(member: nextRoom.hostMember, isNight: palette.isNight, isMinor: false, isSinging: false, time: 0, listeningTilt: 0)
-                        .frame(width: 40, height: 40)
-                    Spacer()
-                    Text("\(vm.solvedRooms.count)/6 珠")
-                        .font(.caption2.weight(.bold).monospacedDigit())
-                        .foregroundStyle(palette.nightLampGold)
-                }
-                Text("今日声学小房")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(palette.homeAnchor)
-                Text(nextRoom.title)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
-                Text("零术语摸懂一条音律哲学")
-                    .font(.caption2)
-                    .foregroundStyle(palette.secondaryInk)
-                    .lineLimit(1)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(palette.cardSurface)
-                    .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.2 : 0.04), radius: 10, y: 4)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var nightLampMiniCard: some View {
-        Button {
-            showNightLampTouch = true
-        } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: 0xFFB84D).opacity(0.28))
-                            .frame(width: 38, height: 38)
-                        Circle()
-                            .fill(Color(hex: 0xFFB84D))
-                            .frame(width: 14, height: 14)
-                            .shadow(color: Color(hex: 0xFFB84D), radius: 6)
-                    }
-                    Spacer()
-                    Image(systemName: "moon.stars.fill")
-                        .font(.caption)
-                        .foregroundStyle(Color(hex: 0xFFB84D))
-                }
-                Text("无障碍夜灯")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color(hex: 0xFFB84D))
-                Text("闭眼摸音剧场")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color(hex: 0xF4EBDD))
-                    .lineLimit(1)
-                Text("掌心震动 + 不刺眼写梦")
-                    .font(.caption2)
-                    .foregroundStyle(Color(hex: 0xAEB4CC))
-                    .lineLimit(1)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(hex: 0x1B2245))
-                    .shadow(color: Color.black.opacity(0.18), radius: 10, y: 4)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var captureBrainMelodyDeskCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("捉住此刻脑海里的旋律")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(palette.primaryInk)
-
-            HStack(spacing: 8) {
-                // 1. 轻哼捉珠
-                Button {
-                    if vm.capturePipeline.isRecording {
-                        vm.finishHumCapture {
-                            showWorkbench = true
-                        }
-                    } else {
-                        vm.startHumCapture()
-                    }
-                } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: vm.capturePipeline.isRecording ? "stop.fill" : "waveform")
-                        Text(vm.capturePipeline.isRecording ? "唱完了" : "轻哼捉珠")
-                            .font(.caption.weight(.bold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Capsule().fill(vm.capturePipeline.isRecording ? palette.tensionFilament : palette.melodyTerracotta))
-                    .foregroundStyle(.white)
-                }
-
-                // 2. 敲拍画坡（零音准门槛）
-                Button {
-                    showDecoupledCapture = true
-                } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "hand.tap.fill")
-                        Text("敲拍画坡")
-                            .font(.caption.weight(.bold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Capsule().fill(palette.bassRibbon.opacity(0.16)))
-                    .foregroundStyle(palette.bassRibbon)
-                }
-
-                // 3. 自由创作精修台
-                Button {
-                    vm.startBlankCanvas()
-                    showWorkbench = true
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "square.and.pencil")
-                        Text("创作台")
-                            .font(.caption.weight(.bold))
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(Capsule().fill(palette.shelfSurface))
-                    .foregroundStyle(palette.primaryInk)
-                }
-            }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(palette.cardSurface)
-                .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.2 : 0.04), radius: 10, y: 4)
-        )
-    }
-}
-
-// MARK: - Full Interactive Workbench Modal (Preserves ALL v0.4.0 Power Without Cluttering Home!)
-
-private struct WorkbenchModalView: View {
-    @ObservedObject var vm: StudioViewModel
-    let palette: ChimmoPalette
-    let onOpenDecoupledCapture: () -> Void
-    let onOpenAbout: () -> Void
-
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                topSkyAndLensHeader
-
-                HarmonicLadderCanvas(
-                    document: vm.document,
-                    chordSpans: vm.chordSpans,
-                    shadowNotes: vm.shadowNotes,
-                    shadowEnabled: vm.shadowCounterpointEnabled,
-                    cognitiveLens: vm.cognitiveLens,
-                    palette: palette,
-                    playheadTime: vm.playheadTime,
-                    activeDegrees: vm.activeDegrees,
-                    latestDegree: vm.latestDegree,
-                    selectedBeadID: vm.selectedBeadID,
-                    impulses: vm.impulses,
-                    onTriggerLadderMember: { member, oct in vm.triggerLadderMember(member, octaveOffset: oct) },
-                    onTapCanvasPitch: { deg, oct, t in vm.placeNoteOnCanvas(degree: deg, octaveOffset: oct, atTime: t) },
-                    onSelectGhost: { id, ghost in vm.applyGhost(beadID: id, ghost: ghost) },
-                    onDragBeadPitch: { id, deg, oct in vm.updateBeadPitch(beadID: id, degree: deg, octaveOffset: oct) },
-                    onTapBead: { bead in vm.previewBead(bead) },
-                    onCycleSpanChord: { idx in vm.cycleSpanChord(spanIndex: idx) },
-                    onAdjustSelectedDuration: { delta in vm.adjustSelectedBeadDuration(delta: delta) },
-                    onDeleteSelectedBead: { vm.deleteSelectedBead() },
-                    onDismissSelection: { vm.selectedBeadID = nil }
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                if !vm.document.isSpecimen && !vm.document.notes.isEmpty {
-                    motifOrigamiQuickStrip
-                }
-
-                workbenchControlDock
-            }
-            .background(palette.paper.ignoresSafeArea())
-            .navigationTitle(vm.document.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("回桌面") {
-                        vm.stopPlayback()
-                        dismiss()
-                    }
-                }
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    if vm.canUndo {
-                        Button {
-                            vm.undo()
-                        } label: {
-                            Image(systemName: "arrow.uturn.backward")
-                        }
-                    }
-                    Button {
-                        vm.toggleShadowCounterpoint()
-                    } label: {
-                        Image(systemName: vm.shadowCounterpointEnabled ? "person.2.wave.2.fill" : "person.2.wave.2")
-                            .foregroundStyle(vm.shadowCounterpointEnabled ? palette.harmonyWash : palette.secondaryInk)
-                    }
-                    Button {
-                        vm.saveCurrentToNotebook()
-                    } label: {
-                        Image(systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark")
-                    }
-                    Button {
-                        onOpenAbout()
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                }
-            }
-        }
-    }
-
-    private var topSkyAndLensHeader: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                HStack(spacing: 2) {
-                    ForEach(CognitiveLens.allCases) { lens in
-                        let sel = vm.cognitiveLens == lens
-                        Button {
-                            vm.cognitiveLens = lens
-                            AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
-                        } label: {
-                            HStack(spacing: 3) {
-                                Image(systemName: lens.iconName).font(.system(size: 9.5, weight: .bold))
-                                Text(lens.shortLabel).font(.system(size: 10, weight: sel ? .bold : .medium))
-                            }
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 4)
-                            .background(Capsule().fill(sel ? palette.homeAnchor : .clear))
-                            .foregroundStyle(sel ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(2)
-                .background(Capsule().fill(palette.shelfSurface))
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 5) {
-                        ForEach(ScaleMode.allCases) { sky in
-                            let sel = vm.document.scaleMode == sky
-                            let tint = sky.skyAuroraColor(isNight: palette.isNight)
-                            Button {
-                                vm.setScaleMode(sky)
-                            } label: {
-                                HStack(spacing: 3) {
-                                    Image(systemName: sky.iconName).font(.system(size: 9.5))
-                                    Text(sky.shortSkyLabel).font(.system(size: 10, weight: sel ? .bold : .medium))
-                                }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4.5)
-                                .background(Capsule().fill(sel ? tint : palette.shelfSurface))
-                                .foregroundStyle(sel ? .white : palette.primaryInk)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-
-            Text(vm.statusToast ?? vm.currentInsight.headline)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(palette.primaryInk)
-                .lineLimit(2)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(palette.cardSurface)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(palette.divider).frame(height: 1)
-        }
-    }
-
-    private var motifOrigamiQuickStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 7) {
-                Text("🌱 种子生长")
-                    .font(.system(size: 10.5, weight: .bold))
-                    .foregroundStyle(palette.homeAnchor)
-
-                ForEach(MotifGrowthOperation.allCases) { op in
-                    Button {
-                        vm.applyMotifGrowth(op)
-                    } label: {
-                        Label(op.label, systemImage: op.iconName)
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Capsule().fill(palette.shelfSurface))
-                            .foregroundStyle(palette.primaryInk)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-        }
-        .background(palette.cardSurface.opacity(0.94))
-        .overlay(alignment: .top) {
-            Rectangle().fill(palette.divider).frame(height: 1)
-        }
-    }
-
-    private var workbenchControlDock: some View {
-        HStack(spacing: 8) {
-            Button {
-                vm.togglePlayback()
-            } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: vm.isPlaying ? "pause.circle.fill" : "play.circle.fill").font(.title2)
-                    Text(vm.isPlaying ? "暂停" : "试听").font(.caption2.weight(.semibold))
-                }
-                .frame(width: 48, height: 48)
-                .foregroundStyle(palette.homeAnchor)
-            }
-
-            Button {
-                vm.stopPlayback()
-                onOpenDecoupledCapture()
-            } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: "hand.tap.fill").font(.title3)
-                    Text("敲拍画坡").font(.caption2.weight(.semibold))
-                }
-                .frame(width: 56, height: 48)
-                .foregroundStyle(palette.bassRibbon)
-            }
-
-            Spacer()
-
-            Button {
-                if vm.capturePipeline.isRecording {
-                    vm.finishHumCapture()
-                } else {
-                    vm.startHumCapture()
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: vm.capturePipeline.isRecording ? "stop.fill" : "waveform").font(.headline)
-                    Text(vm.capturePipeline.isRecording ? "唱完了" : "轻哼捉珠").font(.subheadline.weight(.bold))
-                }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(Capsule().fill(vm.capturePipeline.isRecording ? palette.tensionFilament : palette.melodyTerracotta))
-                .foregroundStyle(.white)
-            }
-
-            Spacer()
-
-            Menu {
-                Section("主旋律乐器") {
-                    ForEach(MelodyVoice.allCases) { v in
-                        Button {
-                            vm.setMelodyVoice(v)
-                        } label: {
-                            if vm.melodyVoice == v { Label(v.label, systemImage: "checkmark") }
-                            else { Label(v.label, systemImage: v.iconName) }
-                        }
-                    }
-                }
-                Section("左手伴奏织体") {
-                    ForEach(AccompanimentTexture.allCases) { tex in
-                        Button {
-                            vm.setAccompanimentTexture(tex)
-                        } label: {
-                            if vm.accompanimentTexture == tex { Label(tex.label, systemImage: "checkmark") }
-                            else { Label(tex.label, systemImage: tex.iconName) }
-                        }
-                    }
-                }
-                Section("和弦光带与速度") {
-                    ForEach(ChordProgressionPreset.allCases) { preset in
-                        Button {
-                            vm.setChordPreset(preset)
-                        } label: {
-                            if vm.chordPreset == preset { Label(preset.label, systemImage: "checkmark") }
-                            else { Text(preset.label) }
-                        }
-                    }
-                    Button {
-                        vm.slowMotion.toggle()
-                    } label: {
-                        Label(vm.slowMotion ? "恢复原速 (1.0×)" : "慢镜拆解 (0.6×)", systemImage: "tortoise")
-                    }
-                }
-            } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: vm.melodyVoice.iconName).font(.title3)
-                    Text("声音").font(.caption2.weight(.semibold))
-                }
-                .frame(width: 48, height: 48)
-                .foregroundStyle(palette.harmonyWash)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(palette.cardSurface)
-        .overlay(alignment: .top) {
-            Rectangle().fill(palette.divider).frame(height: 1)
         }
     }
 }

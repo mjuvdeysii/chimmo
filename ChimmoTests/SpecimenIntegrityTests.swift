@@ -192,4 +192,76 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(reloaded.entries.first?.moodSticker, "✨ 我的名曲变奏")
         XCTAssertEqual(reloaded.entries.first?.document.title, varied.title)
     }
+
+    @MainActor
+    func testXylophoneRollEngineAndInlineTapWorkflow() {
+        XCTAssertEqual(XylophoneLane.allLanes.count, 8)
+        XCTAssertEqual(XylophoneLane.allowedIndices(pentatonicSafe: true), [0, 1, 2, 4, 5, 7])
+        XCTAssertEqual(XylophoneLane.nearestAllowedIndex(3, pentatonicSafe: true), 2) // 4 自动避让到 3
+
+        let raw = [
+            NoteBead(degree: 3, rawOnset: 0.15, rawDuration: 0.45),
+            NoteBead(degree: 3, rawOnset: 0.65, rawDuration: 0.45),
+            NoteBead(degree: 3, rawOnset: 1.15, rawDuration: 0.45),
+            NoteBead(degree: 3, rawOnset: 1.75, rawDuration: 0.65)
+        ]
+
+        // 4 种山坡快选保留全部节奏时间，并把音高塑形到安全木琴条上
+        for hill in MelodyHillTemplate.allCases {
+            let shaped = XylophoneRollEngine.applyHill(hill, to: raw, pentatonicSafe: true)
+            XCTAssertEqual(shaped.count, raw.count)
+            for (orig, s) in zip(raw, shaped) {
+                XCTAssertEqual(orig.rawOnset, s.rawOnset, accuracy: 1e-6)
+                XCTAssertNotEqual(s.degree, 4)
+                XCTAssertNotEqual(s.degree, 7)
+            }
+        }
+
+        // 「只听高低走势、不管跑调」相对轮廓映射
+        let hummed = XylophoneRollEngine.applyRelativeContour(
+            to: raw,
+            normalizedHeights: [0.0, 0.5, 1.0, 0.0],
+            pentatonicSafe: true
+        )
+        XCTAssertEqual(hummed[0].degree, 1)
+        XCTAssertEqual(hummed[2].degree, 1)
+        XCTAssertEqual(hummed[2].octaveOffset, 1) // 最高点映射到 1↑
+        XCTAssertEqual(XylophoneRollEngine.stepDeltaLabel(from: hummed[0], to: hummed[2]), "+7↗")
+
+        // 验光师 3 选 1 智能亮灯推荐
+        let startHints = XylophoneRollEngine.suggestThreeLanes(forBeatIndex: 0, in: hummed, pentatonicSafe: true)
+        XCTAssertEqual(startHints.count, 3)
+        let midHints = XylophoneRollEngine.suggestThreeLanes(forBeatIndex: 1, in: hummed, pentatonicSafe: true)
+        XCTAssertEqual(midHints.count, 3)
+        let endHints = XylophoneRollEngine.suggestThreeLanes(forBeatIndex: 3, in: hummed, pentatonicSafe: true)
+        XCTAssertEqual(endHints.count, 3)
+        XCTAssertEqual(endHints.first?.laneIndex, 0) // 最后一拍优先亮起 1·回家
+
+        // ViewModel 内联木鼓敲节奏 → 定型 → 亮灯跟弹完整流程
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo-v06-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tmpDir))
+        vm.startRhythmTap()
+        XCTAssertTrue(vm.isTappingRhythm)
+        vm.recordRhythmDrumTap()
+        vm.recordRhythmDrumTap()
+        vm.recordRhythmDrumTap()
+        vm.commitRhythmTaps()
+        XCTAssertFalse(vm.isTappingRhythm)
+        XCTAssertEqual(vm.document.notes.count, 3)
+        XCTAssertTrue(vm.pentatonicSafe)
+        XCTAssertTrue(vm.smartHintActive)
+        XCTAssertEqual(vm.smartHints.count, 3)
+
+        // 切到名曲亮灯跟弹并验证敲击目标彩条自动步进
+        vm.openSpecimenForFollowGlow(SpecimenLibrary.saintSaensTheSwan)
+        XCTAssertTrue(vm.followGlowActive)
+        XCTAssertEqual(vm.followGlowIndex, 0)
+        let firstNote = vm.document.notes[0]
+        let firstLane = XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: firstNote.degree, octaveOffset: firstNote.octaveOffset))
+        vm.strikeXylophoneLane(firstLane)
+        XCTAssertEqual(vm.followGlowIndex, 1)
+    }
 }

@@ -147,6 +147,72 @@ public final class HumCapturePipeline: ObservableObject {
         return result
     }
 
+    /// 「只听高低走势、不管跑调」的相对轮廓提取器：
+    /// 即使五音不全或完全唱偏调，只要按着敲好的拍数随口哼出大致高低，就能按相对升降自动把拍子塑形成脑海里的山坡！
+    public func stopAndExtractRelativeContour(slotCount: Int) async -> [Double]? {
+        guard isRecording else { return nil }
+        isRecording = false
+        inputLevel = 0.0
+
+        recordEngine?.inputNode.removeTap(onBus: 0)
+        recordEngine?.stop()
+        recordEngine = nil
+
+        let elapsed = Date().timeIntervalSince(startTimestamp ?? Date())
+        let rawSamples = sampleLock.withLock { buf -> [Float] in
+            let copy = buf
+            buf.removeAll(keepingCapacity: false)
+            return copy
+        }
+        let sourceRate = capturedSampleRate
+        synth.ensureRunning()
+
+        guard slotCount > 0, elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
+            statusMessage = "哼的时间太短啦，按脑海里的高低多哼两秒试试"
+            return nil
+        }
+
+        statusMessage = "正在把你的高低走势贴到敲好的拍子上…"
+        let det = detector
+
+        let heights: [Double] = await Task.detached(priority: .userInitiated) {
+            let mono16k = HumCapturePipeline.resampleLinear(rawSamples, from: sourceRate, to: PitchContour.sampleRate)
+            let contour = det.detect(mono16kSamples: mono16k, fmin: 75.0, fmax: 1100.0)
+            var voicedSemis: [Double] = []
+            for i in 0..<contour.pitchHz.count {
+                let hz = contour.pitchHz[i]
+                let conf = i < contour.confidence.count ? contour.confidence[i] : 1.0
+                if hz > 65.0 && conf >= 0.32 {
+                    voicedSemis.append(12.0 * log2(hz / 110.0))
+                }
+            }
+            guard voicedSemis.count >= max(2, slotCount) else { return [] }
+
+            var slotMedians: [Double] = []
+            for s in 0..<slotCount {
+                let start = (s * voicedSemis.count) / slotCount
+                let end = max(start + 1, ((s + 1) * voicedSemis.count) / slotCount)
+                let slice = voicedSemis[start..<min(end, voicedSemis.count)].sorted()
+                let mid = slice[slice.count / 2]
+                slotMedians.append(mid)
+            }
+
+            guard let lo = slotMedians.min(), let hi = slotMedians.max() else { return [] }
+            let span = hi - lo
+            if span < 0.8 {
+                return Array(repeating: 0.35, count: slotCount)
+            }
+            return slotMedians.map { ($0 - lo) / span }
+        }.value
+
+        if heights.isEmpty {
+            statusMessage = "没听清声音，靠近手机轻轻哼出高低起伏再试一次"
+            return nil
+        }
+        statusMessage = "已按你的哼唱高低排好木琴台阶，试听看看像不像！"
+        return heights
+    }
+
     nonisolated public static func resampleLinear(_ input: [Float], from srcRate: Double, to dstRate: Double) -> [Float] {
         guard !input.isEmpty else { return [] }
         if abs(srcRate - dstRate) < 1.0 { return input }
