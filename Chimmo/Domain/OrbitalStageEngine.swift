@@ -931,3 +931,99 @@ public enum StarHitDynamicsMapper {
         return (velocity, brightness)
     }
 }
+
+/// 8 键木琴琴席左右立体声摆位与木质共鸣箱泛音弦耦合：单手点触琴键即可唤醒自然声场宽度与纯五度/八度微共鸣。
+public enum SympatheticResonanceMapper {
+    public struct ResonanceSpec: Sendable, Equatable {
+        public let keyPan: Double
+        public let overtoneHz: Double
+        public let overtoneVelocity: Double
+        public let overtonePan: Double
+        public let sympatheticLaneIndex: Int
+    }
+
+    public static func keyBenchPan(laneIndex: Int, stereoSpread: Double = 1.0) -> Double {
+        let idx = max(0, min(7, laneIndex))
+        let spread = max(0.60, min(1.35, stereoSpread.isFinite ? stereoSpread : 1.0))
+        let raw = (Double(idx) / 3.5 - 1.0) * 0.46 * spread
+        return max(-0.64, min(0.64, raw))
+    }
+
+    public static func compute(
+        laneIndex: Int,
+        baseHz: Double,
+        velocity: Double,
+        stereoSpread: Double = 1.0,
+        pentatonicSafe: Bool = false
+    ) -> ResonanceSpec {
+        let idx = max(0, min(7, laneIndex))
+        let keyPan = keyBenchPan(laneIndex: idx, stereoSpread: stereoSpread)
+        let diatonicPartners = [7, 5, 6, 7, 0, 1, 2, 0]
+        var symLane = diatonicPartners[idx]
+        if pentatonicSafe && symLane == 6 {
+            // 五音模式下 7 Si 不发声，改以主音 1 Do 作为温和共鸣键
+            symLane = 0
+        }
+
+        guard baseHz.isFinite, baseHz >= 40.0, velocity.isFinite else {
+            return ResonanceSpec(
+                keyPan: keyPan,
+                overtoneHz: 220.0,
+                overtoneVelocity: 0.0,
+                overtonePan: -keyPan * 0.45,
+                sympatheticLaneIndex: symLane
+            )
+        }
+
+        let safeVel = max(0.0, min(1.0, velocity))
+        let rawOvertone = baseHz < 440.0 ? baseHz * 1.5 : baseHz * 0.5
+        let clampedHz = max(65.0, min(1800.0, rawOvertone))
+        let overtoneVel = safeVel >= 0.36 ? min(0.14, max(0.05, safeVel * 0.18)) : 0.0
+        return ResonanceSpec(
+            keyPan: keyPan,
+            overtoneHz: clampedHz,
+            overtoneVelocity: overtoneVel,
+            overtonePan: -keyPan * 0.45,
+            sympatheticLaneIndex: symLane
+        )
+    }
+}
+
+/// 盲人/零基础乐句级跨步导航与开头速览拍数估算：按和弦分句一键跃迁，无需逐拍繁琐滑动。
+public enum PhraseNavigationMapper {
+    public static func nextPhraseBeatIndex(
+        notes: [NoteBead],
+        spans: [ChordSpan],
+        grooveStrength: Double,
+        currentBeatIndex: Int?,
+        delta: Int
+    ) -> Int? {
+        guard !notes.isEmpty else { return nil }
+        let cur = max(0, min(notes.count - 1, currentBeatIndex ?? 0))
+        let stepDir = delta >= 0 ? 1 : -1
+
+        if spans.count > 1 {
+            let curTime = notes[cur].displayOnset(grooveStrength: grooveStrength)
+            let curSpanIdx = spans.firstIndex { curTime >= $0.startTime && curTime < $0.endTime } ?? 0
+            let nextSpanIdx = max(0, min(spans.count - 1, curSpanIdx + stepDir))
+            let targetSpan = spans[nextSpanIdx]
+            if let inSpan = notes.firstIndex(where: {
+                let onset = $0.displayOnset(grooveStrength: grooveStrength)
+                return onset >= targetSpan.startTime - 0.02 && onset < targetSpan.endTime
+            }) {
+                return inSpan
+            }
+            if let nearest = notes.enumerated().min(by: {
+                abs($0.element.displayOnset(grooveStrength: grooveStrength) - targetSpan.startTime)
+                    < abs($1.element.displayOnset(grooveStrength: grooveStrength) - targetSpan.startTime)
+            })?.offset {
+                return nearest
+            }
+        }
+        return max(0, min(notes.count - 1, cur + stepDir * 4))
+    }
+
+    public static func openingPreviewCount(for notes: [NoteBead]) -> Int {
+        min(4, notes.count)
+    }
+}

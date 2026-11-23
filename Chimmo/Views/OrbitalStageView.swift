@@ -253,7 +253,7 @@ public struct OrbitalStageView: View {
 
     private var heroStageContainer: some View {
         let boardBg = palette.isNight ? Color(hex: 0x121936) : Color(hex: 0xFAF6EE)
-        let activeCurtainColor: Color? = (vm.isPlaying && vm.cradleEnabled)
+        let activeCurtainColor: Color? = (vm.cradleEnabled && (vm.isPlaying || vm.selectedBeadID != nil))
             ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
             : nil
         let borderCol = activeCurtainColor?.opacity(palette.isNight ? 0.50 : 0.44)
@@ -299,6 +299,15 @@ public struct OrbitalStageView: View {
                 }
                 .accessibilityAction(named: vm.isPlaying ? "暂停" : "播放") {
                     vm.togglePlayback()
+                }
+                .accessibilityAction(named: "试听开头") {
+                    vm.previewOpeningPhrase()
+                }
+                .accessibilityAction(named: "跳到下一句") {
+                    vm.stepPhrase(delta: 1)
+                }
+                .accessibilityAction(named: "跳到上一句") {
+                    vm.stepPhrase(delta: -1)
                 }
                 .accessibilityAction(named: "升高一音") {
                     vm.shiftSelectedBeadPitch(delta: 1)
@@ -2271,6 +2280,7 @@ public struct OrbitalStageView: View {
                     let hint = hints[lane.index]
                     let isChordResonant = !isMuted && !isFollowTarget && hint == nil && chordDegrees.contains(lane.degree)
                     let isPlayingThis = vm.activeLaneIndices.contains(lane.index) || struckRibbonLane == lane.index
+                    let isSympathetic = !isMuted && !isPlayingThis && vm.sympatheticLaneIndices.contains(lane.index)
                     let barH = CGFloat(58 - lane.index * 2) // 左侧低音更高厚，右侧高音渐趋精巧
                     let col = lane.barColor(isNight: palette.isNight)
 
@@ -2310,8 +2320,10 @@ public struct OrbitalStageView: View {
                             .strokeBorder(
                                 (isFollowTarget || hint != nil)
                                     ? palette.nightLampGold
-                                    : Color.white.opacity(palette.isNight ? 0.16 : 0.36),
-                                lineWidth: (isFollowTarget || hint != nil) ? 2.5 : 0.9
+                                    : (isSympathetic
+                                        ? Color.white.opacity(palette.isNight ? 0.45 : 0.70)
+                                        : Color.white.opacity(palette.isNight ? 0.16 : 0.36)),
+                                lineWidth: (isFollowTarget || hint != nil) ? 2.5 : (isSympathetic ? 1.5 : 0.9)
                             )
                     )
                     .overlay(alignment: .top) {
@@ -2321,6 +2333,12 @@ public struct OrbitalStageView: View {
                                 .frame(width: 5.5, height: 5.5)
                                 .shadow(color: palette.nightLampGold.opacity(0.85), radius: 3)
                                 .offset(y: -3.5)
+                        } else if isSympathetic {
+                            Circle()
+                                .fill(Color.white.opacity(0.75))
+                                .frame(width: 4, height: 4)
+                                .shadow(color: .white.opacity(0.7), radius: 3)
+                                .offset(y: -2.5)
                         }
                     }
                     .overlay(alignment: .bottom) {
@@ -2351,6 +2369,7 @@ public struct OrbitalStageView: View {
                     .opacity(isMuted ? 0.24 : 1.0)
                     .animation(reduceMotion ? nil : .spring(response: 0.20, dampingFraction: 0.65), value: isPlayingThis)
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: isFollowTarget)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: isSympathetic)
                     .accessibilityElement()
                     .accessibilityLabel("\(lane.member.voiceOverSummary)")
                     .accessibilityValue(isFollowTarget ? "当前亮灯" : (isChordResonant ? "和谐音" : ""))

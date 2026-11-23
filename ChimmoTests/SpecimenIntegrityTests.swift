@@ -1165,4 +1165,91 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(RootTranspositionHelper.compactLabel(forRootMIDI: 55), "-5")
         XCTAssertEqual(RootTranspositionHelper.accessibilityLabel(forRootMIDI: 62), "升高 2 半音")
     }
+
+    @MainActor
+    func testCreativeAlchemyRound17SympatheticBenchAndPhraseNav() {
+        // 1. 琴席左右立体声摆位与木质共鸣箱泛音弦映射
+        let leftSpec = SympatheticResonanceMapper.compute(
+            laneIndex: 0,
+            baseHz: 261.63,
+            velocity: 0.68,
+            stereoSpread: 1.0,
+            pentatonicSafe: false
+        )
+        let rightSpec = SympatheticResonanceMapper.compute(
+            laneIndex: 7,
+            baseHz: 523.25,
+            velocity: 0.68,
+            stereoSpread: 1.0,
+            pentatonicSafe: false
+        )
+        XCTAssertLessThan(leftSpec.keyPan, -0.35)
+        XCTAssertGreaterThan(rightSpec.keyPan, 0.35)
+        XCTAssertEqual(leftSpec.keyPan + rightSpec.keyPan, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(leftSpec.overtoneHz, 261.63 * 1.5, accuracy: 1e-2)
+        XCTAssertEqual(rightSpec.overtoneHz, 523.25 * 0.5, accuracy: 1e-2)
+        XCTAssertGreaterThan(leftSpec.overtoneVelocity, 0.0)
+        XCTAssertGreaterThan(leftSpec.overtonePan, 0.0) // 泛音反向扩散
+
+        // 五音模式下 3 Mi 避开不发音的 7 Si（lane 6）
+        let pentaMi = SympatheticResonanceMapper.compute(
+            laneIndex: 2,
+            baseHz: 329.63,
+            velocity: 0.70,
+            stereoSpread: 1.0,
+            pentatonicSafe: true
+        )
+        XCTAssertTrue(XylophoneLane.lane(at: pentaMi.sympatheticLaneIndex).isPentatonicSafe)
+
+        // 轻触低力度及 NaN 防护
+        let whisperSpec = SympatheticResonanceMapper.compute(laneIndex: 1, baseHz: 293.66, velocity: 0.20)
+        XCTAssertEqual(whisperSpec.overtoneVelocity, 0.0, accuracy: 1e-6)
+        let nanSpec = SympatheticResonanceMapper.compute(laneIndex: 99, baseHz: .nan, velocity: .nan)
+        XCTAssertFalse(nanSpec.keyPan.isNaN)
+        XCTAssertFalse(nanSpec.overtoneHz.isNaN)
+
+        // 2. 乐句级跨步导航与开头 4 拍速览
+        let doc = SpecimenLibrary.saintSaensTheSwan
+        let spans = TheoryLensEngine.buildChordSpans(document: doc, preset: .autoMatch, overrides: [:])
+        XCTAssertEqual(PhraseNavigationMapper.openingPreviewCount(for: doc.notes), 4)
+        XCTAssertEqual(PhraseNavigationMapper.openingPreviewCount(for: Array(doc.notes.prefix(2))), 2)
+        XCTAssertNil(PhraseNavigationMapper.nextPhraseBeatIndex(notes: [], spans: [], grooveStrength: 0, currentBeatIndex: nil, delta: 1))
+
+        let jumpedForward = PhraseNavigationMapper.nextPhraseBeatIndex(
+            notes: doc.notes,
+            spans: spans,
+            grooveStrength: doc.grooveStrength,
+            currentBeatIndex: 0,
+            delta: 1
+        )
+        XCTAssertNotNil(jumpedForward)
+        XCTAssertGreaterThan(jumpedForward ?? 0, 0)
+
+        let jumpedBack = PhraseNavigationMapper.nextPhraseBeatIndex(
+            notes: doc.notes,
+            spans: spans,
+            grooveStrength: doc.grooveStrength,
+            currentBeatIndex: jumpedForward,
+            delta: -1
+        )
+        XCTAssertEqual(jumpedBack, 0)
+
+        // 3. 盲人乐句摘要 + 无例行撤销 Toast 契约
+        let vm = StudioViewModel()
+        if let midNote = vm.document.notes.dropFirst(min(4, max(0, vm.document.notes.count - 1))).first {
+            vm.selectBead(midNote.id, playContext: false)
+            XCTAssertTrue(vm.stageAccessibilitySummary.contains("句"))
+            let origDegree = vm.document.notes.first(where: { $0.id == midNote.id })?.degree
+            vm.shiftSelectedBeadPitch(delta: 1)
+            vm.undo()
+            XCTAssertNil(vm.statusToast, "撤销不得弹出文字提示条")
+            XCTAssertFalse(vm.canUndo)
+            let restoredDegree = vm.document.notes.first(where: { $0.id == midNote.id })?.degree
+            XCTAssertEqual(restoredDegree, origDegree)
+        }
+        vm.stepPhrase(delta: 1)
+        vm.previewOpeningPhrase()
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

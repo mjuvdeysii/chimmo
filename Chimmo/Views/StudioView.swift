@@ -89,6 +89,7 @@ public final class StudioViewModel: ObservableObject {
     @Published public var playheadTime: Double? = nil
     @Published public var activeDegrees: Set<Int> = []
     @Published public var activeLaneIndices: Set<Int> = []
+    @Published public var sympatheticLaneIndices: Set<Int> = []
     @Published public var latestDegree: Int? = 1
     @Published public var selectedBeadID: UUID? = nil
     @Published public var impulses: [VisualImpulse] = []
@@ -120,6 +121,7 @@ public final class StudioViewModel: ObservableObject {
     private var lastFreeNoteTime: Date?
     private var toastTask: Task<Void, Never>?
     private var lastScrubTime: Double? = nil
+    private var lastSympatheticTriggerMediaTime: Double = 0
 
     public var chordSpans: [ChordSpan] {
         TheoryLensEngine.buildChordSpans(
@@ -408,11 +410,14 @@ public final class StudioViewModel: ObservableObject {
         let vel = max(0.32, min(0.90, touchIntensity))
         let bright = max(0.55, min(1.25, touchBrightness))
 
-        // 模式 1：亮灯跟弹（星盘主动旋转，把下一颗发光星珠带到 12 点钟唱针处等你敲！）
+        let onset = 0.0
+        let spread = synth.currentSpaceProfile().stereoSpread
+        let benchPan = SympatheticResonanceMapper.keyBenchPan(laneIndex: lane.index, stereoSpread: spread)
+        let currentT = clock.currentTime() ?? 0.0
         if followGlowActive && followGlowIndex < document.notes.count {
             let target = document.notes[followGlowIndex]
             let targetLane = XylophoneLane.laneIndex(degree: target.degree, octaveOffset: target.octaveOffset)
-            let onset = target.displayOnset(grooveStrength: document.grooveStrength)
+            let beadOnset = target.displayOnset(grooveStrength: document.grooveStrength)
 
             if lane.index == targetLane {
                 let hz = document.scaleMode.frequencyHz(
@@ -425,9 +430,10 @@ public final class StudioViewModel: ObservableObject {
                     velocity: min(0.92, vel + 0.05),
                     decay: max(1.1, target.rawDuration * 1.55),
                     brightness: bright,
-                    timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice)
+                    timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice),
+                    pan: benchPan
                 )
-                if let ch = TheoryLensEngine.chord(at: onset, in: chordSpans) {
+                if let ch = TheoryLensEngine.chord(at: beadOnset, in: chordSpans) {
                     synth.playDiatonicChord(
                         rootMIDI: document.rootMIDI,
                         mode: document.scaleMode,
@@ -437,8 +443,8 @@ public final class StudioViewModel: ObservableObject {
                         intensity: 0.62
                     )
                 }
-                rippleBus.emit(laneIndex: lane.index, degree: target.degree, onset: onset, colorHex: member.bodyHex, intensity: vel)
-                updateHarmonyDescriptor(for: target.degree, at: onset)
+                rippleBus.emit(laneIndex: lane.index, degree: target.degree, onset: beadOnset, colorHex: member.bodyHex, intensity: vel)
+                updateHarmonyDescriptor(for: target.degree, at: beadOnset)
                 AcousticHapticsEngine.shared.playConsonantGlow(intensity: Float(max(0.42, min(0.88, vel))))
 
                 followGlowIndex += 1
@@ -456,7 +462,14 @@ public final class StudioViewModel: ObservableObject {
             } else {
                 let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
                 let softVel = max(0.32, vel * 0.78)
-                synth.playNote(frequency: hz, velocity: softVel, decay: 1.0, brightness: bright, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
+                synth.playNote(
+                    frequency: hz,
+                    velocity: softVel,
+                    decay: 1.0,
+                    brightness: bright,
+                    timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice),
+                    pan: benchPan
+                )
                 rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex, intensity: softVel)
                 AcousticHapticsEngine.shared.playExpressivePitchTouch(
                     laneIndex: lane.index,
@@ -480,23 +493,51 @@ public final class StudioViewModel: ObservableObject {
             document.notes[idx].degree = lane.degree
             document.notes[idx].octaveOffset = lane.octaveOffset
             document.notes[idx].ghostCandidates.removeAll()
-            let onset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
-            rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: member.bodyHex, intensity: vel)
+            let noteOnset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
+            rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: noteOnset, colorHex: member.bodyHex, intensity: vel)
             AcousticHapticsEngine.shared.playExpressivePitchTouch(
                 laneIndex: lane.index,
                 velocity: vel,
                 isHome: lane.degree == 1,
                 isTension: member.isTensionDegree
             )
-            updateHarmonyDescriptor(for: lane.degree, at: onset)
+            updateContextMetrics(at: noteOnset)
+            updateHarmonyDescriptor(for: lane.degree, at: noteOnset)
             playContextEcho(upToIndex: idx)
             return
         }
 
-        // 模式 3：纯粹自由演奏（同时泛起星盘涟漪、表达力度与谐振花纹）
+        // 模式 3：纯粹自由演奏（左右立体声琴席摆位 + 木质共鸣箱五度/八度微共鸣 + 涟漪与谐振）
         let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: lane.degree, octaveOffset: lane.octaveOffset)
-        synth.playNote(frequency: hz, velocity: vel, decay: 1.45, brightness: bright, timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice))
-        let currentT = clock.currentTime() ?? 0.0
+        let sym = SympatheticResonanceMapper.compute(
+            laneIndex: lane.index,
+            baseHz: hz,
+            velocity: vel,
+            stereoSpread: spread,
+            pentatonicSafe: pentatonicSafe
+        )
+        synth.playNote(
+            frequency: hz,
+            velocity: vel,
+            decay: 1.45,
+            brightness: bright,
+            timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice),
+            pan: sym.keyPan
+        )
+        let mediaNow = CACurrentMediaTime()
+        if sym.overtoneVelocity > 0.0 && (mediaNow - lastSympatheticTriggerMediaTime) >= 0.075 {
+            lastSympatheticTriggerMediaTime = mediaNow
+            synth.playNote(
+                frequency: sym.overtoneHz,
+                velocity: sym.overtoneVelocity,
+                decay: 1.75,
+                brightness: 0.62,
+                timbre: .feltPiano,
+                delaySeconds: 0.026,
+                pan: sym.overtonePan
+            )
+            flashSympatheticLane(sym.sympatheticLaneIndex)
+        }
         rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: currentT, colorHex: member.bodyHex, intensity: vel)
         AcousticHapticsEngine.shared.playExpressivePitchTouch(
             laneIndex: lane.index,
@@ -789,6 +830,7 @@ public final class StudioViewModel: ObservableObject {
         if let idx = document.notes.firstIndex(where: { $0.id == id }) {
             let bead = document.notes[idx]
             let onset = bead.displayOnset(grooveStrength: document.grooveStrength)
+            updateContextMetrics(at: onset)
             updateHarmonyDescriptor(for: bead.degree, at: onset)
             if playContext {
                 playContextEcho(upToIndex: idx)
@@ -809,6 +851,11 @@ public final class StudioViewModel: ObservableObject {
             let lane = XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset))
             let durText = String(format: "%.1f秒", bead.rawDuration)
             parts.append("第 \(idx + 1) 拍，\(lane.digitLabel) \(lane.solfege)，\(durText)")
+            let onset = bead.displayOnset(grooveStrength: document.grooveStrength)
+            let spans = chordSpans
+            if let spanIdx = spans.firstIndex(where: { onset >= $0.startTime && onset < $0.endTime }) {
+                parts.append("第 \(spanIdx + 1)/\(spans.count) 句，\(spans[spanIdx].chord.moodTitle)")
+            }
         }
         if isPlaying {
             parts.append("正在播放")
@@ -821,8 +868,107 @@ public final class StudioViewModel: ObservableObject {
         let cur = selectedBeadID.flatMap { id in document.notes.firstIndex { $0.id == id } } ?? 0
         let next = max(0, min(document.notes.count - 1, cur + delta))
         selectedBeadID = document.notes[next].id
+        let onset = document.notes[next].displayOnset(grooveStrength: document.grooveStrength)
+        updateContextMetrics(at: onset)
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         playContextEcho(upToIndex: next)
+    }
+
+    public func stepPhrase(delta: Int) {
+        guard !document.notes.isEmpty else { return }
+        let curIdx = selectedBeadID.flatMap { id in document.notes.firstIndex { $0.id == id } }
+        guard let nextIdx = PhraseNavigationMapper.nextPhraseBeatIndex(
+            notes: document.notes,
+            spans: chordSpans,
+            grooveStrength: document.grooveStrength,
+            currentBeatIndex: curIdx,
+            delta: delta
+        ) else { return }
+        let bead = document.notes[nextIdx]
+        selectedBeadID = bead.id
+        let onset = bead.displayOnset(grooveStrength: document.grooveStrength)
+        updateContextMetrics(at: onset)
+        updateHarmonyDescriptor(for: bead.degree, at: onset)
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
+        playContextEcho(upToIndex: nextIdx)
+    }
+
+    public func previewOpeningPhrase() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        let count = PhraseNavigationMapper.openingPreviewCount(for: document.notes)
+        guard count > 0 else {
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+            return
+        }
+        let slice = Array(document.notes.prefix(count))
+        let mode = document.scaleMode
+        let rootMIDI = document.rootMIDI
+        let groove = document.grooveStrength
+        let voiceTimbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+        let spans = chordSpans
+        let totalDur = document.totalDuration
+        let cradle = cradleEnabled
+        let texture = accompanimentTexture
+        let visual = visualMode
+
+        contextEchoTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for (idx, bead) in slice.enumerated() {
+                if Task.isCancelled { return }
+                let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: bead.degree, octaveOffset: bead.octaveOffset)
+                let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+                let lane = XylophoneLane.lane(at: laneIdx)
+                let onset = bead.displayOnset(grooveStrength: groove)
+                let dur = bead.displayDuration(grooveStrength: groove)
+
+                self.flashLane(laneIdx, degree: bead.degree, holdSeconds: max(0.18, min(0.45, dur * 0.85)))
+                self.clock.setScrubTime(onset)
+                self.rippleBus.emit(laneIndex: laneIdx, degree: bead.degree, onset: onset, colorHex: lane.member.bodyHex)
+                self.updateContextMetrics(at: onset)
+                self.updateHarmonyDescriptor(for: bead.degree, at: onset)
+                if self.musicHapticsEnabled {
+                    AcousticHapticsEngine.shared.playPlaybackNotePulse(
+                        laneIndex: laneIdx,
+                        isHome: bead.degree == 1,
+                        isTension: lane.member.isTensionDegree,
+                        isDownbeat: idx == 0
+                    )
+                }
+
+                let pan = AcousticSpatialPanMapper.pan(
+                    forBeatOnset: onset,
+                    totalDuration: totalDur,
+                    visualMode: visual
+                )
+                self.synth.playNote(
+                    frequency: hz,
+                    velocity: idx == 0 ? 0.66 : 0.58,
+                    decay: max(0.75, dur * 1.35),
+                    timbre: voiceTimbre,
+                    pan: pan
+                )
+                if idx == 0, cradle, let ch = TheoryLensEngine.chord(at: onset, in: spans) {
+                    self.synth.playDiatonicChord(
+                        rootMIDI: rootMIDI,
+                        mode: mode,
+                        chord: ch,
+                        texture: texture,
+                        spanDuration: 1.6,
+                        intensity: 0.55
+                    )
+                }
+                if idx + 1 < slice.count {
+                    let nextOnset = slice[idx + 1].displayOnset(grooveStrength: groove)
+                    let gap = max(0.22, min(0.75, nextOnset - onset))
+                    try? await Task.sleep(nanoseconds: UInt64(gap * 1_000_000_000))
+                }
+            }
+            try? await Task.sleep(nanoseconds: 550_000_000)
+            if !Task.isCancelled && !self.isPlaying && !self.followGlowActive {
+                self.clock.setScrubTime(nil)
+            }
+        }
     }
 
     public func shiftSelectedBeadPitch(delta: Int) {
@@ -1513,16 +1659,25 @@ public final class StudioViewModel: ObservableObject {
         playheadTime = nil
         activeDegrees.removeAll()
         activeLaneIndices.removeAll()
+        sympatheticLaneIndices.removeAll()
     }
 
     public func undo() {
         guard let prev = undoStack.popLast() else { return }
         stopPlayback()
+        contextEchoTask?.cancel()
         document = prev
         clock.updateTotalDuration(prev.totalDuration)
         selectedBeadID = document.notes.first?.id
         canUndo = !undoStack.isEmpty
-        showToast("已撤销上一步")
+        AcousticHapticsEngine.shared.playScrubTick()
+        if let first = document.notes.first {
+            let onset = first.displayOnset(grooveStrength: document.grooveStrength)
+            updateContextMetrics(at: onset)
+            updateHarmonyDescriptor(for: first.degree, at: onset)
+        } else {
+            activeChordSpanID = 0
+        }
     }
 
     // MARK: - Internals
@@ -1584,6 +1739,15 @@ public final class StudioViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: holdNs)
             self?.activeDegrees.remove(degree)
             self?.activeLaneIndices.remove(laneIdx)
+        }
+    }
+
+    private func flashSympatheticLane(_ laneIdx: Int, holdSeconds: Double = 0.24) {
+        sympatheticLaneIndices.insert(laneIdx)
+        let holdNs = UInt64(holdSeconds * 1_000_000_000)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: holdNs)
+            self?.sympatheticLaneIndices.remove(laneIdx)
         }
     }
 
