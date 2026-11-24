@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.78.0 - 2026-11-25
+- 节奏鼓面防吞触修复与双滑条自动滚屏追随：在 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 为 `drumMachineModule` 内嵌横向柱条 `ScrollView` 添加 `.allowsHitTesting(false)`，彻底解决点按鼓面右侧波形区偶发被滚动容器截胡不触发敲拍的问题，并接入 `ScrollViewReader` 随拍数自动向右滚屏显示最新重音柱及补齐「已敲 N 拍」VoiceOver 实时读数与提示；同步在 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 为已录音珠条 `capturedStrip` 接入受 `reduceMotion` 门控的 `ScrollViewReader` 自动末尾追随与空白装饰珠屏蔽。
+- 全主舞台确定性 VoiceOver 焦点排序与工坊工具提示闭环：为 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 聆听舞台顶栏、主画布 `ZStack`（空态 CTA 优先于背景画布及角标）、分幕导览条、七小只琴键与底部控制坞，以及 [CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 创作工作台全六层区块配置确定性 `.accessibilitySortPriority`；屏蔽创作空画布背景山坡读屏干扰，并为底部三枚工具键（「轻哼捕音」、「节奏灵感」、「音色和声」）与右上角「更多创作操作」菜单补全 `.accessibilityHint`。
+- 声音调色盒示波窗摘要与音色网格缩放加固：在 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 屏蔽示波背景装饰画布读屏播报，为顶部波形示波按钮补齐实时 `.accessibilityValue`（播报当前主音色、移调与倍速）与 `.accessibilityHint`，并为双列音色与伴奏标签网格补全 `.lineLimit(1).minimumScaleFactor(0.75)`。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound71DrumHitThroughAutoScrollAndVoiceOverPriority`，验证重音节奏映射及全套核心工作台/弹窗日夜双态构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.77.0 - 2026-11-25
 - 站内全量外部 `Link` 无障碍提示收口与法务文档同步：为 [SettingsView.swift](Chimmo/Views/SettingsView.swift) `ChimmoLegalDocumentView` 中全部 4 处外部链接（「查看网页版隐私政策」、「GitHub Issues 联系开发者」、「查看网页版使用条款」、「查看网页版开源许可」）以及 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)「官方网站」链接补齐 `.accessibilityHint("在浏览器中打开")`（并将法务页面最近修订日期同步至 `2026 年 11 月 25 日`），全面消灭 title-first 形式 `Link` 遗漏提示的问题。
 - 三份在线法务绘本页同源升级至正典与高清晰可读性：全面更新 [docs/privacy.html](docs/privacy.html)、[docs/terms.html](docs/terms.html) 与 [docs/licenses.html](docs/licenses.html)，将徽标与角色小偶陈旧 `#228BE6` 替换为正典银月蓝 `#2E7DB2`；补齐日夜双态 `@media (prefers-contrast: more)` 高清晰描边与 `:focus-visible` 键盘焦点环；对齐 `哼唱捉珠`、`PNG 卡片、WAV 音频与标准 MIDI 作品`、`小羊咩、小牛哞` 及第 2 节 `内置曲库与版权边界` 文案。

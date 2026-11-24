@@ -352,17 +352,27 @@ public struct DreamCaptureSheet: View {
                                 }
                                 .padding(.horizontal, 12)
                             } else {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(alignment: .bottom, spacing: 4) {
-                                        ForEach(Array(barMetrics.enumerated()), id: \.offset) { idx, bar in
-                                            let isLatest = idx == barMetrics.count - 1
-                                            let barColor = bar.isDownbeat ? palette.nightLampGold : palette.homeAnchor
-                                            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                                .fill(barColor.opacity(isLatest ? 1.0 : 0.85))
-                                                .frame(width: bar.widthPt, height: bar.heightPt)
+                                ScrollViewReader { proxy in
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(alignment: .bottom, spacing: 4) {
+                                            ForEach(Array(barMetrics.enumerated()), id: \.offset) { idx, bar in
+                                                let isLatest = idx == barMetrics.count - 1
+                                                let barColor = bar.isDownbeat ? palette.nightLampGold : palette.homeAnchor
+                                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                                    .fill(barColor.opacity(isLatest ? 1.0 : 0.85))
+                                                    .frame(width: bar.widthPt, height: bar.heightPt)
+                                                    .id(idx)
+                                            }
+                                        }
+                                        .padding(.horizontal, 10)
+                                    }
+                                    .allowsHitTesting(false)
+                                    .onChange(of: barMetrics.count) { _, newCount in
+                                        guard newCount > 0 else { return }
+                                        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+                                            proxy.scrollTo(newCount - 1, anchor: .trailing)
                                         }
                                     }
-                                    .padding(.horizontal, 10)
                                 }
                                 .padding(.trailing, 48)
                             }
@@ -449,6 +459,8 @@ public struct DreamCaptureSheet: View {
                 }
             }
             .accessibilityLabel("敲击鼓面输入节奏")
+            .accessibilityValue(hasTaps ? "已敲 \(vm.liveTapTimestamps.count) 拍" : "未开始")
+            .accessibilityHint("连续轻点输入节奏，至少两拍后可按节奏生成旋律")
             .accessibilityAction(named: "按当前节奏生成旋律") {
                 if vm.liveTapTimestamps.count >= 2 {
                     vm.commitRhythmTaps()
@@ -700,6 +712,7 @@ public struct DreamCaptureSheet: View {
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel(hill.label)
+                .accessibilityHint("按该山坡线条模板直接生成旋律")
             }
         }
     }
@@ -729,6 +742,7 @@ public struct DreamCaptureSheet: View {
                         )
                     }
                     .frame(width: 46, height: 38)
+                    .accessibilityHidden(true)
 
                     Spacer(minLength: 4)
 
@@ -802,6 +816,7 @@ public struct DreamCaptureSheet: View {
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                     .accessibilityLabel(isRec ? "停止录音" : "开始哼唱录音")
+                    .accessibilityHint(isRec ? "停止录音并把哼唱转为音珠" : "开启麦克风轻哼一段旋律")
                 }
 
                 liveVocalPitchStage(isRec: isRec, level: level, trace: vm.capturePipeline.livePitchTrace)

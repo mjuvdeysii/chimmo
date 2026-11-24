@@ -4467,4 +4467,27 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound71DrumHitThroughAutoScrollAndVoiceOverPriority() throws {
+        let bars = RhythmDrumAccentMapper.barVisualMetrics(timestamps: [0.0, 0.45, 0.90, 1.35, 1.80])
+        XCTAssertEqual(bars.count, 5)
+        XCTAssertEqual(bars.first?.isDownbeat, true)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r71_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            XCTAssertNotNil(OrbitalStageView(vm: vm, palette: p, onOpenAbout: {}))
+            XCTAssertNotNil(CreateStudioView(vm: vm, palette: p, onOpenSharePostcard: {}))
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: p, initialTab: 0))
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: p, initialTab: 1))
+            XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: p))
+        }
+    }
 }

@@ -49,6 +49,7 @@ public struct OrbitalStageView: View {
                 VStack(spacing: 10) {
                     showcaseCrownHeader
                         .padding(.horizontal, 16)
+                        .accessibilitySortPriority(5)
 
                     StageCanvasPanel(
                         vm: vm,
@@ -68,6 +69,7 @@ public struct OrbitalStageView: View {
                         .buttonStyle(.chimmoVinyl(palette: palette, tint: palette.prominentFill, prominent: true))
                     })
                     .padding(.horizontal, 16)
+                    .accessibilitySortPriority(4)
 
                     if !vm.followGlowActive,
                        let chip = StorybookGuidedMomentKinematics.chipModel(
@@ -76,6 +78,7 @@ public struct OrbitalStageView: View {
                        ) {
                         showcaseGuideBar(chip: chip)
                             .padding(.horizontal, 16)
+                            .accessibilitySortPriority(3)
                     }
 
                     StageChoirKeyboardBar(
@@ -90,10 +93,12 @@ public struct OrbitalStageView: View {
                         }
                     )
                     .padding(.horizontal, 16)
+                    .accessibilitySortPriority(2)
 
                     showcaseBottomDock
                         .padding(.horizontal, 16)
                         .padding(.bottom, 6)
+                        .accessibilitySortPriority(1)
                 }
                 .padding(.top, 4)
             }
@@ -646,9 +651,11 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                                 }
                             }
                     )
+                    .accessibilitySortPriority(2)
 
                 if vm.document.notes.isEmpty {
                     emptyOverlay()
+                        .accessibilitySortPriority(3)
                 }
 
                 // 顶部左：声学状态按钮 + 右：三态视窗切换仪（零阴影画布静谧相框）
@@ -682,6 +689,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                     Spacer()
                 }
                 .padding(10)
+                .accessibilitySortPriority(1)
             }
             .background(
                 RoundedRectangle(cornerRadius: ChimmoRadius.stage, style: .continuous)

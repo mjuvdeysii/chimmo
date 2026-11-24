@@ -387,80 +387,90 @@ public struct NightLampTactileSheet: View {
     }
 
     private var capturedStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                if capturedBeads.isEmpty {
-                    HStack(spacing: 8) {
-                        ForEach(0..<3, id: \.self) { dot in
-                            Circle()
-                                .fill(nightPalette.nightLampGold.opacity(dot == 1 ? 0.55 : 0.30))
-                                .frame(width: 6, height: 6)
-                        }
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(nightPalette.cardSurface)
-                            .overlay(Capsule().strokeBorder(nightPalette.divider, lineWidth: 1.0))
-                    )
-                } else {
-                    ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
-                        let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
-                        let lane = XylophoneLane.lane(at: laneIdx)
-                        let isAuditioning = auditioningIndex == idx
-                        let chipFill = isAuditioning
-                            ? nightPalette.nightLampGold.opacity(0.38)
-                            : lane.barColor(isNight: true).opacity(idx == capturedBeads.count - 1 ? 0.34 : 0.20)
-                        let chipStroke = isAuditioning
-                            ? nightPalette.nightLampGold
-                            : lane.barColor(isNight: true).opacity(0.52)
-                        let chipWidth = NightLampPhraseHelper.chipVisualWidth(forDuration: bead.rawDuration)
-                        let durRatio = NightLampPhraseHelper.normalizedDurationRatio(for: bead.rawDuration)
-                        Button {
-                            stopAudition()
-                            previewCapturedBead(bead, index: idx)
-                        } label: {
-                            VStack(spacing: 2.5) {
-                                HStack(spacing: 5) {
-                                    PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
-                                        .frame(width: 9, height: 9)
-                                    Text(lane.digitLabel)
-                                        .font(.caption.weight(.heavy).monospacedDigit())
-                                }
-                                Capsule()
-                                    .fill(chipStroke.opacity(0.85))
-                                    .frame(width: max(12, chipWidth * 0.56 * CGFloat(0.35 + durRatio * 0.65)), height: 2.2)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    if capturedBeads.isEmpty {
+                        HStack(spacing: 8) {
+                            ForEach(0..<3, id: \.self) { dot in
+                                Circle()
+                                    .fill(nightPalette.nightLampGold.opacity(dot == 1 ? 0.55 : 0.30))
+                                    .frame(width: 6, height: 6)
                             }
-                            .frame(minWidth: chipWidth)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(Capsule().fill(chipFill))
-                            .overlay(
-                                Capsule().strokeBorder(chipStroke, lineWidth: isAuditioning ? 1.5 : 1.0)
-                            )
-                            .foregroundStyle(nightPalette.primaryInk)
-                            .scaleEffect(isAuditioning && !reduceMotion ? 1.08 : 1.0)
-                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Capsule())
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-                        .contextMenu {
-                            Button(role: .destructive) {
-                                removeCapturedBead(at: idx)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(nightPalette.cardSurface)
+                                .overlay(Capsule().strokeBorder(nightPalette.divider, lineWidth: 1.0))
+                        )
+                        .accessibilityHidden(true)
+                    } else {
+                        ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
+                            let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+                            let lane = XylophoneLane.lane(at: laneIdx)
+                            let isAuditioning = auditioningIndex == idx
+                            let chipFill = isAuditioning
+                                ? nightPalette.nightLampGold.opacity(0.38)
+                                : lane.barColor(isNight: true).opacity(idx == capturedBeads.count - 1 ? 0.34 : 0.20)
+                            let chipStroke = isAuditioning
+                                ? nightPalette.nightLampGold
+                                : lane.barColor(isNight: true).opacity(0.52)
+                            let chipWidth = NightLampPhraseHelper.chipVisualWidth(forDuration: bead.rawDuration)
+                            let durRatio = NightLampPhraseHelper.normalizedDurationRatio(for: bead.rawDuration)
+                            Button {
+                                stopAudition()
+                                previewCapturedBead(bead, index: idx)
                             } label: {
-                                Label("删除此音", systemImage: "trash")
+                                VStack(spacing: 2.5) {
+                                    HStack(spacing: 5) {
+                                        PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
+                                            .frame(width: 9, height: 9)
+                                        Text(lane.digitLabel)
+                                            .font(.caption.weight(.heavy).monospacedDigit())
+                                    }
+                                    Capsule()
+                                        .fill(chipStroke.opacity(0.85))
+                                        .frame(width: max(12, chipWidth * 0.56 * CGFloat(0.35 + durRatio * 0.65)), height: 2.2)
+                                }
+                                .frame(minWidth: chipWidth)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(Capsule().fill(chipFill))
+                                .overlay(
+                                    Capsule().strokeBorder(chipStroke, lineWidth: isAuditioning ? 1.5 : 1.0)
+                                )
+                                .foregroundStyle(nightPalette.primaryInk)
+                                .scaleEffect(isAuditioning && !reduceMotion ? 1.08 : 1.0)
+                                .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                                .contentShape(Capsule())
                             }
-                        }
-                        .accessibilityLabel("\(lane.digitLabel) \(lane.solfege)")
-                        .accessibilityHint("轻点试听单音，长按或使用转子可删除")
-                        .accessibilityAction(named: "删除此音") {
-                            removeCapturedBead(at: idx)
+                            .id(bead.id)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    removeCapturedBead(at: idx)
+                                } label: {
+                                    Label("删除此音", systemImage: "trash")
+                                }
+                            }
+                            .accessibilityLabel("\(lane.digitLabel) \(lane.solfege)")
+                            .accessibilityHint("轻点试听单音，长按或使用转子可删除")
+                            .accessibilityAction(named: "删除此音") {
+                                removeCapturedBead(at: idx)
+                            }
                         }
                     }
                 }
+                .padding(.vertical, 2)
             }
-            .padding(.vertical, 2)
+            .onChange(of: capturedBeads.count) { _, _ in
+                guard let lastID = capturedBeads.last?.id else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+                    proxy.scrollTo(lastID, anchor: .trailing)
+                }
+            }
         }
         .frame(height: 46)
     }

@@ -87,6 +87,7 @@ public struct CreateStudioView: View {
                 VStack(spacing: 10) {
                     creationTopBar
                         .padding(.horizontal, 16)
+                        .accessibilitySortPriority(6)
 
                     StageCanvasPanel(
                         vm: vm,
@@ -105,15 +106,18 @@ public struct CreateStudioView: View {
                         }
                     )
                     .padding(.horizontal, 16)
+                    .accessibilitySortPriority(5)
 
                     if vm.followGlowActive {
                         creationFollowGlowBar
                             .padding(.horizontal, 16)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            .accessibilitySortPriority(4)
                     } else if let idx = selectedBeatIndex, !vm.isPlaying {
                         compactCreationBeatBar(idx: idx)
                             .padding(.horizontal, 16)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            .accessibilitySortPriority(4)
                     } else if !vm.document.notes.isEmpty {
                         StageHarmonyRibbonView(
                             vm: vm,
@@ -123,10 +127,12 @@ public struct CreateStudioView: View {
                             wakeSignal &+= 1
                         }
                         .padding(.horizontal, 16)
+                        .accessibilitySortPriority(4)
                     }
 
                     creationToolsBar
                         .padding(.horizontal, 16)
+                        .accessibilitySortPriority(3)
 
                     VStack(spacing: 4) {
                         Text(createKeyboardPromptText)
@@ -153,10 +159,12 @@ public struct CreateStudioView: View {
                         )
                     }
                     .padding(.horizontal, 16)
+                    .accessibilitySortPriority(2)
 
                     creationBottomConsole
                         .padding(.horizontal, 16)
                         .padding(.bottom, 6)
+                        .accessibilitySortPriority(1)
                 }
                 .padding(.top, 4)
             }
@@ -401,6 +409,7 @@ public struct CreateStudioView: View {
                     .contentShape(Circle())
                 }
                 .accessibilityLabel("更多创作操作")
+                .accessibilityHint("打开作品集、重命名、调色与导出菜单")
             }
             .fixedSize()
         }
@@ -469,6 +478,7 @@ public struct CreateStudioView: View {
             }
             .frame(height: 112)
             .allowsHitTesting(false)
+            .accessibilityHidden(true)
 
             VStack(spacing: 8) {
                 Spacer(minLength: 4)
@@ -799,15 +809,30 @@ public struct CreateStudioView: View {
 
     private var creationToolsBar: some View {
         HStack(spacing: 8) {
-            creationToolChip(title: "轻哼捕音", icon: "mic.fill", accent: palette.homeAnchor) {
+            creationToolChip(
+                title: "轻哼捕音",
+                icon: "mic.fill",
+                accent: palette.homeAnchor,
+                hint: "打开轻哼捕捉面板，录音把哼唱转为音珠"
+            ) {
                 dreamInitialTab = 1
                 showDreamSheet = true
             }
-            creationToolChip(title: "节奏灵感", icon: "waveform.path", accent: palette.nightLampGold) {
+            creationToolChip(
+                title: "节奏灵感",
+                icon: "waveform.path",
+                accent: palette.nightLampGold,
+                hint: "打开节奏鼓与手绘旋律板"
+            ) {
                 dreamInitialTab = 0
                 showDreamSheet = true
             }
-            creationToolChip(title: "音色和声", icon: "slider.horizontal.3", accent: palette.celadonAccent) {
+            creationToolChip(
+                title: "音色和声",
+                icon: "slider.horizontal.3",
+                accent: palette.celadonAccent,
+                hint: "打开声音调色盒，调整音色、节拍与和声"
+            ) {
                 showSoundSheet = true
             }
         }
@@ -817,6 +842,7 @@ public struct CreateStudioView: View {
         title: String,
         icon: String,
         accent: Color,
+        hint: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -843,6 +869,7 @@ public struct CreateStudioView: View {
             .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+        .accessibilityHint(hint)
     }
 
     // MARK: - 5. Bottom Unmissable Audition & Save Console

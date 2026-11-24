@@ -255,6 +255,7 @@ public struct SoundPaletteBoxSheet: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .allowsHitTesting(false)
+                .accessibilityHidden(true)
 
                 VStack(spacing: 2) {
                     Button {
@@ -274,6 +275,8 @@ public struct SoundPaletteBoxSheet: View {
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
                     .accessibilityLabel("波形示波窗，轻点试听当前音色与双子合奏")
+                    .accessibilityValue("主音色 \(vm.melodyVoice.label)，移调 \(RootTranspositionHelper.compactLabel(forRootMIDI: vm.document.rootMIDI))，倍速 \(String(format: "%.2g", vm.playbackRate)) 倍")
+                    .accessibilityHint("轻点试听当前音色与双子合奏")
 
                     HStack(alignment: .bottom, spacing: 6) {
                         Button {
@@ -790,6 +793,8 @@ public struct SoundPaletteBoxSheet: View {
                                     Text(v.label)
                                         .font(.caption.weight(.heavy))
                                         .foregroundStyle(fgColor)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.75)
                                     Spacer(minLength: 0)
                                 }
                                 .padding(.horizontal, 11)
@@ -919,6 +924,8 @@ public struct SoundPaletteBoxSheet: View {
                                     Text(tex.label)
                                         .font(.caption.weight(.heavy))
                                         .foregroundStyle(fgColor)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.75)
                                     Spacer(minLength: 0)
                                 }
                                 .padding(.horizontal, 11)
