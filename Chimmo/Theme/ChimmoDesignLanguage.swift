@@ -299,12 +299,60 @@ public struct ChimmoCraftBadge: View {
     }
 }
 
+/// 系统「减弱透明度（Reduce Transparency）」与「增强对比度（Increase Contrast）」双轨表面清晰度策略：
+/// 开启任一项视觉辅助后，消除装饰性高光玻璃层与低对比度半透明色洗，转为实底纸面与明确轮廓边线。
+public enum StorybookSurfaceClarityPolicy: Sendable {
+    public static func showsSpecularSheen(reduceTransparency: Bool, increasedContrast: Bool) -> Bool {
+        !reduceTransparency && !increasedContrast
+    }
+
+    public static func showsTranslucentTintWash(reduceTransparency: Bool) -> Bool {
+        !reduceTransparency
+    }
+
+    public static func quietTagFillOpacity(isNight: Bool, reduceTransparency: Bool, increasedContrast: Bool) -> Double {
+        if reduceTransparency || increasedContrast {
+            return isNight ? 0.30 : 0.18
+        }
+        return isNight ? 0.16 : 0.10
+    }
+
+    public static func pillActiveFillOpacity(isNight: Bool, reduceTransparency: Bool, increasedContrast: Bool) -> Double {
+        if reduceTransparency || increasedContrast {
+            return isNight ? 0.42 : 0.26
+        }
+        return isNight ? 0.28 : 0.16
+    }
+
+    public static func borderLineWidth(isActive: Bool, reduceTransparency: Bool, increasedContrast: Bool) -> CGFloat {
+        if increasedContrast {
+            return isActive ? 2.0 : 1.5
+        }
+        if reduceTransparency {
+            return isActive ? 1.6 : 1.25
+        }
+        return isActive ? 1.3 : 1.0
+    }
+
+    public static func subtleBorderOpacity(isNight: Bool, reduceTransparency: Bool, increasedContrast: Bool) -> Double {
+        if increasedContrast {
+            return isNight ? 0.56 : 0.44
+        }
+        if reduceTransparency {
+            return isNight ? 0.32 : 0.24
+        }
+        return isNight ? 0.14 : 0.09
+    }
+}
+
 /// 纯净编辑部质感胶囊标签（去框去阴影：柔彩底色 + 几何微点 + 精密字体）
 public struct ChimmoEditorialPill: View {
     public let text: String
     public let accent: Color
     public let surface: Color
     public let textColor: Color
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(text: String, accent: Color, surface: Color, textColor: Color) {
         self.text = text
@@ -314,23 +362,42 @@ public struct ChimmoEditorialPill: View {
     }
 
     public var body: some View {
+        let increased = colorSchemeContrast == .increased
+        let highClarity = reduceTransparency || increased
+        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+
         HStack(spacing: 5) {
             Circle()
                 .fill(accent)
                 .frame(width: 5.5, height: 5.5)
             Text(text)
-                .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
                 .foregroundStyle(textColor)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 3.5)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(surface.opacity(0.65))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(accent.opacity(0.12))
-                )
+            shape
+                .fill(highClarity ? surface : surface.opacity(0.65))
+                .overlay {
+                    if StorybookSurfaceClarityPolicy.showsTranslucentTintWash(reduceTransparency: reduceTransparency) {
+                        shape.fill(accent.opacity(0.12))
+                    }
+                }
+                .overlay {
+                    if highClarity {
+                        shape.strokeBorder(
+                            accent.opacity(increased ? 0.75 : 0.48),
+                            lineWidth: StorybookSurfaceClarityPolicy.borderLineWidth(
+                                isActive: false,
+                                reduceTransparency: reduceTransparency,
+                                increasedContrast: increased
+                            )
+                        )
+                    }
+                }
         )
     }
 }
@@ -355,6 +422,8 @@ public struct PitchGlyphVectorView: View {
 public struct ChimmoWoodResonatorTray: View {
     public let palette: ChimmoPalette
     public var cornerRadius: CGFloat
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(palette: ChimmoPalette, cornerRadius: CGFloat = ChimmoRadius.inner) {
         self.palette = palette
@@ -363,12 +432,26 @@ public struct ChimmoWoodResonatorTray: View {
 
     public var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let increased = colorSchemeContrast == .increased
         ZStack {
             shape
                 .fill(palette.woodTrayTop)
 
             shape
-                .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                .strokeBorder(
+                    palette.primaryInk.opacity(
+                        StorybookSurfaceClarityPolicy.subtleBorderOpacity(
+                            isNight: palette.isNight,
+                            reduceTransparency: reduceTransparency,
+                            increasedContrast: increased
+                        )
+                    ),
+                    lineWidth: StorybookSurfaceClarityPolicy.borderLineWidth(
+                        isActive: false,
+                        reduceTransparency: reduceTransparency,
+                        increasedContrast: increased
+                    )
+                )
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -402,6 +485,8 @@ public struct ChimmoKilnPillButtonSurface: View {
     public var isActive: Bool
     public var isPressed: Bool
     public var cornerRadius: CGFloat
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(
         palette: ChimmoPalette,
@@ -420,8 +505,21 @@ public struct ChimmoKilnPillButtonSurface: View {
     public var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         let activeTint = accent ?? palette.homeAnchor
+        let increased = colorSchemeContrast == .increased
+        let highClarity = reduceTransparency || increased
+        let lineWidth = StorybookSurfaceClarityPolicy.borderLineWidth(
+            isActive: isActive,
+            reduceTransparency: reduceTransparency,
+            increasedContrast: increased
+        )
         let fillCol = isActive
-            ? activeTint.opacity(palette.isNight ? 0.28 : 0.16)
+            ? activeTint.opacity(
+                StorybookSurfaceClarityPolicy.pillActiveFillOpacity(
+                    isNight: palette.isNight,
+                    reduceTransparency: reduceTransparency,
+                    increasedContrast: increased
+                )
+            )
             : palette.cardSurface
         let rimColor: Color = isActive
             ? activeTint.opacity(palette.isNight ? 0.72 : 0.52)
@@ -431,28 +529,53 @@ public struct ChimmoKilnPillButtonSurface: View {
             : palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.18)
 
         ZStack {
+            if isActive && highClarity {
+                shape.fill(palette.cardSurface)
+            }
+
             shape
                 .fill(fillCol)
                 .shadow(color: shadowColor, radius: isPressed ? 1.5 : 3.5, y: isPressed ? 0.8 : 2.0)
 
-            shape
-                .fill(
-                    LinearGradient(
-                        colors: [.white.opacity(palette.isNight ? 0.05 : 0.35), .clear],
-                        startPoint: .top,
-                        endPoint: .center
+            if StorybookSurfaceClarityPolicy.showsSpecularSheen(
+                reduceTransparency: reduceTransparency,
+                increasedContrast: increased
+            ) {
+                shape
+                    .fill(
+                        LinearGradient(
+                            colors: [.white.opacity(palette.isNight ? 0.05 : 0.35), .clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        )
                     )
-                )
+            }
 
-            shape
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [rimColor, palette.primaryInk.opacity(palette.isNight ? 0.10 : 0.07)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: isActive ? 1.3 : 1.0
-                )
+            if highClarity {
+                shape
+                    .strokeBorder(
+                        isActive
+                            ? activeTint.opacity(increased ? 0.92 : 0.78)
+                            : palette.primaryInk.opacity(
+                                StorybookSurfaceClarityPolicy.subtleBorderOpacity(
+                                    isNight: palette.isNight,
+                                    reduceTransparency: reduceTransparency,
+                                    increasedContrast: increased
+                                )
+                            ),
+                        lineWidth: lineWidth
+                    )
+            } else {
+                shape
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [rimColor, palette.primaryInk.opacity(palette.isNight ? 0.10 : 0.07)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: lineWidth
+                    )
+            }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -465,6 +588,8 @@ public struct StorybookQuietCardSurface: View {
     public var accent: Color?
     public var isHighlighted: Bool
     public var cornerRadius: CGFloat
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(
         palette: ChimmoPalette,
@@ -481,6 +606,8 @@ public struct StorybookQuietCardSurface: View {
     public var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         let activeTint = accent ?? palette.homeAnchor
+        let increased = colorSchemeContrast == .increased
+        let highClarity = reduceTransparency || increased
 
         ZStack {
             shape
@@ -491,7 +618,7 @@ public struct StorybookQuietCardSurface: View {
                     y: 3.5
                 )
 
-            if isHighlighted {
+            if isHighlighted && StorybookSurfaceClarityPolicy.showsTranslucentTintWash(reduceTransparency: reduceTransparency) {
                 shape
                     .fill(activeTint.opacity(palette.isNight ? 0.14 : 0.08))
             }
@@ -499,9 +626,23 @@ public struct StorybookQuietCardSurface: View {
             shape
                 .strokeBorder(
                     isHighlighted
-                        ? activeTint.opacity(0.55)
-                        : (palette.isNight ? Color.white.opacity(0.08) : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.08)),
-                    lineWidth: 1.0
+                        ? activeTint.opacity(highClarity ? (increased ? 0.92 : 0.78) : 0.55)
+                        : (
+                            highClarity
+                                ? palette.primaryInk.opacity(
+                                    StorybookSurfaceClarityPolicy.subtleBorderOpacity(
+                                        isNight: palette.isNight,
+                                        reduceTransparency: reduceTransparency,
+                                        increasedContrast: increased
+                                    )
+                                )
+                                : (palette.isNight ? Color.white.opacity(0.08) : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.08))
+                        ),
+                    lineWidth: StorybookSurfaceClarityPolicy.borderLineWidth(
+                        isActive: isHighlighted,
+                        reduceTransparency: reduceTransparency,
+                        increasedContrast: increased
+                    )
                 )
         }
         .allowsHitTesting(false)
@@ -516,6 +657,8 @@ public struct StorybookQuietTag: View {
     public let tint: Color
     public let textColor: Color
     public let isNight: Bool
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(
         text: String,
@@ -532,21 +675,40 @@ public struct StorybookQuietTag: View {
     }
 
     public var body: some View {
+        let increased = colorSchemeContrast == .increased
+        let highClarity = reduceTransparency || increased
+        let tagShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+
         HStack(spacing: 4) {
             if let systemImage {
                 Image(systemName: systemImage)
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(tint)
             }
             Text(text)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
                 .foregroundStyle(textColor)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 3.5)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(tint.opacity(isNight ? 0.16 : 0.10))
+            tagShape
+                .fill(
+                    tint.opacity(
+                        StorybookSurfaceClarityPolicy.quietTagFillOpacity(
+                            isNight: isNight,
+                            reduceTransparency: reduceTransparency,
+                            increasedContrast: increased
+                        )
+                    )
+                )
+                .overlay {
+                    if highClarity {
+                        tagShape.strokeBorder(tint.opacity(increased ? 0.75 : 0.45), lineWidth: 1.0)
+                    }
+                }
         )
     }
 }
@@ -729,6 +891,8 @@ public struct ChimmoAtelierCardModifier: ViewModifier {
     public let palette: ChimmoPalette
     public var radius: CGFloat
     public var tint: Color?
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(palette: ChimmoPalette, radius: CGFloat = ChimmoRadius.card, tint: Color? = nil) {
         self.palette = palette
@@ -739,6 +903,8 @@ public struct ChimmoAtelierCardModifier: ViewModifier {
     public func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         let dark = palette.isNight
+        let increased = colorSchemeContrast == .increased
+        let highClarity = reduceTransparency || increased
         let shadowColor = palette.elevationShadow(dayOpacity: 0.10, nightOpacity: 0.24)
         let rimTop: Color = dark
             ? palette.nightLampGold.opacity(0.16)
@@ -748,13 +914,16 @@ public struct ChimmoAtelierCardModifier: ViewModifier {
             .background {
                 ZStack {
                     palette.cardSurface
-                    if let tint {
+                    if let tint, StorybookSurfaceClarityPolicy.showsTranslucentTintWash(reduceTransparency: reduceTransparency) {
                         LinearGradient(
                             colors: [tint.opacity(dark ? 0.14 : 0.08), .clear],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
-                    } else {
+                    } else if tint == nil, StorybookSurfaceClarityPolicy.showsSpecularSheen(
+                        reduceTransparency: reduceTransparency,
+                        increasedContrast: increased
+                    ) {
                         LinearGradient(
                             colors: [Color.white.opacity(dark ? 0.04 : 0.22), .clear],
                             startPoint: .top,
@@ -771,22 +940,44 @@ public struct ChimmoAtelierCardModifier: ViewModifier {
                     .shadow(color: shadowColor, radius: dark ? 7 : 8, y: 4)
             }
             .overlay {
-                shape
-                    .strokeBorder(
-                        LinearGradient(
-                            stops: dark
-                                ? [.init(color: rimTop, location: 0),
-                                   .init(color: .white.opacity(0.05), location: 0.32),
-                                   .init(color: Color.black.opacity(0.20), location: 1)]
-                                : [.init(color: rimTop, location: 0),
-                                   .init(color: .white.opacity(0.22), location: 0.38),
-                                   .init(color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.08), location: 1)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1.0
-                    )
-                    .allowsHitTesting(false)
+                Group {
+                    if highClarity {
+                        shape
+                            .strokeBorder(
+                                (tint ?? palette.primaryInk).opacity(
+                                    tint != nil
+                                        ? (increased ? 0.78 : 0.55)
+                                        : StorybookSurfaceClarityPolicy.subtleBorderOpacity(
+                                            isNight: dark,
+                                            reduceTransparency: reduceTransparency,
+                                            increasedContrast: increased
+                                        )
+                                ),
+                                lineWidth: StorybookSurfaceClarityPolicy.borderLineWidth(
+                                    isActive: tint != nil,
+                                    reduceTransparency: reduceTransparency,
+                                    increasedContrast: increased
+                                )
+                            )
+                    } else {
+                        shape
+                            .strokeBorder(
+                                LinearGradient(
+                                    stops: dark
+                                        ? [.init(color: rimTop, location: 0),
+                                           .init(color: .white.opacity(0.05), location: 0.32),
+                                           .init(color: Color.black.opacity(0.20), location: 1)]
+                                        : [.init(color: rimTop, location: 0),
+                                           .init(color: .white.opacity(0.22), location: 0.38),
+                                           .init(color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.08), location: 1)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1.0
+                            )
+                    }
+                }
+                .allowsHitTesting(false)
             }
             .contentShape(shape)
     }
@@ -800,6 +991,8 @@ public struct ChimmoVinylButtonStyle: ButtonStyle {
     public var large: Bool
     @Environment(\.isEnabled) private var enabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(
         palette: ChimmoPalette,
@@ -816,10 +1009,20 @@ public struct ChimmoVinylButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         let dark = palette.isNight
         let pressed = configuration.isPressed
+        let increased = colorSchemeContrast == .increased
+        let highClarity = reduceTransparency || increased
         let resolvedTint = tint ?? (prominent ? palette.prominentFill : palette.homeAnchor)
         let bodyFill: Color = prominent
             ? resolvedTint
-            : resolvedTint.opacity(dark ? 0.24 : 0.14)
+            : resolvedTint.opacity(
+                highClarity
+                    ? StorybookSurfaceClarityPolicy.pillActiveFillOpacity(
+                        isNight: dark,
+                        reduceTransparency: reduceTransparency,
+                        increasedContrast: increased
+                    )
+                    : (dark ? 0.24 : 0.14)
+            )
         let inkColor: Color = prominent
             ? .white
             : (dark ? resolvedTint : resolvedTint.mix(with: palette.primaryInk, by: 0.22))
@@ -839,26 +1042,51 @@ public struct ChimmoVinylButtonStyle: ButtonStyle {
             .frame(minHeight: large ? 48 : 44)
             .background {
                 ZStack {
+                    if !prominent && highClarity {
+                        shape.fill(palette.cardSurface)
+                    }
+
                     shape
                         .fill(bodyFill)
                         .shadow(color: shadowColor, radius: pressed ? 1.5 : (prominent ? 6 : 3), y: pressed ? 0.8 : (prominent ? 3 : 2))
-                    shape
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.white.opacity(prominent ? 0.10 : (dark ? 0.05 : 0.40)), .clear],
-                                startPoint: .top,
-                                endPoint: .center
+
+                    if StorybookSurfaceClarityPolicy.showsSpecularSheen(
+                        reduceTransparency: reduceTransparency,
+                        increasedContrast: increased
+                    ) {
+                        shape
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(prominent ? 0.10 : (dark ? 0.05 : 0.40)), .clear],
+                                    startPoint: .top,
+                                    endPoint: .center
+                                )
                             )
-                        )
-                    shape
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [rimTop, .clear],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1.0
-                        )
+                    }
+
+                    if highClarity {
+                        shape
+                            .strokeBorder(
+                                prominent
+                                    ? (dark ? palette.nightLampGold.opacity(0.65) : palette.primaryInk.opacity(0.35))
+                                    : resolvedTint.opacity(increased ? 0.85 : 0.55),
+                                lineWidth: StorybookSurfaceClarityPolicy.borderLineWidth(
+                                    isActive: prominent,
+                                    reduceTransparency: reduceTransparency,
+                                    increasedContrast: increased
+                                )
+                            )
+                    } else {
+                        shape
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [rimTop, .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1.0
+                            )
+                    }
                 }
             }
             .contentShape(shape)

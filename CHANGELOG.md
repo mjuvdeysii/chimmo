@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.74.0 - 2026-11-25
+- 全系统「减弱透明度（Reduce Transparency）」与「增强对比度（Increase Contrast）」表面清晰度闭环：在 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift) 新增单源策略 `StorybookSurfaceClarityPolicy`，并为 `ChimmoEditorialPill`、`ChimmoWoodResonatorTray`、`ChimmoKilnPillButtonSurface`、`StorybookQuietCardSurface`、`StorybookQuietTag`、`ChimmoAtelierCardModifier` 与 `ChimmoVinylButtonStyle` 全量接入 `@Environment(\.accessibilityReduceTransparency)` 与 `@Environment(\.colorSchemeContrast)`；在系统开启减弱透明度或增强对比度时自动收起装饰高光玻璃层与低对比度半透明色洗，铺实棉纸/夜纸底面并分级强化轮廓描边宽度与不透明度。
+- 主题层语义动态字体清零收官：将 `ChimmoEditorialPill` 与 `StorybookQuietTag` 中的最后 3 处非画布固定字号（`10 / 10.5 / 11pt`）全面升级为 `.system(.caption2, design: .rounded).weight(.bold)`（配 `.lineLimit(1).minimumScaleFactor(0.75)`），达成 `Chimmo/Views/` 与 `Chimmo/Theme/` 全目录实时界面固定字号零残余。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound67SurfaceClarityReduceTransparencyAndThemeDynamicType`，验证 `StorybookSurfaceClarityPolicy` 全部开关分支、单调递进描边及日夜双态主题原语构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.73.0 - 2026-11-25
 - 减弱动态效果（Reduce Motion）平静 15Hz 线性播放进度策略闭环：在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增 `StorybookStageTimelinePolicy`（区分功能性播放/拖动/按音与纯装饰性涟漪/颤音刷新，并在 Reduce Motion 开启时将刷新频率柔和降至 `15 Hz`），并在 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 全面接入 `shouldRun` 与 `minimumInterval`，彻底修复此前开启「减弱动态效果」时 `TimelineView` 被整体暂停导致书签读取线与游标冻结的问题。
 - 舞台单源指针角与零拖尾颗粒纯化：在 `drawOrbitalDiscCanvas` 将书签阅读指针角委派至单源 `StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction:reduceMotion:)`；在 `drawResonanceNebulaCanvas` 为 5 颗流星微尘尾迹补齐 `!reduceMotion` 门控，仅保留清晰纯净的金色星光核心进度点。

@@ -4308,4 +4308,52 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(OrbitalStageView(vm: vm, palette: day, onOpenAbout: {}))
         XCTAssertNotNil(OrbitalStageView(vm: vm, palette: night, onOpenAbout: {}))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound67SurfaceClarityReduceTransparencyAndThemeDynamicType() throws {
+        XCTAssertTrue(StorybookSurfaceClarityPolicy.showsSpecularSheen(reduceTransparency: false, increasedContrast: false))
+        XCTAssertFalse(StorybookSurfaceClarityPolicy.showsSpecularSheen(reduceTransparency: true, increasedContrast: false))
+        XCTAssertFalse(StorybookSurfaceClarityPolicy.showsSpecularSheen(reduceTransparency: false, increasedContrast: true))
+        XCTAssertFalse(StorybookSurfaceClarityPolicy.showsSpecularSheen(reduceTransparency: true, increasedContrast: true))
+
+        XCTAssertTrue(StorybookSurfaceClarityPolicy.showsTranslucentTintWash(reduceTransparency: false))
+        XCTAssertFalse(StorybookSurfaceClarityPolicy.showsTranslucentTintWash(reduceTransparency: true))
+
+        for isNight in [false, true] {
+            let stdTag = StorybookSurfaceClarityPolicy.quietTagFillOpacity(isNight: isNight, reduceTransparency: false, increasedContrast: false)
+            let rtTag = StorybookSurfaceClarityPolicy.quietTagFillOpacity(isNight: isNight, reduceTransparency: true, increasedContrast: false)
+            let icTag = StorybookSurfaceClarityPolicy.quietTagFillOpacity(isNight: isNight, reduceTransparency: false, increasedContrast: true)
+            XCTAssertGreaterThan(rtTag, stdTag)
+            XCTAssertGreaterThan(icTag, stdTag)
+
+            let stdPill = StorybookSurfaceClarityPolicy.pillActiveFillOpacity(isNight: isNight, reduceTransparency: false, increasedContrast: false)
+            let rtPill = StorybookSurfaceClarityPolicy.pillActiveFillOpacity(isNight: isNight, reduceTransparency: true, increasedContrast: false)
+            let icPill = StorybookSurfaceClarityPolicy.pillActiveFillOpacity(isNight: isNight, reduceTransparency: false, increasedContrast: true)
+            XCTAssertGreaterThan(rtPill, stdPill)
+            XCTAssertGreaterThan(icPill, stdPill)
+
+            let stdSubtle = StorybookSurfaceClarityPolicy.subtleBorderOpacity(isNight: isNight, reduceTransparency: false, increasedContrast: false)
+            let rtSubtle = StorybookSurfaceClarityPolicy.subtleBorderOpacity(isNight: isNight, reduceTransparency: true, increasedContrast: false)
+            let icSubtle = StorybookSurfaceClarityPolicy.subtleBorderOpacity(isNight: isNight, reduceTransparency: false, increasedContrast: true)
+            XCTAssertLessThan(stdSubtle, rtSubtle)
+            XCTAssertLessThan(rtSubtle, icSubtle)
+        }
+
+        for isActive in [false, true] {
+            let stdW = StorybookSurfaceClarityPolicy.borderLineWidth(isActive: isActive, reduceTransparency: false, increasedContrast: false)
+            let rtW = StorybookSurfaceClarityPolicy.borderLineWidth(isActive: isActive, reduceTransparency: true, increasedContrast: false)
+            let icW = StorybookSurfaceClarityPolicy.borderLineWidth(isActive: isActive, reduceTransparency: false, increasedContrast: true)
+            XCTAssertLessThan(stdW, rtW)
+            XCTAssertLessThan(rtW, icW)
+        }
+
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            XCTAssertNotNil(ChimmoEditorialPill(text: "Do 1", accent: p.homeAnchor, surface: p.cardSurface, textColor: p.primaryInk))
+            XCTAssertNotNil(StorybookQuietTag(text: "4/4 拍", systemImage: "metronome", tint: p.celadonAccent, textColor: p.primaryInk, isNight: p.isNight))
+            XCTAssertNotNil(ChimmoWoodResonatorTray(palette: p))
+            XCTAssertNotNil(ChimmoKilnPillButtonSurface(palette: p, isActive: true))
+            XCTAssertNotNil(StorybookQuietCardSurface(palette: p, isHighlighted: true))
+            XCTAssertNotNil(ChimmoVinylButtonStyle(palette: p, prominent: true, large: false))
+        }
+    }
 }
