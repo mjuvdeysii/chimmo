@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.70.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.71.0"
     }
 
     private var appBuild: String {
@@ -111,6 +111,7 @@ public struct SettingsView: View {
             Text(text)
                 .font(.caption2.weight(.semibold))
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
         }
         .foregroundStyle(palette.isNight ? tint : tint.mix(with: palette.primaryInk, by: 0.20))
         .padding(.horizontal, 8)
@@ -241,6 +242,7 @@ public struct SettingsView: View {
                 Text(pref.label)
                     .font(.caption2.weight(.bold))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .foregroundStyle(pref == .nightLamp ? night.primaryInk : (pref == .daylight ? day.primaryInk : palette.primaryInk))
             .padding(.horizontal, 9)
@@ -411,6 +413,7 @@ public struct SettingsView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(palette.primaryInk)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                             Text("PNG / WAV / MIDI · 曲本共 \(vm.notebook.entries.count) 首")
                                 .font(.caption)
                                 .foregroundStyle(palette.secondaryInk)
@@ -424,7 +427,7 @@ public struct SettingsView: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 11)
-                    .contentShape(Rectangle())
+                    .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
                 }
                 .disabled(vm.document.notes.isEmpty)
                 .opacity(vm.document.notes.isEmpty ? 0.48 : 1.0)
@@ -525,6 +528,7 @@ public struct SettingsView: View {
                     Link(destination: siteURL) {
                         legalExternalRow(title: "官方网站", symbol: "globe", tint: palette.bassRibbon)
                     }
+                    .accessibilityHint("在浏览器中打开")
                 }
 
                 if let issuesURL = URL(string: "https://github.com/mjuvdeysii/chimmo/issues") {
@@ -533,8 +537,10 @@ public struct SettingsView: View {
                     Link(destination: issuesURL) {
                         legalExternalRow(title: "问题反馈与支持", symbol: "bubble.left.and.text.bubble.right", tint: palette.homeAnchor)
                     }
+                    .accessibilityHint("在浏览器中打开")
                 }
             }
+            .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
             .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
 
             Text("咩哞 · Chimmo 完全在本机离线运行，无需登录，不上传任何录音或个人数据。")
@@ -817,6 +823,7 @@ public struct CharacterSoundTestView: View {
                             }
                         }
                     }
+                    .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
                     .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
 
                     ChimmoSectionTitle(
@@ -881,6 +888,7 @@ public struct CharacterSoundTestView: View {
                             }
                         }
                     }
+                    .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
                     .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
                 }
                 .padding(.top, 8)

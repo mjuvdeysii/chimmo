@@ -311,7 +311,7 @@ public struct CreateStudioView: View {
                     minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension,
                     alignment: .leading
                 )
-                .contentShape(Rectangle())
+                .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
             .accessibilityLabel("作品名称 \(vm.document.title)，\(draftStatusText)")
@@ -582,6 +582,7 @@ public struct CreateStudioView: View {
                 .font(.system(.caption, design: .rounded).weight(.heavy).monospacedDigit())
                 .foregroundStyle(palette.primaryInk)
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
             Spacer(minLength: 4)
 

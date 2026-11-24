@@ -311,6 +311,7 @@ public struct OrbitalStageView: View {
                     .font(.caption2)
                     .foregroundStyle(palette.secondaryInk)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 

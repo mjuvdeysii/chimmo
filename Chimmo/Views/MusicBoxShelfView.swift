@@ -366,6 +366,7 @@ public struct MusicBoxShelfView: View {
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(isSelected ? palette.primaryInk : palette.secondaryInk)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
 
                 Text(countText)
                     .font(.system(.caption2, design: .rounded).weight(.bold).monospacedDigit())
@@ -698,6 +699,7 @@ public struct MusicBoxShelfView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                         .foregroundStyle(palette.primaryInk)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
 
                     Spacer(minLength: 4)
 
@@ -1101,6 +1103,7 @@ public struct MusicBoxShelfView: View {
                             .font(.system(.subheadline, design: .rounded).weight(.heavy))
                             .foregroundStyle(palette.primaryInk)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
 
                         Spacer(minLength: 4)
 

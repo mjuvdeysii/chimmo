@@ -178,6 +178,7 @@ public struct DreamCaptureSheet: View {
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(isSelected ? palette.primaryInk : palette.secondaryInk)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity)
             .frame(height: StorybookAffordanceMetrics.compactToolMinHitDimension)
@@ -560,7 +561,7 @@ public struct DreamCaptureSheet: View {
                     }
                 }
             }
-            .contentShape(Rectangle())
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { val in
@@ -1490,7 +1491,7 @@ private struct SeedPitchFaderColumn: View {
                         )
                         .position(x: centerX, y: thumbY)
                 }
-                .contentShape(Rectangle())
+                .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { val in

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.71.0 - 2026-11-25
+- 全域 Dynamic Type 零截断闭环、圆角命中对齐与外链无障碍提示：在 [CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift)、[DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 与 [SettingsView.swift](Chimmo/Views/SettingsView.swift) 补齐全部 10 处 `.lineLimit(1)` 的 `.minimumScaleFactor(0.75)` 防截断护栏；将创作改名热区（12pt）、手绘旋律垫（18pt）、种子推子（12pt）与导出整行卡（`ChimmoRadius.card`）命中边界贴合圆角视觉轮廓，为全部 3 组工坊列表卡补充 `.clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card))` 防外溢，并为官方网站与问题反馈 `Link` 补全「在浏览器中打开」VoiceOver 提示。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound64DynamicTypeScaleFloorAndHitContainment`，校验法务文档枚举完整性及 `SettingsView`、`SoundPaletteBoxSheet`、`DreamCaptureSheet`、`CreateStudioView` 与 `ChimmoLegalDocumentView` 昼夜双态构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.70.0 - 2026-11-25
 - 舞台交互字阶动态字体全闭环与精准圆角命中对齐：在 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 将底部七音阶琴键数字标牌、和弦幕布罗马数字与切幕箭头，以及 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 书页封面试听/暂停印章图标全面升级为 `.caption2` 语义 Dynamic Type（配 `.minimumScaleFactor` / `.scaleEffect`）；同步将 `stageInteractiveCanvas` 贴合至 `RoundedRectangle(cornerRadius: ChimmoRadius.stage)`、将 `StageChoirKeyboardBar` 拖奏区域贴合至 `RoundedRectangle(cornerRadius: 11)`，消除残余硬字号与直角触控外溢。
 - OpenMotion Director 12 秒导演短片升至 `v20` 并完成音画同源核验：将第二幕夜灯七小只色带与星点升级为 [ChimmoMember.swift](Chimmo/Domain/ChimmoMember.swift) 正典 `nightGlowHex`（配 `#0E1430` 窑墨前景达 AA+/AAA 高对比可读），将终幕圆盘七颗釉珠、共鸣涟漪与徽章版本号同步至 `v0.70` 与日间正典 `bodyHex`，并通过 1920x1080 30fps 带音轨 MP4 技术检验、5 帧实拍抽检及音量检测。

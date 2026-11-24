@@ -4150,4 +4150,30 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         )
     }
+
+    @MainActor
+    func testCreativeAlchemyRound64DynamicTypeScaleFloorAndHitContainment() throws {
+        XCTAssertEqual(ChimmoLegalDocumentView.LegalDocumentKind.allCases.count, 3)
+        for kind in ChimmoLegalDocumentView.LegalDocumentKind.allCases {
+            XCTAssertFalse(kind.navigationTitle.isEmpty)
+            XCTAssertNotNil(ChimmoLegalDocumentView(kind: kind))
+        }
+
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r64_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: day, onOpenSharePostcard: {}))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: night, onOpenSharePostcard: {}))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: day))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: night))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: day, initialTab: 0))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: night, initialTab: 2))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: day, onOpenSharePostcard: {}))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: night, onOpenSharePostcard: {}))
+    }
 }

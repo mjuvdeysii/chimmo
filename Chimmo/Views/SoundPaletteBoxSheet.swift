@@ -106,6 +106,7 @@ public struct SoundPaletteBoxSheet: View {
                     .font(.system(.headline, design: .rounded).weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             Spacer(minLength: 4)
