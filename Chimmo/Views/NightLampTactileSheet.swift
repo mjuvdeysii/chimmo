@@ -95,7 +95,7 @@ public struct NightLampTactileSheet: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                Capsule()
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(Color(hex: 0x162048))
             )
 
@@ -369,7 +369,7 @@ public struct NightLampTactileSheet: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
                     .background(
-                        Capsule()
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .fill(Color(hex: 0x162048))
                     )
                 } else {
@@ -494,10 +494,10 @@ public struct NightLampTactileSheet: View {
                         color: localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xF5ECDD)
                     )
                     .frame(width: 15, height: 15)
-                    Text(localPentatonicSafe ? "5" : "8")
-                        .font(.subheadline.weight(.heavy).monospacedDigit())
+                    Text(localPentatonicSafe ? "五音" : "八音")
+                        .font(.system(.caption, design: .rounded).weight(.heavy))
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 12)
                 .frame(height: 48)
                 .background(
                     ZStack {
@@ -524,13 +524,11 @@ public struct NightLampTactileSheet: View {
                 dismiss()
                 onCommitted()
             } label: {
-                HStack(spacing: 7) {
+                HStack(spacing: 6) {
                     Image(systemName: "checkmark")
                         .font(.subheadline.weight(.heavy))
-                    if !capturedBeads.isEmpty {
-                        Text("\(capturedBeads.count)")
-                            .font(.subheadline.weight(.heavy).monospacedDigit())
-                    }
+                    Text(capturedBeads.isEmpty ? "写入" : "写入 \(capturedBeads.count)")
+                        .font(.system(.subheadline, design: .rounded).weight(.heavy).monospacedDigit())
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)

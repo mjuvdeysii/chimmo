@@ -2915,4 +2915,137 @@ final class SpecimenIntegrityTests: XCTestCase {
         }
         XCTAssertNotNil(CharacterSoundTestView(palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound41CreationCraftChapterFlipAndDirtyTracking() {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r41_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        // 1. CreationStarterSeed 三颗灵感种子与纯值边界校验
+        XCTAssertEqual(CreationStarterSeed.allCases.count, 3)
+        for seed in CreationStarterSeed.allCases {
+            XCTAssertFalse(seed.shortLabel.isEmpty)
+            XCTAssertFalse(seed.titlePrefix.isEmpty)
+            XCTAssertGreaterThanOrEqual(seed.notes.count, 5)
+            for idx in seed.notes.indices {
+                XCTAssertGreaterThan(seed.notes[idx].rawOnset, 0.0)
+                XCTAssertGreaterThanOrEqual(seed.notes[idx].rawDuration, 0.30)
+                if idx > 0 {
+                    XCTAssertGreaterThan(seed.notes[idx].rawOnset, seed.notes[idx - 1].rawOnset)
+                }
+            }
+        }
+
+        // 2. CreationDraftMetrics 状态格式化与 NaN 保护
+        XCTAssertEqual(
+            CreationDraftMetrics.statusLine(noteCount: 0, totalDuration: 3.2, isSaved: false, hasUnsavedChanges: false),
+            "空白草稿"
+        )
+        XCTAssertEqual(
+            CreationDraftMetrics.statusLine(noteCount: 5, totalDuration: .nan, isSaved: false, hasUnsavedChanges: true),
+            "未保存 · 5 音"
+        )
+        XCTAssertEqual(
+            CreationDraftMetrics.statusLine(noteCount: 5, totalDuration: 3.5, isSaved: true, hasUnsavedChanges: false),
+            "已保存 · 5 音 · 3.5s"
+        )
+
+        // 3. Showcase 绘本分幕前后翻页导航与跳转播放
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertEqual(vm.activeSpace, .showcase)
+        XCTAssertEqual(vm.document.title, swan.title)
+
+        let nav0 = StorybookGuidedMomentKinematics.chapterNavigation(for: swan.guidedMoments?.first, in: swan)
+        XCTAssertNotNil(nav0)
+        XCTAssertEqual(nav0?.currentIndex, 0)
+        XCTAssertEqual(nav0?.totalCount, 3)
+        XCTAssertEqual(nav0?.progressLabel, "1/3")
+        XCTAssertFalse(nav0?.canStepPrevious ?? true)
+        XCTAssertTrue(nav0?.canStepNext ?? false)
+
+        vm.stepGuidedMoment(delta: 1)
+        XCTAssertEqual(vm.activeGuidedMoment?.id, 1)
+        XCTAssertTrue(vm.isPlaying)
+        vm.stopPlayback()
+
+        if let thirdMoment = swan.guidedMoments?.last {
+            vm.jumpToGuidedMoment(thirdMoment, autoPlay: false)
+            XCTAssertEqual(vm.activeGuidedMoment?.id, thirdMoment.id)
+            XCTAssertNotNil(vm.clock.scrubTime)
+            XCTAssertGreaterThan(vm.clock.scrubTime ?? 0.0, 1.0)
+        }
+
+        let navLast = StorybookGuidedMomentKinematics.chapterNavigation(for: vm.activeGuidedMoment, in: swan)
+        XCTAssertEqual(navLast?.progressLabel, "3/3")
+        XCTAssertTrue(navLast?.canStepPrevious ?? false)
+        XCTAssertFalse(navLast?.canStepNext ?? true)
+
+        // 4. Creation 种子种植、脏状态全链路闭环与跟灯状态防误写守卫
+        vm.switchSpace(to: .create)
+        vm.plantCreationStarter(.moonlightCradle)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.scaleMode, .wistfulMinor)
+        XCTAssertNil(vm.selectedBeadID)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        let seedCount = vm.document.notes.count
+        vm.stopPlayback()
+
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        vm.setChordPreset(.classicPop)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        vm.setAccompanimentTexture(.feltWaltz)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        vm.setMelodyVoice(.celestaGlass)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        vm.setRootMIDI(62)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        vm.cycleSpanChord(spanIndex: 0)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        vm.undo()
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+
+        // 跟灯激活期间在创作区点按七小只琴键不得额外追加新音符
+        vm.toggleFollowGlow()
+        XCTAssertTrue(vm.followGlowActive)
+        let countBeforeFollowTap = vm.document.notes.count
+        vm.appendOrReplaceNoteFromCreateKey(XylophoneLane.lane(at: 0))
+        XCTAssertEqual(vm.document.notes.count, countBeforeFollowTap)
+        vm.toggleFollowGlow()
+        XCTAssertFalse(vm.followGlowActive)
+        XCTAssertEqual(countBeforeFollowTap, seedCount)
+
+        // 验证 Showcase 原作未受创作操作影响
+        vm.switchSpace(to: .showcase)
+        XCTAssertTrue(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.title, swan.title)
+
+        // 5. 日夜双色视图实例化回归校验
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: dayPalette))
+    }
 }

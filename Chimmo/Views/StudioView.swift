@@ -376,13 +376,89 @@ public final class StudioViewModel: ObservableObject {
         touchIntensity: Double = 0.62,
         touchBrightness: Double = 0.96
     ) {
+        if followGlowActive {
+            strikeXylophoneLane(lane, touchIntensity: touchIntensity, touchBrightness: touchBrightness)
+            return
+        }
         if selectedBeadID != nil {
             strikeXylophoneLane(lane, touchIntensity: touchIntensity, touchBrightness: touchBrightness)
         } else {
             triggerLadderMember(lane.member, octaveOffset: lane.octaveOffset)
             selectedBeadID = nil
         }
+        markCreationDirtyIfNeeded()
+    }
+
+    public func plantCreationStarter(_ seed: CreationStarterSeed) {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        pushUndo()
+        followGlowActive = false
+        followGlowIndex = 0
+        smartHintActive = false
+        isTappingRhythm = false
+        currentSavedEntryID = nil
+        chordOverrides.removeAll()
+        if chordPreset == .off { chordPreset = .autoMatch }
+
+        let starterDoc = MelodyDocument(
+            title: "\(seed.titlePrefix) #\(notebook.entries.count + 1)",
+            subtitle: "点音符或琴键继续续写",
+            rootMIDI: document.rootMIDI,
+            scaleMode: seed.recommendedScaleMode,
+            harmonyProfile: document.harmonyProfile,
+            grooveStrength: 0.0,
+            notes: seed.notes,
+            isSpecimen: false,
+            preferredTexture: accompanimentTexture,
+            preferredVoice: melodyVoice
+        )
+        document = starterDoc
+        pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(starterDoc)
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: starterDoc.scaleMode))
+        clock.updateTotalDuration(starterDoc.totalDuration)
+        selectedBeadID = nil
+        activeGuidedMoment = nil
         hasUnsavedCreationChanges = true
+        if activeSpace == .create {
+            creationSnapshot = captureWorkspaceSnapshot()
+        }
+        AcousticHapticsEngine.shared.playSeedBloom()
+        togglePlayback()
+    }
+
+    public func jumpToGuidedMoment(_ moment: GuidedStoryMoment, autoPlay: Bool = true) {
+        if isPlaying {
+            stopPlayback()
+        }
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        activeGuidedMoment = moment
+
+        let total = document.totalDuration
+        let safeFrac = moment.timeFraction.isFinite ? max(0.0, min(1.0, moment.timeFraction)) : 0.0
+        let targetTime = max(0.0, min(total, total * safeFrac))
+        clock.updateTotalDuration(total)
+        clock.setScrubTime(targetTime)
+        updateContextMetrics(at: targetTime)
+        AcousticHapticsEngine.shared.playScrubTick()
+
+        if autoPlay && !document.notes.isEmpty {
+            togglePlayback()
+        }
+    }
+
+    public func stepGuidedMoment(delta: Int) {
+        guard delta != 0,
+              let nav = StorybookGuidedMomentKinematics.chapterNavigation(for: activeGuidedMoment, in: document) else {
+            return
+        }
+        let target = delta < 0 ? nav.previousMoment : nav.nextMoment
+        guard let target else {
+            AcousticHapticsEngine.shared.playScrubTick()
+            return
+        }
+        jumpToGuidedMoment(target, autoPlay: true)
     }
 
     public func auditionCurrentCreation() {
@@ -1799,9 +1875,7 @@ public final class StudioViewModel: ObservableObject {
         let next = currentSpan.chord.nextChord()
         chordOverrides[spanIndex] = next
         activeChordSpanID = spanIndex
-        if activeSpace == .create && !document.notes.isEmpty {
-            hasUnsavedCreationChanges = true
-        }
+        markCreationDirtyIfNeeded()
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
         synth.playDiatonicChord(
             rootMIDI: document.rootMIDI,
@@ -1817,6 +1891,7 @@ public final class StudioViewModel: ObservableObject {
         chordPreset = preset
         chordOverrides.removeAll()
         previewArpeggioTask?.cancel()
+        markCreationDirtyIfNeeded()
         if preset == .off {
             AcousticHapticsEngine.shared.playScrubTick()
             return
@@ -1856,7 +1931,9 @@ public final class StudioViewModel: ObservableObject {
     public func setAccompanimentTexture(_ texture: AccompanimentTexture) {
         synth.ensureRunning()
         accompanimentTexture = texture
+        document.preferredTexture = texture
         if chordPreset == .off { chordPreset = .autoMatch }
+        markCreationDirtyIfNeeded()
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.35)
         synth.playDiatonicChord(
             rootMIDI: document.rootMIDI,
@@ -1871,6 +1948,8 @@ public final class StudioViewModel: ObservableObject {
     public func setMelodyVoice(_ voice: MelodyVoice) {
         synth.ensureRunning()
         melodyVoice = voice
+        document.preferredVoice = voice
+        markCreationDirtyIfNeeded()
         previewArpeggioTask?.cancel()
         let timbre = FeltPianoSynth.Timbre.from(voice: voice)
         let mode = document.scaleMode
@@ -1890,6 +1969,7 @@ public final class StudioViewModel: ObservableObject {
         if document.rootMIDI != clamped {
             pushUndo()
             document.rootMIDI = clamped
+            markCreationDirtyIfNeeded()
         }
         synth.ensureRunning()
         previewArpeggioTask?.cancel()
@@ -2306,6 +2386,10 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(prev.totalDuration)
         selectedBeadID = document.notes.first?.id
         canUndo = !undoStack.isEmpty
+        if activeSpace == .create {
+            hasUnsavedCreationChanges = !document.notes.isEmpty
+            creationSnapshot = captureWorkspaceSnapshot()
+        }
         AcousticHapticsEngine.shared.playScrubTick()
         if let first = document.notes.first {
             let onset = first.displayOnset(grooveStrength: document.grooveStrength)
@@ -2317,6 +2401,14 @@ public final class StudioViewModel: ObservableObject {
     }
 
     // MARK: - Internals
+
+    private func markCreationDirtyIfNeeded() {
+        guard activeSpace == .create else { return }
+        if !document.notes.isEmpty {
+            hasUnsavedCreationChanges = true
+        }
+        creationSnapshot = captureWorkspaceSnapshot()
+    }
 
     private func updateContextMetrics(at time: Double) {
         if let sp = chordSpans.first(where: { time >= $0.startTime && time < $0.endTime }),

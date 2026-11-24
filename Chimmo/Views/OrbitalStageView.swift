@@ -292,7 +292,9 @@ public struct OrbitalStageView: View {
     // MARK: - 2. Quiet Storybook Guide Bar (Clear Separation Between Card Info & Audition Action)
 
     private func showcaseGuideBar(chip: StorybookGuidedMomentKinematics.MomentChipModel) -> some View {
-        HStack(spacing: 10) {
+        let chapterNav = StorybookGuidedMomentKinematics.chapterNavigation(for: vm.activeGuidedMoment, in: vm.document)
+
+        return HStack(spacing: 8) {
             ChimmoCartoonKeyBuddyView(
                 member: chip.spotlightMember,
                 outlineColor: palette.cartoonOutline,
@@ -302,10 +304,18 @@ public struct OrbitalStageView: View {
             .frame(width: 24, height: 20)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(chip.badge)
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(chip.badge)
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(1)
+
+                    if let nav = chapterNav, nav.totalCount > 1 {
+                        Text(nav.progressLabel)
+                            .font(.system(size: 10.5, weight: .bold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(palette.secondaryInk)
+                    }
+                }
 
                 Text(chip.caption)
                     .font(.caption2)
@@ -314,40 +324,102 @@ public struct OrbitalStageView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button {
-                vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: true)
-                vm.endScrubbing()
-                wakeSignal &+= 1
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 10, weight: .bold))
-                    Text("试听此段")
-                        .font(.system(size: 11.5, weight: .heavy, design: .rounded))
-                }
-                .padding(.horizontal, 12)
-                .frame(minHeight: 36)
-                .background(
-                    ZStack {
-                        Capsule()
-                            .fill(palette.cartoonShadow)
-                            .offset(y: 2)
-                        Capsule()
-                            .fill(palette.storybookButter)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+            HStack(spacing: 5) {
+                if let nav = chapterNav, nav.totalCount > 1 {
+                    guideChapterStepButton(
+                        systemName: "chevron.left",
+                        enabled: nav.canStepPrevious,
+                        accessibilityLabel: "上一幕故事"
+                    ) {
+                        vm.stepGuidedMoment(delta: -1)
+                        wakeSignal &+= 1
                     }
-                )
-                .foregroundStyle(palette.primaryInk)
-                .contentShape(Capsule())
+
+                    guideChapterStepButton(
+                        systemName: "chevron.right",
+                        enabled: nav.canStepNext,
+                        accessibilityLabel: "下一幕故事"
+                    ) {
+                        vm.stepGuidedMoment(delta: 1)
+                        wakeSignal &+= 1
+                    }
+                }
+
+                Button {
+                    if let activeMoment = vm.activeGuidedMoment {
+                        vm.jumpToGuidedMoment(activeMoment, autoPlay: true)
+                    } else {
+                        vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: true)
+                        vm.endScrubbing()
+                        vm.togglePlayback()
+                    }
+                    wakeSignal &+= 1
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("试听此段")
+                            .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    }
+                    .padding(.horizontal, 11)
+                    .frame(minHeight: 40)
+                    .background(
+                        ZStack {
+                            Capsule()
+                                .fill(palette.cartoonShadow)
+                                .offset(y: 2)
+                            Capsule()
+                                .fill(palette.storybookButter)
+                                .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                        }
+                    )
+                    .foregroundStyle(palette.primaryInk)
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityLabel("从头试听 \(chip.badge)")
             }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-            .accessibilityLabel("跳转试听 \(chip.badge)")
+            .fixedSize()
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 7)
         .background(
             StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
         )
+    }
+
+    private func guideChapterStepButton(
+        systemName: String,
+        enabled: Bool,
+        accessibilityLabel: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(palette.cartoonShadow)
+                    .frame(width: 32, height: 32)
+                    .offset(y: 1.5)
+                Circle()
+                    .fill(palette.cardSurface)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Circle().strokeBorder(
+                            palette.cartoonOutline.opacity(palette.isNight ? 0.56 : 0.78),
+                            lineWidth: 1.5
+                        )
+                    )
+                Image(systemName: systemName)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(enabled ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
+            }
+            .frame(width: 36, height: 40)
+            .contentShape(Circle())
+        }
+        .disabled(!enabled)
+        .opacity(enabled ? 1.0 : 0.48)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+        .accessibilityLabel(accessibilityLabel)
     }
 
     // MARK: - 3. Showcase 3-Control Dock (Play / Follow-Glow / Fork to Create)

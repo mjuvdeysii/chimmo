@@ -43,13 +43,12 @@ public struct CreateStudioView: View {
     }
 
     private var draftStatusText: String {
-        if vm.document.notes.isEmpty {
-            return "空白草稿"
-        }
-        if vm.hasUnsavedCreationChanges || vm.currentSavedEntryID == nil {
-            return "未保存"
-        }
-        return "已保存"
+        CreationDraftMetrics.statusLine(
+            noteCount: vm.document.notes.count,
+            totalDuration: vm.document.totalDuration,
+            isSaved: vm.currentSavedEntryID != nil,
+            hasUnsavedChanges: vm.hasUnsavedCreationChanges
+        )
     }
 
     private var draftStatusColor: Color {
@@ -60,6 +59,16 @@ public struct CreateStudioView: View {
             return palette.nightLampGold
         }
         return palette.homeAnchor
+    }
+
+    private var createKeyboardPromptText: String {
+        if vm.followGlowActive {
+            return "按亮灯小偶跟弹练习"
+        }
+        if vm.selectedBeadID != nil {
+            return "点按琴键修改当前选中音高"
+        }
+        return "点按七小只琴键写入音符"
     }
 
     public var body: some View {
@@ -85,23 +94,37 @@ public struct CreateStudioView: View {
                         },
                         onUserDidEdit: {
                             vm.hasUnsavedCreationChanges = true
+                        },
+                        emptyOverlay: {
+                            emptyCreationCanvasOverlay
                         }
-                    ) {
-                        emptyCreationCanvasOverlay
-                    }
+                    )
                     .padding(.horizontal, 12)
 
-                    if let idx = selectedBeatIndex, !vm.isPlaying, !vm.followGlowActive {
+                    if vm.followGlowActive {
+                        creationFollowGlowBar
+                            .padding(.horizontal, 12)
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    } else if let idx = selectedBeatIndex, !vm.isPlaying {
                         compactCreationBeatBar(idx: idx)
                             .padding(.horizontal, 12)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    } else if !vm.document.notes.isEmpty {
+                        StageHarmonyRibbonView(
+                            vm: vm,
+                            palette: palette,
+                            reduceMotion: reduceMotion
+                        ) {
+                            wakeSignal &+= 1
+                        }
+                        .padding(.horizontal, 12)
                     }
 
                     creationToolsBar
                         .padding(.horizontal, 12)
 
                     VStack(spacing: 4) {
-                        Text(vm.selectedBeadID == nil ? "点按七小只琴键写入音符" : "点按琴键修改当前选中音高")
+                        Text(createKeyboardPromptText)
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(palette.secondaryInk)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -465,36 +488,104 @@ public struct CreateStudioView: View {
             VStack(spacing: 10) {
                 Spacer()
 
-                Text("点按画布或下方七小只琴键开始写歌")
+                Text("点按画布、琴键，或选一颗灵感种子")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(palette.primaryInk)
 
-                Button {
-                    vm.plantDuoStarterMotif()
-                    vm.selectedBeadID = nil
-                } label: {
-                    Label("来一段起音灵感", systemImage: "sparkles")
-                        .font(.subheadline.weight(.heavy))
-                        .padding(.horizontal, 18)
-                        .frame(minHeight: 42)
-                        .background(
-                            ZStack {
-                                Capsule()
-                                    .fill(palette.cartoonShadow)
-                                    .offset(y: 2.5)
-                                Capsule()
-                                    .fill(palette.homeAnchor)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
-                            }
-                        )
-                        .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
-                        .contentShape(Capsule())
+                HStack(spacing: 8) {
+                    ForEach(CreationStarterSeed.allCases) { seed in
+                        let isPrimary = seed == .sunnyMeadow
+                        Button {
+                            vm.plantCreationStarter(seed)
+                        } label: {
+                            Label(seed.shortLabel, systemImage: seed.iconName)
+                                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .padding(.horizontal, 10)
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 42)
+                                .background(
+                                    Group {
+                                        if isPrimary {
+                                            ZStack {
+                                                Capsule()
+                                                    .fill(palette.cartoonShadow)
+                                                    .offset(y: 2.5)
+                                                Capsule()
+                                                    .fill(palette.homeAnchor)
+                                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
+                                            }
+                                        } else {
+                                            ChimmoKilnPillButtonSurface(
+                                                palette: palette,
+                                                accent: seed.recommendedScaleMode.skyAuroraColor(isNight: palette.isNight),
+                                                isActive: false,
+                                                cornerRadius: 21
+                                            )
+                                        }
+                                    }
+                                )
+                                .foregroundStyle(
+                                    isPrimary
+                                        ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                        : palette.primaryInk
+                                )
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                        .accessibilityLabel("使用\(seed.shortLabel)起音灵感")
+                    }
                 }
-                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
-                .accessibilityLabel("生成五音起音灵感短句")
+                .padding(.horizontal, 10)
             }
             .padding(.bottom, 14)
         }
+    }
+
+    private var creationFollowGlowBar: some View {
+        let totalCount = max(1, vm.document.notes.count)
+        let curStep = min(vm.followGlowIndex + 1, totalCount)
+        return HStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(palette.nightLampGold)
+
+            Text("跟灯练习 · \(curStep)/\(totalCount)")
+                .font(.system(.caption, design: .rounded).weight(.heavy).monospacedDigit())
+                .foregroundStyle(palette.primaryInk)
+                .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            Button {
+                vm.toggleFollowGlow()
+            } label: {
+                Text("退出跟灯")
+                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    .foregroundStyle(palette.primaryInk)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 40)
+                    .background(
+                        ZStack {
+                            Capsule()
+                                .fill(palette.cartoonShadow)
+                                .offset(y: 2)
+                            Capsule()
+                                .fill(palette.nightLampGold)
+                                .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.6))
+                        }
+                    )
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+            .accessibilityLabel("退出跟灯练习")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
+        )
     }
 
     // MARK: - 3. Compact Single-Row Selected Beat Editor

@@ -996,6 +996,8 @@ public struct DreamCaptureSheet: View {
                     )
                     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
+                .disabled(vm.document.notes.isEmpty)
+                .opacity(vm.document.notes.isEmpty ? 0.45 : 1.0)
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
 
                 Button {

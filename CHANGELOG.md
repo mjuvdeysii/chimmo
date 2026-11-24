@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.48.0 - 2026-11-24
+- Codified the user-calibrated development methodology and 10-point Pre-Commit Self-Audit Checklist in [docs/METHODOLOGY.md](file:///Users/someone/Projects/chimmo/docs/METHODOLOGY.md).
+- Added 3 curated starter seeds (`CreationStarterSeed` with live inline playback), live `StageHarmonyRibbonView` chord exploration, `CreationDraftMetrics` note-count/duration header readout, and a non-trapping `Follow-Glow` exit bar in `CreateStudioView`.
+- Closed remaining creation dirty-tracking gaps (`setChordPreset`, `setAccompanimentTexture`, `setMelodyVoice`, `setRootMIDI`, `undo`), prevented note-write collisions during Follow-Glow mode, and added explicit chapter navigation (`StorybookGuidedMomentKinematics.chapterNavigation`, `stepGuidedMoment`, `jumpToGuidedMoment`) with live chapter playback in `OrbitalStageView`.
+- Polished `NightLampTactileSheet` (replaced decorative dot/mode pills with flat `RoundedRectangle` styling and clearer labels) and guarded empty follow-along action in `DreamCaptureSheet`.
+
 ## 0.47.0 - 2026-11-24
 - Separated Showcase/Interactive Guide ("欣赏") from a dedicated Creation Space ("创作") and commercial-standard Settings tab ("设置") in `StudioView` and `CreateStudioView`, preserving independent workspace snapshots and `hasUnsavedCreationChanges` state so browsing classics never overwrites unsaved creations.
 - Replaced top-left title rename with an explicit Song Picker pill ("切换曲目") opening `MusicBoxShelfView`, removed misleading floating corner chips/drop-shadow stage framing, and added clear labeled "试听" (Audition), "保存作品" (Save), "作品" drawer, and "来一段起音灵感" starter controls.

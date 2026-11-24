@@ -2226,6 +2226,149 @@ public enum StorybookGuidedMomentKinematics {
             targetOnsetSeconds: targetOnset
         )
     }
+
+    public struct MomentChapterNavigation: Equatable, Sendable {
+        public let currentIndex: Int
+        public let totalCount: Int
+        public let canStepPrevious: Bool
+        public let canStepNext: Bool
+        public let previousMoment: GuidedStoryMoment?
+        public let nextMoment: GuidedStoryMoment?
+        public let progressLabel: String
+
+        public init(
+            currentIndex: Int,
+            totalCount: Int,
+            canStepPrevious: Bool,
+            canStepNext: Bool,
+            previousMoment: GuidedStoryMoment?,
+            nextMoment: GuidedStoryMoment?,
+            progressLabel: String
+        ) {
+            self.currentIndex = currentIndex
+            self.totalCount = totalCount
+            self.canStepPrevious = canStepPrevious
+            self.canStepNext = canStepNext
+            self.previousMoment = previousMoment
+            self.nextMoment = nextMoment
+            self.progressLabel = progressLabel
+        }
+    }
+
+    public static func chapterNavigation(
+        for moment: GuidedStoryMoment?,
+        in document: MelodyDocument
+    ) -> MomentChapterNavigation? {
+        guard let moments = document.guidedMoments, !moments.isEmpty else { return nil }
+        let idx: Int
+        if let moment, let found = moments.firstIndex(where: { $0.id == moment.id }) {
+            idx = found
+        } else {
+            idx = 0
+        }
+        let prev = idx > 0 ? moments[idx - 1] : nil
+        let next = (idx + 1 < moments.count) ? moments[idx + 1] : nil
+        return MomentChapterNavigation(
+            currentIndex: idx,
+            totalCount: moments.count,
+            canStepPrevious: idx > 0,
+            canStepNext: idx + 1 < moments.count,
+            previousMoment: prev,
+            nextMoment: next,
+            progressLabel: "\(idx + 1)/\(moments.count)"
+        )
+    }
+}
+
+/// 创作空间三种零门槛起步种子（晴空五音 / 晚风抒情 / 漫步悬浮）：点按立刻成句并保持非破坏可续写状态。
+public enum CreationStarterSeed: String, CaseIterable, Identifiable, Sendable {
+    case sunnyMeadow
+    case moonlightCradle
+    case hoppingSteps
+
+    public var id: String { rawValue }
+
+    public var shortLabel: String {
+        switch self {
+        case .sunnyMeadow: return "晴空种子"
+        case .moonlightCradle: return "晚风种子"
+        case .hoppingSteps: return "漫步种子"
+        }
+    }
+
+    public var titlePrefix: String {
+        switch self {
+        case .sunnyMeadow: return "晴空小曲"
+        case .moonlightCradle: return "晚风夜歌"
+        case .hoppingSteps: return "漫步短句"
+        }
+    }
+
+    public var iconName: String {
+        switch self {
+        case .sunnyMeadow: return "sun.max.fill"
+        case .moonlightCradle: return "moon.stars.fill"
+        case .hoppingSteps: return "figure.walk"
+        }
+    }
+
+    public var recommendedScaleMode: ScaleMode {
+        switch self {
+        case .sunnyMeadow: return .brightMajor
+        case .moonlightCradle: return .wistfulMinor
+        case .hoppingSteps: return .cloudLydian
+        }
+    }
+
+    public var notes: [NoteBead] {
+        switch self {
+        case .sunnyMeadow:
+            return [
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.16, rawDuration: 0.42),
+                NoteBead(degree: 3, octaveOffset: 0, rawOnset: 0.62, rawDuration: 0.42),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 1.08, rawDuration: 0.54),
+                NoteBead(degree: 6, octaveOffset: 0, rawOnset: 1.68, rawDuration: 0.42),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 2.16, rawDuration: 0.86)
+            ]
+        case .moonlightCradle:
+            return [
+                NoteBead(degree: 6, octaveOffset: -1, rawOnset: 0.16, rawDuration: 0.48),
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.70, rawDuration: 0.44),
+                NoteBead(degree: 3, octaveOffset: 0, rawOnset: 1.20, rawDuration: 0.56),
+                NoteBead(degree: 2, octaveOffset: 0, rawOnset: 1.82, rawDuration: 0.46),
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 2.34, rawDuration: 0.92)
+            ]
+        case .hoppingSteps:
+            return [
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.14, rawDuration: 0.36),
+                NoteBead(degree: 2, octaveOffset: 0, rawOnset: 0.54, rawDuration: 0.36),
+                NoteBead(degree: 4, octaveOffset: 0, rawOnset: 0.94, rawDuration: 0.42),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 1.42, rawDuration: 0.38),
+                NoteBead(degree: 3, octaveOffset: 0, rawOnset: 1.86, rawDuration: 0.42),
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 2.34, rawDuration: 0.78)
+            ]
+        }
+    }
+}
+
+/// 创作草稿页眉状态格式化纯函数（严防 NaN/负时长，明确反馈音符数量、秒数与保存状态）。
+public enum CreationDraftMetrics {
+    public static func statusLine(
+        noteCount: Int,
+        totalDuration: Double,
+        isSaved: Bool,
+        hasUnsavedChanges: Bool
+    ) -> String {
+        guard noteCount > 0 else {
+            return "空白草稿"
+        }
+        let prefix = (hasUnsavedChanges || !isSaved) ? "未保存" : "已保存"
+        let safeDur = (totalDuration.isFinite && totalDuration > 0.0) ? totalDuration : 0.0
+        if safeDur <= 0.0 {
+            return "\(prefix) · \(noteCount) 音"
+        }
+        return "\(prefix) · \(noteCount) 音 · \(String(format: "%.1fs", safeDur))"
+    }
 }
 
 /// 两极交互视觉契约与紧凑顶栏纯值测量引擎（100% 纯函数、可单测、尊重减弱动态效果）：
