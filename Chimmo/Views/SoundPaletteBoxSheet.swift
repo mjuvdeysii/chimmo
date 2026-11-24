@@ -593,6 +593,7 @@ public struct SoundPaletteBoxSheet: View {
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("播放速度 \(label)")
+                        .accessibilityValue(active ? "已选中" : "")
                     }
                 }
 

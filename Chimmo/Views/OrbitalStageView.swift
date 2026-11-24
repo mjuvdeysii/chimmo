@@ -779,6 +779,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
                 .accessibilityLabel("切换到\(mode.storybookLabel)视图")
+                .accessibilityValue(active ? "已选中" : "")
             }
         }
         .fixedSize()

@@ -4176,4 +4176,29 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(CreateStudioView(vm: vm, palette: day, onOpenSharePostcard: {}))
         XCTAssertNotNil(CreateStudioView(vm: vm, palette: night, onOpenSharePostcard: {}))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound65VoiceOverSelectionAndPostcardSummaryParity() throws {
+        XCTAssertEqual(StageVisualMode.displayOrder.count, 3)
+        for mode in StageVisualMode.displayOrder {
+            XCTAssertFalse(mode.storybookLabel.isEmpty)
+            XCTAssertFalse(mode.iconName.isEmpty)
+        }
+
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r65_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        let req = VinylPostcardRequest(document: vm.document)
+        XCTAssertNotNil(VinylPostcardShareSheet(palette: day, request: req))
+        XCTAssertNotNil(VinylPostcardShareSheet(palette: night, request: req))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: day, onOpenAbout: {}))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: night, onOpenAbout: {}))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: day))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: night))
+    }
 }

@@ -146,6 +146,7 @@ public struct VinylPostcardShareSheet: View {
                                     }
                                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
                                     .accessibilityLabel("\(mode.storybookLabel)样式")
+                                    .accessibilityValue(active ? "已选中" : "")
                                 }
                             }
                             .padding(3)
@@ -206,6 +207,8 @@ public struct VinylPostcardShareSheet: View {
                                 RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous)
                                     .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
                             )
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel("绘本明信片预览，《\(request.document.title)》，\(useNightCard ? "深色夜灯" : "浅色棉纸")\(selectedMode.storybookLabel)样式，\(showJianpuStrip ? "包含简谱印记" : "纯净画幅")")
 
                         HStack(spacing: 10) {
                             if let pngURL = exportedPNGURL {
@@ -464,7 +467,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.71.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.72.0"
     }
 
     private var appBuild: String {

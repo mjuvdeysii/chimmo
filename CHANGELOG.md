@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.72.0 - 2026-11-25
+- 选中态 VoiceOver 无障碍闭环与绘本明信片整卡摘要播报：为 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift) 明信片画境模式切换胶囊、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 主舞台模式切换胶囊与 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 播放速度胶囊补全统一的 `.accessibilityValue(active ? "已选中" : "")`；同时为 `VinylPostcardCanvasView` 明信片预览卡补充 `.accessibilityElement(children: .ignore)` 聚合语义摘要（播报曲名、昼夜纸色、画境与简谱状态），彻底消除读屏零散跳转与选中态静默差异。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound65VoiceOverSelectionAndPostcardSummaryParity`，校验三态画境标签与 `VinylPostcardShareSheet`、`OrbitalStageView`、`SoundPaletteBoxSheet` 昼夜双态构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.71.0 - 2026-11-25
 - 全域 Dynamic Type 零截断闭环、圆角命中对齐与外链无障碍提示：在 [CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift)、[DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 与 [SettingsView.swift](Chimmo/Views/SettingsView.swift) 补齐全部 10 处 `.lineLimit(1)` 的 `.minimumScaleFactor(0.75)` 防截断护栏；将创作改名热区（12pt）、手绘旋律垫（18pt）、种子推子（12pt）与导出整行卡（`ChimmoRadius.card`）命中边界贴合圆角视觉轮廓，为全部 3 组工坊列表卡补充 `.clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card))` 防外溢，并为官方网站与问题反馈 `Link` 补全「在浏览器中打开」VoiceOver 提示。
 - 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound64DynamicTypeScaleFloorAndHitContainment`，校验法务文档枚举完整性及 `SettingsView`、`SoundPaletteBoxSheet`、`DreamCaptureSheet`、`CreateStudioView` 与 `ChimmoLegalDocumentView` 昼夜双态构造，保持全局零 Emoji 与无模拟器编译全绿。
