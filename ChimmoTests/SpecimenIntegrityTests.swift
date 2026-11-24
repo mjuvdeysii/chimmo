@@ -4553,4 +4553,26 @@ final class SpecimenIntegrityTests: XCTestCase {
             }
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound73OpenMotionV18AndSheetVoiceOverParity() throws {
+        let idleTitle = NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: nil, pentatonicSafe: true)
+        let hoveredTitle = NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 0, pentatonicSafe: true)
+        XCTAssertFalse(idleTitle.isEmpty)
+        XCTAssertNotEqual(idleTitle, hoveredTitle)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r73_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            for tab in [0, 1, 2] {
+                XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: p, initialTab: tab))
+            }
+        }
+    }
 }

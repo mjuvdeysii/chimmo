@@ -151,6 +151,7 @@ public struct NightLampTactileSheet: View {
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("关闭夜灯创作")
+            .accessibilityHint("返回轻哼与折纸面板")
         }
     }
 
@@ -508,6 +509,7 @@ public struct NightLampTactileSheet: View {
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("撤销")
+            .accessibilityHint("删除最后一个录制的音珠")
 
             Button {
                 toggleAudition()
@@ -540,6 +542,7 @@ public struct NightLampTactileSheet: View {
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(auditioningIndex != nil ? "停止试听" : "试听已录旋律")
+            .accessibilityHint("按录制顺序试听或停止回放音珠")
 
             Button {
                 localPentatonicSafe.toggle()

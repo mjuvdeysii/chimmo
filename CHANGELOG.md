@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.80.0 - 2026-11-25
+- OpenMotion Design Studio 互动官网模块化升版至 `v17`–`v18` 并同步独立导出 [docs/index.html](docs/index.html)（`106,336 bytes`）：在 `styles.css`（`v17`）新增全站键盘 `:focus-visible` 焦点环（与三份在线法务页一致）并扩展 `html[data-high-clarity="true"]` 实底 `1.6px` 边线覆盖全站分幕/图标/四域/明信片与页脚卡片；在 `index.html`（`v18`）同步更新 `v0.80.0` 版本徽标、曲本标题转盘直达与全站无障碍说明文案，经整页 PNG 视觉抽检与 `node --check` 零报错验收。
+- 工坊双弹窗最后 4 处 VoiceOver 提示补齐：为 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 顶部页签按键（`节奏 / 轻哼 / 折纸`）与 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 「关闭夜灯创作」、「撤销」与「试听已录旋律」按键补全描述性 `.accessibilityHint`。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound73OpenMotionV18AndSheetVoiceOverParity`，核验 `NightLampPhraseHelper.statusPillTitle` 与捕梦/夜灯双态构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.79.0 - 2026-11-25
 - 曲本页 VoiceOver 标题转盘地标、操作提示与排序优先级全闭环：在 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 为主列表区顶部切换栏/搜索栏/筛选条/曲本列表配置 `.accessibilitySortPriority`（`4 -> 1`），为全部自创作品与名曲卡标题及双空态主标题（「书架暂无曲本」、「暂无匹配曲目」）补充 `.accessibilityAddTraits(.isHeader)` 支持标题转盘直达，为封面试听、聆听/编辑/跟灯/改编/套用风格/管理菜单及筛选重置补充 `.accessibilityHint`，并屏蔽曲目色点与空态插画背景 `StorybookCartoonSceneBackground` 的读屏干扰。
 - 七小只形象视图无障碍策略对齐：在 [ChimmoFigureView.swift](Chimmo/Views/ChimmoFigureView.swift) 根视图补充 `.accessibilityHidden(true)`，与小羊咩、小牛哞及双子徽章保持统一（由外层交互按钮承担明确语义播报，杜绝零散椭圆矢量打扰读屏）。

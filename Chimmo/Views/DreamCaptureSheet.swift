@@ -199,6 +199,7 @@ public struct DreamCaptureSheet: View {
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("切换到\(title)创作面板")
     }
 
     // MARK: - Tab 0: Duo Monitor + Kiln Drum Machine + Stave Parchment Sketch Pad + Curve Presets

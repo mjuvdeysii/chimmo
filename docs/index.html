@@ -484,6 +484,7 @@ html[data-theme="night"] .xylo-key{ border-color: rgba(14, 20, 48, 0.22); }
 .links{ display: flex; gap: 14px; flex-wrap: wrap; }
 a{ color: var(--accent); text-decoration: none; font-weight: 800; }
 a:hover{ text-decoration: underline; }
+a:focus-visible, button:focus-visible, .mascot-card:focus-visible, input:focus-visible{ outline: 2.5px solid var(--prominent); outline-offset: 2px; }
 
 @keyframes breatheSheep{ 0%, 100%{ transform: translateY(0px) scaleY(1); } 50%{ transform: translateY(-2.4px) scaleY(1.022); } }
 @keyframes breatheCow{ 0%, 100%{ transform: translateY(0px) scale(1); } 50%{ transform: translateY(-1.8px) scale(1.018); } }
@@ -512,7 +513,7 @@ html[data-theme="night"][data-high-clarity="true"]{
   --border: rgba(242, 226, 196, 0.36);
   --border-strong: rgba(255, 181, 71, 0.62);
 }
-html[data-high-clarity="true"] .hero, html[data-high-clarity="true"] .mascot-card, html[data-high-clarity="true"] .kiln-xylo-box, html[data-high-clarity="true"] .vinyl-boutique-card, html[data-high-clarity="true"] .soundbox-card, html[data-high-clarity="true"] .vu-meter-card, html[data-high-clarity="true"] .feature-card, html[data-high-clarity="true"] .pill-btn{ border-width: 1.6px; }
+html[data-high-clarity="true"] .hero, html[data-high-clarity="true"] .mascot-card, html[data-high-clarity="true"] .kiln-xylo-box, html[data-high-clarity="true"] .vinyl-boutique-card, html[data-high-clarity="true"] .soundbox-card, html[data-high-clarity="true"] .vu-meter-card, html[data-high-clarity="true"] .story-moments-card, html[data-high-clarity="true"] .spaces-bench, html[data-high-clarity="true"] .icon-triptych-card, html[data-high-clarity="true"] .postcard-bench, html[data-high-clarity="true"] .feature-card, html[data-high-clarity="true"] .footer-card, html[data-high-clarity="true"] .pill-btn{ border-width: 1.6px; }
 html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
 @media (max-width: 740px){
   .hero-head{ padding-right: 0; }
@@ -540,7 +541,7 @@ html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
       </svg>
     </div>
     <span class="brand-title">咩哞 · CHIMMO</span>
-    <span class="brand-ver">v0.75.0</span>
+    <span class="brand-ver">v0.80.0</span>
   </div>
   <div class="controls">
     <button id="toggleMouBtn" class="pill-btn" type="button" aria-pressed="true">
@@ -867,7 +868,7 @@ html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
 <section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
   <div class="icon-triptych-card">
     <div class="bench-label">
-      <span>极简提纯 1-3-5 应用图标（v0.75.0 · 29pt 高辨识）</span>
+      <span>极简提纯 1-3-5 应用图标（v0.80.0 · 29pt 高辨识）</span>
       <span class="bench-sub">单层草坡三态</span>
     </div>
     <div class="icon-triptych-row">
@@ -965,7 +966,7 @@ html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
 
 <section class="spaces-bench" aria-label="聆听、创作、曲本与工坊四标签纯血空间闭环体验">
   <div class="bench-label">
-    <span>v0.75.0 四标签纯血叙事空间闭环（聆听 · 创作 · 曲本 · 工坊）</span>
+    <span>v0.80.0 四标签纯血叙事空间闭环（聆听 · 创作 · 曲本 · 工坊）</span>
     <span class="bench-sub" id="spaceMetaReadout">独立快照零串台</span>
   </div>
   <div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
@@ -1020,7 +1021,7 @@ html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
     <div class="space-pane" data-pane="songbook">
       <div class="songbook-list" id="songbookList"></div>
       <div class="draft-dock">
-        <span class="bench-sub" id="songbookGreetHint">支持卡片长按上下文菜单与 VoiceOver 自定义动作 · 空白书架可点四重奏迎宾</span>
+        <span class="bench-sub" id="songbookGreetHint">支持标题转盘直达每首曲目、卡片长按上下文菜单与 VoiceOver 自定义动作 · 空白书架可点四重奏迎宾</span>
         <button id="shelfQuartetGreetBtn" class="pill-btn soft-celadon" type="button">空白书架 1-3-5 迎宾和弦</button>
       </div>
     </div>
@@ -1085,7 +1086,7 @@ html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
       </svg>
     </div>
     <h2>100% 本机离线与全格式导出</h2>
-    <p>端侧 SwiftF0 离线音高捕捉兼顾减弱动态 15Hz 平稳进度、减弱透明度与增强对比度实底边线及 VoiceOver 选中播报，支持无硬框明信片 PNG、WAV 与 MIDI 导出。</p>
+    <p>端侧 SwiftF0 离线音高捕捉兼顾减弱动态 15Hz、减弱透明与高清晰实底边线、全站 VoiceOver 标题转盘与节奏鼓面直通防吞触，支持无硬框 PNG、WAV 与 MIDI 导出。</p>
   </article>
 </section>
 
