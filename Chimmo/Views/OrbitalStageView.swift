@@ -145,7 +145,7 @@ public struct OrbitalStageView: View {
                         }
                     } label: {
                         let crownGaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
-                        ChimmoDuoBadgeView(
+                        LivingChimmoDuoBadgeView(
                             isNight: palette.isNight,
                             accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
                             melodyActive: !vm.activeLaneIndices.isEmpty || duoGreetingPulse,
@@ -366,7 +366,7 @@ public struct OrbitalStageView: View {
                     )
 
                 if vm.document.notes.isEmpty {
-                    ChimmoDuoBadgeView(
+                    LivingChimmoDuoBadgeView(
                         isNight: palette.isNight,
                         accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
                         melodyActive: false,
@@ -2730,6 +2730,30 @@ private struct MoodAndSoundSheet: View {
     let palette: ChimmoPalette
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var auditionVoice: MelodyVoice? = nil
+    @State private var auditionTexture: AccompanimentTexture? = nil
+    @State private var auditionStartTime: Double = 0
+    @State private var auditionResetTask: Task<Void, Never>? = nil
+
+    private func triggerAudition(voice: MelodyVoice? = nil, texture: AccompanimentTexture? = nil) {
+        auditionStartTime = CACurrentMediaTime()
+        if let voice {
+            auditionVoice = voice
+            auditionTexture = nil
+        } else if let texture {
+            auditionTexture = texture
+            auditionVoice = nil
+        }
+        auditionResetTask?.cancel()
+        auditionResetTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            if !Task.isCancelled {
+                auditionVoice = nil
+                auditionTexture = nil
+            }
+        }
+    }
 
     private func appearanceIcon(for pref: AppearancePreference) -> String {
         switch pref {
@@ -3002,59 +3026,73 @@ private struct MoodAndSoundSheet: View {
     // 4. 「咩 · 音色」声学物理包络曲线区
     private var mieVoiceEnvelopeSection: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Button {
-                    vm.auditionDuoCharacter(.mie)
-                } label: {
-                    ChimmoSheepView(
-                        isNight: palette.isNight,
-                        accentColor: skyColor,
-                        isSinging: true
-                    )
-                    .frame(width: 34, height: 28)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("小羊咩，试听主旋律")
+        return TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+            let now = CACurrentMediaTime()
+            let phaseTime = reduceMotion ? 0.0 : now
+            let isMieActive = (auditionVoice != nil) || vm.isPlaying
+            let sweep: Double? = (auditionVoice != nil && !reduceMotion)
+                ? AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: now - auditionStartTime)
+                : nil
 
-                Text("咩 · 音色")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(palette.secondaryInk)
-
-                Spacer()
-            }
-
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach(MelodyVoice.allCases) { v in
-                    let active = vm.melodyVoice == v
-                    let fgColor = active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
-                    let waveColor = active ? fgColor : palette.homeAnchor
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
                     Button {
-                        vm.setMelodyVoice(v)
+                        vm.auditionDuoCharacter(.mie)
+                        triggerAudition(voice: vm.melodyVoice)
                     } label: {
-                        HStack(spacing: 8) {
-                            VoiceEnvelopeSparkView(
-                                points: AcousticSignatureGeometry.voiceEnvelopePoints(for: v),
-                                color: waveColor,
-                                filled: active
-                            )
-                            .frame(width: 44, height: 20)
-
-                            Text(v.label)
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(fgColor)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 11)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(active ? palette.homeAnchor : palette.cardSurface)
+                        ChimmoSheepView(
+                            isNight: palette.isNight,
+                            accentColor: skyColor,
+                            isSinging: isMieActive,
+                            phaseTime: phaseTime,
+                            gazeBias: auditionVoice != nil ? 0.45 : 0.0
                         )
+                        .frame(width: 34, height: 28)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(v.label)音色")
-                    .accessibilityValue(active ? "已选中" : "")
+                    .accessibilityLabel("小羊咩，试听主旋律")
+
+                    Text("咩 · 音色")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(palette.secondaryInk)
+
+                    Spacer()
+                }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(MelodyVoice.allCases) { v in
+                        let active = vm.melodyVoice == v
+                        let fgColor = active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
+                        let waveColor = active ? fgColor : palette.homeAnchor
+                        Button {
+                            vm.setMelodyVoice(v)
+                            triggerAudition(voice: v)
+                        } label: {
+                            HStack(spacing: 8) {
+                                VoiceEnvelopeSparkView(
+                                    points: AcousticSignatureGeometry.voiceEnvelopePoints(for: v),
+                                    color: waveColor,
+                                    filled: active,
+                                    sweepProgress: auditionVoice == v ? sweep : nil
+                                )
+                                .frame(width: 44, height: 20)
+
+                                Text(v.label)
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(fgColor)
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 11)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(active ? palette.homeAnchor : palette.cardSurface)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(v.label)音色")
+                        .accessibilityValue(active ? "已选中" : "")
+                    }
                 }
             }
         }
@@ -3063,65 +3101,83 @@ private struct MoodAndSoundSheet: View {
     // 5. 「哞 · 伴奏」和弦进行的声学条码与伴奏织体点阵区（消灭全站最后一枚原生 Toggle）
     private var mouAccompanimentSection: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        return VStack(alignment: .leading, spacing: 9) {
-            HStack(spacing: 8) {
-                Button {
-                    if !vm.cradleEnabled {
-                        vm.setChordPreset(.autoMatch)
-                    }
-                    vm.auditionDuoCharacter(.mou)
-                } label: {
-                    ChimmoCowView(
-                        isNight: palette.isNight,
-                        accentColor: skyColor,
-                        isAwake: vm.cradleEnabled,
-                        isPlaying: vm.isPlaying
-                    )
-                    .frame(width: 34, height: 28)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("小牛哞，试听低音伴奏")
+        return TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+            let now = CACurrentMediaTime()
+            let phaseTime = reduceMotion ? 0.0 : now
+            let isMouPulsing = (auditionTexture != nil) || vm.isPlaying
+            let sweep: Double? = (auditionTexture != nil && !reduceMotion)
+                ? AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: now - auditionStartTime)
+                : nil
 
-                Text("哞 · 伴奏")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(palette.secondaryInk)
-
-                Spacer()
-            }
-
-            ChordPresetBarcodeStrip(vm: vm, palette: palette)
-
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach(AccompanimentTexture.allCases) { tex in
-                    let active = vm.cradleEnabled && vm.accompanimentTexture == tex
-                    let fgColor = active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
-                    let dotColor = active ? fgColor : palette.bassRibbon
+            VStack(alignment: .leading, spacing: 9) {
+                HStack(spacing: 8) {
                     Button {
-                        vm.setAccompanimentTexture(tex)
-                    } label: {
-                        HStack(spacing: 8) {
-                            AccompanimentDotPatternView(
-                                dots: AcousticSignatureGeometry.accompanimentPatternDots(for: tex),
-                                color: dotColor
-                            )
-                            .frame(width: 44, height: 20)
-
-                            Text(tex.label)
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(fgColor)
-                            Spacer(minLength: 0)
+                        if !vm.cradleEnabled {
+                            vm.setChordPreset(.autoMatch)
                         }
-                        .padding(.horizontal, 11)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(active ? palette.bassRibbon : palette.cardSurface)
+                        vm.auditionDuoCharacter(.mou)
+                        triggerAudition(texture: vm.accompanimentTexture)
+                    } label: {
+                        ChimmoCowView(
+                            isNight: palette.isNight,
+                            accentColor: skyColor,
+                            isAwake: vm.cradleEnabled,
+                            isPlaying: isMouPulsing,
+                            phaseTime: phaseTime,
+                            gazeBias: auditionTexture != nil ? -0.35 : 0.0
                         )
-                        .opacity(vm.cradleEnabled ? 1.0 : 0.56)
+                        .frame(width: 34, height: 28)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(tex.label)伴奏")
-                    .accessibilityValue(active ? "已选中" : "")
+                    .accessibilityLabel("小牛哞，试听低音伴奏")
+
+                    Text("哞 · 伴奏")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(palette.secondaryInk)
+
+                    Spacer()
+                }
+
+                ChordPresetBarcodeStrip(vm: vm, palette: palette)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(AccompanimentTexture.allCases) { tex in
+                        let active = vm.cradleEnabled && vm.accompanimentTexture == tex
+                        let fgColor = active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
+                        let dotColor = active ? fgColor : palette.bassRibbon
+                        let dots = AcousticSignatureGeometry.accompanimentPatternDots(for: tex)
+                        let activeDot = (auditionTexture == tex && sweep != nil)
+                            ? AcousticSignatureAnimationHelper.activeIndex(progress: sweep!, itemCount: dots.count)
+                            : nil
+                        Button {
+                            vm.setAccompanimentTexture(tex)
+                            triggerAudition(texture: tex)
+                        } label: {
+                            HStack(spacing: 8) {
+                                AccompanimentDotPatternView(
+                                    dots: dots,
+                                    color: dotColor,
+                                    activeDotIndex: activeDot
+                                )
+                                .frame(width: 44, height: 20)
+
+                                Text(tex.label)
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(fgColor)
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 11)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(active ? palette.bassRibbon : palette.cardSurface)
+                            )
+                            .opacity(vm.cradleEnabled ? 1.0 : 0.56)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(tex.label)伴奏")
+                        .accessibilityValue(active ? "已选中" : "")
+                    }
                 }
             }
         }
@@ -3166,6 +3222,7 @@ private struct VoiceEnvelopeSparkView: View {
     let points: [Double]
     let color: Color
     let filled: Bool
+    var sweepProgress: Double? = nil
 
     var body: some View {
         Canvas { ctx, size in
@@ -3194,6 +3251,20 @@ private struct VoiceEnvelopeSparkView: View {
 
             ctx.fill(area, with: .color(color.opacity(filled ? 0.24 : 0.14)))
             ctx.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round))
+
+            if let sweep = sweepProgress,
+               let idx = AcousticSignatureAnimationHelper.activeIndex(progress: sweep, itemCount: points.count) {
+                let x = padX + (CGFloat(idx) / CGFloat(points.count - 1)) * w
+                let y = padY + (1.0 - CGFloat(max(0.0, min(1.0, points[idx])))) * h
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: x - 3.6, y: y - 3.6, width: 7.2, height: 7.2)),
+                    with: .color(color.opacity(0.32))
+                )
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: x - 2.2, y: y - 2.2, width: 4.4, height: 4.4)),
+                    with: .color(color)
+                )
+            }
         }
         .accessibilityHidden(true)
     }
@@ -3202,6 +3273,7 @@ private struct VoiceEnvelopeSparkView: View {
 private struct AccompanimentDotPatternView: View {
     let dots: [AcousticSignatureGeometry.PatternDot]
     let color: Color
+    var activeDotIndex: Int? = nil
 
     var body: some View {
         Canvas { ctx, size in
@@ -3209,13 +3281,21 @@ private struct AccompanimentDotPatternView: View {
             let padY: CGFloat = 3
             let w = max(1, size.width - padX * 2)
             let h = max(1, size.height - padY * 2)
-            for dot in dots {
+            for (idx, dot) in dots.enumerated() {
                 let px = padX + CGFloat(dot.x) * w
                 let py = padY + (1.0 - CGFloat(dot.y)) * h
-                let r = CGFloat(2.0 * dot.radiusScale)
+                let isActive = activeDotIndex == idx
+                let r = CGFloat(2.0 * dot.radiusScale * (isActive ? 1.55 : 1.0))
+                if isActive {
+                    let haloR = r + 2.2
+                    ctx.fill(
+                        Path(ellipseIn: CGRect(x: px - haloR, y: py - haloR, width: haloR * 2, height: haloR * 2)),
+                        with: .color(color.opacity(0.30))
+                    )
+                }
                 ctx.fill(
                     Path(ellipseIn: CGRect(x: px - r, y: py - r, width: r * 2, height: r * 2)),
-                    with: .color(color.opacity(0.92))
+                    with: .color(color.opacity(isActive ? 1.0 : 0.85))
                 )
             }
         }

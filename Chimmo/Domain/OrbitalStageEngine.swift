@@ -1445,3 +1445,80 @@ public enum LibraryCategoryBadgeMapper {
     }
 }
 
+/// 写旋律「节奏/画线」面板与双子即时反应耦合运动学映射（100% 纯函数、可单测）。
+public enum DreamBrushKinematics {
+    public struct ReactionState: Equatable, Sendable {
+        public let sheepTiltProgress: Double
+        public let sheepGazeBias: Double
+        public let sheepSinging: Bool
+        public let cowBeatHighlight: Bool
+        public let beatCycleIndex: Int
+
+        public init(
+            sheepTiltProgress: Double,
+            sheepGazeBias: Double,
+            sheepSinging: Bool,
+            cowBeatHighlight: Bool,
+            beatCycleIndex: Int
+        ) {
+            self.sheepTiltProgress = sheepTiltProgress
+            self.sheepGazeBias = sheepGazeBias
+            self.sheepSinging = sheepSinging
+            self.cowBeatHighlight = cowBeatHighlight
+            self.beatCycleIndex = beatCycleIndex
+        }
+    }
+
+    public static func reaction(
+        brushNormalizedY: Double?,
+        brushNormalizedX: Double?,
+        tapCount: Int
+    ) -> ReactionState {
+        let safeCount = max(0, tapCount)
+        let beatCycleIndex = safeCount == 0 ? 0 : ((safeCount - 1) % 4)
+        let cowBeatHighlight = safeCount > 0 && beatCycleIndex == 0
+
+        if let rawY = brushNormalizedY, rawY.isFinite {
+            let clampedY = max(0.0, min(1.0, rawY))
+            let tilt = (0.5 - clampedY) * 1.8
+            let clampedTilt = max(-1.0, min(1.0, tilt))
+            let rawX = (brushNormalizedX?.isFinite == true) ? (brushNormalizedX ?? 0.5) : 0.5
+            let gaze = max(-1.0, min(1.0, (rawX - 0.5) * 1.6))
+            return ReactionState(
+                sheepTiltProgress: clampedTilt,
+                sheepGazeBias: gaze,
+                sheepSinging: true,
+                cowBeatHighlight: cowBeatHighlight,
+                beatCycleIndex: beatCycleIndex
+            )
+        }
+
+        return ReactionState(
+            sheepTiltProgress: 0.0,
+            sheepGazeBias: safeCount > 0 ? -0.35 : 0.0,
+            sheepSinging: cowBeatHighlight,
+            cowBeatHighlight: cowBeatHighlight,
+            beatCycleIndex: beatCycleIndex
+        )
+    }
+}
+
+/// 声音调色台物理包络波形与伴奏点阵动画扫描游标（把试听耳返转为可见的光点走带）。
+public enum AcousticSignatureAnimationHelper {
+    public static func sweepProgress(
+        elapsedSeconds: Double,
+        durationSeconds: Double = 0.65
+    ) -> Double {
+        guard elapsedSeconds.isFinite, durationSeconds.isFinite, durationSeconds > 0.05 else {
+            return 0.0
+        }
+        return max(0.0, min(1.0, elapsedSeconds / durationSeconds))
+    }
+
+    public static func activeIndex(progress: Double, itemCount: Int) -> Int? {
+        guard itemCount > 0, progress.isFinite else { return nil }
+        let p = max(0.0, min(0.9999, progress))
+        return max(0, min(itemCount - 1, Int(floor(p * Double(itemCount)))))
+    }
+}
+

@@ -61,7 +61,7 @@ public struct NightLampTactileSheet: View {
                 size: 38
             )
 
-            ChimmoDuoBadgeView(
+            LivingChimmoDuoBadgeView(
                 isNight: true,
                 accentColor: Color(hex: 0xFFB84D),
                 melodyActive: currentHoverLane != nil || auditioningIndex != nil,

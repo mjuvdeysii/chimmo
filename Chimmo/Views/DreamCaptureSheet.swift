@@ -21,6 +21,8 @@ public struct DreamCaptureSheet: View {
     @State private var showNightLampTheater: Bool = false
     @State private var lastBrushLane: Int? = nil
     @State private var lastBrushTime: Double = 0
+    @State private var brushNormX: Double? = nil
+    @State private var brushNormY: Double? = nil
 
     public init(vm: StudioViewModel, palette: ChimmoPalette) {
         self.vm = vm
@@ -67,9 +69,17 @@ public struct DreamCaptureSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .onChange(of: modeTab) { _, _ in
+            lastBrushLane = nil
+            lastBrushTime = 0
+            brushNormX = nil
+            brushNormY = nil
+        }
         .onDisappear {
             lastBrushLane = nil
             lastBrushTime = 0
+            brushNormX = nil
+            brushNormY = nil
             if vm.isTappingRhythm {
                 vm.cancelRhythmTap()
             }
@@ -83,8 +93,68 @@ public struct DreamCaptureSheet: View {
 
     // MARK: - Tab 0: Sculptural Drum Pad + Ghost-Wave Sketch Canvas + Pure Curve Presets
 
+    private var dreamDuoReactiveHeader: some View {
+        let skyCol = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let reaction = DreamBrushKinematics.reaction(
+            brushNormalizedY: brushNormY,
+            brushNormalizedX: brushNormX,
+            tapCount: vm.liveTapTimestamps.count
+        )
+        return TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+            let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
+            HStack(spacing: 12) {
+                ChimmoSheepView(
+                    isNight: palette.isNight,
+                    accentColor: skyCol,
+                    isSinging: reaction.sheepSinging,
+                    tiltProgress: reaction.sheepTiltProgress,
+                    phaseTime: phaseTime,
+                    gazeBias: reaction.sheepGazeBias
+                )
+                .frame(width: 34, height: 28)
+
+                HStack(spacing: 6) {
+                    ForEach(0..<4, id: \.self) { idx in
+                        let active = !vm.liveTapTimestamps.isEmpty && reaction.beatCycleIndex == idx
+                        let isDownbeatDot = idx == 0
+                        Circle()
+                            .fill(
+                                active
+                                    ? (isDownbeatDot ? palette.nightLampGold : palette.homeAnchor)
+                                    : palette.secondaryInk.opacity(isDownbeatDot ? 0.34 : 0.18)
+                            )
+                            .frame(
+                                width: active ? (isDownbeatDot ? 9 : 7.5) : 5.5,
+                                height: active ? (isDownbeatDot ? 9 : 7.5) : 5.5
+                            )
+                            .animation(
+                                reduceMotion ? nil : .spring(response: 0.2, dampingFraction: 0.65),
+                                value: vm.liveTapTimestamps.count
+                            )
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                ChimmoCowView(
+                    isNight: palette.isNight,
+                    accentColor: skyCol,
+                    isAwake: vm.cradleEnabled,
+                    isPlaying: reaction.cowBeatHighlight,
+                    phaseTime: phaseTime,
+                    gazeBias: brushNormY != nil ? -0.45 : 0.0
+                )
+                .frame(width: 34, height: 28)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.shelfSurface.opacity(0.65)))
+        }
+        .accessibilityHidden(true)
+    }
+
     private var rhythmAndSketchSection: some View {
         VStack(alignment: .leading, spacing: 14) {
+            dreamDuoReactiveHeader
             // A. 雕塑感敲节奏鼓面（无文字说明，支持 4 拍重音/次重音环震波与动态时距柱）
             VStack(spacing: 10) {
                 Button {
@@ -312,6 +382,8 @@ public struct DreamCaptureSheet: View {
                             }
                             let normY = Double(clamped.y / max(1, geo.size.height))
                             let normX = Double(clamped.x / max(1, geo.size.width))
+                            brushNormX = normX
+                            brushNormY = normY
                             let brushLane = SketchPitchBrushMapper.laneIndex(
                                 normalizedTopToBottomY: normY,
                                 pentatonicSafe: vm.pentatonicSafe
@@ -345,6 +417,12 @@ public struct DreamCaptureSheet: View {
                         .onEnded { _ in
                             lastBrushLane = nil
                             lastBrushTime = 0
+                            brushNormX = nil
+                            brushNormY = nil
+                            if sketchPoints.count < 2 && vm.liveTapTimestamps.count < 2 {
+                                sketchPoints.removeAll()
+                                return
+                            }
                             let targetSlots = max(6, vm.liveTapTimestamps.count >= 2 ? vm.liveTapTimestamps.count : max(6, vm.document.notes.count))
                             let heights = ContourSketchSampler.sampleContour(points: sketchPoints, in: geo.size, slotCount: targetSlots)
                             if vm.liveTapTimestamps.count >= 2 {
@@ -359,6 +437,10 @@ public struct DreamCaptureSheet: View {
                     if !sketchPoints.isEmpty {
                         Button {
                             sketchPoints.removeAll()
+                            lastBrushLane = nil
+                            lastBrushTime = 0
+                            brushNormX = nil
+                            brushNormY = nil
                         } label: {
                             Image(systemName: "arrow.counterclockwise")
                                 .font(.caption2.weight(.bold))
@@ -376,7 +458,7 @@ public struct DreamCaptureSheet: View {
             .accessibilityLabel("单指绘制高低旋律线")
             .accessibilityHint("也可使用下方预设旋律弧线或进入闭眼滑音逐音录制")
 
-            // C. 纯曲线预设起伏（2×2 矢量曲线卡）
+            // C. 纯曲线预设起伏（2×2 矢量曲线卡，与 Tab 2 统一端珠与二字短标语法）
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(MelodyHillTemplate.allCases) { hill in
                     Button {
@@ -386,11 +468,20 @@ public struct DreamCaptureSheet: View {
                         vm.applyHillTemplate(hill)
                         dismiss()
                     } label: {
-                        DreamMiniHillShape(profile: hill.previewProfile, color: palette.homeAnchor)
-                            .frame(width: 76, height: 28)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
+                        VStack(spacing: 6) {
+                            DreamMiniHillShape(
+                                profile: hill.previewProfile,
+                                color: palette.homeAnchor,
+                                tipColor: palette.nightLampGold
+                            )
+                            .frame(width: 82, height: 26)
+                            Text(hill.shortLabel)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(palette.primaryInk)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(hill.label)
@@ -760,18 +851,27 @@ public struct DreamCaptureSheet: View {
 private struct DreamMiniHillShape: View {
     let profile: [Double]
     let color: Color
+    var tipColor: Color = .clear
 
     var body: some View {
         Canvas { ctx, size in
             guard profile.count > 1 else { return }
             var p = Path()
+            var lastPt: CGPoint = .zero
             for (idx, h) in profile.enumerated() {
-                let x = CGFloat(idx) / CGFloat(profile.count - 1) * size.width
-                let y = size.height - 1.5 - CGFloat(h) * (size.height - 3.0)
-                if idx == 0 { p.move(to: CGPoint(x: x, y: y)) }
-                else { p.addLine(to: CGPoint(x: x, y: y)) }
+                let x = 3.0 + CGFloat(idx) / CGFloat(profile.count - 1) * max(1, size.width - 6.0)
+                let y = size.height - 3.0 - CGFloat(h) * max(1, size.height - 6.0)
+                let pt = CGPoint(x: x, y: y)
+                if idx == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+                lastPt = pt
             }
             ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+            if tipColor != .clear {
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: lastPt.x - 2.6, y: lastPt.y - 2.6, width: 5.2, height: 5.2)),
+                    with: .color(tipColor)
+                )
+            }
         }
     }
 }

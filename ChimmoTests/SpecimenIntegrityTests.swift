@@ -1879,4 +1879,97 @@ final class SpecimenIntegrityTests: XCTestCase {
         vm.stopPlayback()
         XCTAssertNil(vm.statusToast)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound26DreamBrushKinematicsSignaturePulseAndUndoSync() throws {
+        // 1. DreamBrushKinematics 静止、敲击四拍脉冲与高低拖拽越界防卫
+        let idle = DreamBrushKinematics.reaction(brushNormalizedY: nil, brushNormalizedX: nil, tapCount: 0)
+        XCTAssertEqual(idle.sheepTiltProgress, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(idle.sheepGazeBias, 0.0, accuracy: 0.0001)
+        XCTAssertFalse(idle.sheepSinging)
+        XCTAssertFalse(idle.cowBeatHighlight)
+        XCTAssertEqual(idle.beatCycleIndex, 0)
+
+        let tapDownbeat = DreamBrushKinematics.reaction(brushNormalizedY: nil, brushNormalizedX: nil, tapCount: 1)
+        XCTAssertEqual(tapDownbeat.beatCycleIndex, 0)
+        XCTAssertTrue(tapDownbeat.cowBeatHighlight)
+        XCTAssertTrue(tapDownbeat.sheepSinging)
+        XCTAssertLessThan(tapDownbeat.sheepGazeBias, 0.0)
+
+        let tapSecond = DreamBrushKinematics.reaction(brushNormalizedY: nil, brushNormalizedX: nil, tapCount: 2)
+        XCTAssertEqual(tapSecond.beatCycleIndex, 1)
+        XCTAssertFalse(tapSecond.cowBeatHighlight)
+        XCTAssertFalse(tapSecond.sheepSinging)
+
+        let tapCycleRestart = DreamBrushKinematics.reaction(brushNormalizedY: nil, brushNormalizedX: nil, tapCount: 5)
+        XCTAssertEqual(tapCycleRestart.beatCycleIndex, 0)
+        XCTAssertTrue(tapCycleRestart.cowBeatHighlight)
+
+        let negativeTap = DreamBrushKinematics.reaction(brushNormalizedY: nil, brushNormalizedX: nil, tapCount: -4)
+        XCTAssertEqual(negativeTap.beatCycleIndex, 0)
+        XCTAssertFalse(negativeTap.cowBeatHighlight)
+
+        let highBrush = DreamBrushKinematics.reaction(brushNormalizedY: 0.08, brushNormalizedX: 0.85, tapCount: 2)
+        XCTAssertTrue(highBrush.sheepSinging)
+        XCTAssertGreaterThan(highBrush.sheepTiltProgress, 0.5)
+        XCTAssertGreaterThan(highBrush.sheepGazeBias, 0.3)
+
+        let lowBrush = DreamBrushKinematics.reaction(brushNormalizedY: 0.95, brushNormalizedX: 0.1, tapCount: 1)
+        XCTAssertTrue(lowBrush.sheepSinging)
+        XCTAssertLessThan(lowBrush.sheepTiltProgress, -0.5)
+        XCTAssertLessThan(lowBrush.sheepGazeBias, -0.3)
+        XCTAssertTrue(lowBrush.cowBeatHighlight)
+
+        let nanBrush = DreamBrushKinematics.reaction(brushNormalizedY: .nan, brushNormalizedX: .infinity, tapCount: 1)
+        XCTAssertEqual(nanBrush.sheepTiltProgress, 0.0, accuracy: 0.0001)
+        XCTAssertTrue(nanBrush.sheepGazeBias.isFinite)
+
+        // 2. AcousticSignatureAnimationHelper 试听波形扫描游标与点阵索引映射
+        XCTAssertEqual(AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: -0.1), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(
+            AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: 0.325, durationSeconds: 0.65),
+            0.5,
+            accuracy: 0.0001
+        )
+        XCTAssertEqual(
+            AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: 2.0, durationSeconds: 0.65),
+            1.0,
+            accuracy: 0.0001
+        )
+        XCTAssertEqual(AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: .nan), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(
+            AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: 0.3, durationSeconds: 0.01),
+            0.0,
+            accuracy: 0.0001
+        )
+        XCTAssertEqual(AcousticSignatureAnimationHelper.activeIndex(progress: 0.0, itemCount: 5), 0)
+        XCTAssertEqual(AcousticSignatureAnimationHelper.activeIndex(progress: 0.5, itemCount: 5), 2)
+        XCTAssertEqual(AcousticSignatureAnimationHelper.activeIndex(progress: 1.0, itemCount: 5), 4)
+        XCTAssertNil(AcousticSignatureAnimationHelper.activeIndex(progress: 0.5, itemCount: 0))
+        XCTAssertNil(AcousticSignatureAnimationHelper.activeIndex(progress: .nan, itemCount: 5))
+
+        // 3. StudioViewModel.undo() 同步恢复 AcousticSpaceProfile 声场与 pentatonicSafe 五声安全锁
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r26_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.startBlankCanvas()
+        vm.plantDuoStarterMotif()
+        XCTAssertTrue(vm.pentatonicSafe)
+        let baseMode = vm.document.scaleMode
+        let switchedMode: ScaleMode = (baseMode == .wistfulMinor) ? .brightMajor : .wistfulMinor
+
+        vm.setScaleMode(switchedMode)
+        XCTAssertEqual(vm.document.scaleMode, switchedMode)
+        XCTAssertEqual(vm.synth.currentSpaceProfile(), AcousticSpaceProfile.profile(for: switchedMode))
+
+        vm.pentatonicSafe = false
+        vm.undo()
+
+        XCTAssertEqual(vm.document.scaleMode, baseMode)
+        XCTAssertEqual(vm.synth.currentSpaceProfile(), AcousticSpaceProfile.profile(for: baseMode))
+        XCTAssertTrue(vm.pentatonicSafe)
+        XCTAssertNil(vm.statusToast)
+    }
 }

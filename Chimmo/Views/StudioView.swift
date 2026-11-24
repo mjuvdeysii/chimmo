@@ -1995,6 +1995,8 @@ public final class StudioViewModel: ObservableObject {
         stopPlayback()
         contextEchoTask?.cancel()
         document = prev
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: prev.scaleMode))
+        pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(prev)
         clock.updateTotalDuration(prev.totalDuration)
         selectedBeadID = document.notes.first?.id
         canUndo = !undoStack.isEmpty

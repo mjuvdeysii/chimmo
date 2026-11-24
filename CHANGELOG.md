@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.33.0 - 2026-11-24
+- **修复与稳定性提升（Fix）**：
+  - 修复 `StudioViewModel.undo()` 撤销音阶调式后声学混响空间配置 `AcousticSpaceProfile` 与 `pentatonicSafe` 未同步恢复的问题，`undo()` 后自动同步调用 `synth.applySpaceProfile` 并按文档音高重算五声安全锁；
+  - 修复 `DreamCaptureSheet` Tab 0（节奏与轮廓速写）轻触画板即清空整首旋律并覆盖为 6 个平直音符的误触隐患（新增 `2pt` 以上有效拖拽位移门限），并修复切换标签或点按重置后 `lastBrushLane` 残留问题；
+  - 移除 `MoodAndSoundSheet` 中「咩」头像的常驻 `isSinging: true` 硬编码，切换为仅在试听声脉冲周期内高歌。
+- **创意炼金术 × IP 动画联动（Creative Alchemy & Motion）**：
+  - 新增纯函数运动学引擎 `DreamBrushKinematics`，在 `DreamCaptureSheet` 顶部实装可随画笔归一化高度/横向方位实时倾身注视并在高音区欢唱的「咩」与按四拍周期脉动高亮的「哞」双子联动视窗；
+  - 新增 `AcousticSignatureAnimationHelper` 光点扫频游标，驱动 `MoodAndSoundSheet` 音色包络波形 `VoiceEnvelopeSparkView` 与伴奏点阵 `AccompanimentDotPatternView` 实现点选试听 0.65s 实时扫频点亮与点阵波纹反馈；
+  - 同步推进 OpenMotion 导演动画工程，完成 12 秒 1080p 30fps「咩 × 哞 × 七小只」三幕陶瓷角色动画短片与原创合成伴奏音轨整合。
+- **全局视觉与交互对齐（Global Alignment）**：
+  - 在 `ChimmoDuoMascotView` 抽离可复用组件 `LivingChimmoDuoBadgeView`（24fps 轻量呼吸周期并完整尊重 `accessibilityReduceMotion`），统一主舞台顶栏、空画布、夜灯面板与曲库空态的活体双子形态；
+  - 对齐 `DreamCaptureSheet` Tab 0 四套山丘弧线卡片与主舞台山丘视觉语言，补齐金色起音尖端圆点与双字短标。
+- **单元测试（Tests）**：
+  - 新增 `testCreativeAlchemyRound26DreamBrushKinematicsSignaturePulseAndUndoSync`，完整覆盖速写双子联动运动学、声音脉冲扫频游标索引边界与 `undo()` 声场/五声安全锁回退契约。
+
 ## 0.32.0 - 2026-11-24
 
 - **活体「咩 × 哞」生命运动学 × 七小只窑陶合唱木架 × OpenMotion 互动绘本展示页 × 曲库单屏分类短标与舞台一致性修复 · 创意炼金术第 25 轮重构**：

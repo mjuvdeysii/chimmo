@@ -238,15 +238,12 @@ public struct MusicBoxShelfView: View {
     private var mySavedDiscsSection: some View {
         if notebook.entries.isEmpty {
             VStack(spacing: 16) {
-                TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
-                    ChimmoDuoBadgeView(
-                        isNight: palette.isNight,
-                        accentColor: palette.homeAnchor,
-                        melodyActive: false,
-                        cowAwake: true,
-                        phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime()
-                    )
-                }
+                LivingChimmoDuoBadgeView(
+                    isNight: palette.isNight,
+                    accentColor: palette.homeAnchor,
+                    melodyActive: false,
+                    cowAwake: true
+                )
                 .frame(width: 96, height: 64)
 
                 Text("暂无作品")
@@ -283,15 +280,12 @@ public struct MusicBoxShelfView: View {
 
     private var filteredEmptyPlaceholder: some View {
         VStack(spacing: 14) {
-            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
-                ChimmoDuoBadgeView(
-                    isNight: palette.isNight,
-                    accentColor: palette.secondaryInk,
-                    melodyActive: false,
-                    cowAwake: false,
-                    phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime()
-                )
-            }
+            LivingChimmoDuoBadgeView(
+                isNight: palette.isNight,
+                accentColor: palette.secondaryInk,
+                melodyActive: false,
+                cowAwake: false
+            )
             .frame(width: 72, height: 48)
             Text("暂无匹配曲目")
                 .font(.subheadline.weight(.bold))

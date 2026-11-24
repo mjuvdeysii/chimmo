@@ -1,3 +1,4 @@
+import QuartzCore
 import SwiftUI
 
 /// 咩哞 · Chimmo 声学双子星（Mie & Mou）：
@@ -680,6 +681,45 @@ public struct ChimmoDuoBadgeView: View {
                 .offset(x: -w * 0.20, y: -h * 0.03)
             }
             .frame(width: w, height: h)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// 自带低功耗局域 `TimelineView` 的活体双子徽章（用于实时界面，不触发外层主画布整树重绘；离线截图仍保留静态 `ChimmoDuoBadgeView`）。
+public struct LivingChimmoDuoBadgeView: View {
+    public let isNight: Bool
+    public let accentColor: Color
+    public var melodyActive: Bool = false
+    public var cowAwake: Bool = true
+    public var gazeBias: Double = 0.0
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    public init(
+        isNight: Bool,
+        accentColor: Color,
+        melodyActive: Bool = false,
+        cowAwake: Bool = true,
+        gazeBias: Double = 0.0
+    ) {
+        self.isNight = isNight
+        self.accentColor = accentColor
+        self.melodyActive = melodyActive
+        self.cowAwake = cowAwake
+        self.gazeBias = gazeBias
+    }
+
+    public var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+            ChimmoDuoBadgeView(
+                isNight: isNight,
+                accentColor: accentColor,
+                melodyActive: melodyActive,
+                cowAwake: cowAwake,
+                phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime(),
+                gazeBias: gazeBias
+            )
         }
         .accessibilityHidden(true)
     }
