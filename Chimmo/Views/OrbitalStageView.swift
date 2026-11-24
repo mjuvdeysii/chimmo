@@ -599,7 +599,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
     }
 
     var body: some View {
-        let boardBg = palette.isNight ? Color(hex: 0x101733) : Color(hex: 0xFFFDF7)
+        let boardBg = palette.stageBoardSurface
         let activeCurtainColor: Color? = (vm.cradleEnabled && (vm.isPlaying || (allowsEditing && vm.selectedBeadID != nil)))
             ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
             : nil

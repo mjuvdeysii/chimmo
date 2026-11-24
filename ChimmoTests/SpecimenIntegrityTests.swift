@@ -3692,4 +3692,42 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound55UserPreferencesPersistenceAndSettingsPolish() throws {
+        // 1. 隔离 UserDefaults 套件校验外观/画境/触感反馈离线持久化
+        let suiteName = "app.chimmo.r55.\(UUID().uuidString)"
+        let suite = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        suite.removePersistentDomain(forName: suiteName)
+        defer { suite.removePersistentDomain(forName: suiteName) }
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r55_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm1 = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir), preferences: suite)
+        vm1.appearance = .nightLamp
+        vm1.visualMode = .orbitalDisc
+        vm1.toggleMusicHaptics()
+        XCTAssertFalse(vm1.musicHapticsEnabled)
+
+        let vm2 = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir), preferences: suite)
+        XCTAssertEqual(vm2.appearance, .nightLamp)
+        XCTAssertEqual(vm2.visualMode, .orbitalDisc)
+        XCTAssertFalse(vm2.musicHapticsEnabled)
+
+        // 默认无偏好套件的临时实例不受污染
+        let ephemeral = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertEqual(ephemeral.appearance, .auto)
+        XCTAssertEqual(ephemeral.visualMode, .flowingRiver)
+        XCTAssertTrue(ephemeral.musicHapticsEnabled)
+
+        // 2. 舞台语义底面与工坊视图实例化
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotEqual(dayPalette.stageBoardSurface, nightPalette.stageBoardSurface)
+        XCTAssertNotNil(SettingsView(vm: vm2, palette: dayPalette))
+        XCTAssertNotNil(SettingsView(vm: vm2, palette: nightPalette))
+    }
 }

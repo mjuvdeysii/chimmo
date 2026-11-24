@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.61.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.62.0"
     }
 
     private var appBuild: String {
@@ -347,7 +347,12 @@ public struct SettingsView: View {
                 HStack(spacing: 12) {
                     prefIconTile(symbol: "shield.lefthalf.filled", tint: palette.homeAnchor)
 
-                    Toggle(isOn: $vm.pentatonicSafe) {
+                    Toggle(
+                        isOn: Binding(
+                            get: { vm.pentatonicSafe },
+                            set: { if $0 != vm.pentatonicSafe { vm.togglePentatonicSafe() } }
+                        )
+                    ) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("五音防跑调保护")
                                 .font(.subheadline.weight(.semibold))
@@ -368,7 +373,12 @@ public struct SettingsView: View {
                 HStack(spacing: 12) {
                     prefIconTile(symbol: "hand.tap.fill", tint: palette.bassRibbon)
 
-                    Toggle(isOn: $vm.musicHapticsEnabled) {
+                    Toggle(
+                        isOn: Binding(
+                            get: { vm.musicHapticsEnabled },
+                            set: { if $0 != vm.musicHapticsEnabled { vm.toggleMusicHaptics() } }
+                        )
+                    ) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("节拍触感反馈")
                                 .font(.subheadline.weight(.semibold))
@@ -393,10 +403,11 @@ public struct SettingsView: View {
                         prefIconTile(symbol: "square.and.arrow.up", tint: palette.nightLampGold)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("导出当前作品 (PNG / WAV / MIDI)")
+                            Text("导出「\(vm.document.title)」")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(palette.primaryInk)
-                            Text("目前曲本共收藏 \(vm.notebook.entries.count) 首")
+                                .lineLimit(1)
+                            Text("PNG / WAV / MIDI · 曲本共 \(vm.notebook.entries.count) 首")
                                 .font(.caption)
                                 .foregroundStyle(palette.secondaryInk)
                         }
@@ -411,6 +422,8 @@ public struct SettingsView: View {
                     .padding(.vertical, 11)
                     .contentShape(Rectangle())
                 }
+                .disabled(vm.document.notes.isEmpty)
+                .opacity(vm.document.notes.isEmpty ? 0.48 : 1.0)
                 .buttonStyle(.plain)
                 .accessibilityHint("打开明信片图片与音频工程导出面板")
             }
@@ -456,7 +469,7 @@ public struct SettingsView: View {
                         .foregroundStyle(palette.secondaryInk)
                 }
                 .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
 
                 NavigationLink {
@@ -478,7 +491,7 @@ public struct SettingsView: View {
                             .foregroundStyle(palette.secondaryInk)
                     }
                     .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
                     .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
                 }

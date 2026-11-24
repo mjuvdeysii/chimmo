@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.62.0 - 2026-11-25
+- 商业级离线偏好持久化闭环：[StudioView.swift](Chimmo/Views/StudioView.swift) `StudioViewModel` 新增可注入 `UserDefaults` 离线存储（`StudioView` 正式启用 `.standard`，测试默认传 `nil` 隔离），跨启动持久记住用户所选「外观显示（自动 / 日光 / 夜灯）」、「舞台默认视图（山坡 / 花环 / 星环）」与「节拍触感反馈」开关状态。
+- 工坊细节与主舞台语义底面对齐：在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `stageBoardSurface` 语义底面色并接入 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)（清零 `0x101733` 硬编码）；[SettingsView.swift](Chimmo/Views/SettingsView.swift) 将五音/震动开关改经 `togglePentatonicSafe()` / `toggleMusicHaptics()` 统一输出触觉反馈，导出行动态显示当前作品名称并在空画布态柔和禁用，同时等高对齐「仅本机离线 / 开源与曲目鸣谢」双列卡片。
+- 回归校验：新增 `testCreativeAlchemyRound55UserPreferencesPersistenceAndSettingsPolish`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.61.0 - 2026-11-25
 - 闭眼夜灯触觉工坊软胶纯化与 `40pt` 热区闭环：在 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 中彻底废除关闭、撤销、播停、五/八音与「写入」按钮下方的 5 处生硬 `0x03050F` 偏移黑色砖块底影及过重粗框，统一升级为 `nightPalette = ChimmoPalette(isNight: true)` 柔和接触投影与细腻细框（保留 `#070B1A` Zero-Vision OLED 夜幕底色）；将已录夜灯音珠芯片热区扩展至 `>= 40pt`（显式 `.contentShape(Capsule())`）便于盲操点按回听。
 - 指尖即显音级唱名与延音微珠：在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) `NightLampPhraseHelper` 新增 `statusPillTitle(hoverLaneIndex:pentatonicSafe:)`，单指在夜灯音脊滑动时顶部状态胶囊轻柔显示当下音级唱名与 3 段延音微珠指示（松手即回归模式标签），并使写入空态文案与无障碍标签更清晰；同步将 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 五音拨杆开关色同步为 `palette.celadonAccent`。

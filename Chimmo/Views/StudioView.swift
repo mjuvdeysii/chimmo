@@ -80,16 +80,32 @@ public final class StageRippleBus {
 
 @MainActor
 public final class StudioViewModel: ObservableObject {
+    private static let appearancePrefKey = "chimmo.pref.appearance"
+    private static let visualModePrefKey = "chimmo.pref.visualMode"
+    private static let musicHapticsPrefKey = "chimmo.pref.musicHaptics"
+
     @Published public var document: MelodyDocument = SpecimenLibrary.saintSaensTheSwan
-    @Published public var appearance: AppearancePreference = .auto
-    @Published public var visualMode: StageVisualMode = .flowingRiver
+    @Published public var appearance: AppearancePreference = .auto {
+        didSet {
+            preferences?.set(appearance.rawValue, forKey: Self.appearancePrefKey)
+        }
+    }
+    @Published public var visualMode: StageVisualMode = .flowingRiver {
+        didSet {
+            preferences?.set(visualMode.rawValue, forKey: Self.visualModePrefKey)
+        }
+    }
     @Published public var melodyVoice: MelodyVoice = .singingCello
     @Published public var accompanimentTexture: AccompanimentTexture = .swanRipple
     @Published public var chordPreset: ChordProgressionPreset = .autoMatch
     @Published public var chordOverrides: [Int: DiatonicChord] = [:]
     @Published public var pentatonicSafe: Bool = false
     @Published public var shadowCounterpointEnabled: Bool = false
-    @Published public var musicHapticsEnabled: Bool = true
+    @Published public var musicHapticsEnabled: Bool = true {
+        didSet {
+            preferences?.set(musicHapticsEnabled, forKey: Self.musicHapticsPrefKey)
+        }
+    }
     @Published public var playbackRate: Double = 1.0
     @Published public var followGlowActive: Bool = false
     @Published public var followGlowIndex: Int = 0
@@ -144,6 +160,7 @@ public final class StudioViewModel: ObservableObject {
     }
 
     private let router = HalfDuplexAudioRouter()
+    private let preferences: UserDefaults?
     private var undoStack: [MelodyDocument] = []
     private var showcaseSnapshot: WorkspaceSnapshot?
     private var creationSnapshot: WorkspaceSnapshot?
@@ -646,7 +663,21 @@ public final class StudioViewModel: ObservableObject {
         )
     }
 
-    public init(notebookStore: MelodyNotebookStore? = nil) {
+    public init(notebookStore: MelodyNotebookStore? = nil, preferences: UserDefaults? = nil) {
+        self.preferences = preferences
+        if let prefs = preferences {
+            if let rawApp = prefs.string(forKey: Self.appearancePrefKey),
+               let parsed = AppearancePreference(rawValue: rawApp) {
+                self.appearance = parsed
+            }
+            if let rawMode = prefs.string(forKey: Self.visualModePrefKey),
+               let parsed = StageVisualMode(rawValue: rawMode) {
+                self.visualMode = parsed
+            }
+            if prefs.object(forKey: Self.musicHapticsPrefKey) != nil {
+                self.musicHapticsEnabled = prefs.bool(forKey: Self.musicHapticsPrefKey)
+            }
+        }
         let s = FeltPianoSynth(router: router)
         self.synth = s
         self.capturePipeline = HumCapturePipeline(router: router, synth: s)
@@ -2540,7 +2571,7 @@ public final class StudioViewModel: ObservableObject {
 
 /// 咩哞：四标签纯血叙事工坊架构（「聆听」绘本舞台 / 「创作」自由工坊 / 「曲本」离线乐谱库 / 「工坊」声学与外观设定）。
 public struct StudioView: View {
-    @StateObject private var vm = StudioViewModel()
+    @StateObject private var vm = StudioViewModel(preferences: .standard)
     @Environment(\.colorScheme) private var systemScheme
 
     @State private var selectedTab: ChimmoTab = .showcase
