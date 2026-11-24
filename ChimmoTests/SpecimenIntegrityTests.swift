@@ -2149,4 +2149,103 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound30SoundPaletteBoxKinematicsAndAudioReadiness() throws {
+        // 1. SoundPaletteBoxKinematics 机械黄铜拨杆四态运动学
+        let onLive = SoundPaletteBoxKinematics.toggleLeverState(isOn: true, reduceMotion: false)
+        let offLive = SoundPaletteBoxKinematics.toggleLeverState(isOn: false, reduceMotion: false)
+        let onReduced = SoundPaletteBoxKinematics.toggleLeverState(isOn: true, reduceMotion: true)
+        let offReduced = SoundPaletteBoxKinematics.toggleLeverState(isOn: false, reduceMotion: true)
+
+        XCTAssertEqual(onLive.travelFraction, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(onLive.tiltDegrees, -7.0, accuracy: 0.0001)
+        XCTAssertEqual(onLive.lampGlowOpacity, 0.92, accuracy: 0.0001)
+
+        XCTAssertEqual(offLive.travelFraction, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(offLive.tiltDegrees, 7.0, accuracy: 0.0001)
+        XCTAssertEqual(offLive.lampGlowOpacity, 0.16, accuracy: 0.0001)
+
+        XCTAssertEqual(onReduced.travelFraction, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(onReduced.tiltDegrees, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(offReduced.travelFraction, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(offReduced.tiltDegrees, 0.0, accuracy: 0.0001)
+
+        // 2. SoundPaletteBoxKinematics 示波窗 4 种音色分化与异常数值边界防护
+        XCTAssertTrue(
+            SoundPaletteBoxKinematics.oscilloscopeSamples(for: .concertPiano, rootMIDI: 60, playbackRate: 1.0, phase: 0.0, sampleCount: 0).isEmpty
+        )
+        XCTAssertEqual(
+            SoundPaletteBoxKinematics.oscilloscopeSamples(for: .concertPiano, rootMIDI: 60, playbackRate: 1.0, phase: 0.0, sampleCount: 1),
+            [0.5]
+        )
+
+        let waveSets = MelodyVoice.allCases.map {
+            SoundPaletteBoxKinematics.oscilloscopeSamples(
+                for: $0,
+                rootMIDI: 60,
+                playbackRate: 1.0,
+                phase: 0.35,
+                sampleCount: 28
+            )
+        }
+        for wave in waveSets {
+            XCTAssertEqual(wave.count, 28)
+            XCTAssertTrue(wave.allSatisfy { $0.isFinite && $0 >= 0.06 && $0 <= 0.94 })
+        }
+        for i in 0..<waveSets.count {
+            for j in (i + 1)..<waveSets.count {
+                XCTAssertNotEqual(waveSets[i], waveSets[j], "各主旋律音色示波曲线应具备可区分形态")
+            }
+        }
+
+        let nanWave = SoundPaletteBoxKinematics.oscilloscopeSamples(
+            for: .singingCello,
+            rootMIDI: 999,
+            playbackRate: .nan,
+            phase: .infinity,
+            sampleCount: 28
+        )
+        XCTAssertEqual(nanWave.count, 28)
+        XCTAssertTrue(nanWave.allSatisfy { $0.isFinite && $0 >= 0.06 && $0 <= 0.94 })
+
+        // 3. SoundPaletteBoxKinematics 1·3·5 三音偶聚焦路由
+        XCTAssertNil(SoundPaletteBoxKinematics.triadFocusDegree(for: nil))
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .scale), 3)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .voice), 5)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .pitch), 5)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .tempo), 5)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .groove), 5)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .texture), 1)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .chord), 1)
+        XCTAssertEqual(SoundPaletteBoxKinematics.triadFocusDegree(for: .character(6)), 6)
+        XCTAssertNil(SoundPaletteBoxKinematics.triadFocusDegree(for: .character(0)))
+        XCTAssertNil(SoundPaletteBoxKinematics.triadFocusDegree(for: .character(8)))
+
+        // 4. setGrooveStrength 幂等防重复撤销栈污染 + 声学设置零例行 Toast
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r30_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.startBlankCanvas()
+        vm.plantDuoStarterMotif()
+        vm.stopPlayback()
+
+        let baselineGroove = vm.document.grooveStrength
+        vm.setGrooveStrength(0.5)
+        XCTAssertTrue(vm.canUndo)
+
+        // 连续重复点选同档位不应再新增撤销记录
+        vm.setGrooveStrength(0.5)
+        vm.undo()
+        XCTAssertEqual(vm.document.grooveStrength, baselineGroove, accuracy: 0.001)
+
+        vm.setScaleMode(.cloudLydian)
+        vm.setMelodyVoice(.liquidHarp)
+        vm.setAccompanimentTexture(.summerGlass)
+        vm.setRootMIDI(65)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

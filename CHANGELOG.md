@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.37.0 - 2026-11-24
+- **童书声音调色木盒硬件重构（SoundPaletteBoxSheet & SoundPaletteBoxKinematics v0.37.0）**：
+  - 将原扁平 `MoodAndSoundSheet` 全面重构为 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 暖窑象牙 × 蜂蜡桦木 × 拉丝黄铜童书调色木盒：
+    - 顶栏集成 `ChimmoCraftBadge(.atmosphereHorizon)`、内嵌式三态外观黄铜拨盘（自动 / 日光 / 夜灯）与窑瓷完成按键；
+    - 顶部核心内凹木框示波窗实时渲染 [SoundPaletteBoxKinematics](Chimmo/Domain/OrbitalStageEngine.swift) 驱动的平滑声学波形，并在下方共鸣木架呈现实体可点试听的「咩 × 1·3·5 三音小偶（陶诺 / 拍咯 / 壳咯）× 哞」合唱联动，切换大/小调时 `3 拍咯` 实时扬翅或微沉呼应；
+    - 构造机械黄铜拨杆三连开关木槽（五音 / 伴唱 / 震动，带位移倾斜运动学与珠宝微光指示灯）、五色极光调式木槽、倍速/节拍/音区三层黄铜混音柜，以及带四角铆钉边框的「咩 · 音色」与「哞 · 伴奏」独立共鸣盒。
+- **OpenMotion 绘本动画短片 v9 升级（OpenMotion Director）**：
+  - 全三幕（`s1-wake` / `s2-choir` / `s3-finale`）重绘为统一 `#F4EDE0` 暖窑宣纸典藏绘本版画内页框（`y: 46..942px` 完全避开抓帧边界缝隙，配拉丝黄铜双线与四角铆钉）：
+    - `s1-wake` 新增晨光斜光束、木盒示波窗扫频联动、小羊咩扇耳 `svgOrigin` 随动及小牛哞新月黄铜牛角、避让角尖呼吸弧线与不裁切木架的安全醒目金色声环；
+    - `s2-choir` 将深夜绒靛蓝画板嵌入宣纸画框内消除底部浅条，升级七小只哑光陶泥径向明暗与高光眼眸，并在 `7.30s` 主音重音处新增 `7 叮尖 -> 1 陶诺` 金色解决弧动画（叮尖瞬间回正、陶诺胸口铜珠亮起）；
+    - `s3-finale` 忠实还原 AppIcon 同源瓷盘声学唱机立体绘本展开图（木质外环、象牙瓷盘、琥珀玻璃利萨如轴心、七彩陶珠、黄铜唱臂落针激起三重晶透声波涟漪），并通过 SVG viewBox `svgOrigin`（`180 180` / `336 36`）锁定瓷盘外缘与唱臂枢轴、仅驱动七颗陶珠随唱盘顺时针旋转且贴合小木台接触阴影。
+- **修复、全局对齐与单元测试（Fix, Alignment & Tests）**：
+  - 为 `StudioViewModel` 的 `setScaleMode`、`setAccompanimentTexture`、`setMelodyVoice`、`setRootMIDI` 与暂停态 `setPlaybackRate` 补齐 `synth.ensureRunning()` 音频引擎首触预热，并为 `setGrooveStrength` 增加幂等撤销栈守卫防止重复点击产生空撤销记录；
+  - 为 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift) 补充 `.onDisappear` 试听重置任务取消，并将 `AboutSheetView`、`NightLampTactileSheet` 与 `OrbitalStageView` 全部遗留深蓝色值统一收敛为 `#0E142C`；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound30SoundPaletteBoxKinematicsAndAudioReadiness`。
+
 ## 0.36.0 - 2026-11-24
 - **捕梦工坊实体创作工作台重构（Kiln Workbench & Analog VU Console v0.36.0）**：
   - 彻底摆脱原生 `NavigationStack` 标题栏、`UISegmentedControl` 与平白卡片，重构 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 为暖窑象牙 × 蜂蜡桦木 × 拉丝黄铜三维创作台：

@@ -364,7 +364,7 @@ public struct NightLampTactileSheet: View {
                     .foregroundStyle(
                         capturedBeads.isEmpty
                             ? Color(hex: 0x5B6482)
-                            : (auditioningIndex != nil ? Color(hex: 0x151B36) : Color(hex: 0xFFB84D))
+                            : (auditioningIndex != nil ? Color(hex: 0x0E142C) : Color(hex: 0xFFB84D))
                     )
             }
             .disabled(capturedBeads.isEmpty)
@@ -413,7 +413,7 @@ public struct NightLampTactileSheet: View {
                 .background(
                     Capsule().fill(capturedBeads.isEmpty ? Color(hex: 0x242C4A) : Color(hex: 0xFFB84D))
                 )
-                .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x151B36))
+                .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x0E142C))
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(.plain)

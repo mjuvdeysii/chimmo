@@ -311,6 +311,7 @@ public final class StudioViewModel: ObservableObject {
         AcousticHapticsEngine.shared.playScrubTick()
 
         if !isPlaying {
+            synth.ensureRunning()
             previewArpeggioTask?.cancel()
             let gapSec = max(0.24, min(0.70, 0.42 / clamped))
             let mode = document.scaleMode
@@ -1362,6 +1363,7 @@ public final class StudioViewModel: ObservableObject {
             pushUndo()
             document.scaleMode = mode
         }
+        synth.ensureRunning()
         synth.applySpaceProfile(AcousticSpaceProfile.profile(for: mode))
         previewArpeggioTask?.cancel()
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
@@ -1596,6 +1598,7 @@ public final class StudioViewModel: ObservableObject {
     }
 
     public func setAccompanimentTexture(_ texture: AccompanimentTexture) {
+        synth.ensureRunning()
         accompanimentTexture = texture
         if chordPreset == .off { chordPreset = .autoMatch }
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.35)
@@ -1610,6 +1613,7 @@ public final class StudioViewModel: ObservableObject {
     }
 
     public func setMelodyVoice(_ voice: MelodyVoice) {
+        synth.ensureRunning()
         melodyVoice = voice
         previewArpeggioTask?.cancel()
         let timbre = FeltPianoSynth.Timbre.from(voice: voice)
@@ -1631,6 +1635,7 @@ public final class StudioViewModel: ObservableObject {
             pushUndo()
             document.rootMIDI = clamped
         }
+        synth.ensureRunning()
         previewArpeggioTask?.cancel()
         AcousticHapticsEngine.shared.playBeatTap(isStrong: clamped == 60)
         let timbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
@@ -1647,7 +1652,9 @@ public final class StudioViewModel: ObservableObject {
 
     public func setGrooveStrength(_ strength: Double) {
         let clamped = strength.isFinite ? max(0.0, min(1.0, strength)) : 0.0
-        pushUndo()
+        if abs(document.grooveStrength - clamped) > 0.001 {
+            pushUndo()
+        }
         if clamped > 0.01 {
             document.notes = GrooveAlignmentEngine.populateQuantizedTargets(for: document.notes)
         }

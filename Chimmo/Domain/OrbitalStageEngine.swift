@@ -1648,3 +1648,116 @@ public enum HumVUMeterKinematics {
     }
 }
 
+/// 声音调色木盒交互试听通道标识（供 `SoundPaletteBoxKinematics` 与实时舞台联动）。
+public enum SoundBoxAuditionChannel: Equatable, Sendable {
+    case voice
+    case texture
+    case scale
+    case pitch
+    case tempo
+    case groove
+    case chord
+    case character(Int)
+}
+
+/// 童书声音调色木盒纯值运动学与声波示波映射（100% 纯函数、可单测、尊重减弱动态效果）。
+public enum SoundPaletteBoxKinematics {
+    public struct ToggleLeverState: Equatable, Sendable {
+        public let travelFraction: Double
+        public let tiltDegrees: Double
+        public let lampGlowOpacity: Double
+
+        public init(travelFraction: Double, tiltDegrees: Double, lampGlowOpacity: Double) {
+            self.travelFraction = travelFraction
+            self.tiltDegrees = tiltDegrees
+            self.lampGlowOpacity = lampGlowOpacity
+        }
+    }
+
+    public static func toggleLeverState(isOn: Bool, reduceMotion: Bool) -> ToggleLeverState {
+        if isOn {
+            return ToggleLeverState(
+                travelFraction: 1.0,
+                tiltDegrees: reduceMotion ? 0.0 : -7.0,
+                lampGlowOpacity: 0.92
+            )
+        }
+        return ToggleLeverState(
+            travelFraction: 0.0,
+            tiltDegrees: reduceMotion ? 0.0 : 7.0,
+            lampGlowOpacity: 0.16
+        )
+    }
+
+    public static func oscilloscopeSamples(
+        for voice: MelodyVoice,
+        rootMIDI: Int,
+        playbackRate: Double,
+        phase: Double,
+        sampleCount: Int = 28
+    ) -> [Double] {
+        guard sampleCount > 0 else { return [] }
+        if sampleCount == 1 { return [0.5] }
+
+        let clampedMIDI = RootTranspositionHelper.clampedRootMIDI(rootMIDI)
+        let safeRate = playbackRate.isFinite ? max(0.5, min(1.6, playbackRate)) : 1.0
+        let safePhase = phase.isFinite ? phase : 0.0
+        let envelope = AcousticSignatureGeometry.voiceEnvelopePoints(for: voice)
+
+        let baseCycles: Double
+        let harmonicRatio: Double
+        let harmonicWeight: Double
+        switch voice {
+        case .singingCello:
+            baseCycles = 3.2
+            harmonicRatio = 2.0
+            harmonicWeight = 0.28
+        case .concertPiano:
+            baseCycles = 4.0
+            harmonicRatio = 2.5
+            harmonicWeight = 0.22
+        case .liquidHarp:
+            baseCycles = 5.0
+            harmonicRatio = 3.0
+            harmonicWeight = 0.25
+        case .celestaGlass:
+            baseCycles = 6.2
+            harmonicRatio = 4.0
+            harmonicWeight = 0.32
+        }
+
+        let totalCycles = max(1.5, baseCycles + Double(clampedMIDI - 60) * 0.12)
+        let denom = Double(sampleCount - 1)
+        let envMaxIdx = max(1, envelope.count - 1)
+
+        return (0..<sampleCount).map { idx in
+            let u = Double(idx) / denom
+            let envPos = u * Double(envMaxIdx)
+            let lo = max(0, min(envelope.count - 1, Int(floor(envPos))))
+            let hi = max(0, min(envelope.count - 1, lo + 1))
+            let frac = envPos - Double(lo)
+            let envVal = envelope[lo] * (1.0 - frac) + envelope[hi] * frac
+
+            let angle = u * Double.pi * 2.0 * totalCycles + safePhase * safeRate
+            let carrier = (sin(angle) + harmonicWeight * sin(angle * harmonicRatio + 0.45)) / (1.0 + harmonicWeight)
+            let sample = 0.5 + envVal * carrier * 0.42
+            return max(0.06, min(0.94, sample))
+        }
+    }
+
+    public static func triadFocusDegree(for channel: SoundBoxAuditionChannel?) -> Int? {
+        guard let channel else { return nil }
+        switch channel {
+        case .scale:
+            return 3
+        case .voice, .pitch, .tempo, .groove:
+            return 5
+        case .texture, .chord:
+            return 1
+        case .character(let deg):
+            return (1...7).contains(deg) ? deg : nil
+        }
+    }
+}
+
+

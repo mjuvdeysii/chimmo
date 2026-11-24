@@ -91,7 +91,7 @@ public struct VinylPostcardShareSheet: View {
                                         .font(.system(size: 12.5, weight: .bold))
                                         .frame(width: 34, height: 28)
                                         .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
+                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
@@ -114,7 +114,7 @@ public struct VinylPostcardShareSheet: View {
                                         .font(.system(size: 12.5, weight: .bold))
                                         .frame(width: 30, height: 28)
                                         .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
+                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("\(mode.rawValue)样式")
@@ -132,7 +132,7 @@ public struct VinylPostcardShareSheet: View {
                                 .font(.system(size: 12.5, weight: .bold))
                                 .frame(width: 34, height: 34)
                                 .background(Capsule().fill(showJianpuStrip ? palette.homeAnchor : palette.cardSurface))
-                                .foregroundStyle(showJianpuStrip ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
+                                .foregroundStyle(showJianpuStrip ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("在明信片显示简谱音符")
@@ -153,7 +153,7 @@ public struct VinylPostcardShareSheet: View {
                                 VStack(spacing: 5) {
                                     ChimmoCraftMark(
                                         .vinylSeal,
-                                        color: palette.isNight ? Color(hex: 0x151B36) : .white
+                                        color: palette.isNight ? Color(hex: 0x0E142C) : .white
                                     )
                                     .frame(width: 18, height: 18)
                                     Text("PNG")
@@ -162,7 +162,7 @@ public struct VinylPostcardShareSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                                 .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.homeAnchor))
-                                .foregroundStyle(palette.isNight ? Color(hex: 0x151B36) : .white)
+                                .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("分享图片 PNG")
@@ -560,7 +560,7 @@ public struct AboutSheetView: View {
                             HStack(spacing: 10) {
                                 ChimmoCraftMark(
                                     .vinylSeal,
-                                    color: palette.isNight ? Color(hex: 0x151B36) : .white
+                                    color: palette.isNight ? Color(hex: 0x0E142C) : .white
                                 )
                                 .frame(width: 18, height: 18)
 
@@ -583,7 +583,7 @@ public struct AboutSheetView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 13)
                             .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.homeAnchor))
-                            .foregroundStyle(palette.isNight ? Color(hex: 0x151B36) : .white)
+                            .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
                         }
                         .buttonStyle(.plain)
                     }
@@ -628,6 +628,12 @@ public struct AboutSheetView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完成") { dismiss() }
                 }
+            }
+            .onDisappear {
+                duoResetTask?.cancel()
+                duoResetTask = nil
+                memberResetTask?.cancel()
+                memberResetTask = nil
             }
         }
     }
