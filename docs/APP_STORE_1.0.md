@@ -1,4 +1,4 @@
-# 咩哞 · Chimmo｜App Store 1.0 提审与建项资料包
+# 咩哞琴盒 · Mie & Mou｜App Store 1.0 提审与建项资料包
 
 直接复制以下字段填入 [App Store Connect](https://appstoreconnect.apple.com) 即可完成新 App 创建与提审配置。
 
@@ -7,7 +7,7 @@
 ## 1. 新建 App 必填四项（App Store Connect → 我的 App → `+` 新建 App）
 
 - **平台**：`iOS`
-- **名称（简体中文）**：`咩哞`（若想带副标题检索词可用：`咩哞 - 捉住脑海里的旋律`）
+- **名称（简体中文）**：`咩哞琴盒`（若想带副标题检索词可用：`咩哞琴盒 - 轻哼成曲，七声和鸣`）
 - **主要语言**：`简体中文 (Simplified Chinese)`
 - **套装 ID (Bundle ID)**：`app.chimmo`（CI 已自动通过 App Store Connect API 注册）
 - **SKU**：`chimmo`
@@ -18,7 +18,7 @@
 ## 2. 应用信息与网址（GitHub Pages 自动托管）
 
 - **副标题（简体中文，30 字内）**：`把脑海里的旋律唱出来、看得见`
-- **应用名称（English）**：`Chimmo`
+- **应用名称（English）**：`Mie & Mou`
 - **副标题（English，30 chars max）**：`Hum & See Your Melodies`
 - **主分类**：`音乐 (Music)`
 - **副分类**：`教育 (Education)` 或 `娱乐 (Entertainment)`
@@ -32,12 +32,12 @@
 ## 3. 推广文本与描述（简体中文）
 
 ### 推广文本（170 字内）
-脑海里突然冒出一段旋律，却不会五线谱也不会乐器？对「咩哞」轻轻哼一声，七只哑光窑陶音级小偶就会把它凝结成纸上看得见的音珠，再托起一汪温暖的现代和声。完全离线，无账号，无广告。
+脑海里突然冒出一段旋律，却不会五线谱也不会乐器？对「咩哞琴盒」轻轻哼一声，七只哑光窑陶音级小偶就会把它凝结成纸上看得见的音珠，再托起一汪温暖的现代和声。完全离线，无账号，无广告。
 
 ### 描述
 你有没有过这样的时刻：走在路上或临睡前，脑子里忽然转着一段很好听的旋律；或者听一首喜欢的曲子时，好奇编曲家眼里的音符到底长什么样？
 
-「咩哞（Chimmo）」把复杂的五线谱和乐理藏在身后，换成了坐在矮木架上的**七只哑光窑陶声学小偶**——它们正好对应调里的 `1 2 3 4 5 6 7` 七个音级：
+「咩哞琴盒（Mie & Mou）」把复杂的五线谱和乐理藏在身后，换成了坐在矮木架上的**七只哑光窑陶声学小偶**——它们正好对应调里的 `1 2 3 4 5 6 7` 七个音级：
 · 1 号 陶诺（家）：稳重的赤陶倒钟，旋律落到他身上，整句就回到了家
 · 2 号 豆叩（迈步）：微微前倾的暖杏小木鱼，走出家门的第一步
 · 3 号 拍咯（晴雨）：胭脂珊瑚不倒翁，大调双耳轻扬、小调微垂，一眼看懂晴雨情绪
@@ -68,10 +68,10 @@
 ## 5. App Review 审核备注（Review Notes）
 
 ```text
-Thank you for reviewing Chimmo (咩哞).
+Thank you for reviewing Mie & Mou (咩哞琴盒).
 
 1. No Account & 100% Offline:
-   Chimmo runs completely offline on the device. No login, account, or internet connection is required.
+   Mie & Mou runs completely offline on the device. No login, account, or internet connection is required.
 
 2. How to Test Core Features:
    - Browse & Deconstruct Specimens: Tap "标本" (Specimens) in the top-left toolbar to explore 16 built-in interactive musical arrangements, toggle "单听旋律 / 单听水面 / 完整合奏" to isolate melody vs. harmony, or switch between Daylight and Night-Lamp themes.

@@ -4575,4 +4575,35 @@ final class SpecimenIntegrityTests: XCTestCase {
             }
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound74BilingualNamingParityAndFinalHandoff() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r74_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.switchSpace(to: .create)
+        vm.plantCreationStarter(.sunnyMeadow)
+        vm.stopPlayback()
+
+        for isNight in [false, true] {
+            let palette = ChimmoPalette(isNight: isNight)
+            XCTAssertNotNil(SettingsView(vm: vm, palette: palette))
+            XCTAssertNotNil(AboutSheetView(palette: palette, currentDocument: vm.document, cradleEnabled: true))
+            let png = VinylPostcardExporter.renderPNGData(
+                document: vm.document,
+                shadowEnabled: false,
+                isNight: isNight,
+                visualMode: .flowingRiver,
+                includeJianpuStrip: true
+            )
+            XCTAssertNotNil(png)
+        }
+
+        for kind in ChimmoLegalDocumentView.LegalDocumentKind.allCases {
+            XCTAssertNotNil(ChimmoLegalDocumentView(kind: kind))
+        }
+    }
 }

@@ -467,7 +467,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.80.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.81.0"
     }
 
     private var appBuild: String {
@@ -485,7 +485,7 @@ public struct AboutSheetView: View {
                             .frame(width: 44, height: 44)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("咩哞 · Chimmo")
+                            Text("咩哞琴盒 · Mie & Mou")
                                 .font(.headline)
                                 .accessibilityAddTraits(.isHeader)
                             Text("100% 本机离线声学音乐绘本")
@@ -541,7 +541,7 @@ public struct AboutSheetView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("关于咩哞")
+            .navigationTitle("关于咩哞琴盒")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.81.0 - 2026-11-25
+- 正式确立中英文双语应用命名对齐同家族姊妹作《摸索台灯 / Moss & Otto》：简体中文定名「**咩哞琴盒**」，英文定名「**Mie & Mou**」（保留套装标识 `app.chimmo` 与七声小偶家族代号 `Chimmo` 不变）。新增 [InfoPlist.xcstrings](Chimmo/Resources/InfoPlist.xcstrings) 为 `CFBundleDisplayName`、`CFBundleName` 与 `NSMicrophoneUsageDescription` 提供 `zh-Hans` / `en` 双语原生本地化，并同步更新 [Info.plist](Chimmo/Resources/Info.plist)。
+- 全端内品牌文案、法务页与绘本明信片同步：更新 [SettingsView.swift](Chimmo/Views/SettingsView.swift)（「咩哞琴盒 · Mie & Mou」与隐私/条款正文及兜底版本号 `0.81.0`）、[AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)（「关于咩哞琴盒」与品牌标题及兜底版本号 `0.81.0`）以及 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 印章抬头（「咩哞琴盒 · MIE & MOU」）。
+- 全生态网页与核心文档同源对齐：同步更新 [docs/privacy.html](docs/privacy.html)、[docs/terms.html](docs/terms.html)、[docs/licenses.html](docs/licenses.html)、OpenMotion Design Studio 互动官网 `v19`（独立导出至 [docs/index.html](docs/index.html)），以及 [README.md](README.md)、[docs/IP.md](docs/IP.md)、[docs/METHODOLOGY.md](docs/METHODOLOGY.md)（升版 `v2.1`）与 [docs/APP_STORE_1.0.md](docs/APP_STORE_1.0.md)。
+- 收尾校验与巡检状态：新增 `@MainActor` 单测 `testCreativeAlchemyRound74BilingualNamingParityAndFinalHandoff` 校验设置、关于、全部三类法务视图及日夜绘本明信片导出链路；本轮收官交付后暂停每 15 分钟自动持续打磨巡检。
+
 ## 0.80.0 - 2026-11-25
 - OpenMotion Design Studio 互动官网模块化升版至 `v17`–`v18` 并同步独立导出 [docs/index.html](docs/index.html)（`106,336 bytes`）：在 `styles.css`（`v17`）新增全站键盘 `:focus-visible` 焦点环（与三份在线法务页一致）并扩展 `html[data-high-clarity="true"]` 实底 `1.6px` 边线覆盖全站分幕/图标/四域/明信片与页脚卡片；在 `index.html`（`v18`）同步更新 `v0.80.0` 版本徽标、曲本标题转盘直达与全站无障碍说明文案，经整页 PNG 视觉抽检与 `node --check` 零报错验收。
 - 工坊双弹窗最后 4 处 VoiceOver 提示补齐：为 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 顶部页签按键（`节奏 / 轻哼 / 折纸`）与 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 「关闭夜灯创作」、「撤销」与「试听已录旋律」按键补全描述性 `.accessibilityHint`。

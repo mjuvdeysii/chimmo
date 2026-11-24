@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.80.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.81.0"
     }
 
     private var appBuild: String {
@@ -70,7 +70,7 @@ public struct SettingsView: View {
                     .frame(width: 66, height: 66)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("咩哞 · Chimmo")
+                    Text("咩哞琴盒 · Mie & Mou")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                         .accessibilityAddTraits(.isHeader)
@@ -545,7 +545,7 @@ public struct SettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
             .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
 
-            Text("咩哞 · Chimmo 完全在本机离线运行，无需登录，不上传任何录音或个人数据。")
+            Text("咩哞琴盒（Mie & Mou）完全在本机离线运行，无需登录，不上传任何录音或个人数据。")
                 .font(.footnote)
                 .foregroundStyle(palette.secondaryInk)
                 .padding(.horizontal, 4)
@@ -633,7 +633,7 @@ public struct ChimmoLegalDocumentView: View {
         }
 
         Section("1. 核心原则：不联网、不收集任何数据") {
-            Text("咩哞（Chimmo）是一款完全在您的设备本地离线运行的音乐创作与可视化应用。我们不设账号系统，不连接任何远程服务器，不包含任何广告、统计分析或第三方追踪 SDK。")
+            Text("咩哞琴盒（Mie & Mou）是一款完全在您的设备本地离线运行的音乐创作与可视化应用。我们不设账号系统，不连接任何远程服务器，不包含任何广告、统计分析或第三方追踪 SDK。")
                 .font(.subheadline)
         }
 
@@ -666,7 +666,7 @@ public struct ChimmoLegalDocumentView: View {
         }
 
         Section("1. 创作归属") {
-            Text("您使用咩哞（Chimmo）自行哼唱、点按或编排并导出的原创旋律、PNG 卡片、WAV 音频与标准 MIDI 作品，其著作权完全归您本人所有。")
+            Text("您使用咩哞琴盒（Mie & Mou）自行哼唱、点按或编排并导出的原创旋律、PNG 卡片、WAV 音频与标准 MIDI 作品，其著作权完全归您本人所有。")
                 .font(.subheadline)
         }
 

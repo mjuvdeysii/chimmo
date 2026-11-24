@@ -135,7 +135,7 @@ public struct VinylPostcardCanvasView: View {
                         )
                         .frame(width: 30, height: 20)
 
-                        Text("咩哞 · CHIMMO")
+                        Text("咩哞琴盒 · MIE & MOU")
                             .font(.system(size: 11, weight: .heavy, design: .rounded))
                             .tracking(1.0)
                             .foregroundStyle(palette.primaryInk)
