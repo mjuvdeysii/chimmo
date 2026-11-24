@@ -3632,4 +3632,39 @@ final class SpecimenIntegrityTests: XCTestCase {
             XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette, initialTab: tab))
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound53PitchChoirSpotlightAndInsetSurfaceToken() throws {
+        // 1. StorybookChoirMeterKinematics.pitchFocusedBuddyIndex 非录音、空值、NaN 与夹紧边界校验
+        XCTAssertNil(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 0.5, isRecording: false))
+        XCTAssertNil(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: nil, isRecording: true))
+        XCTAssertNil(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: .nan, isRecording: true))
+        XCTAssertNil(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: .infinity, isRecording: true))
+        XCTAssertNil(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 0.5, isRecording: true, buddyCount: 0))
+
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: -0.4, isRecording: true), 0)
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 0.0, isRecording: true), 0)
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 0.5, isRecording: true), 3)
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 1.0, isRecording: true), 6)
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 1.8, isRecording: true), 6)
+
+        // 2. ChimmoPalette.insetStageSurface 日/夜语义色板区分
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotEqual(dayPalette.insetStageSurface, nightPalette.insetStageSurface)
+
+        // 3. 捕梦工坊三大面板与调音百宝箱在日/夜下均可安全实例化
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r53_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        for tab in [0, 1, 2] {
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette, initialTab: tab))
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette, initialTab: tab))
+        }
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+    }
 }

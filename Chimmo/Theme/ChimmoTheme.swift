@@ -62,6 +62,11 @@ public struct ChimmoPalette: Sendable {
         isNight ? Color(hex: 0x7EC8C3) : Color(hex: 0x3D7A77)
     }
 
+    /// 捕梦工坊与声音调色盒内嵌微舞台底色（与棉纸/深靛纸卡自然衔接，消除散落硬编码）
+    public var insetStageSurface: Color {
+        isNight ? Color(hex: 0x131B38) : Color(hex: 0xF7EFE2)
+    }
+
     public init(isNight: Bool) {
         self.isNight = isNight
         if isNight {

@@ -181,7 +181,7 @@ public struct SoundPaletteBoxSheet: View {
 
     private var soundBoxDioramaOscilloscope: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let skyBg = palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2)
+        let skyBg = palette.insetStageSurface
         let focusedDeg = SoundPaletteBoxKinematics.triadFocusDegree(for: activeChannel)
         let shelfFigures: [ChimmoMember] = [.taono, .plokko, .corllo]
 

@@ -2026,6 +2026,20 @@ public enum StorybookChoirMeterKinematics {
         let count = max(1, min(buddyCount, Int((ratio * Double(buddyCount)).rounded(.up))))
         return Set(0..<count)
     }
+
+    /// 根据轻哼实时归一化音高（0.0...1.0）映射当前领唱小偶索引（0..<buddyCount）；非录音、空值或非有限值返回 nil。
+    public static func pitchFocusedBuddyIndex(
+        normalizedPitch: Double?,
+        isRecording: Bool,
+        buddyCount: Int = 7
+    ) -> Int? {
+        guard isRecording, buddyCount > 0, let raw = normalizedPitch, raw.isFinite else {
+            return nil
+        }
+        let clamped = max(0.0, min(1.0, raw))
+        let scaled = Int((clamped * Double(buddyCount - 1)).rounded())
+        return max(0, min(buddyCount - 1, scaled))
+    }
 }
 
 /// 唱片工坊与离线明信片的扁平卡通绘本排版与 IP 主角选取纯值引擎（零拟物、100% 纯函数可单测）。

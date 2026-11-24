@@ -327,7 +327,7 @@ public struct DreamCaptureSheet: View {
 
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
+                                .fill(palette.insetStageSurface)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 11, style: .continuous)
                                         .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
@@ -744,7 +744,8 @@ public struct DreamCaptureSheet: View {
                     isRecording: isRec,
                     palette: palette,
                     isMinor: vm.document.scaleMode.isMinorFlavored,
-                    reduceMotion: reduceMotion
+                    reduceMotion: reduceMotion,
+                    livePitchNormalized: vm.capturePipeline.livePitchTrace.last
                 )
 
                 ZStack {
@@ -754,12 +755,12 @@ public struct DreamCaptureSheet: View {
                             lineWidth: 2.0
                         )
                         .frame(width: 126, height: 126)
-                        .scaleEffect(1.0 + level * 0.22)
+                        .scaleEffect(reduceMotion ? 1.0 : (1.0 + level * 0.22))
 
                     Circle()
                         .fill((isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(0.18))
                         .frame(width: 102, height: 102)
-                        .scaleEffect(1.0 + level * 0.30)
+                        .scaleEffect(reduceMotion ? 1.0 : (1.0 + level * 0.30))
 
                     Circle()
                         .strokeBorder(
@@ -862,7 +863,7 @@ public struct DreamCaptureSheet: View {
     private func liveVocalPitchStage(isRec: Bool, level: CGFloat, trace: [Double]) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
+                .fill(palette.insetStageSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
@@ -1160,6 +1161,7 @@ private struct StorybookChoirLevelStageView: View {
     let palette: ChimmoPalette
     let isMinor: Bool
     let reduceMotion: Bool
+    var livePitchNormalized: Double? = nil
 
     var body: some View {
         let meter = HumVUMeterKinematics.reading(inputLevel: inputLevel, isRecording: isRecording, totalSegments: 9)
@@ -1174,7 +1176,12 @@ private struct StorybookChoirLevelStageView: View {
             totalSegments: 9,
             buddyCount: ChimmoMember.allCases.count
         )
-        let skyBg = palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2)
+        let focusedBuddyIdx = StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(
+            normalizedPitch: livePitchNormalized,
+            isRecording: isRecording,
+            buddyCount: ChimmoMember.allCases.count
+        )
+        let skyBg = palette.insetStageSurface
 
         ZStack {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -1206,23 +1213,35 @@ private struct StorybookChoirLevelStageView: View {
                 HStack(spacing: 4) {
                     ForEach(Array(ChimmoMember.allCases.enumerated()), id: \.element.id) { idx, member in
                         let isCheering = cheering.contains(idx)
+                        let isPitchSolo = (focusedBuddyIdx == idx)
+                        let isSingingBuddy = isPitchSolo || isCheering
                         let hillPop = bars.indices.contains(idx) ? bars[idx].buddyPopOffsetY : 0.0
                         let barCol = XylophoneLane.lane(at: idx).barColor(isNight: palette.isNight)
 
                         VStack(spacing: 2) {
-                            ChimmoCartoonKeyBuddyView(
-                                member: member,
-                                outlineColor: palette.primaryInk.opacity(0.76),
-                                isSinging: isCheering,
-                                isMinor: isMinor
-                            )
-                            .frame(width: 24, height: 20)
-                            .offset(y: isCheering ? hillPop : 0.0)
+                            ZStack {
+                                if isPitchSolo {
+                                    Circle()
+                                        .fill(barCol.opacity(palette.isNight ? 0.34 : 0.22))
+                                        .frame(width: 28, height: 28)
+                                }
+
+                                ChimmoCartoonKeyBuddyView(
+                                    member: member,
+                                    outlineColor: palette.primaryInk.opacity(0.76),
+                                    isSinging: isSingingBuddy,
+                                    isMinor: isMinor
+                                )
+                                .frame(width: 24, height: 20)
+                                .scaleEffect(reduceMotion ? 1.0 : (isPitchSolo ? 1.14 : 1.0))
+                            }
+                            .offset(y: reduceMotion ? 0.0 : (isPitchSolo ? -5.0 : (isCheering ? hillPop : 0.0)))
+                            .animation(reduceMotion ? nil : .spring(response: 0.20, dampingFraction: 0.65), value: isPitchSolo)
                             .animation(reduceMotion ? nil : .spring(response: 0.20, dampingFraction: 0.65), value: isCheering)
 
                             Capsule()
-                                .fill(isCheering ? barCol : palette.divider)
-                                .frame(width: 14, height: 3)
+                                .fill(isSingingBuddy ? barCol : palette.divider)
+                                .frame(width: isPitchSolo ? 18 : 14, height: isPitchSolo ? 4 : 3)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -1430,7 +1449,7 @@ private struct SeedPitchFaderColumn: View {
                         .position(x: centerX, y: 8 + trackH * 0.5)
 
                     Capsule()
-                        .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
+                        .fill(palette.insetStageSurface)
                         .overlay(Capsule().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.16 : 0.10), lineWidth: 1.0))
                         .frame(width: 12, height: trackH)
                         .position(x: centerX, y: 8 + trackH * 0.5)

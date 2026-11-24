@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.60.0 - 2026-11-25
+- 里程碑 60 · 轻哼电台音高聚光灯合唱反馈：在 `StorybookChoirMeterKinematics` 新增纯函数 `pitchFocusedBuddyIndex(normalizedPitch:isRecording:buddyCount:)`，将实时哼唱归一化音高直接映射至 `1-7` 领唱小偶，实时亮起主音色主题柔光圈、底座高亮胶囊与轻跃表情反馈（绝不新增解释文字，并 100% 受 `reduceMotion` 门控；同步为 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 录音麦环呼吸缩放补齐 `reduceMotion` 防眩晕门控）。
+- 内嵌微舞台语义色阶收口：在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `insetStageSurface` 语义色（日光 `#F7EFE2` / 夜灯 `#131B38`），彻底消除 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 与 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 中 5 处 `0x10193C` / `0xFFF7E2` 硬编码十六进制色值，使轻哼音准区、节奏条、调音音域柱与示波底窗在日夜模式下完全呼吸一体。
+- 回归校验：新增 `testCreativeAlchemyRound53PitchChoirSpotlightAndInsetSurfaceToken`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.59.0 - 2026-11-25
 - 全站硬描边零残余收口：彻底清理 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 与 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift) 全部剩余 `cartoonOutline` 调用（全站 `Views/`、`Domain/` 与设计语言绘制层 `cartoonOutline` 与 `cartoonShadow` 双双归零），将音珠外缘、星核印章、山坡线、手绘笔刷拖尾与小偶发丝边全面柔化为奥托夜色/窑纸正典 `primaryInk` 半透明细线（彻底消除夜间模式亮黄生硬框线）。
 - 声场波形窗一键试听：[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 顶部 `SoundBoxOscilloscopeWindow` 升级为 `>= 40pt` 可触试听控件，轻点实时波形即可直接触发 `auditionDuoGreeting()` 合奏耳返与波纹扫描动效。
