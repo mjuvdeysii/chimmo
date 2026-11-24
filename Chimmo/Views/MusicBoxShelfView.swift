@@ -320,7 +320,10 @@ public struct MusicBoxShelfView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.subheadline)
                         .foregroundStyle(palette.secondaryInk.opacity(0.75))
-                        .frame(width: 32, height: 32)
+                        .frame(
+                            width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                            height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                        )
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -363,7 +366,7 @@ public struct MusicBoxShelfView: View {
                     .foregroundStyle(isSelected ? palette.homeAnchor : palette.secondaryInk)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 36)
+            .frame(height: StorybookAffordanceMetrics.compactToolMinHitDimension)
             .background(
                 Group {
                     if isSelected {
@@ -416,7 +419,8 @@ public struct MusicBoxShelfView: View {
                                 )
                             )
                             .foregroundStyle(active ? palette.primaryInk : palette.secondaryInk)
-                            .contentShape(Capsule())
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("分类 \(badge.rawCategory)")
@@ -455,7 +459,10 @@ public struct MusicBoxShelfView: View {
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : aurora)
                         }
-                        .frame(width: 36, height: 36)
+                        .frame(
+                            width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                            height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                        )
                         .contentShape(Circle())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -484,7 +491,8 @@ public struct MusicBoxShelfView: View {
                             )
                         )
                         .foregroundStyle(palette.primaryInk)
-                        .contentShape(Capsule())
+                        .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("重置全部筛选")

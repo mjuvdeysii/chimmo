@@ -159,13 +159,13 @@ public struct SoundPaletteBoxSheet: View {
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
                     .padding(.horizontal, 13)
-                    .frame(minHeight: 36)
+                    .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                     .background(
                         ChimmoKilnPillButtonSurface(
                             palette: palette,
                             accent: palette.brassHairline,
                             isActive: false,
-                            cornerRadius: 17
+                            cornerRadius: 20
                         )
                     )
                     .contentShape(Capsule())
@@ -275,6 +275,10 @@ public struct SoundPaletteBoxSheet: View {
                                 gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? 0.25
                             )
                             .frame(width: 36, height: 32)
+                            .frame(
+                                minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                            )
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -299,6 +303,11 @@ public struct SoundPaletteBoxSheet: View {
                                 )
                                 .scaleEffect(0.62, anchor: .bottom)
                                 .frame(width: 34, height: 36, alignment: .bottom)
+                                .frame(
+                                    minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                    minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                    alignment: .bottom
+                                )
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -322,6 +331,10 @@ public struct SoundPaletteBoxSheet: View {
                                 gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? -0.25
                             )
                             .frame(width: 36, height: 32)
+                            .frame(
+                                minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                            )
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -544,7 +557,7 @@ public struct SoundPaletteBoxSheet: View {
                             Text(label)
                                 .font(.caption.weight(.heavy).monospacedDigit())
                                 .frame(maxWidth: .infinity)
-                                .frame(minHeight: 34)
+                                .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                                 .background(
                                     ZStack {
                                         Capsule()

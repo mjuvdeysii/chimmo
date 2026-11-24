@@ -588,77 +588,143 @@ public struct CreateStudioView: View {
         )
     }
 
-    // MARK: - 3. Compact Single-Row Selected Beat Editor
+    // MARK: - 3. Compact Two-Row Selected Beat Editor (Pitch Step + Duration + >= 40pt Hit Targets)
 
+    @ViewBuilder
     private func compactCreationBeatBar(idx: Int) -> some View {
-        let total = vm.document.notes.count
-        return HStack(spacing: 6) {
-            Button {
-                vm.stepSelectedBeat(delta: -1)
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.caption.weight(.bold))
-                    .frame(width: 34, height: 34)
-                    .background(
-                        ChimmoKilnPillButtonSurface(palette: palette, accent: palette.homeAnchor, isActive: false, cornerRadius: 12)
-                    )
-                    .foregroundStyle(idx > 0 ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
-                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .disabled(idx <= 0)
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-            .accessibilityLabel("上一拍")
+        if vm.document.notes.indices.contains(idx) {
+            let bead = vm.document.notes[idx]
+            let desc = CreateBeatAdjustmentDescriptor(
+                bead: bead,
+                index: idx,
+                totalCount: vm.document.notes.count,
+                pentatonicSafe: vm.pentatonicSafe
+            )
+            let laneColor = desc.lane.barColor(isNight: palette.isNight)
 
-            Text("\(idx + 1)/\(total)")
-                .font(.caption.weight(.heavy).monospacedDigit())
-                .foregroundStyle(palette.secondaryInk)
-                .frame(minWidth: 34)
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    beatNavStepButton(
+                        systemName: "chevron.left",
+                        enabled: desc.canStepPrevious,
+                        tint: palette.primaryInk,
+                        accessibilityLabel: "上一拍"
+                    ) {
+                        vm.stepSelectedBeat(delta: -1)
+                    }
 
-            Button {
-                vm.stepSelectedBeat(delta: 1)
-            } label: {
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.bold))
-                    .frame(width: 34, height: 34)
-                    .background(
-                        ChimmoKilnPillButtonSurface(palette: palette, accent: palette.homeAnchor, isActive: false, cornerRadius: 12)
-                    )
-                    .foregroundStyle(idx + 1 < total ? palette.homeAnchor : palette.secondaryInk.opacity(0.35))
-                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .disabled(idx + 1 >= total)
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-            .accessibilityLabel("下一拍")
+                    Spacer(minLength: 4)
 
-            Spacer(minLength: 4)
+                    HStack(spacing: 5) {
+                        StorybookQuietTag(
+                            text: desc.beatProgressLabel,
+                            tint: laneColor,
+                            textColor: laneColor,
+                            isNight: palette.isNight
+                        )
 
-            beatToolIconButton("minus.circle", label: "缩短音符", tint: palette.primaryInk) {
-                vm.adjustSelectedBeadDuration(delta: -0.18)
+                        StorybookQuietTag(
+                            text: desc.pitchSummaryLabel,
+                            tint: laneColor,
+                            textColor: palette.primaryInk,
+                            isNight: palette.isNight
+                        )
+                    }
+                    .accessibilityElement(children: .combine)
+
+                    Spacer(minLength: 4)
+
+                    beatNavStepButton(
+                        systemName: "chevron.right",
+                        enabled: desc.canStepNext,
+                        tint: palette.homeAnchor,
+                        accessibilityLabel: "下一拍"
+                    ) {
+                        vm.stepSelectedBeat(delta: 1)
+                    }
+
+                    beatNavStepButton(
+                        systemName: "xmark",
+                        enabled: true,
+                        tint: palette.secondaryInk,
+                        accessibilityLabel: "完成单拍调整"
+                    ) {
+                        vm.selectedBeadID = nil
+                    }
+                }
+
+                HStack(spacing: 6) {
+                    beatToolIconButton(
+                        "arrow.down",
+                        label: "音高降一格",
+                        tint: palette.bassRibbon,
+                        enabled: desc.canStepPitchDown
+                    ) {
+                        vm.shiftSelectedBeadPitch(delta: -1)
+                    }
+                    beatToolIconButton(
+                        "arrow.up",
+                        label: "音高升一格",
+                        tint: palette.bassRibbon,
+                        enabled: desc.canStepPitchUp
+                    ) {
+                        vm.shiftSelectedBeadPitch(delta: 1)
+                    }
+                    beatToolIconButton(
+                        "minus.circle",
+                        label: "缩短音符",
+                        tint: palette.primaryInk
+                    ) {
+                        vm.adjustSelectedBeadDuration(delta: -0.18)
+                    }
+                    beatToolIconButton(
+                        "plus.circle",
+                        label: "延长音符",
+                        tint: palette.primaryInk
+                    ) {
+                        vm.adjustSelectedBeadDuration(delta: 0.22)
+                    }
+                    beatToolIconButton(
+                        "plus.square.on.square",
+                        label: "插入一拍",
+                        tint: palette.homeAnchor
+                    ) {
+                        vm.insertBeatAfterSelected()
+                    }
+                    beatToolIconButton(
+                        "trash",
+                        label: "删除选中音符",
+                        tint: palette.melodyTerracotta
+                    ) {
+                        vm.deleteSelectedBead()
+                    }
+                }
             }
-            beatToolIconButton("plus.circle", label: "延长音符", tint: palette.primaryInk) {
-                vm.adjustSelectedBeadDuration(delta: 0.22)
-            }
-            beatToolIconButton("plus.square.on.square", label: "插入一拍", tint: palette.bassRibbon) {
-                vm.insertBeatAfterSelected()
-            }
-            beatToolIconButton("trash", label: "删除选中音符", tint: palette.melodyTerracotta) {
-                vm.deleteSelectedBead()
-            }
-            beatToolIconButton("xmark", label: "完成单拍调整", tint: palette.secondaryInk) {
-                vm.selectedBeadID = nil
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityValue("第 \(desc.beatProgressLabel) 拍 \(desc.pitchSummaryLabel)")
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment:
+                    if desc.canStepPitchUp { vm.shiftSelectedBeadPitch(delta: 1) }
+                case .decrement:
+                    if desc.canStepPitchDown { vm.shiftSelectedBeadPitch(delta: -1) }
+                @unknown default:
+                    break
+                }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(
-            StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
-        )
     }
 
-    private func beatToolIconButton(
-        _ systemName: String,
-        label: String,
+    private func beatNavStepButton(
+        systemName: String,
+        enabled: Bool,
         tint: Color,
+        accessibilityLabel: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -668,9 +734,37 @@ public struct CreateStudioView: View {
                 .background(
                     ChimmoKilnPillButtonSurface(palette: palette, accent: tint, isActive: false, cornerRadius: 12)
                 )
-                .foregroundStyle(tint)
+                .foregroundStyle(enabled ? tint : palette.secondaryInk.opacity(0.35))
+                .frame(
+                    minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                    minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                )
+                .contentShape(Rectangle())
+        }
+        .disabled(!enabled)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private func beatToolIconButton(
+        _ systemName: String,
+        label: String,
+        tint: Color,
+        enabled: Bool = true,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.caption.weight(.bold))
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                .background(
+                    ChimmoKilnPillButtonSurface(palette: palette, accent: tint, isActive: false, cornerRadius: 12)
+                )
+                .foregroundStyle(enabled ? tint : palette.secondaryInk.opacity(0.35))
                 .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
+        .disabled(!enabled)
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
         .accessibilityLabel(label)
     }
@@ -715,7 +809,7 @@ public struct CreateStudioView: View {
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 38)
+            .frame(height: 42)
             .background(
                 ChimmoKilnPillButtonSurface(
                     palette: palette,

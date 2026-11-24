@@ -3129,4 +3129,94 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(vm.document.title, goingHome.title)
         XCTAssertNotNil(SettingsView(vm: vm, palette: ChimmoPalette(isNight: true)))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound43BeatPitchAdjustmentAndCompactHitTargets() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r43_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        // 1. 紧凑工具按钮触控热区标准校验（>= 40pt）
+        XCTAssertGreaterThanOrEqual(StorybookAffordanceMetrics.compactToolMinHitDimension, 40.0)
+        let expandedTarget = StorybookAffordanceMetrics.validatedHitTarget(
+            visualWidth: 34,
+            visualHeight: 34,
+            minimum: StorybookAffordanceMetrics.compactToolMinHitDimension
+        )
+        XCTAssertGreaterThanOrEqual(expandedTarget.width, 40.0)
+        XCTAssertGreaterThanOrEqual(expandedTarget.height, 40.0)
+
+        // 2. CreateBeatAdjustmentDescriptor 音级微调上下限与 NaN 防护校验
+        let lowDoBead = NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.2, rawDuration: .nan)
+        let lowDesc = CreateBeatAdjustmentDescriptor(
+            bead: lowDoBead,
+            index: 0,
+            totalCount: 3,
+            pentatonicSafe: true
+        )
+        XCTAssertEqual(lowDesc.beatProgressLabel, "1/3")
+        XCTAssertFalse(lowDesc.canStepPrevious)
+        XCTAssertTrue(lowDesc.canStepNext)
+        XCTAssertFalse(lowDesc.canStepPitchDown)
+        XCTAssertTrue(lowDesc.canStepPitchUp)
+        XCTAssertFalse(lowDesc.pitchSummaryLabel.lowercased().contains("nan"))
+
+        let highDoBead = NoteBead(degree: 1, octaveOffset: 1, rawOnset: 1.0, rawDuration: 0.8)
+        let highDesc = CreateBeatAdjustmentDescriptor(
+            bead: highDoBead,
+            index: 2,
+            totalCount: 3,
+            pentatonicSafe: true
+        )
+        XCTAssertEqual(highDesc.beatProgressLabel, "3/3")
+        XCTAssertTrue(highDesc.canStepPrevious)
+        XCTAssertFalse(highDesc.canStepNext)
+        XCTAssertTrue(highDesc.canStepPitchDown)
+        XCTAssertFalse(highDesc.canStepPitchUp)
+        XCTAssertTrue(highDesc.pitchSummaryLabel.contains("0.8s"))
+
+        // 3. 创作区单拍音级微调闭环（含五音规避、下界不溢出与脏状态追踪）
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.switchSpace(to: .create)
+        vm.plantCreationStarter(.sunnyMeadow)
+        vm.stopPlayback()
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        let firstBead = try XCTUnwrap(vm.document.notes.first)
+        XCTAssertEqual(firstBead.degree, 1)
+        vm.selectBead(firstBead.id, playContext: false)
+
+        // 已在最低音 1 Do，向下降不应发生越界修改
+        vm.shiftSelectedBeadPitch(delta: -1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 1)
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        // 向上升一格到 2 Re，应更新乐谱并标记未保存改动
+        vm.shiftSelectedBeadPitch(delta: 1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 2)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+
+        // 再升两格（3 Mi -> 跳过 4 Fa（五音安全开启）-> 5 Sol）
+        vm.shiftSelectedBeadPitch(delta: 1)
+        vm.shiftSelectedBeadPitch(delta: 1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 5)
+
+        // 降一格回到 3 Mi
+        vm.shiftSelectedBeadPitch(delta: -1)
+        XCTAssertEqual(vm.document.notes.first?.degree, 3)
+
+        // 4. 日夜与图鉴无障碍视图回归构造
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(VinylPostcardShareSheet(palette: dayPalette, request: VinylPostcardRequest(document: vm.document)))
+        XCTAssertNotNil(AboutSheetView(palette: dayPalette, currentDocument: vm.document, cradleEnabled: true))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(CharacterSoundTestView(palette: dayPalette, scaleMode: .wistfulMinor, cradleEnabled: true))
+    }
 }

@@ -135,13 +135,13 @@ public struct DreamCaptureSheet: View {
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
                     .padding(.horizontal, 13)
-                    .frame(minHeight: 36)
+                    .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                     .background(
                         ChimmoKilnPillButtonSurface(
                             palette: palette,
                             accent: palette.brassHairline,
                             isActive: false,
-                            cornerRadius: 17
+                            cornerRadius: 20
                         )
                     )
                     .contentShape(Capsule())
@@ -180,7 +180,7 @@ public struct DreamCaptureSheet: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 36)
+            .frame(height: StorybookAffordanceMetrics.compactToolMinHitDimension)
             .background(
                 Group {
                     if isSelected {
@@ -404,7 +404,10 @@ public struct DreamCaptureSheet: View {
                                         .font(.caption.weight(.bold))
                                         .foregroundStyle(palette.homeAnchor)
                                 }
-                                .frame(width: 34, height: 34)
+                                .frame(
+                                    width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                    height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                                )
                                 .contentShape(Circle())
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -426,7 +429,10 @@ public struct DreamCaptureSheet: View {
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(palette.secondaryInk)
                             }
-                            .frame(width: 34, height: 34)
+                            .frame(
+                                width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                            )
                             .contentShape(Circle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -626,7 +632,10 @@ public struct DreamCaptureSheet: View {
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(palette.secondaryInk)
                         }
-                        .frame(width: 34, height: 34)
+                        .frame(
+                            width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                            height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                        )
                         .contentShape(Circle())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -820,13 +829,13 @@ public struct DreamCaptureSheet: View {
                     .foregroundStyle(palette.primaryInk)
             }
             .padding(.horizontal, 14)
-            .frame(minHeight: 38)
+            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
             .background(
                 ChimmoKilnPillButtonSurface(
                     palette: palette,
                     accent: col,
                     isActive: false,
-                    cornerRadius: 16
+                    cornerRadius: 20
                 )
             )
             .contentShape(Capsule())

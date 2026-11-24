@@ -97,6 +97,10 @@ public struct VinylPostcardShareSheet: View {
                                             .frame(width: 38, height: 34)
                                             .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
                                             .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                            .frame(
+                                                minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                                minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                                            )
                                             .contentShape(Capsule())
                                     }
                                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
@@ -132,6 +136,10 @@ public struct VinylPostcardShareSheet: View {
                                             .frame(width: 36, height: 34)
                                             .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
                                             .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                            .frame(
+                                                minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                                minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                                            )
                                             .contentShape(Capsule())
                                     }
                                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
@@ -159,17 +167,20 @@ public struct VinylPostcardShareSheet: View {
                             } label: {
                                 Image(systemName: "textformat.123")
                                     .font(.system(size: 12.5, weight: .bold))
-                                    .frame(width: 38, height: 38)
+                                    .frame(
+                                        width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                        height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                                    )
                                     .background(
                                         ChimmoKilnPillButtonSurface(
                                             palette: palette,
                                             accent: palette.homeAnchor,
                                             isActive: showJianpuStrip,
-                                            cornerRadius: 14
+                                            cornerRadius: 16
                                         )
                                     )
                                     .foregroundStyle(showJianpuStrip ? palette.homeAnchor : palette.secondaryInk)
-                                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("在明信片显示简谱音符")
@@ -458,7 +469,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.47.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.50.0"
     }
 
     private var appBuild: String {

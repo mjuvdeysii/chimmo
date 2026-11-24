@@ -2446,6 +2446,8 @@ public enum StorybookAffordanceMetrics {
         }
     }
 
+    public static let compactToolMinHitDimension: CGFloat = 40.0
+
     public static func validatedHitTarget(
         visualWidth: CGFloat,
         visualHeight: CGFloat,
@@ -2466,6 +2468,43 @@ public enum StorybookAffordanceMetrics {
 
     public static func sheetHeaderBudgetHeight(hasModeRail: Bool) -> CGFloat {
         hasModeRail ? 52.0 : 48.0
+    }
+}
+
+/// 创作工坊单拍精修微调状态（100% 纯函数、防越界防 NaN、兼容五音防跑调开关）。
+public struct CreateBeatAdjustmentDescriptor: Equatable, Sendable {
+    public let lane: XylophoneLane
+    public let beatProgressLabel: String
+    public let pitchSummaryLabel: String
+    public let canStepPrevious: Bool
+    public let canStepNext: Bool
+    public let canStepPitchDown: Bool
+    public let canStepPitchUp: Bool
+
+    public init(
+        bead: NoteBead,
+        index: Int,
+        totalCount: Int,
+        pentatonicSafe: Bool
+    ) {
+        let safeTotal = max(1, totalCount)
+        let safeIndex = max(0, min(safeTotal - 1, index))
+        let curLaneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+        let resolvedLane = XylophoneLane.lane(at: curLaneIdx)
+        let allowed = XylophoneLane.allowedIndices(pentatonicSafe: pentatonicSafe)
+        let safeAllowed = allowed.isEmpty ? Array(0..<XylophoneLane.allLanes.count) : allowed
+        let curPos = safeAllowed.firstIndex(of: curLaneIdx)
+            ?? safeAllowed.enumerated().min(by: { abs($0.element - curLaneIdx) < abs($1.element - curLaneIdx) })?.offset
+            ?? 0
+        let safeDur = bead.rawDuration.isFinite ? max(0.1, min(8.0, bead.rawDuration)) : 0.4
+
+        self.lane = resolvedLane
+        self.beatProgressLabel = "\(safeIndex + 1)/\(safeTotal)"
+        self.pitchSummaryLabel = "\(resolvedLane.digitLabel) \(resolvedLane.member.chineseName) · \(String(format: "%.1fs", safeDur))"
+        self.canStepPrevious = safeIndex > 0
+        self.canStepNext = safeIndex + 1 < safeTotal
+        self.canStepPitchDown = curPos > 0 || curLaneIdx > (safeAllowed.first ?? 0)
+        self.canStepPitchUp = (curPos + 1 < safeAllowed.count) || curLaneIdx < (safeAllowed.last ?? (XylophoneLane.allLanes.count - 1))
     }
 }
 

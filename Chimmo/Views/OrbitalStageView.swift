@@ -413,7 +413,10 @@ public struct OrbitalStageView: View {
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(enabled ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
             }
-            .frame(width: 36, height: 40)
+            .frame(
+                width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                height: StorybookAffordanceMetrics.compactToolMinHitDimension
+            )
             .contentShape(Circle())
         }
         .disabled(!enabled)
@@ -2825,7 +2828,11 @@ internal struct StageHarmonyRibbonView: View {
                     .frame(width: 24, height: 18)
                 }
                 .frame(width: 44, height: 34)
-                .contentShape(Capsule())
+                .frame(
+                    minWidth: 44,
+                    minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                )
+                .contentShape(Rectangle())
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(vm.cradleEnabled ? "关闭小牛哞伴奏" : "开启小牛哞伴奏")
@@ -2877,7 +2884,11 @@ internal struct StageHarmonyRibbonView: View {
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
                                 .frame(width: segW, height: 34)
-                                .contentShape(Capsule())
+                                .frame(
+                                    minWidth: segW,
+                                    minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                                )
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("第 \(seg.spanID + 1) 幕和弦 \(seg.romanLabel) \(seg.chord.moodTitle)")
@@ -2886,7 +2897,7 @@ internal struct StageHarmonyRibbonView: View {
                     }
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: vm.activeChordSpanID)
                 }
-                .frame(height: 34)
+                .frame(height: StorybookAffordanceMetrics.compactToolMinHitDimension)
             } else {
                 Button {
                     vm.setChordPreset(.autoMatch)
@@ -2912,7 +2923,8 @@ internal struct StageHarmonyRibbonView: View {
                                 .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.55), lineWidth: 1.5))
                         }
                     )
-                    .contentShape(Capsule())
+                    .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("开启智能和弦伴奏")

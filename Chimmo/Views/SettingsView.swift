@@ -17,7 +17,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.49.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.50.0"
     }
 
     private var appBuild: String {
@@ -52,16 +52,20 @@ public struct SettingsView: View {
                             Text(pref.label).tag(pref)
                         }
                     }
+                    .accessibilityHint("选择白天纸艺、夜间星灯或跟随系统外观")
 
                     Picker("舞台默认视图", selection: $vm.visualMode) {
                         ForEach(StageVisualMode.displayOrder) { mode in
                             Text(mode.storybookLabel).tag(mode)
                         }
                     }
+                    .accessibilityHint("选择进入应用时的主舞台画境样式")
 
                     Toggle("节拍触感反馈", isOn: $vm.musicHapticsEnabled)
+                        .accessibilityHint("点按音珠与切换拍点时触发轻量触觉")
 
                     Toggle("五音防跑调保护", isOn: $vm.pentatonicSafe)
+                        .accessibilityHint("创作与跟弹时自动避开半音碰撞")
                 }
 
                 Section("作品与导出") {
@@ -73,6 +77,7 @@ public struct SettingsView: View {
                     } label: {
                         Label("导出当前作品 (PNG / WAV / MIDI)", systemImage: "square.and.arrow.up")
                     }
+                    .accessibilityHint("打开明信片图片与音频工程导出面板")
                 }
 
                 Section("隐私与法律") {
@@ -99,6 +104,7 @@ public struct SettingsView: View {
                     } label: {
                         Label("声音角色图鉴", systemImage: "music.mic")
                     }
+                    .accessibilityHint("试听小羊咩、小牛哞与七小只音阶")
 
                     if let siteURL = URL(string: "https://mjuvdeysii.github.io/chimmo/") {
                         Link(destination: siteURL) {
@@ -283,6 +289,7 @@ public struct CharacterSoundTestView: View {
     public let onAuditionDuo: (ChimmoDuoCharacter) -> Void
     public let onAuditionMember: (ChimmoMember) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var focusedMemberDegree: Int? = nil
     @State private var auditioningDuo: ChimmoDuoCharacter? = nil
     @State private var resetTask: Task<Void, Never>? = nil
@@ -306,6 +313,7 @@ public struct CharacterSoundTestView: View {
         List {
             Section("双子主创") {
                 ForEach(ChimmoDuoCharacter.allCases) { character in
+                    let isAuditioning = auditioningDuo == character
                     Button {
                         auditioningDuo = character
                         onAuditionDuo(character)
@@ -331,6 +339,7 @@ public struct CharacterSoundTestView: View {
                                 }
                             }
                             .frame(width: 44, height: 34)
+                            .accessibilityHidden(true)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(character.chineseName)
@@ -345,16 +354,24 @@ public struct CharacterSoundTestView: View {
 
                             Image(systemName: "speaker.wave.2.fill")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(isAuditioning ? Color.accentColor : .secondary)
+                                .accessibilityHidden(true)
                         }
+                        .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: auditioningDuo)
+                    .accessibilityLabel("\(character.chineseName)，\(character.roleShort)")
+                    .accessibilityValue(isAuditioning ? "正在试听" : "")
+                    .accessibilityHint("轻点试听双子角色音色")
                 }
             }
 
             Section("调内七小只音阶家族") {
                 ForEach(ChimmoMember.allCases) { member in
+                    let isSinging = focusedMemberDegree == member.degree
+                    let memberRole = member.isTriadPillar ? "主和弦家族定锚" : (member.isTensionDegree ? "天然张力倾向音" : "色彩过渡音")
                     Button {
                         focusedMemberDegree = member.degree
                         onAuditionMember(member)
@@ -365,19 +382,20 @@ public struct CharacterSoundTestView: View {
                                 member: member,
                                 isNight: palette.isNight,
                                 isMinor: scaleMode.isMinorFlavored,
-                                isSinging: focusedMemberDegree == member.degree,
+                                isSinging: isSinging,
                                 focusedDegree: focusedMemberDegree,
                                 time: 0,
                                 listeningTilt: 0
                             )
                             .scaleEffect(0.72)
                             .frame(width: 36, height: 36)
+                            .accessibilityHidden(true)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("\(member.degree) \(member.solfege) · \(member.chineseName)")
                                     .font(.body.weight(.semibold))
                                     .foregroundStyle(.primary)
-                                Text(member.isTriadPillar ? "主和弦家族定锚" : (member.isTensionDegree ? "天然张力倾向音" : "色彩过渡音"))
+                                Text(memberRole)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -386,11 +404,17 @@ public struct CharacterSoundTestView: View {
 
                             Image(systemName: "play.fill")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(isSinging ? Color.accentColor : .secondary)
+                                .accessibilityHidden(true)
                         }
+                        .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: focusedMemberDegree)
+                    .accessibilityLabel("\(member.degree) \(member.solfege) \(member.chineseName)，\(memberRole)")
+                    .accessibilityValue(isSinging ? "正在发音" : "")
+                    .accessibilityHint("轻点试听\(member.chineseName)的音级")
                 }
             }
         }

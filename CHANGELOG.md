@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.50.0 - 2026-11-24
+- Round 43 (ADA Craft & Tactile Creation Polish):
+  - Activated pitch-stepping controls (`shiftSelectedBeadPitch(delta: -1 / +1)`) in `CreateStudioView.compactCreationBeatBar`, backed by pure engine helper `CreateBeatAdjustmentDescriptor` (pentatonic-safe bounds, digit/member/duration badge using borderless `StorybookQuietTag`, VoiceOver `accessibilityAdjustableAction`, and >= 40pt hit targets).
+  - Upgraded all remaining sub-40pt interactive hit targets across `CreateStudioView`, `OrbitalStageView`, `SoundPaletteBoxSheet`, `DreamCaptureSheet`, `MusicBoxShelfView`, and `AboutSheetView` to `>= StorybookAffordanceMetrics.compactToolMinHitDimension` (`40pt`) with explicit `.contentShape(...)` while preserving compact visual geometry.
+  - Completed `SettingsView` and `CharacterSoundTestView` VoiceOver `accessibilityLabel / accessibilityValue / accessibilityHint` coverage and `@Environment(\.accessibilityReduceMotion)` animation gating.
+  - Added `testCreativeAlchemyRound43BeatPitchAdjustmentAndCompactHitTargets` in `ChimmoTests/SpecimenIntegrityTests.swift`.
+
 ## 0.49.0 - 2026-11-24
 - Round 42 (Visual-First Alchemy Loop): Full-chain OpenMotion brand synchronization & Three-Space Showcase alignment:
   - OpenMotion Design Studio website upgraded to v10 (`f60f9ab2-f447-4d3c-a5ef-ae1c270c0f7d`) and synced to `docs/index.html` (`SHA-256: 2232fe7343ecf876c7edf01ea6f1f4adaa5d965e9f04a8ff475d0393d7d37286`), showcasing the Three-Space Showcase/Create/Settings architecture, interactive Creation starter seeds, Swan chapter navigation, and Two-Pole Affordance tag polish (no pill outlines on read-only badges).
