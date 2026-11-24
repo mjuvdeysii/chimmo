@@ -471,7 +471,6 @@
     }
     .vinyl-boutique-card.spinning .tonearm-svg { transform: rotate(20deg); }
 
-
     /* Flat Cartoon Postcard Press Bench (Round 34) */
     .postcard-bench {
       background: var(--paper);
@@ -691,6 +690,71 @@
     .sound-hill.on.warm { background: #F7882F; }
     .sound-hill.on.hot { background: #F25563; }
 
+    /* Round 36: 1-3-5 Flat Cartoon AppIcon Triptych & Story Moment Showcase */
+    .icon-story-bench {
+      display: grid;
+      grid-template-columns: 1.06fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .icon-triptych-card, .story-moments-card {
+      background: var(--paper);
+      border: 2.2px solid var(--outline);
+      border-radius: 22px;
+      padding: 13px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .icon-triptych-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .appicon-tile {
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+      background: var(--shelf);
+      border: 1.8px solid var(--outline);
+      border-radius: 16px;
+      padding: 9px 6px 7px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .appicon-squircle {
+      width: 68px;
+      height: 68px;
+      border-radius: 17px;
+      border: 2px solid var(--outline);
+      overflow: hidden;
+      box-shadow: 0 3px 0 var(--shadow-hard);
+    }
+    .story-whisper-box {
+      border-radius: 14px;
+      background: var(--mint);
+      border: 2px solid var(--outline);
+      padding: 10px 12px;
+      display: grid;
+      gap: 4px;
+    }
+    .story-whisper-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .story-whisper-text {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.48;
+    }
+
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -778,7 +842,7 @@
     @media (max-width: 740px) {
       .hero-head { padding-right: 0; }
       .hero-sun-badge { width: 48px; height: 48px; top: 10px; right: 10px; opacity: 0.85; }
-      .duo-stage, .workshop-bench, .postcard-bench, .soundbox-bench, .cards-grid { grid-template-columns: 1fr; }
+      .duo-stage, .workshop-bench, .postcard-bench, .soundbox-bench, .icon-story-bench, .cards-grid { grid-template-columns: 1fr; }
       .choir-grid { gap: 2px; }
       .figure-name { font-size: 10px; }
       .lever-row { grid-template-columns: 1fr; }
@@ -790,13 +854,15 @@
     <header class="topbar">
       <div class="brand-mark">
         <div class="brand-seal" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9" stroke="#231B15" stroke-width="2.2" fill="#FFFDF7"/>
-            <circle cx="12" cy="12" r="4" fill="#0E766E"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <circle cx="6.2" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.5"/>
+            <circle cx="17.8" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.5"/>
+            <rect x="7.8" y="6.2" width="8.4" height="12.2" rx="4.2" fill="#F25563" stroke="#231B15" stroke-width="1.6"/>
+            <circle cx="12" cy="14.2" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
           </svg>
         </div>
         <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.41.0</span>
+        <span class="brand-ver">v0.43.0</span>
       </div>
 
       <div class="controls">
@@ -1003,7 +1069,6 @@
       </button>
     </section>
 
-
     <section class="postcard-bench" aria-label="扁平卡通黑胶星轨明信片交互印制台">
       <div class="postcard-frame" id="postcardPreviewFrame">
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:900">
@@ -1131,6 +1196,101 @@
       </div>
     </section>
 
+    <section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
+      <div class="icon-triptych-card">
+        <div class="bench-label">
+          <span>全新 1-3-5 三音主和弦应用图标（v0.43.0）</span>
+          <span class="bench-sub">零拟物三态</span>
+        </div>
+        <div class="icon-triptych-row">
+          <div class="appicon-tile">
+            <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
+              <rect width="100" height="100" fill="#F4EDE0"/>
+              <circle cx="77" cy="18" r="6" fill="#FFE49E" stroke="#231B15" stroke-width="2"/>
+              <path d="M0 74 Q26 67 52 73 T100 71 L100 100 L0 100 Z" fill="#CBE8D9"/>
+              <path d="M0 80 Q32 84 56 78 T100 80 L100 100 L0 100 Z" fill="#B2DCC8" stroke="#231B15" stroke-width="2"/>
+              <circle cx="24" cy="60" r="14" fill="#E64980" stroke="#231B15" stroke-width="2.2"/>
+              <circle cx="24" cy="48" r="2.5" fill="#FFB94E" stroke="#231B15" stroke-width="1.2"/>
+              <circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#231B15" stroke-width="2"/>
+              <ellipse cx="75" cy="60" rx="12" ry="15" fill="#228BE6" stroke="#231B15" stroke-width="2.2"/>
+              <rect x="41" y="29" width="6" height="14" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2"/>
+              <circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.6"/>
+              <rect x="53" y="30" width="6" height="13" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2"/>
+              <circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.6"/>
+              <rect x="33" y="42" width="34" height="35" rx="16" fill="#F25563" stroke="#231B15" stroke-width="2.4"/>
+              <circle cx="44" cy="55" r="2.2" fill="#231B15"/>
+              <circle cx="56" cy="55" r="2.2" fill="#231B15"/>
+              <circle cx="47" cy="67" r="5" fill="#FFFDF7" stroke="#231B15" stroke-width="1.6"/>
+              <circle cx="47" cy="67" r="2.3" fill="#FFB94E"/>
+            </svg>
+            <span>日光纸感</span>
+          </div>
+
+          <div class="appicon-tile">
+            <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
+              <rect width="100" height="100" fill="#131B3D"/>
+              <circle cx="50" cy="58" r="31" fill="#1C2858" stroke="#FFB94E" stroke-opacity="0.35" stroke-width="1.2"/>
+              <path d="M79 12 C71 14 71 24 79 26 C75 23 75 15 79 12 Z" fill="#FFB94E"/>
+              <path d="M0 80 Q32 84 56 78 T100 80 L100 100 L0 100 Z" fill="#233570" stroke="#FFB94E" stroke-width="2"/>
+              <circle cx="24" cy="60" r="14" fill="#F25A90" stroke="#070B1A" stroke-width="2.2"/>
+              <circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#070B1A" stroke-width="2"/>
+              <ellipse cx="75" cy="60" rx="12" ry="15" fill="#3899EE" stroke="#070B1A" stroke-width="2.2"/>
+              <rect x="41" y="29" width="6" height="14" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2"/>
+              <circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.6"/>
+              <rect x="53" y="30" width="6" height="13" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2"/>
+              <circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.6"/>
+              <rect x="33" y="42" width="34" height="35" rx="16" fill="#F55D6B" stroke="#070B1A" stroke-width="2.4"/>
+              <circle cx="44" cy="55" r="2.2" fill="#090C1C"/>
+              <circle cx="56" cy="55" r="2.2" fill="#090C1C"/>
+              <circle cx="47" cy="67" r="5" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.6"/>
+              <circle cx="47" cy="67" r="2.4" fill="#FFB94E"/>
+            </svg>
+            <span>星夜守望</span>
+          </div>
+
+          <div class="appicon-tile">
+            <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
+              <rect width="100" height="100" fill="#0C0C0E"/>
+              <path d="M79 12 C71 14 71 24 79 26 C75 23 75 15 79 12 Z" fill="#D4D4DC"/>
+              <path d="M0 80 Q32 84 56 78 T100 80 L100 100 L0 100 Z" fill="#3E3E46" stroke="#9E9EA8" stroke-width="1.8"/>
+              <circle cx="24" cy="60" r="14" fill="#8E8E98" stroke="#0C0C0E" stroke-width="2.2"/>
+              <circle cx="85" cy="54" r="8" fill="#64646E" stroke="#0C0C0E" stroke-width="2"/>
+              <ellipse cx="75" cy="60" rx="12" ry="15" fill="#AEAEB8" stroke="#0C0C0E" stroke-width="2.2"/>
+              <rect x="41" y="29" width="6" height="14" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2"/>
+              <circle cx="44" cy="27" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.6"/>
+              <rect x="53" y="30" width="6" height="13" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2"/>
+              <circle cx="56" cy="28" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.6"/>
+              <rect x="33" y="42" width="34" height="35" rx="16" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.4"/>
+              <circle cx="44" cy="55" r="2.2" fill="#0C0C0E"/>
+              <circle cx="56" cy="55" r="2.2" fill="#0C0C0E"/>
+              <circle cx="47" cy="67" r="5" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.6"/>
+              <circle cx="47" cy="67" r="2.3" fill="#3A3A42"/>
+            </svg>
+            <span>单色着染</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-moments-card">
+        <div class="bench-label">
+          <span>绘本分幕故事角标 · 《天鹅》三幕</span>
+          <span class="bench-sub" id="storyMomentBadge">陶诺领唱</span>
+        </div>
+        <div class="sb-controls-row" id="storyMomentButtons" role="group" aria-label="天鹅故事分幕">
+          <button class="sb-chip active" type="button" data-story="0">1 · 天鹅入水</button>
+          <button class="sb-chip" type="button" data-story="1">2 · 扬颈远望</button>
+          <button class="sb-chip" type="button" data-story="2">3 · 湖面归宁</button>
+        </div>
+        <div class="story-whisper-box">
+          <div class="story-whisper-head">
+            <span id="storyWhisperTitle">第一幕 · 天鹅入水</span>
+            <span id="storyWhisperSolfege" style="color:var(--accent)">Do 1↑ → Ti 7 → Mi 3</span>
+          </div>
+          <p class="story-whisper-text" id="storyWhisperCaption">从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。</p>
+        </div>
+      </div>
+    </section>
+
     <section class="cards-grid">
       <article class="feature-card">
         <div class="feature-chip" aria-hidden="true">
@@ -1139,8 +1299,8 @@
             <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
           </svg>
         </div>
-        <h2>零拟物扁平卡通与绘本全幅舞台</h2>
-        <p>全面告别木纹与金属渐变拟物，用暖墨描边、纸艺云朵山坡与紧凑构图填满画幅，打造真正会唱的交互儿童绘本。</p>
+        <h2>零拟物 1-3-5 图标与绘本舞台</h2>
+        <p>端内与 AppIcon 全员统一暖墨描边、扁平糖果色块与硬朗投影，新增分幕故事角标让零乐理用户首触 30 秒即懂旋律呼吸。</p>
       </article>
 
       <article class="feature-card">
@@ -1521,6 +1681,47 @@
       });
 
       renderOscilloscope();
+
+      const storyMoments = [
+        {
+          badge: "陶诺领唱",
+          title: "第一幕 · 天鹅入水",
+          solfege: "Do 1↑ → Ti 7 → Mi 3",
+          caption: "从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。",
+          notes: [523.25, 493.88, 329.63]
+        },
+        {
+          badge: "壳咯远望",
+          title: "第二幕 · 扬颈远望",
+          solfege: "Fa 4 → Sol 5 → La 6 → Do 1↑",
+          caption: "4→5→6 像羽翼蓄力，一路攀回高音 1↑，展现清晰上扬的线条弧度。",
+          notes: [349.23, 392.00, 440.00, 523.25]
+        },
+        {
+          badge: "陶诺归家",
+          title: "第三幕 · 湖面归宁",
+          solfege: "Fa 4 → Mi 3 → Re 2 → Do 1",
+          caption: "4→3→2→1 级进轻落回陶诺，整片湖水归于温柔的平静。",
+          notes: [349.23, 329.63, 293.66, 261.63]
+        }
+      ];
+      const storyBadge = document.getElementById("storyMomentBadge");
+      const storyTitle = document.getElementById("storyWhisperTitle");
+      const storySolfege = document.getElementById("storyWhisperSolfege");
+      const storyCaption = document.getElementById("storyWhisperCaption");
+
+      document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.story) || 0;
+          const m = storyMoments[idx] || storyMoments[0];
+          document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+          storyBadge.textContent = m.badge;
+          storyTitle.textContent = m.title;
+          storySolfege.textContent = m.solfege;
+          storyCaption.textContent = m.caption;
+          m.notes.forEach((hz, i) => playTone(hz, 0.56, i * 0.16, 0.14, "triangle"));
+        });
+      });
 
       const postcardSvg = document.getElementById("postcardArtSvg");
       const postcardPill = document.getElementById("postcardModePill");

@@ -24,6 +24,7 @@ public struct OrbitalStageView: View {
     @State private var duoGreetingTask: Task<Void, Never>? = nil
     @State private var stageMiePulse: Bool = false
     @State private var stageMieTask: Task<Void, Never>? = nil
+    @State private var showStoryWhisper: Bool = false
 
     // 手势交互态（仅局部瞬态，绝不触发重排版死循环）
     @State private var discInteractionMode: DiscDragMode = .none
@@ -153,6 +154,7 @@ public struct OrbitalStageView: View {
             }
             .onChange(of: vm.document.id) { _, _ in
                 manualRiverScrollX = 0
+                showStoryWhisper = false
                 coastTask?.cancel()
                 coastTask = nil
                 rippleWakeTask?.cancel()
@@ -188,6 +190,7 @@ public struct OrbitalStageView: View {
                 coastTask?.cancel()
                 coastTask = nil
                 rippleWakeActive = false
+                showStoryWhisper = false
             }
             .onAppear {
                 if vm.requestOpenDreamSheet {
@@ -250,8 +253,8 @@ public struct OrbitalStageView: View {
                 .accessibilityHint("轻点试听小羊与小牛和音")
 
                 Rectangle()
-                    .fill(palette.brassHairline.opacity(0.45))
-                    .frame(width: 1, height: 18)
+                    .fill(palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.78))
+                    .frame(width: 1.5, height: 18)
                     .accessibilityHidden(true)
 
                 Button {
@@ -261,13 +264,8 @@ public struct OrbitalStageView: View {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(skyColor)
-                            .frame(width: 9, height: 9)
-                            .overlay(Circle().stroke(palette.glazeHighlight, lineWidth: 0.9))
-                            .overlay(
-                                Circle()
-                                    .strokeBorder(palette.brassHairline.opacity(0.68), lineWidth: 0.9)
-                                    .padding(-2.2)
-                            )
+                            .frame(width: 9.5, height: 9.5)
+                            .overlay(Circle().stroke(palette.cartoonOutline, lineWidth: 1.3))
 
                         Text(vm.document.title)
                             .font(.system(.subheadline, design: .rounded).weight(.heavy))
@@ -688,9 +686,61 @@ public struct OrbitalStageView: View {
             reduceMotion: reduceMotion
         )
 
-        return VStack {
+        let storyChip = (vm.selectedBeadID == nil)
+            ? StorybookGuidedMomentKinematics.chipModel(moment: vm.activeGuidedMoment, document: vm.document)
+            : nil
+
+        return VStack(spacing: 6) {
             Spacer()
-            HStack {
+
+            if showStoryWhisper, let chip = storyChip {
+                HStack(spacing: 8) {
+                    Text(chip.caption)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Button {
+                        vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: true)
+                        vm.endScrubbing()
+                        wakeRippleTimeline()
+                        showStoryWhisper = false
+                    } label: {
+                        Text("试听此段")
+                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule()
+                                    .fill(palette.storybookButter)
+                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                            )
+                            .foregroundStyle(palette.primaryInk)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("跳转试听 \(chip.badge)")
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            .fill(palette.cartoonShadow)
+                            .offset(x: 0, y: 2.5)
+                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            .fill(palette.cardSurface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                    .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                            )
+                    }
+                )
+                .padding(.horizontal, 12)
+                .transition(.opacity)
+            }
+
+            HStack(alignment: .bottom, spacing: 6) {
                 cornerPerchTile(
                     accent: skyColor,
                     meadowFill: palette.storybookMint,
@@ -722,7 +772,13 @@ public struct OrbitalStageView: View {
                     }
                 }
 
-                Spacer()
+                Spacer(minLength: 4)
+
+                if let chip = storyChip {
+                    storybookStoryChipButton(chip: chip)
+                }
+
+                Spacer(minLength: 4)
 
                 cornerPerchTile(
                     accent: vm.cradleEnabled ? palette.bassRibbon : palette.nightLampGold,
@@ -787,7 +843,11 @@ public struct OrbitalStageView: View {
                 VStack(spacing: 0) {
                     Circle()
                         .fill(accent.opacity(state.brassPinOpacity))
-                        .frame(width: 4.5, height: 4.5)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(palette.cartoonOutline.opacity(0.72), lineWidth: 0.9)
+                        )
+                        .frame(width: 5.0, height: 5.0)
                         .padding(.top, 3.5)
 
                     Spacer(minLength: 0)
@@ -809,6 +869,66 @@ public struct OrbitalStageView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(accessibilityHint)
+    }
+
+    private func storybookStoryChipButton(
+        chip: StorybookGuidedMomentKinematics.MomentChipModel
+    ) -> some View {
+        let memberAccent = palette.isNight ? chip.spotlightMember.nightGlowColor : chip.spotlightMember.bodyColor
+        return Button {
+            if reduceMotion {
+                showStoryWhisper.toggle()
+            } else {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    showStoryWhisper.toggle()
+                }
+            }
+            vm.auditionChimmoMember(chip.spotlightMember)
+        } label: {
+            HStack(spacing: 5) {
+                ChimmoCartoonKeyBuddyView(
+                    member: chip.spotlightMember,
+                    outlineColor: palette.cartoonOutline,
+                    isSinging: vm.isPlaying,
+                    isMinor: vm.document.scaleMode.isMinorFlavored
+                )
+                .frame(width: 17, height: 17)
+                .padding(2)
+                .background(
+                    Circle()
+                        .fill(memberAccent.opacity(palette.isNight ? 0.34 : 0.24))
+                )
+
+                Text(chip.badge)
+                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    .foregroundStyle(palette.primaryInk)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
+                Image(systemName: showStoryWhisper ? "chevron.down" : "book.pages.fill")
+                    .font(.system(size: 9.5, weight: .bold))
+                    .foregroundStyle(palette.secondaryInk)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                ZStack {
+                    Capsule()
+                        .fill(palette.cartoonShadow)
+                        .offset(x: 0, y: 2)
+                    Capsule()
+                        .fill(showStoryWhisper ? palette.cardSurface : palette.storybookButter)
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.80 : 0.90), lineWidth: 1.6)
+                        )
+                }
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("绘本分幕：\(chip.badge)")
+        .accessibilityValue(chip.caption)
+        .accessibilityHint("轻点展开或收起编曲手账")
     }
 
     private var stageInteractiveCanvas: some View {
@@ -1255,17 +1375,11 @@ public struct OrbitalStageView: View {
             }
 
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col.opacity(isFollowPassed ? 0.45 : 1.0)))
-
-            // 玻璃陶瓷高光点
-            let specR = orbR * 0.38
-            let specRect = CGRect(
-                x: item.pt.x - orbR * 0.48,
-                y: item.pt.y - orbR * 0.56,
-                width: specR * 1.4,
-                height: specR * 0.9
+            ctx.stroke(
+                Path(ellipseIn: orbRect),
+                with: .color(palette.cartoonOutline.opacity(isFollowPassed ? 0.35 : (palette.isNight ? 0.72 : 0.88))),
+                lineWidth: 1.8
             )
-            ctx.fill(Path(ellipseIn: specRect), with: .color(.white.opacity(isFollowPassed ? 0.16 : 0.34)))
-            ctx.stroke(Path(ellipseIn: orbRect), with: .color(.white.opacity(0.58)), lineWidth: 1.0)
 
             // 色盲友好八音阶几何矢量图腾
             let glyphSize = orbR * 1.15
@@ -1499,10 +1613,10 @@ public struct OrbitalStageView: View {
             ctx.fill(playTri, with: .color(palette.nightLampGold.opacity(0.32)))
         }
 
-        // 中心黄铜轴心点
-        let pinRect = CGRect(x: center.x - 4.2, y: center.y - 4.2, width: 8.4, height: 8.4)
+        // 中心卡通暖金轴心点
+        let pinRect = CGRect(x: center.x - 4.5, y: center.y - 4.5, width: 9.0, height: 9.0)
         ctx.fill(Path(ellipseIn: pinRect), with: .color(palette.nightLampGold))
-        ctx.stroke(Path(ellipseIn: pinRect), with: .color(.white.opacity(0.65)), lineWidth: 0.8)
+        ctx.stroke(Path(ellipseIn: pinRect), with: .color(palette.cartoonOutline.opacity(0.88)), lineWidth: 1.4)
     }
 
     private func drawRipplesOnDisc(ctx: inout GraphicsContext, metrics: OrbitalMetrics, discRot: Double, needleAngle: Double, mediaNow: Double) {
@@ -1574,7 +1688,7 @@ public struct OrbitalStageView: View {
             style: StrokeStyle(lineWidth: isPlaying ? 3.0 : 2.0, lineCap: .round)
         )
 
-        // 右上方斜插而下的双层拉丝黄铜唱臂
+        // 右上方斜插而下的扁平卡通暖墨描边唱臂
         let pivot = CGPoint(
             x: metrics.center.x + metrics.platterRadius * 0.78,
             y: max(24.0, metrics.center.y - metrics.platterRadius * 1.24)
@@ -1586,24 +1700,25 @@ public struct OrbitalStageView: View {
         var arm = Path()
         arm.move(to: pivot)
         arm.addLine(to: stylusHead)
+        let inkOutline = palette.cartoonOutline.opacity(palette.isNight ? 0.85 : 0.90)
         ctx.stroke(
             arm,
-            with: .color(Color(hex: 0x8B6118).opacity(0.55)),
-            style: StrokeStyle(lineWidth: 5.2, lineCap: .round)
+            with: .color(inkOutline),
+            style: StrokeStyle(lineWidth: 5.4, lineCap: .round)
         )
         ctx.stroke(
             arm,
-            with: .color(palette.nightLampGold.opacity(0.98)),
-            style: StrokeStyle(lineWidth: 2.3, lineCap: .round)
+            with: .color(palette.nightLampGold),
+            style: StrokeStyle(lineWidth: 2.6, lineCap: .round)
         )
 
         let pivotCap = CGRect(x: pivot.x - 6.0, y: pivot.y - 6.0, width: 12, height: 12)
-        ctx.fill(Path(ellipseIn: pivotCap), with: .color(palette.nightLampGold.opacity(0.95)))
-        ctx.stroke(Path(ellipseIn: pivotCap), with: .color(.white.opacity(0.65)), lineWidth: 1.0)
+        ctx.fill(Path(ellipseIn: pivotCap), with: .color(palette.storybookButter))
+        ctx.stroke(Path(ellipseIn: pivotCap), with: .color(inkOutline), lineWidth: 1.8)
 
-        let headDot = CGRect(x: stylusHead.x - 4.8, y: stylusHead.y - 4.8, width: 9.6, height: 9.6)
-        ctx.fill(Path(ellipseIn: headDot), with: .color(palette.nightLampGold))
-        ctx.stroke(Path(ellipseIn: headDot), with: .color(.white.opacity(0.85)), lineWidth: 1.0)
+        let headDot = CGRect(x: stylusHead.x - 5.0, y: stylusHead.y - 5.0, width: 10.0, height: 10.0)
+        ctx.fill(Path(ellipseIn: headDot), with: .color(palette.homeAnchor))
+        ctx.stroke(Path(ellipseIn: headDot), with: .color(inkOutline), lineWidth: 1.8)
     }
 
     // MARK: - 2B. Flowing Mountain-River Canvas Rendering

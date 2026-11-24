@@ -5,21 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>开源许可 · 咩哞 (Chimmo)</title>
   <style>
-    :root { --bg: #F7F3EA; --card: #EFE8DA; --ink: #1C1D19; --sub: #5E5F66; --accent: #0B7D74; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #1B2245; --card: #222B56; --ink: #F4EBDD; --sub: #AEB4CC; --accent: #4FD8CB; }
+    :root {
+      --bg: #F4EDE0;
+      --paper: #FFFDF7;
+      --shelf: #EFE4CF;
+      --butter: #FFE49E;
+      --mint: #D8F1E7;
+      --outline: #231B15;
+      --ink: #231B15;
+      --sub: #5E5245;
+      --accent: #0E766E;
+      --shadow-hard: rgba(35, 27, 21, 0.22);
     }
-    body { margin: 0; padding: 36px 20px; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; line-height: 1.7; }
-    .wrap { max-width: 720px; margin: 0 auto; }
-    .card { background: var(--card); border-radius: 18px; padding: 22px 24px; margin-bottom: 18px; }
-    pre { white-space: pre-wrap; font-size: 13px; color: var(--sub); }
-    a { color: var(--accent); text-decoration: none; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0E142C;
+        --paper: #162048;
+        --shelf: #1D2856;
+        --butter: #2B2952;
+        --mint: #162C46;
+        --outline: #FFB94E;
+        --ink: #F5ECDD;
+        --sub: #B3BEDC;
+        --accent: #53DFCF;
+        --shadow-hard: rgba(4, 7, 20, 0.78);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 16px 40px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", sans-serif;
+      line-height: 1.72;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+    .hero-banner {
+      background: var(--paper);
+      border: 2.5px solid var(--outline);
+      border-radius: 24px;
+      padding: 18px 22px;
+      box-shadow: 0 5px 0 var(--shadow-hard);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px 4px 6px;
+      border-radius: 999px;
+      background: var(--butter);
+      color: var(--ink);
+      border: 2px solid var(--outline);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    h1 { margin: 0; font-size: 24px; font-weight: 900; }
+    .meta { margin: 4px 0 0; color: var(--sub); font-size: 13px; font-weight: 700; }
+    .card {
+      background: var(--paper);
+      border: 2.2px solid var(--outline);
+      border-radius: 20px;
+      padding: 18px 22px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
+    }
+    h2 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
+    p { margin: 0 0 12px; font-size: 15px; font-weight: 500; }
+    pre {
+      margin: 0;
+      padding: 14px;
+      background: var(--shelf);
+      border: 2px solid var(--outline);
+      border-radius: 14px;
+      white-space: pre-wrap;
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .back-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--shelf);
+      border: 2.2px solid var(--outline);
+      border-radius: 18px;
+      padding: 12px 18px;
+      box-shadow: 0 3px 0 var(--shadow-hard);
+    }
+    a.home-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--butter);
+      color: var(--ink);
+      border: 2px solid var(--outline);
+      box-shadow: 0 2px 0 var(--shadow-hard);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
+    a { color: var(--accent); text-decoration: none; font-weight: 800; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>开源许可与致谢</h1>
-    <div class="card">
+  <main class="wrap">
+    <header class="hero-banner">
+      <div>
+        <span class="brand-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
+            <circle cx="17.5" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.6"/>
+            <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
+            <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
+          </svg>
+          <span>OPEN SOURCE ACKNOWLEDGMENTS</span>
+        </span>
+        <h1>开源许可与致谢</h1>
+        <p class="meta">本机离线声学引擎与开源社区致谢说明</p>
+      </div>
+    </header>
+
+    <section class="card">
       <h2>SwiftF0 (MIT License)</h2>
       <p>本项目中的动态规划音符切分算法（<code>SwiftF0NoteSegmenter.swift</code>）参考并移植自 <a href="https://github.com/lars76/swift-f0">lars76/swift-f0</a>。</p>
       <pre>MIT License
@@ -35,8 +153,16 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.</pre>
-    </div>
-    <p><a href="index.html">← 返回咩哞主页</a></p>
-  </div>
+    </section>
+
+    <footer class="back-bar">
+      <a class="home-btn" href="index.html">返回咩哞主页</a>
+      <nav class="nav-links" aria-label="法律与开源页面">
+        <a href="privacy.html">隐私政策</a>
+        <a href="terms.html">使用条款</a>
+        <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
+      </nav>
+    </footer>
+  </main>
 </body>
 </html>

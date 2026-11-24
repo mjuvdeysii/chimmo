@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.43.0 - 2026-11-24
+- **1-3-5 扁平卡通应用图标 × 主舞台绘本分幕角标 × 全站零拟物首触闭环（Kids' Book First-30-Seconds Edition v0.43.0）**：
+  - **全新 `1-3-5` 三音主和弦应用图标套件（`AppIcon-Light` / `AppIcon-Dark` / `AppIcon-Tinted` + `Tools/ip/render_flat_app_icons.py`）**：彻底淘汰早年 3D 拟物圆盘图标，严格遵循 IP 正典《1-3-5 主三和弦三人组》（居中前立的珊瑚赤陶铃「1 陶诺」与胸口金珠 + 左后探出的「3 拍咯」+ 右后探出的「5 壳咯」螺旋贝耳）重绘为 1024×1024 零渐变扁平卡通童书图标三态（含 29pt 高辨识粗暖墨描边、星月夜守望态及高对比度单色着染态）；
+  - **主舞台绘本分幕轻故事角标 & 纯平涂唱盘（`StorybookGuidedMomentKinematics` & `OrbitalStageView`）**：盘活 `vm.activeGuidedMoment` 实时分幕数据，在小羊咩与小牛哞双子底座之间的底部安全区嵌入紧凑扁平贴纸 `storybookStoryChipButton`，展示当前曲目分幕名与领唱小偶，轻点即响小偶声音并展开单行编曲手账气泡与「试听此段」快捷跳转；同步清除主舞台音珠 3D 玻璃反光椭圆、金属唱臂描边与顶栏 `brassHairline` 细线，全面统一至清晰暖墨描边扁平卡通画风；
+  - **OpenMotion Design Studio 互动绘本官网 `v8` 与三份法务绘本页全面对齐（`docs/index.html`、`privacy.html`、`licenses.html`、`terms.html`）**：通过 `openmotion-design` 将官网升级至 `v8`（`v0.43.0` 徽章、1-3-5 新图标三态与《天鹅》三幕可听角标），导出整页 PNG 验收后同步仓库；将 `privacy.html`、`licenses.html` 与 `terms.html` 全面改版为统一的暖窑宣纸 `#F4EDE0` / 深夜靛蓝 `#0E142C` 扁平卡通绘本卡风格并补充 PNG 明信片/WAV/MIDI 导出说明；
+  - **单测与静态校验**：新增 `testCreativeAlchemyRound36AppIconCanonsAndStorybookGuidedMoments`，通过无模拟器 `xcodebuild build-for-testing`（0 error、0 warning）、零渐变零模糊阴影及全局零 Emoji 门禁。
+
 ## 0.42.0 - 2026-11-24
 - **零拟物零渐变最终收口 × 星夜绘本盲操台 × OpenMotion 短片七小只 Solo v12（Zero-Gradient Flat Cartoon Kids' Book Edition v0.42.0）**：
   - **夜灯绘本舞台（`NightLampTactileSheet` & `StorybookNightLampInclusivityKinematics`）**：全面废除夜灯画布背景、闲置提示条与触控光斑中的全部 `LinearGradient` / `RadialGradient`，重构为深靛蓝 `#0B112B` 星月夜丘童书舞台；修复盲操与音珠试听冷启动静音隐患，在 `previewTactileLane(_:)` 与 `previewCapturedBead(_:index:)` 中补全 `vm.synth.ensureRunning()`，新增无障碍撤销转子操作 `.accessibilityAction(named: "撤销上一音")` 与实时声名状态朗读 `accessibilityCanvasValue`；同步兼容系统「减弱动态效果」分档直控圈径，并保留实时悬停音位对应的 `ChimmoCartoonKeyBuddyView` 陪唱小偶；

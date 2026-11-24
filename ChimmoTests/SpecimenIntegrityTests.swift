@@ -2580,4 +2580,56 @@ final class SpecimenIntegrityTests: XCTestCase {
         let sheet = NightLampTactileSheet(vm: vm)
         XCTAssertNotNil(sheet)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound36AppIconCanonsAndStorybookGuidedMoments() {
+        // 1. 1-3-5 主三和弦三人组顺序与新版 AppIcon IP 正典完全对齐（陶诺-拍咯-壳咯）
+        let iconTriad = ChimmoMember.allCases.filter(\.isTriadPillar)
+        XCTAssertEqual(iconTriad, [.taono, .plokko, .corllo])
+
+        // 2. 空曲谱、空分幕与空白徽章标题均安全返回 nil，避免空白舞台误占空间
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        XCTAssertNil(StorybookGuidedMomentKinematics.chipModel(moment: nil, document: swan))
+
+        let emptyDoc = MelodyDocument(
+            title: "空白测试",
+            subtitle: "",
+            rootMIDI: 60,
+            scaleMode: .brightMajor,
+            harmonyProfile: swan.harmonyProfile,
+            grooveStrength: 0.0,
+            notes: []
+        )
+        XCTAssertNil(StorybookGuidedMomentKinematics.chipModel(moment: swan.guidedMoments?.first, document: emptyDoc))
+
+        let blankMoment = GuidedStoryMoment(id: 99, timeFraction: 0.5, badge: "   \n ", caption: "无字忽略")
+        XCTAssertNil(StorybookGuidedMomentKinematics.chipModel(moment: blankMoment, document: swan))
+
+        // 3. 越界与 NaN timeFraction 防御以及《天鹅》分幕角标映射
+        let nanMoment = GuidedStoryMoment(id: 100, timeFraction: .nan, badge: "天鹅浮水", caption: "测试异常值保护")
+        let nanChip = StorybookGuidedMomentKinematics.chipModel(moment: nanMoment, document: swan)
+        XCTAssertEqual(nanChip?.progressFraction ?? -1, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(nanChip?.targetOnsetSeconds ?? -1, 0.0, accuracy: 1e-6)
+
+        let overMoment = GuidedStoryMoment(id: 101, timeFraction: 2.5, badge: "终点落宁", caption: "上限钳位保护")
+        let overChip = StorybookGuidedMomentKinematics.chipModel(moment: overMoment, document: swan)
+        XCTAssertEqual(overChip?.progressFraction ?? -1, 1.0, accuracy: 1e-6)
+        XCTAssertEqual(overChip?.targetOnsetSeconds ?? -1, swan.totalDuration, accuracy: 1e-6)
+
+        guard let openingMoment = swan.guidedMoments?.first,
+              let chip = StorybookGuidedMomentKinematics.chipModel(moment: openingMoment, document: swan) else {
+            XCTFail("天鹅标本必须生成有效的绘本分幕角标模型")
+            return
+        }
+        XCTAssertFalse(chip.badge.isEmpty)
+        XCTAssertFalse(chip.caption.isEmpty)
+        XCTAssertTrue((0.0...1.0).contains(chip.progressFraction))
+        XCTAssertGreaterThanOrEqual(chip.targetOnsetSeconds, 0.0)
+
+        // 4. 点按分幕角标跳转试听保持零例行 Toast
+        let vm = StudioViewModel()
+        vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: false)
+        vm.endScrubbing()
+        XCTAssertNil(vm.statusToast)
+    }
 }

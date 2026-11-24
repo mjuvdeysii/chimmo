@@ -2165,5 +2165,57 @@ public enum StorybookNightLampInclusivityKinematics {
     }
 }
 
+/// 主舞台「绘本分幕角标」纯值运动学：将当前编曲故事高光时刻映射为紧凑不挡舞台的绘本角标与领唱小偶。
+public enum StorybookGuidedMomentKinematics {
+    public struct MomentChipModel: Equatable, Sendable {
+        public let badge: String
+        public let caption: String
+        public let progressFraction: Double
+        public let spotlightMember: ChimmoMember
+        public let targetOnsetSeconds: Double
+
+        public init(
+            badge: String,
+            caption: String,
+            progressFraction: Double,
+            spotlightMember: ChimmoMember,
+            targetOnsetSeconds: Double
+        ) {
+            self.badge = badge
+            self.caption = caption
+            self.progressFraction = progressFraction
+            self.spotlightMember = spotlightMember
+            self.targetOnsetSeconds = targetOnsetSeconds
+        }
+    }
+
+    public static func chipModel(
+        moment: GuidedStoryMoment?,
+        document: MelodyDocument
+    ) -> MomentChipModel? {
+        guard let moment, !document.notes.isEmpty else { return nil }
+        let safeBadge = moment.badge.trimmingCharacters(in: .whitespacesAndNewlines)
+        let safeCaption = moment.caption.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !safeBadge.isEmpty else { return nil }
+        let safeFraction = moment.timeFraction.isFinite ? max(0.0, min(1.0, moment.timeFraction)) : 0.0
+        let total = max(0.0, document.totalDuration)
+        let targetOnset = total * safeFraction
+
+        let nearestBead = document.notes.min { lhs, rhs in
+            abs(lhs.rawOnset - targetOnset) < abs(rhs.rawOnset - targetOnset)
+        }
+        let heroMember = nearestBead?.member ?? StorybookPostcardAndShelfKinematics.heroMember(for: document)
+
+        return MomentChipModel(
+            badge: safeBadge,
+            caption: safeCaption,
+            progressFraction: safeFraction,
+            spotlightMember: heroMember,
+            targetOnsetSeconds: targetOnset
+        )
+    }
+}
+
+
 
 
