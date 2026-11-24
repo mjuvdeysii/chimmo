@@ -396,7 +396,7 @@ public struct DreamCaptureSheet: View {
                                         .fill(palette.cardSurface)
                                         .frame(width: 32, height: 32)
                                         .shadow(
-                                            color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                            color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.22),
                                             radius: 3,
                                             y: 1.5
                                         )
@@ -424,7 +424,7 @@ public struct DreamCaptureSheet: View {
                                     .fill(palette.cardSurface)
                                     .frame(width: 32, height: 32)
                                     .shadow(
-                                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                        color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.22),
                                         radius: 3,
                                         y: 1.5
                                     )
@@ -464,7 +464,7 @@ public struct DreamCaptureSheet: View {
                 RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
                     .fill(palette.cardSurface)
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                        color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.22),
                         radius: 6,
                         y: 3
                     )
@@ -635,7 +635,7 @@ public struct DreamCaptureSheet: View {
                                 .fill(palette.cardSurface)
                                 .frame(width: 32, height: 32)
                                 .shadow(
-                                    color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                    color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.22),
                                     radius: 3,
                                     y: 1.5
                                 )
@@ -964,26 +964,27 @@ public struct DreamCaptureSheet: View {
                     stopActiveCaptureSessions()
                     showNightLampTheater = true
                 } label: {
+                    let lampPalette = ChimmoPalette(isNight: true)
                     VStack(spacing: 8) {
                         ChimmoCraftBadge(
                             .nightLampHalo,
-                            accent: Color(hex: 0xFFB547),
-                            surface: Color(hex: 0x19213F),
+                            accent: lampPalette.nightLampGold,
+                            surface: lampPalette.cardSurface,
                             size: 38
                         )
                         Text("闭眼滑音")
                             .font(.system(.caption, design: .rounded).weight(.heavy))
-                            .foregroundStyle(Color(hex: 0xF2E2C4))
+                            .foregroundStyle(lampPalette.primaryInk)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color(hex: 0x0E1430))
-                            .shadow(color: Color.black.opacity(0.32), radius: 5, y: 2.5)
+                            .fill(lampPalette.paper)
+                            .shadow(color: lampPalette.elevationShadow(dayOpacity: 0.32, nightOpacity: 0.32), radius: 5, y: 2.5)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .strokeBorder(Color(hex: 0xFFB547).opacity(0.55), lineWidth: 1.2)
+                                    .strokeBorder(lampPalette.nightLampGold.opacity(0.55), lineWidth: 1.2)
                             )
                     )
                     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -1102,7 +1103,7 @@ public struct DreamCaptureSheet: View {
                                         .fill(palette.cardSurface)
                                         .frame(width: 40, height: 40)
                                         .shadow(
-                                            color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                            color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.22),
                                             radius: 3.5,
                                             y: 1.5
                                         )
@@ -1474,7 +1475,7 @@ private struct SeedPitchFaderColumn: View {
                         .fill(laneCol)
                         .frame(width: 23, height: 23)
                         .shadow(
-                            color: palette.isNight ? Color.black.opacity(0.28) : Color(hex: 0x7A5230).opacity(0.16),
+                            color: palette.elevationShadow(dayOpacity: 0.16, nightOpacity: 0.28),
                             radius: 3,
                             y: 1.5
                         )

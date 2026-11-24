@@ -3793,4 +3793,43 @@ final class SpecimenIntegrityTests: XCTestCase {
         vm.saveCurrentToNotebook()
         XCTAssertEqual(vm.notebook.entries.count, 1)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound58SemanticElevationAndContrastClosure() throws {
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+
+        XCTAssertNotEqual(day.contrastInkOnAccent, night.contrastInkOnAccent)
+        XCTAssertNotEqual(day.contrastInkOnHighlight, night.contrastInkOnHighlight)
+        XCTAssertNotEqual(day.figureContourInk, night.figureContourInk)
+        XCTAssertNotEqual(
+            ChimmoPalette.elevationShadowColor(isNight: false),
+            ChimmoPalette.elevationShadowColor(isNight: true)
+        )
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r58_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: day))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: night))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: day))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: night))
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: day,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: day, onOpenSharePostcard: {}))
+        XCTAssertNotNil(AboutSheetView(palette: day, currentDocument: vm.document, cradleEnabled: true))
+    }
 }

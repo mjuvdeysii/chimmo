@@ -284,7 +284,7 @@ public struct MusicBoxShelfView: View {
                         .fill(searchActive ? palette.prominentFill : palette.cardSurface)
                         .frame(width: 36, height: 36)
                         .shadow(
-                            color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                            color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                             radius: 3,
                             y: 1.5
                         )
@@ -445,7 +445,7 @@ public struct MusicBoxShelfView: View {
                             .shadow(
                                 color: isSel
                                     ? aurora.opacity(0.28)
-                                    : (palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08)),
+                                    : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.22),
                                 radius: 3,
                                 y: 1.5
                             )
@@ -458,7 +458,7 @@ public struct MusicBoxShelfView: View {
 
                         Image(systemName: mode.iconName)
                             .font(.footnote.weight(.bold))
-                            .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E1430) : .white) : aurora)
+                            .foregroundStyle(isSel ? palette.contrastInkOnAccent : aurora)
                     }
                     .frame(
                         width: StorybookAffordanceMetrics.compactToolMinHitDimension,
@@ -1277,7 +1277,7 @@ private struct StorybookSongbookCoverThumb: View {
                         .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                     }
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.30) : Color(hex: 0x7A5230).opacity(0.14),
+                        color: palette.elevationShadow(dayOpacity: 0.14, nightOpacity: 0.30),
                         radius: 3.5,
                         x: 1,
                         y: placement.shadowOffsetY * 0.75
@@ -1312,7 +1312,7 @@ private struct StorybookSongbookCoverThumb: View {
                         ZStack(alignment: .bottomTrailing) {
                             ZStack {
                                 Circle()
-                                    .fill(Color(hex: hero.bodyHex).opacity(palette.isNight ? 0.34 : 0.24))
+                                    .fill(hero.bodyColor.opacity(palette.isNight ? 0.34 : 0.24))
                                     .frame(width: 30, height: 30)
                                     .overlay(
                                         Circle().strokeBorder(ink.opacity(palette.isNight ? 0.26 : 0.18), lineWidth: 1.0)
@@ -1359,7 +1359,7 @@ private struct StorybookSongbookCoverThumb: View {
                     .overlay(
                         Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(isPlaying ? (palette.isNight ? Color(hex: 0x0E1430) : palette.primaryInk) : palette.homeAnchor)
+                            .foregroundStyle(isPlaying ? palette.contrastInkOnHighlight : palette.homeAnchor)
                     )
                     .offset(x: 52, y: 48)
             }

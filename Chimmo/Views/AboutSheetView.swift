@@ -113,7 +113,7 @@ public struct VinylPostcardShareSheet: View {
                                 Capsule()
                                     .fill(palette.cardSurface)
                                     .shadow(
-                                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                                        color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.22),
                                         radius: 3.5,
                                         y: 1.5
                                     )
@@ -153,7 +153,7 @@ public struct VinylPostcardShareSheet: View {
                                 Capsule()
                                     .fill(palette.cardSurface)
                                     .shadow(
-                                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                                        color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.22),
                                         radius: 3.5,
                                         y: 1.5
                                     )
@@ -198,7 +198,7 @@ public struct VinylPostcardShareSheet: View {
                             .frame(width: 270, height: 340)
                             .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
                             .shadow(
-                                color: palette.isNight ? Color.black.opacity(0.32) : Color(hex: 0x7A5230).opacity(0.16),
+                                color: palette.elevationShadow(dayOpacity: 0.16, nightOpacity: 0.32),
                                 radius: 12,
                                 y: 6
                             )
@@ -464,7 +464,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.64.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.65.0"
     }
 
     private var appBuild: String {

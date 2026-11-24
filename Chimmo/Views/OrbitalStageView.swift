@@ -388,7 +388,7 @@ public struct OrbitalStageView: View {
                     .fill(palette.cardSurface)
                     .frame(width: 32, height: 32)
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                        color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                         radius: 2.5,
                         y: 1.5
                     )
@@ -475,7 +475,7 @@ public struct OrbitalStageView: View {
                                 .strokeBorder(Color.white.opacity(palette.isNight ? 0.16 : 0.35), lineWidth: 1.0)
                         )
                 )
-                .foregroundStyle(isFollow && !palette.isNight ? palette.primaryInk : (isFollow ? Color(hex: 0x0E1430) : .white))
+                .foregroundStyle(isFollow ? palette.contrastInkOnHighlight : .white)
                 .contentShape(Capsule())
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -679,7 +679,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 RoundedRectangle(cornerRadius: ChimmoRadius.stage, style: .continuous)
                     .fill(boardBg)
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.28) : Color(hex: 0x7A5230).opacity(0.09),
+                        color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.28),
                         radius: 8,
                         y: 4
                     )
@@ -786,7 +786,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             Capsule()
                 .fill(palette.cardSurface)
                 .shadow(
-                    color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                    color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                     radius: 4,
                     y: 2
                 )
@@ -881,7 +881,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 Capsule()
                     .fill(palette.cardSurface)
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                        color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                         radius: 4,
                         y: 2
                     )
@@ -984,7 +984,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         let shadowRect = platterRect.offsetBy(dx: 0, dy: 3.0)
         ctx.fill(
             Path(ellipseIn: shadowRect),
-            with: .color(palette.isNight ? Color.black.opacity(0.28) : Color(hex: 0x7A5230).opacity(0.09))
+            with: .color(palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.28))
         )
 
         ctx.fill(
@@ -2643,7 +2643,7 @@ internal struct StageChoirKeyboardBar: View {
                         VStack(spacing: 2) {
                             ChimmoCartoonKeyBuddyView(
                                 member: lane.member,
-                                outlineColor: palette.isNight ? Color(hex: 0x0A0F24) : palette.primaryInk.opacity(0.72),
+                                outlineColor: palette.isNight ? palette.figureContourInk : palette.primaryInk.opacity(0.72),
                                 isSinging: buddyPose.showSingingSmile,
                                 isMinor: isMinor
                             )
@@ -2867,7 +2867,7 @@ internal struct StageHarmonyRibbonView: View {
                                     Capsule()
                                         .fill(isActive ? segCol : palette.cardSurface)
                                         .shadow(
-                                            color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                                            color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.22),
                                             radius: 3,
                                             y: 1.5
                                         )

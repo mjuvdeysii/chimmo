@@ -426,9 +426,9 @@ public struct ChimmoKilnPillButtonSurface: View {
         let rimColor: Color = isActive
             ? activeTint.opacity(palette.isNight ? 0.72 : 0.52)
             : (palette.isNight ? palette.nightLampGold.opacity(0.16) : Color.white.opacity(0.88))
-        let shadowColor: Color = palette.isNight
-            ? Color.black.opacity(isActive ? 0.28 : 0.18)
-            : (isActive ? activeTint.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.09))
+        let shadowColor: Color = isActive
+            ? (palette.isNight ? Color.black.opacity(0.28) : activeTint.opacity(0.20))
+            : palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.18)
 
         ZStack {
             shape
@@ -486,9 +486,7 @@ public struct StorybookQuietCardSurface: View {
             shape
                 .fill(palette.cardSurface)
                 .shadow(
-                    color: palette.isNight
-                        ? Color.black.opacity(0.24)
-                        : Color(hex: 0x7A5230).opacity(0.10),
+                    color: palette.elevationShadow(dayOpacity: 0.10, nightOpacity: 0.24),
                     radius: 7,
                     y: 3.5
                 )
@@ -502,7 +500,7 @@ public struct StorybookQuietCardSurface: View {
                 .strokeBorder(
                     isHighlighted
                         ? activeTint.opacity(0.55)
-                        : (palette.isNight ? Color.white.opacity(0.08) : Color(hex: 0x7A5230).opacity(0.08)),
+                        : (palette.isNight ? Color.white.opacity(0.08) : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.08)),
                     lineWidth: 1.0
                 )
         }
@@ -593,7 +591,8 @@ public struct ChimmoResonanceBead: View {
     }
 
     public var body: some View {
-        let core = tint ?? (isNight ? Color(hex: 0xFFB547) : Color(hex: 0xC4513A))
+        let beadTheme = ChimmoPalette(isNight: isNight)
+        let core = tint ?? (isNight ? beadTheme.nightLampGold : beadTheme.homeAnchor)
         ZStack {
             Circle()
                 .fill(core)
@@ -628,8 +627,9 @@ public struct ChimmoSectionTitle: View {
     }
 
     public var body: some View {
-        let secondaryInk = isNight ? Color(hex: 0xB8BED4) : Color(hex: 0x4D4E55)
-        let primaryInk = isNight ? Color(hex: 0xF2E2C4) : Color(hex: 0x1C1D19)
+        let sectionTheme = ChimmoPalette(isNight: isNight)
+        let secondaryInk = sectionTheme.secondaryInk
+        let primaryInk = sectionTheme.primaryInk
         Group {
             if type.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 3) {
@@ -739,9 +739,7 @@ public struct ChimmoAtelierCardModifier: ViewModifier {
     public func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         let dark = palette.isNight
-        let shadowColor = dark
-            ? Color.black.opacity(0.24)
-            : Color(hex: 0x7A5230).opacity(0.10)
+        let shadowColor = palette.elevationShadow(dayOpacity: 0.10, nightOpacity: 0.24)
         let rimTop: Color = dark
             ? palette.nightLampGold.opacity(0.16)
             : Color.white.opacity(0.92)
@@ -782,7 +780,7 @@ public struct ChimmoAtelierCardModifier: ViewModifier {
                                    .init(color: Color.black.opacity(0.20), location: 1)]
                                 : [.init(color: rimTop, location: 0),
                                    .init(color: .white.opacity(0.22), location: 0.38),
-                                   .init(color: Color(hex: 0x7A5230).opacity(0.08), location: 1)],
+                                   .init(color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.08), location: 1)],
                             startPoint: .top,
                             endPoint: .bottom
                         ),
@@ -826,9 +824,9 @@ public struct ChimmoVinylButtonStyle: ButtonStyle {
             ? .white
             : (dark ? resolvedTint : resolvedTint.mix(with: palette.primaryInk, by: 0.22))
         let shape = Capsule(style: .continuous)
-        let shadowColor: Color = dark
-            ? Color.black.opacity(prominent ? 0.34 : 0.18)
-            : (prominent ? resolvedTint : Color(hex: 0x7A5230)).opacity(prominent ? 0.26 : 0.10)
+        let shadowColor: Color = prominent
+            ? (dark ? Color.black.opacity(0.34) : resolvedTint.opacity(0.26))
+            : palette.elevationShadow(dayOpacity: 0.10, nightOpacity: 0.18)
         let rimTop: Color = dark
             ? palette.nightLampGold.opacity(prominent ? 0.22 : 0.14)
             : Color.white.opacity(0.84)
@@ -982,11 +980,11 @@ public struct ChimmoCartoonKeyBuddyView: View {
                 ctx.stroke(Circle().path(in: swirl), with: .color(ink), style: stroke)
             case .tinki:
                 let bobble = CGRect(x: cx - 2.2, y: cy - 10.2, width: 4.4, height: 4.4)
-                ctx.fill(Circle().path(in: bobble), with: .color(Color(hex: 0xFFE49E)))
+                ctx.fill(Circle().path(in: bobble), with: .color(ChimmoPalette.warmButterHighlight))
                 ctx.stroke(Circle().path(in: bobble), with: .color(ink), style: stroke)
             case .bomo:
                 let cap = CGRect(x: cx - 5.2, y: cy - 7.5, width: 10.4, height: 3.6)
-                ctx.fill(Capsule().path(in: cap), with: .color(Color(hex: 0xFFE49E)))
+                ctx.fill(Capsule().path(in: cap), with: .color(ChimmoPalette.warmButterHighlight))
                 ctx.stroke(Capsule().path(in: cap), with: .color(ink), style: stroke)
             case .doko, .udo:
                 break

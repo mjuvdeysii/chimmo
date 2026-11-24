@@ -141,7 +141,7 @@ public struct SoundPaletteBoxSheet: View {
                 Capsule()
                     .fill(palette.cardSurface)
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                        color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.22),
                         radius: 3.5,
                         y: 1.5
                     )
@@ -428,7 +428,7 @@ public struct SoundPaletteBoxSheet: View {
             HStack(spacing: 8) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(palette.isNight ? Color(hex: 0x0E1430) : palette.storybookButter.opacity(0.48))
+                        .fill(palette.isNight ? palette.paper : palette.storybookButter.opacity(0.48))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
                                 .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.22 : 0.14), lineWidth: 1.0)
@@ -576,7 +576,7 @@ public struct SoundPaletteBoxSheet: View {
                                         .shadow(
                                             color: active
                                                 ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
-                                                : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                                : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.20),
                                             radius: 3.5,
                                             y: 1.5
                                         )
@@ -625,7 +625,7 @@ public struct SoundPaletteBoxSheet: View {
                                     .shadow(
                                         color: active
                                             ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
-                                            : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                            : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.20),
                                         radius: 3.5,
                                         y: 1.5
                                     )
@@ -637,7 +637,7 @@ public struct SoundPaletteBoxSheet: View {
                                     )
                             )
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("节奏\(label)")
@@ -679,7 +679,7 @@ public struct SoundPaletteBoxSheet: View {
                                     .shadow(
                                         color: active
                                             ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
-                                            : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                            : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.20),
                                         radius: 3.5,
                                         y: 1.5
                                     )
@@ -692,7 +692,7 @@ public struct SoundPaletteBoxSheet: View {
                             )
                             .foregroundStyle(active ? Color.white : palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("音区\(RootTranspositionHelper.accessibilityLabel(forRootMIDI: targetMIDI))")
@@ -749,17 +749,17 @@ public struct SoundPaletteBoxSheet: View {
                                     .minimumScaleFactor(0.75)
                             }
                             .padding(.horizontal, 11)
-                            .frame(minHeight: 32)
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                             .background(
                                 ChimmoKilnPillButtonSurface(
                                     palette: palette,
                                     accent: palette.nightLampGold,
                                     isActive: true,
-                                    cornerRadius: 16
+                                    cornerRadius: 20
                                 )
                             )
                             .foregroundStyle(palette.primaryInk)
-                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Capsule())
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -797,7 +797,7 @@ public struct SoundPaletteBoxSheet: View {
                                         .shadow(
                                             color: active
                                                 ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
-                                                : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                                : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.20),
                                             radius: 4,
                                             y: 2
                                         )
@@ -871,18 +871,17 @@ public struct SoundPaletteBoxSheet: View {
                                     .minimumScaleFactor(0.75)
                             }
                             .padding(.horizontal, 11)
-                            .frame(minHeight: 32)
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                             .background(
                                 ChimmoKilnPillButtonSurface(
                                     palette: palette,
                                     accent: palette.celadonAccent,
                                     isActive: true,
-                                    cornerRadius: 16
+                                    cornerRadius: 20
                                 )
                             )
                             .foregroundStyle(palette.primaryInk)
-                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("试听小牛哞低音伴奏")
@@ -895,7 +894,7 @@ public struct SoundPaletteBoxSheet: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(AccompanimentTexture.allCases) { tex in
                             let active = vm.cradleEnabled && vm.accompanimentTexture == tex
-                            let fgColor = active ? (palette.isNight ? Color(hex: 0x0E1430) : .white) : palette.primaryInk
+                            let fgColor = active ? palette.contrastInkOnAccent : palette.primaryInk
                             let dotColor = active ? fgColor : palette.bassRibbon
                             let dots = AcousticSignatureGeometry.accompanimentPatternDots(for: tex)
                             let activeDot = (auditionTexture == tex && sweep != nil)
@@ -926,7 +925,7 @@ public struct SoundPaletteBoxSheet: View {
                                         .shadow(
                                             color: active
                                                 ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.22)
-                                                : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                                : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.20),
                                             radius: 4,
                                             y: 2
                                         )
@@ -1182,7 +1181,7 @@ private struct ChordPresetBarcodeStrip: View {
                             .shadow(
                                 color: selected
                                     ? palette.bassRibbon.opacity(palette.isNight ? 0.24 : 0.16)
-                                    : (palette.isNight ? Color.black.opacity(0.18) : Color(hex: 0x7A5230).opacity(0.07)),
+                                    : palette.elevationShadow(dayOpacity: 0.07, nightOpacity: 0.18),
                                 radius: 3,
                                 y: 1.5
                             )

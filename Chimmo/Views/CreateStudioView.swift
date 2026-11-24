@@ -375,7 +375,7 @@ public struct CreateStudioView: View {
                             .fill(palette.cardSurface)
                             .frame(width: 36, height: 36)
                             .shadow(
-                                color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                                color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                                 radius: 3,
                                 y: 1.5
                             )
@@ -411,7 +411,7 @@ public struct CreateStudioView: View {
                     .fill(palette.cardSurface)
                     .frame(width: 36, height: 36)
                     .shadow(
-                        color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                        color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                         radius: 3,
                         y: 1.5
                     )
@@ -874,7 +874,7 @@ public struct CreateStudioView: View {
                             .shadow(
                                 color: needsSave
                                     ? palette.prominentFill.opacity(palette.isNight ? 0.34 : 0.24)
-                                    : (palette.isNight ? Color.black.opacity(0.18) : Color(hex: 0x7A5230).opacity(0.08)),
+                                    : palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.18),
                                 radius: needsSave ? 5 : 3,
                                 y: 2
                             )
@@ -905,7 +905,7 @@ public struct CreateStudioView: View {
                         .fill(palette.cardSurface)
                         .frame(width: 44, height: 44)
                         .shadow(
-                            color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                            color: palette.elevationShadow(dayOpacity: 0.09, nightOpacity: 0.24),
                             radius: 3.5,
                             y: 2
                         )

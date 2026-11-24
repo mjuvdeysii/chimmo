@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.65.0 - 2026-11-25
+- 窑纸软胶接触投影与对比前景色全站单一数据源收口：
+  - 在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `elevationShadowColor(isNight:dayOpacity:nightOpacity:)` / `elevationShadow(...)` 柔和投影单源公式、`contrastInkOnAccent`、`contrastInkOnHighlight`、`warmButterHighlight` 与 `figureContourInk` 语义 Token。
+  - 清零 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)、[CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift)、[DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)、[ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift) 与 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 中 35+ 处散落 `0x7A5230`、`0x0E1430`、`0x19213F`、`0xF2E2C4` 与 `0xFFB547` 原始十六进制硬编码（其中捕梦工坊「闭眼滑音」夜空入口卡改用 `ChimmoPalette(isNight: true)` 语义驱动，曲本卡片角色渐变光晕改用 `hero.bodyColor`）。
+- 声音调色盒触摸热区胶囊纯化：优化 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 节拍律动、移调与双主角试听按钮 `.contentShape(Capsule())` 贴合边界与 `40pt` 可触尺寸一致性。
+- 回归校验：新增 `testCreativeAlchemyRound58SemanticElevationAndContrastClosure`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.64.0 - 2026-11-25
 - 全链路 OpenMotion 官网 v12 与 12 秒导演短片 v18 同源跃迁：
   - OpenMotion Design Studio 互动官网升至 `v12` 并同步至 [docs/index.html](docs/index.html)：全站同步 R50–R56 窑纸软胶规范，清除曲本封面偏置硬砖影与粗黑 UI 外框，明暗双态同步日光/夜灯对位月蓝（`#2E7DB2` / `#7EC8E3`）；声调盒示波窗升级为 `40pt+` 可点击试听按钮，声波山坡表联动 `1-7` 音高实时聚光；四标签纯血空间展示盒支持「聆听去创作改编」、「创作 40pt 铅笔原地改名 + 1-5 液态竖琴归档印音」、「曲本对称聆听/编辑分流」与「工坊 8 音脊闭眼夜灯直触声场（`1 Do` ~ `1↑ Do↑`）+ 3 颗琥珀余韵指示灯」。

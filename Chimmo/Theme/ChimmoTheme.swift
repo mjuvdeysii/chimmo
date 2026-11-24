@@ -86,6 +86,39 @@ public struct ChimmoPalette: Sendable {
     public var nightLampPadSurface: Color { Color(hex: 0x0B112B) }
     public var nightLampHillSurface: Color { Color(hex: 0x121A3D) }
 
+    /// 窑纸软胶接触投影单源公式（日光暖棕 #7A5230，夜灯静谧黑）
+    public static func elevationShadowColor(
+        isNight: Bool,
+        dayOpacity: Double = 0.09,
+        nightOpacity: Double = 0.24
+    ) -> Color {
+        isNight ? Color.black.opacity(nightOpacity) : Color(hex: 0x7A5230).opacity(dayOpacity)
+    }
+
+    public func elevationShadow(dayOpacity: Double = 0.09, nightOpacity: Double = 0.24) -> Color {
+        Self.elevationShadowColor(isNight: isNight, dayOpacity: dayOpacity, nightOpacity: nightOpacity)
+    }
+
+    /// 高亮主题色填充上的前景色（夜灯落深靛 paper 避免刺眼，日光落纯白）
+    public var contrastInkOnAccent: Color {
+        isNight ? paper : .white
+    }
+
+    /// 柔光高亮底面上的高对比前景色（夜灯落深靛 paper，日光落墨黑 primaryInk）
+    public var contrastInkOnHighlight: Color {
+        isNight ? paper : primaryInk
+    }
+
+    /// 绘本陶偶头饰统一暖黄柔光色
+    public static var warmButterHighlight: Color {
+        Color(hex: 0xFFE49E)
+    }
+
+    /// 绘本陶偶雕塑轮廓深色（仅用于主角/小偶陶瓷线稿）
+    public var figureContourInk: Color {
+        isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
+    }
+
     public init(isNight: Bool) {
         self.isNight = isNight
         if isNight {

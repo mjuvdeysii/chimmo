@@ -115,7 +115,7 @@ public struct VinylPostcardCanvasView: View {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(palette.cardSurface)
                         .shadow(
-                            color: snapshot.isNight ? Color.black.opacity(0.30) : Color(hex: 0x7A5230).opacity(0.12),
+                            color: ChimmoPalette.elevationShadowColor(isNight: snapshot.isNight, dayOpacity: 0.12, nightOpacity: 0.30),
                             radius: 10,
                             y: 4
                         )
@@ -279,7 +279,7 @@ public struct VinylPostcardCanvasView: View {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(palette.cardSurface)
                                 .shadow(
-                                    color: snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.10),
+                                    color: ChimmoPalette.elevationShadowColor(isNight: snapshot.isNight, dayOpacity: 0.10, nightOpacity: 0.24),
                                     radius: 6,
                                     y: 3
                                 )
@@ -330,7 +330,7 @@ public struct VinylPostcardCanvasView: View {
 
         // 2. 极简窑纸软胶音乐盒花环（零音槽纹路，柔和接触影 + 细暖墨发丝边）
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
-        let contactWash = snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09)
+        let contactWash = ChimmoPalette.elevationShadowColor(isNight: snapshot.isNight, dayOpacity: 0.09, nightOpacity: 0.24)
         ctx.fill(
             Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 3.5)),
             with: .color(contactWash)
@@ -509,7 +509,7 @@ public struct VinylPostcardCanvasView: View {
     private func drawPostcardRiver(ctx: inout GraphicsContext, size: CGSize, palette: ChimmoPalette) {
         let cardRect = CGRect(x: 12, y: 16, width: size.width - 24, height: size.height - 34)
         let cardPath = RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect)
-        let contactWash = snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09)
+        let contactWash = ChimmoPalette.elevationShadowColor(isNight: snapshot.isNight, dayOpacity: 0.09, nightOpacity: 0.24)
         ctx.fill(
             RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect.offsetBy(dx: 0, dy: 3.5)),
             with: .color(contactWash)
@@ -719,7 +719,7 @@ public struct VinylPostcardCanvasView: View {
 
         // 2. 窑纸软胶星盘底盘与同心星环
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
-        let contactWash = snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09)
+        let contactWash = ChimmoPalette.elevationShadowColor(isNight: snapshot.isNight, dayOpacity: 0.09, nightOpacity: 0.24)
         ctx.fill(
             Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 3.5)),
             with: .color(contactWash)
