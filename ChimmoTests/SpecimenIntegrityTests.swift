@@ -3600,4 +3600,36 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         )
     }
+
+    @MainActor
+    func testCreativeAlchemyRound52ZeroCartoonOutlineAndInteractiveOscilloscope() throws {
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r52_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.plantCreationStarter(.sunnyMeadow)
+
+        // 1. 声场示波合奏试听与全画境/捕音/调音台日夜实例化
+        vm.auditionDuoGreeting()
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+
+        for mode in StageVisualMode.allCases {
+            vm.visualMode = mode
+            XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+            XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        }
+
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+        for tab in [0, 1, 2] {
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette, initialTab: tab))
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette, initialTab: tab))
+        }
+    }
 }

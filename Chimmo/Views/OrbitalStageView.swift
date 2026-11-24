@@ -286,7 +286,7 @@ public struct OrbitalStageView: View {
         return HStack(spacing: 8) {
             ChimmoCartoonKeyBuddyView(
                 member: chip.spotlightMember,
-                outlineColor: palette.cartoonOutline,
+                outlineColor: palette.primaryInk.opacity(0.76),
                 isSinging: vm.isPlaying,
                 isMinor: vm.document.scaleMode.isMinorFlavored
             )
@@ -1229,8 +1229,8 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col.opacity(isFollowPassed ? 0.45 : 1.0)))
             ctx.stroke(
                 Path(ellipseIn: orbRect),
-                with: .color(palette.cartoonOutline.opacity(isFollowPassed ? 0.35 : (palette.isNight ? 0.72 : 0.88))),
-                lineWidth: 1.8
+                with: .color(palette.primaryInk.opacity(isFollowPassed ? 0.18 : (palette.isNight ? 0.34 : 0.24))),
+                lineWidth: 1.2
             )
 
             // 色盲友好八音阶几何矢量图腾
@@ -1447,8 +1447,8 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         )
         ctx.stroke(
             Path(ellipseIn: hubRect),
-            with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.80 : 0.88)),
-            lineWidth: 1.8
+            with: .color(palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.14)),
+            lineWidth: 1.3
         )
 
         // 利萨如实时波纹花（随声压实时呼吸）
@@ -1555,9 +1555,9 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             if idx == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
         }
         star.closeSubpath()
-        let inkOutline = palette.cartoonOutline.opacity(palette.isNight ? 0.85 : 0.90)
+        let inkOutline = palette.primaryInk.opacity(palette.isNight ? 0.38 : 0.28)
         ctx.fill(star, with: .color(palette.nightLampGold))
-        ctx.stroke(star, with: .color(inkOutline), lineWidth: 1.5)
+        ctx.stroke(star, with: .color(inkOutline), lineWidth: 1.2)
     }
 
     // MARK: - 2B. Full-Width Storybook Hill Score Canvas Rendering
@@ -1789,8 +1789,8 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
             ctx.stroke(
                 Path(ellipseIn: orbRect),
-                with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.82 : 0.90)),
-                lineWidth: 1.6
+                with: .color(palette.primaryInk.opacity(palette.isNight ? 0.34 : 0.24)),
+                lineWidth: 1.2
             )
 
             let gs = orbR * 1.15
@@ -1992,8 +1992,8 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         )
         ctx.stroke(
             Path(ellipseIn: hubRect),
-            with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.80 : 0.88)),
-            lineWidth: 1.8
+            with: .color(palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.14)),
+            lineWidth: 1.3
         )
         drawLissajousWave(
             ctx: &ctx,

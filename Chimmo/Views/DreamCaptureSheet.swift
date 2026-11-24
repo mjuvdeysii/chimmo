@@ -337,7 +337,7 @@ public struct DreamCaptureSheet: View {
                                 HStack(spacing: 8) {
                                     ChimmoCartoonKeyBuddyView(
                                         member: .doko,
-                                        outlineColor: palette.cartoonOutline,
+                                        outlineColor: palette.primaryInk.opacity(0.76),
                                         isSinging: false,
                                         isMinor: vm.document.scaleMode.isMinorFlavored
                                     )
@@ -485,7 +485,7 @@ public struct DreamCaptureSheet: View {
                     meadowFill.addLine(to: CGPoint(x: 0, y: size.height))
                     meadowFill.closeSubpath()
                     ctx.fill(meadowFill, with: .color(palette.storybookHillFront.opacity(0.70)))
-                    ctx.stroke(meadow, with: .color(palette.cartoonOutline.opacity(0.28)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+                    ctx.stroke(meadow, with: .color(palette.divider), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
 
                     let padX: CGFloat = 18
                     let padY: CGFloat = 14
@@ -503,7 +503,7 @@ public struct DreamCaptureSheet: View {
                         let laneCol = XylophoneLane.lane(at: laneIdx).barColor(isNight: palette.isNight)
                         let beadRect = CGRect(x: padX - 4, y: y - 2.6, width: 5.2, height: 5.2)
                         ctx.fill(Path(ellipseIn: beadRect), with: .color(laneCol))
-                        ctx.stroke(Path(ellipseIn: beadRect), with: .color(palette.cartoonOutline.opacity(0.75)), lineWidth: 0.9)
+                        ctx.stroke(Path(ellipseIn: beadRect), with: .color(palette.primaryInk.opacity(palette.isNight ? 0.32 : 0.24)), lineWidth: 0.9)
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -532,7 +532,7 @@ public struct DreamCaptureSheet: View {
                         let startPt = CGPoint(x: padX, y: midY - CGFloat(sin(-0.35)) * amp)
                         let startRect = CGRect(x: startPt.x - 5.5, y: startPt.y - 5.5, width: 11, height: 11)
                         ctx.fill(Path(ellipseIn: startRect), with: .color(palette.nightLampGold))
-                        ctx.stroke(Path(ellipseIn: startRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
+                        ctx.stroke(Path(ellipseIn: startRect), with: .color(palette.primaryInk.opacity(palette.isNight ? 0.38 : 0.28)), lineWidth: 1.2)
                     }
                     .allowsHitTesting(false)
                 } else {
@@ -544,7 +544,7 @@ public struct DreamCaptureSheet: View {
                         }
                         ctx.stroke(
                             path,
-                            with: .color(palette.cartoonOutline.opacity(0.85)),
+                            with: .color(palette.homeAnchor.opacity(palette.isNight ? 0.28 : 0.18)),
                             style: StrokeStyle(lineWidth: 7.5, lineCap: .round, lineJoin: .round)
                         )
                         ctx.stroke(
@@ -555,7 +555,7 @@ public struct DreamCaptureSheet: View {
                         if let tip = sketchPoints.last {
                             let tipRect = CGRect(x: tip.x - 5.5, y: tip.y - 5.5, width: 11, height: 11)
                             ctx.fill(Path(ellipseIn: tipRect), with: .color(palette.nightLampGold))
-                            ctx.stroke(Path(ellipseIn: tipRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
+                            ctx.stroke(Path(ellipseIn: tipRect), with: .color(palette.primaryInk.opacity(palette.isNight ? 0.38 : 0.28)), lineWidth: 1.2)
                         }
                     }
                 }
@@ -829,7 +829,7 @@ public struct DreamCaptureSheet: View {
             HStack(spacing: 6) {
                 ChimmoCartoonKeyBuddyView(
                     member: degree == 1 ? .taono : .corllo,
-                    outlineColor: palette.cartoonOutline,
+                    outlineColor: palette.primaryInk.opacity(0.76),
                     isSinging: false,
                     isMinor: vm.document.scaleMode.isMinorFlavored
                 )
@@ -1182,7 +1182,7 @@ private struct StorybookChoirLevelStageView: View {
 
             Canvas { ctx, size in
                 let w = max(1, size.width)
-                let outline = palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.70)
+                let outline = palette.primaryInk.opacity(palette.isNight ? 0.26 : 0.18)
                 if palette.isNight {
                     let moonC = CGPoint(x: w * 0.90, y: 18)
                     var moon = Path()
@@ -1212,7 +1212,7 @@ private struct StorybookChoirLevelStageView: View {
                         VStack(spacing: 2) {
                             ChimmoCartoonKeyBuddyView(
                                 member: member,
-                                outlineColor: palette.cartoonOutline,
+                                outlineColor: palette.primaryInk.opacity(0.76),
                                 isSinging: isCheering,
                                 isMinor: isMinor
                             )
@@ -1323,7 +1323,7 @@ private struct MotifMorphPreviewCard: View {
                     .fill(palette.shelfSurface.opacity(palette.isNight ? 0.55 : 0.72))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(palette.cartoonOutline.opacity(0.45), lineWidth: 1.2)
+                            .strokeBorder(palette.divider, lineWidth: 1.0)
                     )
 
                 Canvas { ctx, size in
@@ -1411,7 +1411,7 @@ private struct SeedPitchFaderColumn: View {
         VStack(spacing: 5) {
             ChimmoCartoonKeyBuddyView(
                 member: lane.member,
-                outlineColor: palette.cartoonOutline,
+                outlineColor: palette.primaryInk.opacity(0.76),
                 isSinging: shift != 0,
                 isMinor: false
             )

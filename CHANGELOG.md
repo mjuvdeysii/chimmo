@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.59.0 - 2026-11-25
+- 全站硬描边零残余收口：彻底清理 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 与 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift) 全部剩余 `cartoonOutline` 调用（全站 `Views/`、`Domain/` 与设计语言绘制层 `cartoonOutline` 与 `cartoonShadow` 双双归零），将音珠外缘、星核印章、山坡线、手绘笔刷拖尾与小偶发丝边全面柔化为奥托夜色/窑纸正典 `primaryInk` 半透明细线（彻底消除夜间模式亮黄生硬框线）。
+- 声场波形窗一键试听：[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 顶部 `SoundBoxOscilloscopeWindow` 升级为 `>= 40pt` 可触试听控件，轻点实时波形即可直接触发 `auditionDuoGreeting()` 合奏耳返与波纹扫描动效。
+- 回归校验：新增 `testCreativeAlchemyRound52ZeroCartoonOutlineAndInteractiveOscilloscope`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.58.0 - 2026-11-25
 - 全仓明信片与绘本封面窑纸纯化：彻底清除 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 中最后 3 处 `0x18234E` 残色、5 处硬砖 `cartoonShadow` 及粗黑 `cartoonOutline` 外框（全部 Domain + Views 文件实现 `cartoonShadow = 0` 与旧夜色六进制零残留），离线导出 PNG 统一接入日/夜双态窑陶软胶质感；同步柔化 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 书页与空态边框。
 - 创作命名、存盘回声与曲本双动线闭环：[CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 创作顶栏升级为显式 `pencil.line` 点按重命名按钮（同时严格保留聆听区不可误改边界）；`saveCurrentToNotebook()` 在非播停状态下轻奏温润 `1-5` 窑印和声封缄回音（零例行弹窗）；[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 与 [StudioView.swift](Chimmo/Views/StudioView.swift) 联合为「我的曲本」补齐「聆听」（保护创作快照切入剧场欣赏）与「编辑」对称双动线。

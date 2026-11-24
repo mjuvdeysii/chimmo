@@ -213,7 +213,7 @@ public struct SoundPaletteBoxSheet: View {
                 Canvas { ctx, size in
                     let w = max(1, size.width)
                     let h = max(1, size.height)
-                    let ink = palette.cartoonOutline.opacity(palette.isNight ? 0.45 : 0.42)
+                    let ink = palette.primaryInk.opacity(palette.isNight ? 0.20 : 0.14)
 
                     if palette.isNight {
                         let moonC = CGPoint(x: w * 0.90, y: 16)
@@ -255,14 +255,23 @@ public struct SoundPaletteBoxSheet: View {
                 .allowsHitTesting(false)
 
                 VStack(spacing: 2) {
-                    SoundBoxOscilloscopeWindow(
-                        samples: samples,
-                        waveColor: skyColor,
-                        outlineColor: palette.cartoonOutline,
-                        dotColor: palette.nightLampGold,
-                        sweepProgress: sweep
-                    )
-                    .frame(height: 26)
+                    Button {
+                        vm.auditionDuoGreeting()
+                        triggerAudition(.voice)
+                    } label: {
+                        SoundBoxOscilloscopeWindow(
+                            samples: samples,
+                            waveColor: skyColor,
+                            outlineColor: palette.primaryInk.opacity(palette.isNight ? 0.32 : 0.22),
+                            dotColor: palette.nightLampGold,
+                            sweepProgress: sweep
+                        )
+                        .frame(height: 28)
+                        .frame(maxWidth: .infinity, minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
+                    .accessibilityLabel("波形示波窗，轻点试听当前音色与双子合奏")
 
                     HStack(alignment: .bottom, spacing: 6) {
                         Button {

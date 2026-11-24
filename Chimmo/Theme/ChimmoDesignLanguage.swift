@@ -1039,7 +1039,7 @@ public struct StorybookCartoonSceneBackground: View {
         Canvas { ctx, size in
             let w = max(1, size.width)
             let h = max(1, size.height)
-            let outline = palette.cartoonOutline.opacity(palette.isNight ? 0.30 : 0.24)
+            let outline = palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.10)
 
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(palette.paper))
 
