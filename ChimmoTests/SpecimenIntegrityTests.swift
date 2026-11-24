@@ -2430,4 +2430,92 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound34StorybookShelfAndPostcardFlatCartoon() throws {
+        // 1. StorybookPostcardAndShelfKinematics 主角小偶选取（空作品归家、频次优先、平局取尾音）
+        let emptyDoc = MelodyDocument(title: " ", scaleMode: .brightMajor, notes: [])
+        XCTAssertEqual(StorybookPostcardAndShelfKinematics.heroMember(for: emptyDoc), .taono)
+
+        let solDominantDoc = MelodyDocument(
+            title: "远望晴空",
+            scaleMode: .brightMajor,
+            notes: [
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.0, rawDuration: 0.4),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 0.4, rawDuration: 0.4),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 0.8, rawDuration: 0.4),
+                NoteBead(degree: 3, octaveOffset: 0, rawOnset: 1.2, rawDuration: 0.4)
+            ]
+        )
+        XCTAssertEqual(StorybookPostcardAndShelfKinematics.heroMember(for: solDominantDoc), .corllo)
+
+        let tieBreakEndingDoc = MelodyDocument(
+            title: "落回三音",
+            scaleMode: .wistfulMinor,
+            notes: [
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 0.0, rawDuration: 0.4),
+                NoteBead(degree: 3, octaveOffset: 0, rawOnset: 0.4, rawDuration: 0.4)
+            ]
+        )
+        XCTAssertEqual(StorybookPostcardAndShelfKinematics.heroMember(for: tieBreakEndingDoc), .plokko)
+
+        // 2. 唱片封套主角头像联动位移与减弱动态效果尊重
+        let plokkoIdleMinor = StorybookPostcardAndShelfKinematics.sleevePlacement(
+            isPlaying: false,
+            hero: .plokko,
+            isMinor: true,
+            reduceMotion: false
+        )
+        let plokkoPlayMinor = StorybookPostcardAndShelfKinematics.sleevePlacement(
+            isPlaying: true,
+            hero: .plokko,
+            isMinor: true,
+            reduceMotion: false
+        )
+        let plokkoReduced = StorybookPostcardAndShelfKinematics.sleevePlacement(
+            isPlaying: true,
+            hero: .plokko,
+            isMinor: true,
+            reduceMotion: true
+        )
+        XCTAssertEqual(plokkoIdleMinor.shadowOffsetY, 2.5, accuracy: 0.0001)
+        XCTAssertEqual(plokkoPlayMinor.shadowOffsetY, 4.0, accuracy: 0.0001)
+        XCTAssertEqual(plokkoIdleMinor.buddyTiltDegrees, 10.0, accuracy: 0.0001)
+        XCTAssertLessThan(plokkoPlayMinor.buddyOffsetY, 0.0)
+        XCTAssertEqual(plokkoReduced.buddyOffsetY, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(plokkoReduced.buddyTiltDegrees, 0.0, accuracy: 0.0001)
+
+        // 3. 扁平太阳光线端点生成与边界防护
+        XCTAssertTrue(StorybookPostcardAndShelfKinematics.radialRaySegments(center: CGPoint(x: 10, y: 10), innerRadius: 8, outerRadius: 14, rayCount: 0).isEmpty)
+        XCTAssertTrue(StorybookPostcardAndShelfKinematics.radialRaySegments(center: CGPoint(x: CGFloat.nan, y: 10), innerRadius: 8, outerRadius: 14, rayCount: 8).isEmpty)
+        let rays = StorybookPostcardAndShelfKinematics.radialRaySegments(center: CGPoint(x: 50, y: 50), innerRadius: 10, outerRadius: 20, rayCount: 8)
+        XCTAssertEqual(rays.count, 8)
+        XCTAssertEqual(rays[0].start.x, 50.0, accuracy: 0.001)
+        XCTAssertEqual(rays[0].start.y, 40.0, accuracy: 0.001)
+        XCTAssertEqual(rays[0].end.y, 30.0, accuracy: 0.001)
+
+        // 4. VinylPostcardSnapshot IP 主角映射与六组合离线 PNG 渲染非空验证
+        let snap = VinylPostcardSnapshot(
+            document: tieBreakEndingDoc,
+            isNight: true,
+            visualMode: .orbitalDisc,
+            includeJianpuStrip: true
+        )
+        XCTAssertEqual(snap.heroMember, .plokko)
+        XCTAssertFalse(snap.jianpuTokens.isEmpty)
+
+        for night in [false, true] {
+            for mode in StageVisualMode.allCases {
+                let data = VinylPostcardExporter.renderPNGData(
+                    document: solDominantDoc,
+                    shadowEnabled: true,
+                    isNight: night,
+                    visualMode: mode,
+                    includeJianpuStrip: true
+                )
+                XCTAssertNotNil(data)
+            }
+        }
+        XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: emptyDoc, isNight: false, visualMode: .orbitalDisc))
+    }
 }

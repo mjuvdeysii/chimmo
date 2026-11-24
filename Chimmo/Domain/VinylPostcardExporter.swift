@@ -33,6 +33,7 @@ public struct VinylPostcardSnapshot: Sendable {
     public let rootMIDI: Int
     public let includeJianpuStrip: Bool
     public let jianpuTokens: [PostcardJianpuToken]
+    public let heroMember: ChimmoMember
 
     public init(
         document: MelodyDocument,
@@ -83,10 +84,11 @@ public struct VinylPostcardSnapshot: Sendable {
             let lane = XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset))
             return PostcardJianpuToken(digit: lane.digitLabel, colorHex: lane.member.bodyHex)
         }
+        self.heroMember = StorybookPostcardAndShelfKinematics.heroMember(for: document)
     }
 }
 
-/// 美术馆级离线黑胶星轨明信片静态视图（540×680 pt，在 `ImageRenderer` 下 2x 导出为 `1080×1360` 高清 PNG）
+/// 扁平卡通童书风格离线黑胶星轨明信片静态视图（540×680 pt，在 `ImageRenderer` 下 2x 导出为 `1080×1360` 高清 PNG，零渐变零模糊）
 public struct VinylPostcardCanvasView: View {
     public let snapshot: VinylPostcardSnapshot
 
@@ -99,136 +101,199 @@ public struct VinylPostcardCanvasView: View {
         let skyColor = snapshot.scaleMode.skyAuroraColor(isNight: snapshot.isNight)
 
         ZStack {
-            LinearGradient(
-                colors: snapshot.isNight
-                    ? [Color(hex: 0x0F1530), Color(hex: 0x1B244B)]
-                    : [Color(hex: 0xFCF8F0), Color(hex: 0xF1E8D7)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            palette.paper
 
-            RadialGradient(
-                colors: [skyColor.opacity(snapshot.isNight ? 0.22 : 0.14), .clear],
-                center: UnitPoint(x: 0.5, y: 0.44),
-                startRadius: 20,
-                endRadius: 290
-            )
+            ZStack {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(palette.cartoonShadow)
+                    .offset(x: 4, y: 5)
 
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            palette.nightLampGold.opacity(0.55),
-                            skyColor.opacity(0.32),
-                            palette.nightLampGold.opacity(0.45)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.5
+                StorybookCartoonSceneBackground(
+                    palette: palette,
+                    accentTint: skyColor,
+                    hillHeightRatio: 0.27,
+                    showsSkyMotifs: true
                 )
-                .padding(16)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
-            VStack(spacing: 16) {
-                // 顶部栏（嵌「咩 × 哞」双子印章 + 极简调式与音色角标）
-                HStack(spacing: 8) {
-                    ChimmoDuoBadgeView(
-                        isNight: snapshot.isNight,
-                        accentColor: skyColor,
-                        melodyActive: !snapshot.notes.isEmpty,
-                        cowAwake: true
-                    )
-                    .frame(width: 30, height: 20)
+                ChimmoBrassFrameAccent(
+                    palette: palette,
+                    cornerRadius: 24,
+                    showCornerPins: true
+                )
 
-                    Text("咩哞 · CHIMMO")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .tracking(1.1)
-                        .foregroundStyle(palette.secondaryInk)
+                VStack(spacing: 8) {
+                    // 顶部栏（嵌「咩 × 哞」双子印章 + 调式与音色扁平贴纸角标）
+                    HStack(spacing: 8) {
+                        ChimmoDuoBadgeView(
+                            isNight: snapshot.isNight,
+                            accentColor: skyColor,
+                            melodyActive: !snapshot.notes.isEmpty,
+                            cowAwake: true
+                        )
+                        .frame(width: 30, height: 20)
 
-                    Spacer()
+                        Text("咩哞 · CHIMMO")
+                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            .tracking(1.0)
+                            .foregroundStyle(palette.primaryInk)
 
-                    Text(snapshot.scaleMode.shortSkyLabel)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 3.5)
-                        .background(Capsule().fill(skyColor.opacity(0.18)))
-                        .foregroundStyle(skyColor)
+                        Spacer()
 
-                    Text(snapshot.melodyVoiceLabel)
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 3.5)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
-                }
-                .padding(.horizontal, 34)
-                .padding(.top, 30)
+                        Text(snapshot.scaleMode.shortSkyLabel)
+                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 3.5)
+                            .background(
+                                Capsule()
+                                    .fill(skyColor.opacity(snapshot.isNight ? 0.24 : 0.16))
+                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
+                            )
+                            .foregroundStyle(palette.primaryInk)
 
-                // 中央画境视觉（随当前主舞台模式所见即所得切换：转盘 / 曲线 / 星环）
-                Canvas { ctx, size in
-                    switch snapshot.visualMode {
-                    case .orbitalDisc:
-                        drawPostcardDisc(ctx: &ctx, size: size, palette: palette)
-                    case .flowingRiver:
-                        drawPostcardRiver(ctx: &ctx, size: size, palette: palette)
-                    case .resonanceNebula:
-                        drawPostcardNebula(ctx: &ctx, size: size, palette: palette)
+                        Text(snapshot.melodyVoiceLabel)
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 3.5)
+                            .background(
+                                Capsule()
+                                    .fill(palette.cardSurface)
+                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
+                            )
+                            .foregroundStyle(palette.primaryInk)
                     }
-                }
-                .frame(width: 392, height: snapshot.includeJianpuStrip && !snapshot.jianpuTokens.isEmpty ? 364 : 392)
+                    .padding(.horizontal, 26)
+                    .padding(.top, 20)
 
-                if snapshot.includeJianpuStrip && !snapshot.jianpuTokens.isEmpty {
-                    HStack(spacing: 6) {
-                        ForEach(Array(snapshot.jianpuTokens.enumerated()), id: \.offset) { _, token in
-                            HStack(spacing: 2.5) {
-                                Circle()
-                                    .fill(Color(hex: token.colorHex))
-                                    .frame(width: 5, height: 5)
-                                Text(token.digit)
+                    StorybookScallopDivider(
+                        color: palette.cartoonOutline.opacity(snapshot.isNight ? 0.55 : 0.40),
+                        stepWidth: 16
+                    )
+                    .frame(height: 6)
+                    .padding(.horizontal, 26)
+
+                    // 中央画境视觉（随当前主舞台模式切换：转盘 / 曲线 / 星环）
+                    Canvas { ctx, size in
+                        switch snapshot.visualMode {
+                        case .orbitalDisc:
+                            drawPostcardDisc(ctx: &ctx, size: size, palette: palette)
+                        case .flowingRiver:
+                            drawPostcardRiver(ctx: &ctx, size: size, palette: palette)
+                        case .resonanceNebula:
+                            drawPostcardNebula(ctx: &ctx, size: size, palette: palette)
+                        }
+                    }
+                    .frame(
+                        width: 376,
+                        height: (snapshot.includeJianpuStrip && !snapshot.jianpuTokens.isEmpty) ? 312 : 336
+                    )
+
+                    if snapshot.includeJianpuStrip && !snapshot.jianpuTokens.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(Array(snapshot.jianpuTokens.enumerated()), id: \.offset) { _, token in
+                                HStack(spacing: 2.5) {
+                                    Circle()
+                                        .fill(Color(hex: token.colorHex))
+                                        .frame(width: 5, height: 5)
+                                    Text(token.digit)
+                                        .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                                        .foregroundStyle(palette.primaryInk)
+                                }
+                            }
+                            if snapshot.notes.count > snapshot.jianpuTokens.count {
+                                Text("…")
                                     .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                                    .foregroundStyle(palette.primaryInk)
+                                    .foregroundStyle(palette.secondaryInk)
                             }
                         }
-                        if snapshot.notes.count > snapshot.jianpuTokens.count {
-                            Text("…")
-                                .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(palette.secondaryInk)
-                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(palette.cardSurface)
+                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
+                        )
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(palette.shelfSurface.opacity(snapshot.isNight ? 0.85 : 0.72)))
-                }
 
-                // 底部极简画报标题与光学比例印记
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(snapshot.title)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(palette.primaryInk)
-                        .lineLimit(2)
+                    // 草原山坡上的静态 IP 合影与扁平卡通标题铭牌（与山坡分离不遮字）
+                    VStack(spacing: 4) {
+                        HStack(alignment: .bottom, spacing: 14) {
+                            ChimmoSheepView(
+                                isNight: snapshot.isNight,
+                                accentColor: skyColor,
+                                isSinging: !snapshot.notes.isEmpty,
+                                phaseTime: 0,
+                                gazeBias: 0.25
+                            )
+                            .frame(width: 44, height: 34)
 
-                    HStack(spacing: 10) {
-                        Label("\(snapshot.notes.count)", systemImage: "music.note")
-                        Text("·")
-                        Text(String(format: "%.1fs", snapshot.totalDuration))
-                        if snapshot.rootMIDI != 60 {
-                            Text("·")
-                            Text(RootTranspositionHelper.compactLabel(forRootMIDI: snapshot.rootMIDI))
+                            ChimmoFigureView(
+                                member: snapshot.heroMember,
+                                isNight: snapshot.isNight,
+                                isMinor: snapshot.scaleMode.isMinorFlavored,
+                                isSinging: !snapshot.notes.isEmpty,
+                                focusedDegree: snapshot.heroMember.degree,
+                                time: 0,
+                                listeningTilt: 0
+                            )
+                            .frame(width: 34, height: 42)
+
+                            ChimmoCowView(
+                                isNight: snapshot.isNight,
+                                accentColor: skyColor,
+                                isAwake: true,
+                                isPlaying: !snapshot.notes.isEmpty,
+                                phaseTime: 0,
+                                gazeBias: -0.25
+                            )
+                            .frame(width: 44, height: 34)
                         }
-                        if snapshot.shadowEnabled {
-                            ChimmoCraftMark(.counterpointMoons, color: Color(hex: 0x4EA8DE))
-                                .frame(width: 13, height: 13)
+                        .frame(height: 42)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(snapshot.title)
+                                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                                .foregroundStyle(palette.primaryInk)
+                                .lineLimit(2)
+
+                            HStack(spacing: 10) {
+                                Label("\(snapshot.notes.count)", systemImage: "music.note")
+                                Text("·")
+                                Text(String(format: "%.1fs", snapshot.totalDuration))
+                                if snapshot.rootMIDI != 60 {
+                                    Text("·")
+                                    Text(RootTranspositionHelper.compactLabel(forRootMIDI: snapshot.rootMIDI))
+                                }
+                                if snapshot.shadowEnabled {
+                                    ChimmoCraftMark(.counterpointMoons, color: Color(hex: 0x4EA8DE))
+                                        .frame(width: 13, height: 13)
+                                }
+                                Spacer()
+                                ChimmoCraftMark(.vinylSeal, color: palette.nightLampGold)
+                                    .frame(width: 16, height: 16)
+                            }
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(palette.secondaryInk)
                         }
-                        Spacer()
-                        ChimmoCraftMark(.vinylSeal, color: palette.nightLampGold.opacity(0.85))
-                            .frame(width: 16, height: 16)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(palette.cartoonShadow)
+                                    .offset(y: 3)
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(palette.cardSurface)
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
+                            }
+                        )
                     }
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(palette.secondaryInk.opacity(0.90))
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 18)
                 }
-                .padding(.horizontal, 34)
-                .padding(.bottom, 30)
             }
+            .padding(14)
         }
         .frame(width: 540, height: 680)
     }
@@ -263,19 +328,16 @@ public struct VinylPostcardCanvasView: View {
             ctx.stroke(Path(ellipseIn: pearlRect), with: .color(col), lineWidth: 1.3)
         }
 
-        // 2. 陶瓷/黑胶底盘 + 微音槽 + 12 刻度
+        // 2. 扁平卡通绘本唱盘 + 微音槽 + 暖墨描边
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
         ctx.fill(
-            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 5)),
-            with: .color(Color.black.opacity(snapshot.isNight ? 0.42 : 0.09))
+            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 6)),
+            with: .color(palette.cartoonShadow)
         )
-        let discGrad = Gradient(colors: snapshot.isNight
-            ? [Color(hex: 0x222D61), Color(hex: 0x131A3C)]
-            : [Color(hex: 0xFFFFFF), Color(hex: 0xF1E8D9)]
-        )
+        let platterFill = snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface
         ctx.fill(
             Path(ellipseIn: platterRect),
-            with: .radialGradient(discGrad, center: CGPoint(x: center.x - platterR * 0.25, y: center.y - platterR * 0.25), startRadius: 6, endRadius: platterR * 1.15)
+            with: .color(platterFill)
         )
         for g in 0..<18 {
             let gr = innerR * 0.94 + (CGFloat(g) / 17.0) * (outerR * 1.04 - innerR * 0.94)
@@ -285,8 +347,7 @@ public struct VinylPostcardCanvasView: View {
                 lineWidth: 0.7
             )
         }
-        let rimColor = snapshot.isNight ? Color(hex: 0x524036).opacity(0.8) : Color(hex: 0xD2B48C).opacity(0.88)
-        ctx.stroke(Path(ellipseIn: platterRect), with: .color(rimColor), lineWidth: 3.4)
+        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.cartoonOutline), lineWidth: 3.0)
 
         for laneIdx in 0..<8 {
             let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
@@ -348,27 +409,18 @@ public struct VinylPostcardCanvasView: View {
                 var seg = Path()
                 seg.move(to: p0)
                 seg.addQuadCurve(to: p1, control: ctrl)
-                let c0 = XylophoneLane.lane(at: d0.laneIdx).barColor(isNight: snapshot.isNight)
                 let c1 = XylophoneLane.lane(at: d1.laneIdx).barColor(isNight: snapshot.isNight)
                 let style = IntervalSilkStyle.metrics(fromLane: d0.laneIdx, toLane: d1.laneIdx, isNight: snapshot.isNight)
                 if style.glowWidth > 0 {
                     ctx.stroke(
                         seg,
-                        with: .linearGradient(
-                            Gradient(colors: [c0.opacity(style.glowOpacity), c1.opacity(style.glowOpacity)]),
-                            startPoint: p0,
-                            endPoint: p1
-                        ),
+                        with: .color(c1.opacity(style.glowOpacity)),
                         style: StrokeStyle(lineWidth: style.glowWidth, lineCap: .round)
                     )
                 }
                 ctx.stroke(
                     seg,
-                    with: .linearGradient(
-                        Gradient(colors: [c0.opacity(style.coreOpacity), c1.opacity(style.coreOpacity)]),
-                        startPoint: p0,
-                        endPoint: p1
-                    ),
+                    with: .color(c1.opacity(style.coreOpacity)),
                     style: StrokeStyle(lineWidth: style.coreWidth, lineCap: .round)
                 )
             }
@@ -412,19 +464,14 @@ public struct VinylPostcardCanvasView: View {
             }
         }
 
-        // 4. 中央利萨如印章与 12 点钟黄铜定锚
+        // 4. 中央扁平卡通利萨如印章与 12 点钟暖琥珀定锚
         let hubR = innerR * 0.76
         let hubRect = CGRect(x: center.x - hubR, y: center.y - hubR, width: hubR * 2, height: hubR * 2)
         ctx.fill(
             Path(ellipseIn: hubRect),
-            with: .radialGradient(
-                Gradient(colors: snapshot.isNight ? [Color(hex: 0xFFB84D).opacity(0.32), Color(hex: 0x242F63)] : [Color(hex: 0xFFE3A3).opacity(0.68), Color(hex: 0xF5E7CE)]),
-                center: center,
-                startRadius: 2,
-                endRadius: hubR
-            )
+            with: .color(palette.storybookButter)
         )
-        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.nightLampGold.opacity(0.55)), lineWidth: 1.4)
+        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.cartoonOutline), lineWidth: 1.8)
 
         let amp = hubR * 0.55
         var wave = Path()
@@ -452,20 +499,17 @@ public struct VinylPostcardCanvasView: View {
     }
 
     private func drawPostcardRiver(ctx: inout GraphicsContext, size: CGSize, palette: ChimmoPalette) {
-        let cardRect = CGRect(x: 12, y: 20, width: size.width - 24, height: size.height - 40)
+        let cardRect = CGRect(x: 12, y: 16, width: size.width - 24, height: size.height - 34)
         let cardPath = RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect)
         ctx.fill(
-            cardPath,
-            with: .linearGradient(
-                Gradient(colors: snapshot.isNight
-                    ? [Color(hex: 0x1D2551), Color(hex: 0x121836)]
-                    : [Color(hex: 0xFFFFFF), Color(hex: 0xF1E8D9)]),
-                startPoint: CGPoint(x: size.width * 0.5, y: cardRect.minY),
-                endPoint: CGPoint(x: size.width * 0.5, y: cardRect.maxY)
-            )
+            RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect.offsetBy(dx: 0, dy: 5)),
+            with: .color(palette.cartoonShadow)
         )
-        let rimColor = snapshot.isNight ? Color(hex: 0x524036).opacity(0.8) : Color(hex: 0xD2B48C).opacity(0.88)
-        ctx.stroke(cardPath, with: .color(rimColor), lineWidth: 2.2)
+        ctx.fill(
+            cardPath,
+            with: .color(snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface)
+        )
+        ctx.stroke(cardPath, with: .color(palette.cartoonOutline), lineWidth: 2.6)
 
         let padX: CGFloat = 28
         let usableW = max(1, size.width - padX * 2)
@@ -561,14 +605,10 @@ public struct VinylPostcardCanvasView: View {
             area.closeSubpath()
             ctx.fill(
                 area,
-                with: .linearGradient(
-                    Gradient(colors: [palette.homeAnchor.opacity(0.18), .clear]),
-                    startPoint: CGPoint(x: size.width * 0.5, y: topY),
-                    endPoint: CGPoint(x: size.width * 0.5, y: bottomY)
-                )
+                with: .color(palette.homeAnchor.opacity(snapshot.isNight ? 0.16 : 0.12))
             )
 
-            // 棱镜音程渐变曲线
+            // 扁平卡通音程色线
             for i in 1..<pts.count {
                 let d0 = pts[i - 1]
                 let d1 = pts[i]
@@ -579,19 +619,18 @@ public struct VinylPostcardCanvasView: View {
                 var seg = Path()
                 seg.move(to: p0)
                 seg.addCurve(to: p1, control1: c1, control2: c2)
-                let col0 = XylophoneLane.lane(at: d0.laneIdx).barColor(isNight: snapshot.isNight)
                 let col1 = XylophoneLane.lane(at: d1.laneIdx).barColor(isNight: snapshot.isNight)
                 let style = IntervalSilkStyle.metrics(fromLane: d0.laneIdx, toLane: d1.laneIdx, isNight: snapshot.isNight)
                 if style.glowWidth > 0 {
                     ctx.stroke(
                         seg,
-                        with: .linearGradient(Gradient(colors: [col0.opacity(style.glowOpacity), col1.opacity(style.glowOpacity)]), startPoint: p0, endPoint: p1),
+                        with: .color(col1.opacity(style.glowOpacity)),
                         style: StrokeStyle(lineWidth: style.glowWidth, lineCap: .round)
                     )
                 }
                 ctx.stroke(
                     seg,
-                    with: .linearGradient(Gradient(colors: [col0.opacity(style.coreOpacity), col1.opacity(style.coreOpacity)]), startPoint: p0, endPoint: p1),
+                    with: .color(col1.opacity(style.coreOpacity)),
                     style: StrokeStyle(lineWidth: style.coreWidth, lineCap: .round)
                 )
             }
@@ -646,19 +685,17 @@ public struct VinylPostcardCanvasView: View {
             ctx.stroke(arc, with: .color(col.opacity(0.80)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
         }
 
-        // 2. 星盘底盘与同心星环
+        // 2. 扁平卡通星盘底盘与同心星环
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
         ctx.fill(
-            Path(ellipseIn: platterRect),
-            with: .radialGradient(
-                Gradient(colors: snapshot.isNight ? [Color(hex: 0x1E295E), Color(hex: 0x101638)] : [Color(hex: 0xFFFDF8), Color(hex: 0xEFE5D4)]),
-                center: center,
-                startRadius: 8,
-                endRadius: platterR
-            )
+            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 6)),
+            with: .color(palette.cartoonShadow)
         )
-        let rimColor = snapshot.isNight ? Color(hex: 0x524036).opacity(0.8) : Color(hex: 0xD2B48C).opacity(0.88)
-        ctx.stroke(Path(ellipseIn: platterRect), with: .color(rimColor), lineWidth: 3.2)
+        ctx.fill(
+            Path(ellipseIn: platterRect),
+            with: .color(snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface)
+        )
+        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.cartoonOutline), lineWidth: 3.0)
 
         for mult in [0.42, 0.72] {
             let rr = platterR * CGFloat(mult)
@@ -682,19 +719,18 @@ public struct VinylPostcardCanvasView: View {
                 var seg = Path()
                 seg.move(to: p0)
                 seg.addQuadCurve(to: p1, control: ctrl)
-                let c0 = XylophoneLane.lane(at: l0).barColor(isNight: snapshot.isNight)
                 let c1 = XylophoneLane.lane(at: l1).barColor(isNight: snapshot.isNight)
                 let style = IntervalSilkStyle.metrics(fromLane: l0, toLane: l1, isNight: snapshot.isNight)
                 if style.glowWidth > 0 {
                     ctx.stroke(
                         seg,
-                        with: .linearGradient(Gradient(colors: [c0.opacity(style.glowOpacity), c1.opacity(style.glowOpacity)]), startPoint: p0, endPoint: p1),
+                        with: .color(c1.opacity(style.glowOpacity)),
                         style: StrokeStyle(lineWidth: style.glowWidth, lineCap: .round)
                     )
                 }
                 ctx.stroke(
                     seg,
-                    with: .linearGradient(Gradient(colors: [c0.opacity(style.coreOpacity), c1.opacity(style.coreOpacity)]), startPoint: p0, endPoint: p1),
+                    with: .color(c1.opacity(style.coreOpacity)),
                     style: StrokeStyle(lineWidth: style.coreWidth, lineCap: .round)
                 )
             }
@@ -720,19 +756,14 @@ public struct VinylPostcardCanvasView: View {
             ctx.fill(PitchGlyphShape.glyph(forLaneIndex: laneIdx).path(in: CGRect(x: pt.x - gs * 0.5, y: pt.y - gs * 0.5, width: gs, height: gs)), with: .color(.white.opacity(0.95)), style: FillStyle(eoFill: true))
         }
 
-        // 5. 中央大尺度利萨如星核 / 空盘呼吸导引环
+        // 5. 中央扁平卡通利萨如星核 / 空盘呼吸导引环
         let coreR = platterR * 0.30
         let coreRect = CGRect(x: center.x - coreR, y: center.y - coreR, width: coreR * 2, height: coreR * 2)
         ctx.fill(
             Path(ellipseIn: coreRect),
-            with: .radialGradient(
-                Gradient(colors: snapshot.isNight ? [Color(hex: 0xFFB84D).opacity(0.32), Color(hex: 0x242F63)] : [Color(hex: 0xFFE3A3).opacity(0.68), Color(hex: 0xF5E7CE)]),
-                center: center,
-                startRadius: 2,
-                endRadius: coreR
-            )
+            with: .color(palette.storybookButter)
         )
-        ctx.stroke(Path(ellipseIn: coreRect), with: .color(palette.nightLampGold.opacity(0.6)), lineWidth: 1.4)
+        ctx.stroke(Path(ellipseIn: coreRect), with: .color(palette.cartoonOutline), lineWidth: 1.8)
 
         let amp = coreR * 0.62
         var wave = Path()

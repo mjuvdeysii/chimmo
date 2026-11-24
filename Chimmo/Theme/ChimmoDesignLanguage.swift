@@ -545,3 +545,182 @@ public struct ChimmoCartoonKeyBuddyView: View {
         .accessibilityHidden(true)
     }
 }
+
+/// 扁平卡通童书场景背景层（纯平涂天空、日光太阳射线 / 夜灯新月纸星、双层手绘草坡，零渐变零模糊）。
+public struct StorybookCartoonSceneBackground: View {
+    public let palette: ChimmoPalette
+    public var accentTint: Color?
+    public var hillHeightRatio: CGFloat
+    public var showsSkyMotifs: Bool
+
+    public init(
+        palette: ChimmoPalette,
+        accentTint: Color? = nil,
+        hillHeightRatio: CGFloat = 0.28,
+        showsSkyMotifs: Bool = true
+    ) {
+        self.palette = palette
+        self.accentTint = accentTint
+        self.hillHeightRatio = hillHeightRatio
+        self.showsSkyMotifs = showsSkyMotifs
+    }
+
+    public var body: some View {
+        Canvas { ctx, size in
+            let w = max(1, size.width)
+            let h = max(1, size.height)
+            let outline = palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.72)
+
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(palette.paper))
+
+            if let tint = accentTint {
+                let skyWash = Path(CGRect(x: 0, y: 0, width: w, height: h * 0.42))
+                ctx.fill(skyWash, with: .color(tint.opacity(palette.isNight ? 0.11 : 0.08)))
+            }
+
+            if showsSkyMotifs {
+                drawSkyCelestial(ctx: &ctx, w: w, h: h, outline: outline)
+                drawPaperCloud(ctx: &ctx, center: CGPoint(x: w * 0.22, y: h * 0.18), scale: min(1.0, w / 340.0), outline: outline)
+                drawPaperCloud(ctx: &ctx, center: CGPoint(x: w * 0.80, y: h * 0.23), scale: min(0.86, w / 390.0), outline: outline)
+            }
+
+            let bandH = max(24, h * max(0.14, min(0.55, hillHeightRatio)))
+            drawRollingHill(
+                ctx: &ctx,
+                width: w,
+                totalHeight: h,
+                topOffset: h - bandH * 1.18,
+                amplitude: 0.22,
+                phaseShift: 0.35,
+                fillColor: palette.storybookHillBack,
+                outlineColor: outline
+            )
+            drawRollingHill(
+                ctx: &ctx,
+                width: w,
+                totalHeight: h,
+                topOffset: h - bandH * 0.82,
+                amplitude: 0.18,
+                phaseShift: 2.35,
+                fillColor: palette.storybookHillFront,
+                outlineColor: outline
+            )
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func drawSkyCelestial(ctx: inout GraphicsContext, w: CGFloat, h: CGFloat, outline: Color) {
+        let cx = w * 0.86
+        let cy = h * 0.12
+        let r = min(18.0, min(w, h) * 0.055)
+
+        if palette.isNight {
+            var moon = Path()
+            let top = CGPoint(x: cx + r * 0.3, y: cy - r * 0.85)
+            let bot = CGPoint(x: cx + r * 0.3, y: cy + r * 0.85)
+            moon.move(to: top)
+            moon.addCurve(
+                to: bot,
+                control1: CGPoint(x: cx - r * 1.05, y: cy - r * 0.48),
+                control2: CGPoint(x: cx - r * 1.05, y: cy + r * 0.48)
+            )
+            moon.addCurve(
+                to: top,
+                control1: CGPoint(x: cx - r * 0.22, y: cy + r * 0.36),
+                control2: CGPoint(x: cx - r * 0.22, y: cy - r * 0.36)
+            )
+            moon.closeSubpath()
+            ctx.fill(moon, with: .color(palette.nightLampGold))
+            ctx.stroke(moon, with: .color(outline), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+
+            for starPt in [CGPoint(x: w * 0.12, y: h * 0.11), CGPoint(x: w * 0.68, y: h * 0.10)] {
+                let d = Path(ellipseIn: CGRect(x: starPt.x - 2.6, y: starPt.y - 2.6, width: 5.2, height: 5.2))
+                ctx.fill(d, with: .color(palette.nightLampGold))
+            }
+        } else {
+            let sunCenter = CGPoint(x: cx, y: cy)
+            let rays = StorybookPostcardAndShelfKinematics.radialRaySegments(
+                center: sunCenter,
+                innerRadius: r + 3.5,
+                outerRadius: r + 9.0,
+                rayCount: 8
+            )
+            for seg in rays {
+                var p = Path()
+                p.move(to: seg.start)
+                p.addLine(to: seg.end)
+                ctx.stroke(p, with: .color(palette.nightLampGold), style: StrokeStyle(lineWidth: 2.0, lineCap: .round))
+            }
+            let sunRect = CGRect(x: sunCenter.x - r, y: sunCenter.y - r, width: r * 2, height: r * 2)
+            ctx.fill(Path(ellipseIn: sunRect), with: .color(palette.storybookButter))
+            ctx.stroke(Path(ellipseIn: sunRect), with: .color(outline), lineWidth: 1.6)
+        }
+    }
+
+    private func drawPaperCloud(ctx: inout GraphicsContext, center: CGPoint, scale: CGFloat, outline: Color) {
+        let s = max(0.55, scale)
+        let cw: CGFloat = 46 * s
+        let ch: CGFloat = 18 * s
+        let left = center.x - cw * 0.5
+        let right = center.x + cw * 0.5
+        let baseY = center.y + ch * 0.5
+        let cloudFill = palette.isNight ? palette.cardSurface.opacity(0.66) : palette.cardSurface
+
+        var cloud = Path()
+        cloud.move(to: CGPoint(x: left + 6 * s, y: baseY))
+        cloud.addLine(to: CGPoint(x: right - 6 * s, y: baseY))
+        cloud.addQuadCurve(to: CGPoint(x: right, y: baseY - 6 * s), control: CGPoint(x: right, y: baseY))
+        cloud.addQuadCurve(to: CGPoint(x: right - 12 * s, y: baseY - 12 * s), control: CGPoint(x: right, y: baseY - 13 * s))
+        cloud.addQuadCurve(to: CGPoint(x: center.x - 10 * s, y: baseY - 14 * s), control: CGPoint(x: center.x - 1 * s, y: baseY - 22 * s))
+        cloud.addQuadCurve(to: CGPoint(x: left, y: baseY - 6 * s), control: CGPoint(x: left, y: baseY - 13 * s))
+        cloud.addQuadCurve(to: CGPoint(x: left + 6 * s, y: baseY), control: CGPoint(x: left, y: baseY))
+        cloud.closeSubpath()
+
+        ctx.fill(cloud, with: .color(cloudFill))
+        ctx.stroke(cloud, with: .color(outline.opacity(0.55)), style: StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round))
+    }
+
+    private func drawRollingHill(
+        ctx: inout GraphicsContext,
+        width: CGFloat,
+        totalHeight: CGFloat,
+        topOffset: CGFloat,
+        amplitude: Double,
+        phaseShift: Double,
+        fillColor: Color,
+        outlineColor: Color
+    ) {
+        let profile = StorybookIllustrationLayout.rollingHillProfile(
+            sampleCount: 18,
+            amplitude: amplitude,
+            phaseShift: phaseShift
+        )
+        guard let first = profile.first else { return }
+        let hillBand: CGFloat = 48
+        let mapped = profile.map { pt in
+            CGPoint(x: CGFloat(pt.xFraction) * width, y: topOffset + CGFloat(pt.yFraction - 0.5) * hillBand)
+        }
+        var fillPath = Path()
+        fillPath.move(to: CGPoint(x: 0, y: totalHeight))
+        fillPath.addLine(to: CGPoint(x: CGFloat(first.xFraction) * width, y: mapped[0].y))
+        var ridgePath = Path()
+        ridgePath.move(to: mapped[0])
+        for i in 1..<mapped.count {
+            let prev = mapped[i - 1]
+            let curr = mapped[i]
+            let mid = CGPoint(x: (prev.x + curr.x) * 0.5, y: (prev.y + curr.y) * 0.5)
+            fillPath.addQuadCurve(to: mid, control: prev)
+            ridgePath.addQuadCurve(to: mid, control: prev)
+        }
+        if let last = mapped.last {
+            fillPath.addLine(to: last)
+            ridgePath.addLine(to: last)
+        }
+        fillPath.addLine(to: CGPoint(x: width, y: totalHeight))
+        fillPath.closeSubpath()
+
+        ctx.fill(fillPath, with: .color(fillColor))
+        ctx.stroke(ridgePath, with: .color(outlineColor.opacity(0.52)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
+    }
+}

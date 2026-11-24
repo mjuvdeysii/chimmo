@@ -2016,5 +2016,101 @@ public enum StorybookChoirMeterKinematics {
     }
 }
 
+/// 唱片工坊与离线明信片的扁平卡通绘本排版与 IP 主角选取纯值引擎（零拟物、100% 纯函数可单测）。
+public enum StorybookPostcardAndShelfKinematics {
+    public struct RaySegment: Equatable, Sendable {
+        public let start: CGPoint
+        public let end: CGPoint
+
+        public init(start: CGPoint, end: CGPoint) {
+            self.start = start
+            self.end = end
+        }
+    }
+
+    public struct SleeveBadgePlacement: Equatable, Sendable {
+        public let buddyOffsetY: CGFloat
+        public let buddyTiltDegrees: Double
+        public let shadowOffsetY: CGFloat
+
+        public init(buddyOffsetY: CGFloat, buddyTiltDegrees: Double, shadowOffsetY: CGFloat) {
+            self.buddyOffsetY = buddyOffsetY
+            self.buddyTiltDegrees = buddyTiltDegrees
+            self.shadowOffsetY = shadowOffsetY
+        }
+    }
+
+    /// 选取当前曲目中最具代表性的咩哞小偶（按音符频次优先，平局优先收尾落音）。
+    public static func heroMember(for document: MelodyDocument) -> ChimmoMember {
+        guard !document.notes.isEmpty else {
+            return .taono
+        }
+        var counts: [ChimmoMember: Int] = [:]
+        for note in document.notes {
+            let member = ChimmoMember.from(degree: note.degree)
+            counts[member, default: 0] += 1
+        }
+        let maxCount = counts.values.max() ?? 0
+        let sorted = document.notes.sorted {
+            $0.displayOnset(grooveStrength: document.grooveStrength) < $1.displayOnset(grooveStrength: document.grooveStrength)
+        }
+        if let lastNote = sorted.last {
+            let endingMember = ChimmoMember.from(degree: lastNote.degree)
+            if counts[endingMember] == maxCount {
+                return endingMember
+            }
+        }
+        return counts
+            .filter { $0.value == maxCount }
+            .keys
+            .min(by: { $0.degree < $1.degree }) ?? .taono
+    }
+
+    /// 唱片封套贴纸与角色头像在试听态、小调色彩与减弱动态效果下的扁平位移状态。
+    public static func sleevePlacement(
+        isPlaying: Bool,
+        hero: ChimmoMember,
+        isMinor: Bool,
+        reduceMotion: Bool
+    ) -> SleeveBadgePlacement {
+        let pose = StorybookIllustrationLayout.keyBuddyPose(
+            for: hero,
+            isSinging: isPlaying,
+            isMinor: isMinor,
+            reduceMotion: reduceMotion
+        )
+        return SleeveBadgePlacement(
+            buddyOffsetY: pose.popOffsetY,
+            buddyTiltDegrees: pose.earTiltDegrees,
+            shadowOffsetY: isPlaying ? 4.0 : 2.5
+        )
+    }
+
+    /// 生成扁平卡通太阳光线端点（兼容零数量与 NaN/Inf 安全边界）。
+    public static func radialRaySegments(
+        center: CGPoint,
+        innerRadius: CGFloat,
+        outerRadius: CGFloat,
+        rayCount: Int = 8
+    ) -> [RaySegment] {
+        guard rayCount > 0,
+              center.x.isFinite, center.y.isFinite,
+              innerRadius.isFinite, outerRadius.isFinite else {
+            return []
+        }
+        let safeInner = max(0, min(innerRadius, outerRadius))
+        let safeOuter = max(safeInner, outerRadius)
+        return (0..<rayCount).map { idx in
+            let angle = (Double(idx) / Double(rayCount)) * Double.pi * 2.0 - Double.pi * 0.5
+            let dx = CGFloat(cos(angle))
+            let dy = CGFloat(sin(angle))
+            return RaySegment(
+                start: CGPoint(x: center.x + dx * safeInner, y: center.y + dy * safeInner),
+                end: CGPoint(x: center.x + dx * safeOuter, y: center.y + dy * safeOuter)
+            )
+        }
+    }
+}
+
 
 

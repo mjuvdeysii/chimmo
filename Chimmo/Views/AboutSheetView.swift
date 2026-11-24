@@ -39,7 +39,7 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
     }
 }
 
-/// 离线黑胶星轨明信片、可播音频 & 标准 MIDI 分享抽屉（零 Emoji，纯粹的窑陶 × 黄铜版画展示体验）
+/// 离线扁平卡通黑胶星轨明信片、可播音频 & 标准 MIDI 分享抽屉（零 Emoji，零模糊投影，童书绘本印刷体验）
 public struct VinylPostcardShareSheet: View {
     public let palette: ChimmoPalette
     public let request: VinylPostcardRequest
@@ -76,189 +76,254 @@ public struct VinylPostcardShareSheet: View {
 
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 18) {
-                    // 浅色 / 深色（蜂蜡桦木托槽 + 黄铜窑瓷按键） + 三态画境切换 + 简谱开关
-                    HStack(spacing: 8) {
-                        ZStack {
-                            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
-                            HStack(spacing: 2) {
-                                ForEach([false, true], id: \.self) { nightFlag in
-                                    let active = useNightCard == nightFlag
-                                    Button {
-                                        useNightCard = nightFlag
-                                        AcousticHapticsEngine.shared.playScrubTick()
-                                    } label: {
-                                        Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
-                                            .font(.system(size: 12.5, weight: .bold))
-                                            .frame(width: 34, height: 28)
-                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+            ZStack {
+                AmbientPaperBackdrop(
+                    palette: palette,
+                    accentTint: request.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+                )
+
+                ScrollView {
+                    VStack(spacing: 12) {
+                        // 扁平卡通日夜纸卡片 + 三态画境切换 + 简谱印记开关
+                        HStack(spacing: 8) {
+                            ZStack {
+                                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
+                                HStack(spacing: 2) {
+                                    ForEach([false, true], id: \.self) { nightFlag in
+                                        let active = useNightCard == nightFlag
+                                        Button {
+                                            useNightCard = nightFlag
+                                            AcousticHapticsEngine.shared.playScrubTick()
+                                        } label: {
+                                            Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
+                                                .font(.system(size: 12.5, weight: .bold))
+                                                .frame(width: 34, height: 28)
+                                                .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                                .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
+                                        .accessibilityValue(active ? "已选中" : "")
                                     }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
-                                    .accessibilityValue(active ? "已选中" : "")
                                 }
+                                .padding(3)
                             }
-                            .padding(3)
-                            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 16, showCornerPins: false)
-                        }
-                        .fixedSize()
+                            .fixedSize()
 
-                        Spacer(minLength: 4)
+                            Spacer(minLength: 4)
 
-                        ZStack {
-                            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
-                            HStack(spacing: 2) {
-                                ForEach(StageVisualMode.allCases) { mode in
-                                    let active = selectedMode == mode
-                                    Button {
-                                        selectedMode = mode
-                                    } label: {
-                                        Image(systemName: mode.iconName)
-                                            .font(.system(size: 12.5, weight: .bold))
-                                            .frame(width: 30, height: 28)
-                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                            ZStack {
+                                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
+                                HStack(spacing: 2) {
+                                    ForEach(StageVisualMode.allCases) { mode in
+                                        let active = selectedMode == mode
+                                        Button {
+                                            selectedMode = mode
+                                        } label: {
+                                            Image(systemName: mode.iconName)
+                                                .font(.system(size: 12.5, weight: .bold))
+                                                .frame(width: 30, height: 28)
+                                                .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                                .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel("\(mode.rawValue)样式")
                                     }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel("\(mode.rawValue)样式")
                                 }
+                                .padding(3)
                             }
-                            .padding(3)
-                            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 16, showCornerPins: false)
-                        }
-                        .fixedSize()
+                            .fixedSize()
 
-                        Button {
-                            showJianpuStrip.toggle()
-                            AcousticHapticsEngine.shared.playScrubTick()
-                        } label: {
-                            Image(systemName: "textformat.123")
-                                .font(.system(size: 12.5, weight: .bold))
-                                .frame(width: 34, height: 34)
-                                .background(
-                                    ChimmoKilnPillButtonSurface(
-                                        palette: palette,
-                                        accent: palette.homeAnchor,
-                                        isActive: showJianpuStrip,
-                                        cornerRadius: 14
+                            Button {
+                                showJianpuStrip.toggle()
+                                AcousticHapticsEngine.shared.playScrubTick()
+                            } label: {
+                                Image(systemName: "textformat.123")
+                                    .font(.system(size: 12.5, weight: .bold))
+                                    .frame(width: 34, height: 34)
+                                    .background(
+                                        ChimmoKilnPillButtonSurface(
+                                            palette: palette,
+                                            accent: palette.homeAnchor,
+                                            isActive: showJianpuStrip,
+                                            cornerRadius: 14
+                                        )
                                     )
+                                    .foregroundStyle(showJianpuStrip ? palette.homeAnchor : palette.secondaryInk)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("在明信片显示简谱音符")
+                            .accessibilityValue(showJianpuStrip ? "已开启" : "已关闭")
+                        }
+                        .padding(.horizontal, 14)
+
+                        StorybookScallopDivider(
+                            color: palette.cartoonOutline.opacity(palette.isNight ? 0.48 : 0.34),
+                            stepWidth: 16
+                        )
+                        .frame(height: 6)
+                        .padding(.horizontal, 14)
+
+                        // 等比缩放呈现 540x680 扁平卡通绘本明信片预览（硬朗无模糊位移阴影 + 暖墨描边）
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(palette.cartoonShadow)
+                                .frame(width: 270, height: 340)
+                                .offset(x: 4, y: 5)
+
+                            VinylPostcardCanvasView(snapshot: snapshot)
+                                .scaleEffect(0.5)
+                                .frame(width: 270, height: 340)
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
                                 )
-                                .foregroundStyle(showJianpuStrip ? palette.homeAnchor : palette.secondaryInk)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("在明信片显示简谱音符")
-                        .accessibilityValue(showJianpuStrip ? "已开启" : "已关闭")
-                    }
-                    .padding(.horizontal, 16)
 
-                    // 等比缩放呈现 540x680 卡片预览
-                    VinylPostcardCanvasView(snapshot: snapshot)
-                        .scaleEffect(0.5)
-                        .frame(width: 270, height: 340)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .shadow(color: Color.black.opacity(useNightCard ? 0.36 : 0.14), radius: 16, y: 8)
-
-                    HStack(spacing: 10) {
-                        if let pngURL = exportedPNGURL {
-                            ShareLink(item: pngURL) {
-                                VStack(spacing: 5) {
-                                    ChimmoCraftMark(
-                                        .vinylSeal,
-                                        color: palette.isNight ? Color(hex: 0x0E142C) : .white
+                        HStack(spacing: 10) {
+                            if let pngURL = exportedPNGURL {
+                                ShareLink(item: pngURL) {
+                                    VStack(spacing: 5) {
+                                        ChimmoCraftMark(
+                                            .vinylSeal,
+                                            color: palette.isNight ? Color(hex: 0x0E142C) : .white
+                                        )
+                                        .frame(width: 18, height: 18)
+                                        Text("PNG")
+                                            .font(.caption.weight(.heavy).monospaced())
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(palette.cartoonShadow)
+                                                .offset(y: 3)
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(palette.homeAnchor)
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                                        }
                                     )
-                                    .frame(width: 18, height: 18)
-                                    Text("PNG")
-                                        .font(.caption.weight(.bold).monospaced())
+                                    .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("分享图片 PNG")
+                            } else {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                            }
+
+                            if let wavURL = exportedWAVURL {
+                                ShareLink(item: wavURL) {
+                                    VStack(spacing: 5) {
+                                        Image(systemName: "waveform")
+                                            .font(.subheadline.weight(.bold))
+                                        Text("WAV")
+                                            .font(.caption.weight(.heavy).monospaced())
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(palette.cartoonShadow)
+                                                .offset(y: 3)
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(palette.storybookButter)
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                                        }
+                                    )
+                                    .foregroundStyle(palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("分享立体声音频 WAV")
+                            } else if isRenderingWAV {
+                                VStack(spacing: 5) {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                    Text("WAV")
+                                        .font(.caption.weight(.heavy).monospaced())
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.homeAnchor))
-                                .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("分享图片 PNG")
-                        } else {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
-                        }
-
-                        if let wavURL = exportedWAVURL {
-                            ShareLink(item: wavURL) {
+                                .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                                .foregroundStyle(palette.secondaryInk)
+                            } else {
                                 VStack(spacing: 5) {
                                     Image(systemName: "waveform")
-                                        .font(.subheadline.weight(.bold))
-                                    Text("WAV")
-                                        .font(.caption.weight(.bold).monospaced())
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.nightLampGold.opacity(0.18)))
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(palette.nightLampGold.opacity(0.45), lineWidth: 1.0))
-                                .foregroundStyle(palette.nightLampGold)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("分享立体声音频 WAV")
-                        } else if isRenderingWAV {
-                            VStack(spacing: 5) {
-                                ProgressView()
-                                    .controlSize(.small)
-                                Text("WAV")
-                                    .font(.caption.weight(.bold).monospaced())
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(palette.divider, lineWidth: 1.0))
-                            .foregroundStyle(palette.secondaryInk)
-                        } else {
-                            VStack(spacing: 5) {
-                                Image(systemName: "waveform")
-                                    .font(.subheadline.weight(.semibold))
-                                Text("WAV")
-                                    .font(.caption.weight(.bold).monospaced())
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
-                            .foregroundStyle(palette.secondaryInk.opacity(0.5))
-                        }
-
-                        if let midiURL = exportedMIDIURL {
-                            ShareLink(item: midiURL) {
-                                VStack(spacing: 5) {
-                                    Image(systemName: "pianokeys")
                                         .font(.subheadline.weight(.semibold))
-                                    Text("MIDI")
-                                        .font(.caption.weight(.bold).monospaced())
+                                    Text("WAV")
+                                        .font(.caption.weight(.heavy).monospaced())
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(palette.divider, lineWidth: 1.0))
-                                .foregroundStyle(palette.primaryInk)
+                                .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                                .foregroundStyle(palette.secondaryInk.opacity(0.6))
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("导出 MIDI")
-                        } else {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.cardSurface))
-                        }
-                    }
-                    .padding(.horizontal, 16)
 
-                    Label("本机离线生成", systemImage: "lock.fill")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(palette.secondaryInk)
+                            if let midiURL = exportedMIDIURL {
+                                ShareLink(item: midiURL) {
+                                    VStack(spacing: 5) {
+                                        Image(systemName: "pianokeys")
+                                            .font(.subheadline.weight(.semibold))
+                                        Text("MIDI")
+                                            .font(.caption.weight(.heavy).monospaced())
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(palette.cartoonShadow)
+                                                .offset(y: 3)
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(palette.storybookMint)
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                                        }
+                                    )
+                                    .foregroundStyle(palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("导出 MIDI")
+                            } else {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                            }
+                        }
+                        .padding(.horizontal, 14)
+
+                        HStack(spacing: 8) {
+                            ChimmoCartoonKeyBuddyView(
+                                member: snapshot.heroMember,
+                                outlineColor: palette.cartoonOutline,
+                                isSinging: true,
+                                isMinor: request.document.scaleMode.isMinorFlavored
+                            )
+                            .frame(width: 24, height: 20)
+
+                            Label("本机离线印制 · \(snapshot.heroMember.chineseName)守护", systemImage: "lock.fill")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(palette.primaryInk)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(palette.cardSurface)
+                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.4))
+                        )
+                    }
+                    .padding(.vertical, 12)
                 }
-                .padding(.vertical, 16)
             }
-            .background(palette.paper.ignoresSafeArea())
             .navigationTitle("分享作品")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

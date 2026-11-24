@@ -471,6 +471,71 @@
     }
     .vinyl-boutique-card.spinning .tonearm-svg { transform: rotate(20deg); }
 
+
+    /* Flat Cartoon Postcard Press Bench (Round 34) */
+    .postcard-bench {
+      background: var(--paper);
+      border: 2.2px solid var(--outline);
+      border-radius: 22px;
+      padding: 13px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .postcard-frame {
+      position: relative;
+      background: var(--paper);
+      border: 2.2px solid var(--outline);
+      border-radius: 18px;
+      padding: 10px 10px 8px;
+      box-shadow: 3px 4px 0 var(--shadow-hard);
+      overflow: hidden;
+      display: grid;
+      gap: 6px;
+    }
+    .postcard-meta-plaque {
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border: 1.8px solid var(--outline);
+      border-radius: 11px;
+      padding: 6px 8px;
+      box-shadow: 0 2px 0 var(--shadow-hard);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .choir-meter-row {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      align-items: end;
+    }
+    .mini-buddy-badge {
+      height: 18px;
+      border-radius: 999px;
+      border: 1.6px solid #231B15;
+      background: #FFFDF7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.14s ease;
+    }
+    .mini-buddy-badge.cheering {
+      transform: translateY(-4px);
+    }
+    .mini-buddy-eye {
+      width: 2.6px;
+      height: 2.6px;
+      border-radius: 999px;
+      background: #231B15;
+    }
+
     /* Flat Cartoon Sound Palette Card & Bouncing Sound-Hill Meter */
     .soundbox-bench {
       display: grid;
@@ -706,14 +771,14 @@
       .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd {
         animation: none !important;
       }
-      .sound-hill, .hill-mini-mie, .lever-knob, .triad-pill {
+      .sound-hill, .hill-mini-mie, .mini-buddy-badge, .lever-knob, .triad-pill {
         transition: none !important;
       }
     }
     @media (max-width: 740px) {
       .hero-head { padding-right: 0; }
       .hero-sun-badge { width: 48px; height: 48px; top: 10px; right: 10px; opacity: 0.85; }
-      .duo-stage, .workshop-bench, .soundbox-bench, .cards-grid { grid-template-columns: 1fr; }
+      .duo-stage, .workshop-bench, .postcard-bench, .soundbox-bench, .cards-grid { grid-template-columns: 1fr; }
       .choir-grid { gap: 2px; }
       .figure-name { font-size: 10px; }
       .lever-row { grid-template-columns: 1fr; }
@@ -731,7 +796,7 @@
           </svg>
         </div>
         <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.39.0</span>
+        <span class="brand-ver">v0.41.0</span>
       </div>
 
       <div class="controls">
@@ -795,10 +860,16 @@
               </g>
               <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
               <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
-              <circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
-              <circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
-              <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
-              <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
+              <g stroke="#231B15" stroke-width="3.6" fill="none">
+                <circle cx="43" cy="48" r="18"/>
+                <circle cx="69" cy="48" r="18"/>
+                <ellipse cx="56" cy="41" rx="23" ry="20"/>
+                <ellipse cx="56" cy="54" rx="26" ry="20"/>
+              </g>
+              <circle cx="43" cy="48" r="18" fill="#FFFDF7"/>
+              <circle cx="69" cy="48" r="18" fill="#FFFDF7"/>
+              <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFDF7"/>
+              <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFDF7"/>
               <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4" stroke="#231B15" stroke-width="1.4"/>
               <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
               <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
@@ -909,9 +980,14 @@
         <div class="sleeve-wrap" aria-hidden="true">
           <div class="peeking-disc"></div>
           <div class="sleeve-cover">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" fill="#D8F1E7" stroke="#231B15" stroke-width="1.8"/>
-              <circle cx="12" cy="12" r="3.4" fill="#F25563"/>
+            <svg width="48" height="52" viewBox="0 0 48 52" fill="none">
+              <path d="M0 39 Q14 31 28 38 T48 35 L48 52 L0 52 Z" fill="var(--hill-front)"/>
+              <circle cx="25" cy="24" r="12" fill="#F25563" fill-opacity="0.22" stroke="#231B15" stroke-width="1.5"/>
+              <rect x="19" y="13" width="3.5" height="6" rx="1.7" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
+              <rect x="27" y="13" width="3.5" height="6" rx="1.7" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
+              <rect x="17" y="18" width="16" height="12" rx="6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.6"/>
+              <circle cx="22.5" cy="24" r="1.5" fill="#231B15"/>
+              <circle cx="27.5" cy="24" r="1.5" fill="#231B15"/>
             </svg>
           </div>
           <svg class="tonearm-svg" width="92" height="74" viewBox="0 0 92 74">
@@ -925,6 +1001,34 @@
           <div id="vinylStatusText" style="font-size:12px;font-weight:700;color:var(--sub);margin-top:3px">轻点唱片滑出纸套，跟随唱针一起跳音阶</div>
         </div>
       </button>
+    </section>
+
+
+    <section class="postcard-bench" aria-label="扁平卡通黑胶星轨明信片交互印制台">
+      <div class="postcard-frame" id="postcardPreviewFrame">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:900">
+          <span>咩哞 · 绘本明信片</span>
+          <span id="postcardModePill" style="padding:1px 7px;border-radius:999px;background:var(--mint);border:1.4px solid var(--outline)">星轨转盘</span>
+        </div>
+        <svg id="postcardArtSvg" width="100%" height="122" viewBox="0 0 200 122" aria-hidden="true"></svg>
+        <div class="postcard-meta-plaque">
+          <span>天鹅湖畔 · 离线 PNG</span>
+          <span style="color:var(--accent)">陶诺守护</span>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:9px;align-content:center">
+        <div class="bench-label">
+          <span>绘本星轨明信片印制台（零渐变平涂卡纸）</span>
+          <span class="bench-sub" id="postcardStatusSub">1080×1360 离线高清导出</span>
+        </div>
+        <p class="bench-sub" style="margin:0;line-height:1.5">小羊咩、小牛哞与曲目主角小偶站上双层草坡陪你署名。轻点切换三种音乐画境，即刻响起对应音画印记。</p>
+        <div class="sb-controls-row" id="postcardModeButtons" role="group" aria-label="明信片画境模式">
+          <button class="sb-chip active" type="button" data-pmode="disc">星轨转盘</button>
+          <button class="sb-chip" type="button" data-pmode="river">极光琴河</button>
+          <button class="sb-chip" type="button" data-pmode="nebula">八角星座</button>
+        </div>
+      </div>
     </section>
 
     <section class="soundbox-bench" aria-label="童书声音调色卡与跳跃声波山坡表">
@@ -988,7 +1092,7 @@
 
         <div id="hillMeterBox" class="hill-meter-box">
           <div class="hill-meter-sky">
-            <span class="bench-sub">发声越响，小羊与彩虹山坡跳得越高</span>
+            <span class="bench-sub">发声越响，七小只逐一点头助威</span>
             <svg class="hill-mini-mie" width="34" height="28" viewBox="0 0 112 92" aria-hidden="true">
               <circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
               <circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
@@ -996,6 +1100,16 @@
               <circle cx="48" cy="49" r="3.8" fill="#231B15"/>
               <circle cx="64" cy="49" r="3.8" fill="#231B15"/>
             </svg>
+          </div>
+
+          <div class="choir-meter-row" id="choirMeterBuddies" aria-hidden="true">
+            <span class="mini-buddy-badge" data-c="#F25563"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+            <span class="mini-buddy-badge" data-c="#F7882F"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+            <span class="mini-buddy-badge" data-c="#E64980"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+            <span class="mini-buddy-badge" data-c="#12B886"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+            <span class="mini-buddy-badge" data-c="#228BE6"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+            <span class="mini-buddy-badge" data-c="#7950F2"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+            <span class="mini-buddy-badge" data-c="#E59900"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
           </div>
 
           <div class="sound-hills" id="soundHills" aria-hidden="true">
@@ -1085,10 +1199,12 @@
       const hillBox = document.getElementById("hillMeterBox");
       const hillBadge = document.getElementById("vuReadoutBadge");
       const hills = Array.from(document.querySelectorAll("#soundHills .sound-hill"));
+      const miniBuddies = Array.from(document.querySelectorAll("#choirMeterBuddies .mini-buddy-badge"));
 
       function pulseSoundHills(level) {
         const lv = Math.max(0.15, Math.min(1.0, level || 0.6));
         const litCount = Math.max(2, Math.min(9, Math.round(lv * 9)));
+        const cheeringCount = Math.max(1, Math.min(7, Math.ceil((litCount / 9) * 7)));
         hillBox.classList.add("singing");
         hills.forEach((el, idx) => {
           const isOn = idx < litCount;
@@ -1098,6 +1214,12 @@
           el.classList.toggle("warm", isOn && idx >= 4 && idx < 7);
           el.classList.toggle("hot", isOn && idx >= 7);
         });
+        miniBuddies.forEach((b, idx) => {
+          const cheer = idx < cheeringCount;
+          b.classList.toggle("cheering", cheer);
+          b.style.backgroundColor = cheer ? "#FFE49E" : "#FFFDF7";
+          b.style.borderColor = cheer ? b.dataset.c : "#231B15";
+        });
         hillBadge.textContent = lv >= 0.74 ? "欢快高音齐唱" : "轻柔声波跃动";
         clearTimeout(hillTimer);
         hillTimer = setTimeout(() => {
@@ -1105,6 +1227,11 @@
           hills.forEach((el, idx) => {
             el.style.height = `${idx % 2 === 1 ? 46 : 36}%`;
             el.classList.remove("on", "warm", "hot");
+          });
+          miniBuddies.forEach((b) => {
+            b.classList.remove("cheering");
+            b.style.backgroundColor = "#FFFDF7";
+            b.style.borderColor = "#231B15";
           });
           hillBadge.textContent = "静候开唱";
         }, 720);
@@ -1394,6 +1521,37 @@
       });
 
       renderOscilloscope();
+
+      const postcardSvg = document.getElementById("postcardArtSvg");
+      const postcardPill = document.getElementById("postcardModePill");
+
+      function renderPostcardArt(mode) {
+        const hillSvg = '<path d="M0 98 Q46 80 100 94 T200 88 L200 122 L0 122 Z" fill="var(--hill-back)"/><path d="M0 107 Q62 93 128 106 T200 99 L200 122 L0 122 Z" fill="var(--hill-front)"/>';
+        const sunSvg = '<circle cx="172" cy="18" r="9" fill="var(--gold)" stroke="var(--outline)" stroke-width="1.6"/>';
+        let art = '';
+        if (mode === "disc") {
+          postcardPill.textContent = "星轨转盘";
+          art = '<circle cx="100" cy="56" r="40" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><circle cx="100" cy="56" r="28" fill="none" stroke="#228BE6" stroke-width="1.4" stroke-opacity="0.45"/><circle cx="100" cy="56" r="14" fill="var(--butter)" stroke="var(--outline)" stroke-width="1.6"/><path d="M78 44 Q100 30 120 46 T112 72" fill="none" stroke="#F25563" stroke-width="2.4" stroke-linecap="round"/><circle cx="78" cy="44" r="4.2" fill="#F25563" stroke="#FFFDF7" stroke-width="1.2"/><circle cx="120" cy="46" r="4.2" fill="#E64980" stroke="#FFFDF7" stroke-width="1.2"/><circle cx="112" cy="72" r="4.2" fill="#228BE6" stroke="#FFFDF7" stroke-width="1.2"/>';
+        } else if (mode === "river") {
+          postcardPill.textContent = "极光琴河";
+          art = '<rect x="18" y="16" width="164" height="78" rx="12" fill="var(--card)" stroke="var(--outline)" stroke-width="2"/><line x1="28" y1="38" x2="172" y2="38" stroke="#228BE6" stroke-width="1.2" stroke-opacity="0.4"/><line x1="28" y1="68" x2="172" y2="68" stroke="#F25563" stroke-width="1.4" stroke-opacity="0.5"/><path d="M32 68 C62 68 70 38 102 38 C134 38 140 54 168 54" fill="none" stroke="#0E766E" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="68" r="4.5" fill="#F25563"/><circle cx="102" cy="38" r="4.5" fill="#228BE6"/><circle cx="168" cy="54" r="4.5" fill="#E64980"/>';
+        } else {
+          postcardPill.textContent = "八角星座";
+          art = '<circle cx="100" cy="56" r="40" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><polygon points="100,26 126,56 100,86 74,56" fill="none" stroke="#7950F2" stroke-width="2.2" stroke-linejoin="round"/><circle cx="100" cy="56" r="11" fill="var(--butter)" stroke="var(--outline)" stroke-width="1.5"/><circle cx="100" cy="26" r="4.5" fill="#F25563"/><circle cx="126" cy="56" r="4.5" fill="#228BE6"/><circle cx="100" cy="86" r="4.5" fill="#12B886"/><circle cx="74" cy="56" r="4.5" fill="#E64980"/>';
+        }
+        postcardSvg.innerHTML = sunSvg + hillSvg + art;
+      }
+
+      document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+          renderPostcardArt(btn.dataset.pmode);
+          const chord = btn.dataset.pmode === "disc" ? [261.63, 329.63] : (btn.dataset.pmode === "river" ? [329.63, 392.00] : [293.66, 440.00]);
+          playTone(chord[0], 0.45, 0, 0.13, "triangle");
+          playTone(chord[1], 0.58, 0.08, 0.14, "sine");
+        });
+      });
+      renderPostcardArt("disc");
 
       const mieCard = document.getElementById("mieCard");
       const mouCard = document.getElementById("mouCard");

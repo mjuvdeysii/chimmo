@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.41.0 - 2026-11-24
+- **黑胶唱片工坊与离线明信片全面扁平卡通绘本化 × OpenMotion 官网 v7（Flat Cartoon Kids' Book Edition v0.41.0）**：
+  - [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 与 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift)：新增纯值域引擎 `StorybookPostcardAndShelfKinematics`（曲目主角小偶选取 `heroMember(for:)`、封套贴纸位移 `sleevePlacement(...)` 与太阳光线生成器 `radialRaySegments(...)`），以及全域复用的零渐变童书风景图层 `StorybookCartoonSceneBackground`（日光太阳射线 / 夜灯新月纸星、单一闭合墨线纸艺云朵、双层手绘草坡）；
+  - [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)：清除全部残余 `LinearGradient` 与模糊 `.shadow(...)`，补充空作品直接试听守卫 `guard !doc.notes.isEmpty`；将 `VinylBoutiqueSleeveThumb` 重构为零延迟 `Button` 互动绘本封面（内嵌草坡起伏与实时欢唱晃头的曲目主角 `ChimmoCartoonKeyBuddyView`），将「唱片架暂无作品」与筛选空态重绘为汇聚 `taono / plokko / corllo` 与双子星的全幅草原绘本跨页；
+  - [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 与 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)：彻底消除 `VinylPostcardCanvasView` 与 `VinylPostcardShareSheet` 内的 16 处渐变及模糊浮动投影，重构为带暖墨漫画框、四角彩色圆钉贴纸、扇形顶帘、双层草坡、`咩 × 主角小偶 × 哞` 静态合影以及不遮挡文字的标题铭牌；PNG / WAV / MIDI 分享卡同步升级为硬朗无模糊偏移阴影贴纸卡片；
+  - OpenMotion Design Studio 互动绘本官网推进至 `v7`（`f60f9ab2-f447-4d3c-a5ef-ae1c270c0f7d` -> [docs/index.html](docs/index.html)）：统一小羊咩无内接缝闭合云朵轮廓、为跳跃声波小山坡加入随音量点头亮灯的七小只微缩合唱排、为唱片封套加入陶诺主角小偶，并新增「绘本星轨明信片交互印制台」卡片支持星轨转盘 / 极光琴河 / 八角星座实时切换与和弦发声，完成无头 PNG 渲染图目视验收；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound34StorybookShelfAndPostcardFlatCartoon`。
+
 ## 0.40.0 - 2026-11-24
 - **声音调色盒、捕梦工坊 × 双子星轮廓 × OpenMotion 短片 v10 全扁平卡通绘本化（Flat Cartoon Kids' Book Edition v0.40.0）**：
   - [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)：彻底移除木架与开关中的全部渐变及模糊投影，将顶部示波器升级为含太阳/新月、纸艺云朵、草坡与「咩 × 1·3·5 三音偶 × 哞」交互演出的绘本草坡舞台；将拨杆重构为漫画拨片贴纸开关，并用 `StorybookScallopDivider` 扇形彩带分隔混音三层，在「咩 · 音色」「哞 · 伴奏」标题胶囊内直接嵌入活体微缩双子视图；
