@@ -21,6 +21,7 @@ public final class HumCapturePipeline: ObservableObject {
     private var startTimestamp: Date?
     private var lastLevelTick: Date = .distantPast
     private var liveTraceTask: Task<Void, Never>?
+    private var captureGeneration: UInt64 = 0
 
     public init(
         router: HalfDuplexAudioRouter,
@@ -67,6 +68,8 @@ public final class HumCapturePipeline: ObservableObject {
     }
 
     private func beginEngineCaptureAsync() {
+        captureGeneration &+= 1
+        let generation = captureGeneration
         liveTraceTask?.cancel()
         liveTraceTask = nil
         livePitchTrace = []
@@ -105,7 +108,7 @@ public final class HumCapturePipeline: ObservableObject {
                     let rms = sqrt(Double(sumSq) / Double(count))
                     let normalized = min(1.0, rms * 6.5)
                     Task { @MainActor [weak self] in
-                        guard let self else { return }
+                        guard let self, self.captureGeneration == generation else { return }
                         let now = Date()
                         if now.timeIntervalSince(self.lastLevelTick) >= 0.05 {
                             self.lastLevelTick = now
@@ -118,7 +121,7 @@ public final class HumCapturePipeline: ObservableObject {
                 try engine.start()
 
                 await MainActor.run { [weak self] in
-                    guard let self else {
+                    guard let self, self.captureGeneration == generation else {
                         engine.inputNode.removeTap(onBus: 0)
                         engine.stop()
                         return
@@ -132,7 +135,7 @@ public final class HumCapturePipeline: ObservableObject {
                 }
             } catch {
                 await MainActor.run { [weak self] in
-                    guard let self else { return }
+                    guard let self, self.captureGeneration == generation else { return }
                     self.liveTraceTask?.cancel()
                     self.liveTraceTask = nil
                     self.livePitchTrace = []
@@ -200,6 +203,23 @@ public final class HumCapturePipeline: ObservableObject {
                 try? await Task.sleep(nanoseconds: 85_000_000)
             }
         }
+    }
+
+    public func cancelRecording() {
+        captureGeneration &+= 1
+        isRecording = false
+        inputLevel = 0.0
+        liveTraceTask?.cancel()
+        liveTraceTask = nil
+        livePitchTrace = []
+
+        recordEngine?.inputNode.removeTap(onBus: 0)
+        recordEngine?.stop()
+        recordEngine = nil
+
+        sampleLock.withLock { $0.removeAll(keepingCapacity: false) }
+        statusMessage = ""
+        synth.ensureRunning()
     }
 
     public func stopAndTranscribe(preferredMode: ScaleMode?) async -> ScaleGravityEngine.SnappedResult? {

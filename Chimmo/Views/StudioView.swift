@@ -1301,6 +1301,10 @@ public final class StudioViewModel: ObservableObject {
         capturePipeline.startRecording()
     }
 
+    public func cancelHumCapture() {
+        capturePipeline.cancelRecording()
+    }
+
     public func finishRelativeContourHum() {
         Task {
             if !document.notes.isEmpty {

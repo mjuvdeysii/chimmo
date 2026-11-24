@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.36.0 - 2026-11-24
+- **捕梦工坊实体创作工作台重构（Kiln Workbench & Analog VU Console v0.36.0）**：
+  - 彻底摆脱原生 `NavigationStack` 标题栏、`UISegmentedControl` 与平白卡片，重构 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 为暖窑象牙 × 蜂蜡桦木 × 拉丝黄铜三维创作台：
+    - 顶栏换装随当前模式切换徽标的 `ChimmoCraftBadge`、`ChimmoEditorialPill` 实时状态胶囊与暖瓷 `"完成"` 按钮，并构建三槽木框黄铜切换轨（「节奏画室」 / 「轻哼电台」 / 「折纸工坊」）；
+    - Tab 0「节奏画室」升级双子木框监视窗、蜂蜡桦木桌面木鼓机（内凹背光拍条窗口与拍数铜牌）、带 5/8 线音阶标尺与左缘彩色定位珠的手绘宣纸木框画盘及带柔和渐变阴影填充的 2×2 山坡浮雕卡；
+    - Tab 1「轻哼电台」重构为内置物理感黄铜指针模拟声压表 `AnalogHumVUMeterView`（9 档刻度弧 + 红区警告刻线 + 9 段实时灯条）的温暖广播木柜，配合黄铜外圈录音键、内凹示波窗与 1/5 定音调音珠；
+    - Tab 2「折纸工坊」统一夜灯剧场 / 跟灯 / 新画布硬件三联卡、带凹槽背景条的双曲线变形成长卡，并将三通道音高变奏推子收入带四角黄铜铆钉的木制混音盒。
+- **OpenMotion 导演动画短片 v7 视觉校准（OpenMotion Director）**：
+  - 同步校准 `s1-wake` / `s2-choir` / `s3-finale` 至暖窑象牙 `#F4EDE0`、深夜靛蓝 `#0E142C` 与拉丝黄铜视觉体系，并将片尾黄铜画框缩进安全视口高度内避免底部裁切。
+- **修复、引擎与单元测试（Fix & Engine）**：
+  - 为 [HumCapturePipeline.swift](Chimmo/Audio/HumCapturePipeline.swift) 新增带 `captureGeneration` 并发代数保护的 `cancelRecording()`，并在 [StudioView.swift](Chimmo/Views/StudioView.swift) 暴露 `cancelHumCapture()`，确保切换标签、打开夜灯剧场或关闭工坊时干净终止麦收音与节奏打点；
+  - 修复 Tab 0 画板仅轻触不足 2 点时误把已敲节奏展平为低音平线的问题，在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增 `HumVUMeterKinematics` 并在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 补齐 `testCreativeAlchemyRound29HumVUMeterKinematicsAndDreamWorkbenchCleanup`。
+
 ## 0.35.0 - 2026-11-24
 - **曲库黑胶精品店与展示工坊重构（Boutique Vinyl Cabinet & Design Studio v0.35.0）**：
   - 彻底移除系统默认分段控件与平白列表卡片，重构 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 为窑陶 × 蜂蜡桦木 × 拉丝黄铜黑胶唱片工坊：

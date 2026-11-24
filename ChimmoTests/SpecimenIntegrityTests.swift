@@ -2076,4 +2076,77 @@ final class SpecimenIntegrityTests: XCTestCase {
         let distinctTitles = Set(store.entries.map(\.document.title))
         XCTAssertEqual(distinctTitles.count, 4)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound29HumVUMeterKinematicsAndDreamWorkbenchCleanup() throws {
+        // 1. HumVUMeterKinematics 非录音态、非有限边界与 9 段声压表增调递推
+        let idle = HumVUMeterKinematics.reading(inputLevel: 0.92, isRecording: false)
+        XCTAssertEqual(idle.needleAngleDegrees, -44.0, accuracy: 0.0001)
+        XCTAssertEqual(idle.activeSegments, 0)
+        XCTAssertFalse(idle.isHot)
+
+        let nanReading = HumVUMeterKinematics.reading(inputLevel: .nan, isRecording: true)
+        let infReading = HumVUMeterKinematics.reading(inputLevel: .infinity, isRecording: true)
+        let negReading = HumVUMeterKinematics.reading(inputLevel: -0.5, isRecording: true)
+        XCTAssertEqual(nanReading, idle)
+        XCTAssertEqual(infReading, idle)
+        XCTAssertEqual(negReading, idle)
+
+        let low = HumVUMeterKinematics.reading(inputLevel: 0.12, isRecording: true)
+        let mid = HumVUMeterKinematics.reading(inputLevel: 0.48, isRecording: true)
+        let hot = HumVUMeterKinematics.reading(inputLevel: 0.82, isRecording: true)
+        let full = HumVUMeterKinematics.reading(inputLevel: 1.0, isRecording: true)
+
+        XCTAssertLessThan(low.needleAngleDegrees, mid.needleAngleDegrees)
+        XCTAssertLessThan(mid.needleAngleDegrees, hot.needleAngleDegrees)
+        XCTAssertLessThan(hot.needleAngleDegrees, full.needleAngleDegrees)
+        XCTAssertEqual(full.needleAngleDegrees, 44.0, accuracy: 0.0001)
+
+        XCTAssertGreaterThanOrEqual(low.activeSegments, 1)
+        XCTAssertLessThan(low.activeSegments, mid.activeSegments)
+        XCTAssertLessThan(mid.activeSegments, hot.activeSegments)
+        XCTAssertLessThanOrEqual(hot.activeSegments, full.activeSegments)
+        XCTAssertEqual(full.activeSegments, 9)
+
+        XCTAssertFalse(low.isHot)
+        XCTAssertFalse(mid.isHot)
+        XCTAssertTrue(hot.isHot)
+        XCTAssertTrue(full.isHot)
+
+        let zeroSeg = HumVUMeterKinematics.reading(inputLevel: 0.9, isRecording: true, totalSegments: 0)
+        XCTAssertEqual(zeroSeg.activeSegments, 0)
+
+        // 2. HumCapturePipeline.cancelRecording & StudioViewModel.cancelHumCapture 干净重置校验
+        let router = HalfDuplexAudioRouter()
+        let synth = FeltPianoSynth()
+        let pipeline = HumCapturePipeline(router: router, synth: synth)
+        pipeline.cancelRecording()
+        XCTAssertFalse(pipeline.isRecording)
+        XCTAssertEqual(pipeline.inputLevel, 0.0, accuracy: 0.0001)
+        XCTAssertTrue(pipeline.livePitchTrace.isEmpty)
+        XCTAssertTrue(pipeline.statusMessage.isEmpty)
+
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r29_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.cancelHumCapture()
+        XCTAssertFalse(vm.capturePipeline.isRecording)
+        XCTAssertEqual(vm.capturePipeline.inputLevel, 0.0, accuracy: 0.0001)
+        XCTAssertTrue(vm.capturePipeline.livePitchTrace.isEmpty)
+        XCTAssertTrue(vm.capturePipeline.statusMessage.isEmpty)
+        XCTAssertNil(vm.statusToast)
+
+        // 3. 敲击节奏清理契约
+        vm.startRhythmTap()
+        vm.recordRhythmDrumTap()
+        XCTAssertTrue(vm.isTappingRhythm)
+        XCTAssertEqual(vm.liveTapTimestamps.count, 1)
+        vm.cancelRhythmTap()
+        XCTAssertFalse(vm.isTappingRhythm)
+        XCTAssertTrue(vm.liveTapTimestamps.isEmpty)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

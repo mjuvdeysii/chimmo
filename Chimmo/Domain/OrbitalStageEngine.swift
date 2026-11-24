@@ -1610,3 +1610,41 @@ public enum VinylBoutiqueKinematics {
     }
 }
 
+/// 轻哼电台模拟黄铜 VU 声压表运动学：将线性麦克风电平转化为暖弧指针摆角、9 段灯柱与高潮过载判定（100% 纯函数、可单测）。
+public enum HumVUMeterKinematics {
+    public struct MeterReading: Equatable, Sendable {
+        public let needleAngleDegrees: Double
+        public let activeSegments: Int
+        public let isHot: Bool
+
+        public init(needleAngleDegrees: Double, activeSegments: Int, isHot: Bool) {
+            self.needleAngleDegrees = needleAngleDegrees
+            self.activeSegments = activeSegments
+            self.isHot = isHot
+        }
+    }
+
+    public static func reading(
+        inputLevel: Double,
+        isRecording: Bool,
+        totalSegments: Int = 9
+    ) -> MeterReading {
+        guard isRecording, inputLevel.isFinite else {
+            return MeterReading(needleAngleDegrees: -44.0, activeSegments: 0, isHot: false)
+        }
+        let level = max(0.0, min(1.0, inputLevel))
+        let curved = pow(level, 0.72)
+        let angle = -44.0 + curved * 88.0
+        let safeTotal = max(0, totalSegments)
+        let segs: Int
+        if safeTotal == 0 {
+            segs = 0
+        } else {
+            let rawSegs = Int((curved * Double(safeTotal)).rounded())
+            segs = level >= 0.04 ? max(1, min(safeTotal, rawSegs)) : min(safeTotal, rawSegs)
+        }
+        let isHot = level >= 0.74
+        return MeterReading(needleAngleDegrees: angle, activeSegments: segs, isHot: isHot)
+    }
+}
+
