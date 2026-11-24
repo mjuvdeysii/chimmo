@@ -1522,3 +1522,61 @@ public enum AcousticSignatureAnimationHelper {
     }
 }
 
+/// 实体 3D 窑陶琴块物理浮起与按压厚度运动学（严格纯值计算，可完整单测）。
+public enum KilnKeyPhysics {
+    public struct KeyElevation: Equatable, Sendable {
+        public let frontLipHeight: CGFloat
+        public let pressOffsetY: CGFloat
+        public let shadowRadius: CGFloat
+        public let shadowOffsetY: CGFloat
+
+        public init(
+            frontLipHeight: CGFloat,
+            pressOffsetY: CGFloat,
+            shadowRadius: CGFloat,
+            shadowOffsetY: CGFloat
+        ) {
+            self.frontLipHeight = frontLipHeight
+            self.pressOffsetY = pressOffsetY
+            self.shadowRadius = shadowRadius
+            self.shadowOffsetY = shadowOffsetY
+        }
+    }
+
+    public static func elevation(
+        isPressed: Bool,
+        isFollowTarget: Bool,
+        isMuted: Bool
+    ) -> KeyElevation {
+        if isMuted {
+            return KeyElevation(frontLipHeight: 1.5, pressOffsetY: 2.0, shadowRadius: 1.0, shadowOffsetY: 1.0)
+        }
+        if isPressed {
+            return KeyElevation(frontLipHeight: 1.2, pressOffsetY: 3.4, shadowRadius: 2.0, shadowOffsetY: 0.6)
+        }
+        if isFollowTarget {
+            return KeyElevation(frontLipHeight: 5.2, pressOffsetY: -3.5, shadowRadius: 8.5, shadowOffsetY: 4.5)
+        }
+        return KeyElevation(frontLipHeight: 4.2, pressOffsetY: 0.0, shadowRadius: 4.5, shadowOffsetY: 3.0)
+    }
+}
+
+/// 底部黄铜发条播放环归一化与五音守护表盘刻度计数映射（100% 纯函数、可单测）。
+public enum StageTransportRingMapper {
+    public static func loopProgress(currentTime: Double?, totalDuration: Double) -> Double {
+        guard let ct = currentTime,
+              ct.isFinite,
+              totalDuration.isFinite,
+              totalDuration > 0.05 else {
+            return 0.0
+        }
+        let mod = ct.truncatingRemainder(dividingBy: totalDuration)
+        let wrapped = mod < 0 ? mod + totalDuration : mod
+        return max(0.0, min(1.0, wrapped / totalDuration))
+    }
+
+    public static func pentatonicIndicatorCount(isSafe: Bool) -> Int {
+        isSafe ? 5 : 7
+    }
+}
+

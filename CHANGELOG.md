@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.34.0 - 2026-11-24
+- **建筑级主舞台视觉与材质重构（Global Materials & Stage Instrument Redesign）**：
+  - 升级全局 `ChimmoPalette` 与启动纸色资产：将日光底盘重构为暖窑象牙宣纸（`#F4EDE0`）、蜂蜡桦木与拉丝黄铜，夜灯重构为深夜天鹅绒靛蓝（`#0E142C`）、烟熏胡桃木与暖钨丝琥珀，并扩充 `woodTrayTop`、`woodTrayBottom`、`brassHairline`、`glazeHighlight`、`recessShadow` 物理材质原语；
+  - 升级 [AmbientPaperBackdrop.swift](Chimmo/Views/AmbientPaperBackdrop.swift) 与 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift)：加入确定性零功耗手抄陶纸矿物微粒/纤维肌理与工作室斜光束，新增可复用实体原语 `ChimmoWoodResonatorTray`、`ChimmoBrassFrameAccent` 与 `ChimmoKilnPillButtonSurface`；
+  - 重构主舞台 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)：
+    - 移除系统默认导航栏，改用一体式「双子窑陶铭牌胶囊」与 34pt 硬件圆形陶瓷按键构成的 `kilnCrownHeader`；
+    - 为主声盘/山河/星云共鸣腔披上带四角黄铜微铆钉的蜂蜡桦木框，并将浮雕三态模式切换仪收入右上角、于左下/右下四角增加可点按试听/唤醒的双子舞台角守护底座（`stageDuoCornerPerches`）；
+    - 为四幕和声触控轨增添内凹陶槽与顶部釉光高光层；
+    - 将底部蒙氏彩虹琴键重构为带双根拉丝黄铜共鸣导轨、微铆钉与 `KilnKeyPhysics` 真实 3D 压感立面的窑陶木琴共鸣箱；
+    - 将底部控制区重构为悬浮暖瓷黄铜发条中控台，左设 `StageTransportRingMapper` 驱动的循环播放进度光弧轮，右设 5/7 点五音守护刻度表盘。
+- **OpenMotion 导演动画短片全画幅精修（OpenMotion Director）**：
+  - 为 `ea36d037-a0fb-479e-bdd1-3d1ccf653b14` 工程 `index.html` 显式声明 1920x1080 主宿主几何并统一暖窑象牙底色 `#F4EDE0`，通过 `0` error / `0` warning 校验并重出 12 秒成片（同时确认并记录 macOS 宿主快速抓帧视口 `993px` 高度上限）。
+- **物理引擎与单元测试（Engine & Tests）**：
+  - 在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增 `KilnKeyPhysics` 与 `StageTransportRingMapper`；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound27KilnHardwareMaterialsTransportRingAndStageRedesign`。
+
 ## 0.33.0 - 2026-11-24
 - **修复与稳定性提升（Fix）**：
   - 修复 `StudioViewModel.undo()` 撤销音阶调式后声学混响空间配置 `AcousticSpaceProfile` 与 `pentatonicSafe` 未同步恢复的问题，`undo()` 后自动同步调用 `synth.applySpaceProfile` 并按文档音高重算五声安全锁；

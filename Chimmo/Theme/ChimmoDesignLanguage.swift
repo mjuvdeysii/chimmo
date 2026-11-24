@@ -309,3 +309,166 @@ public struct PitchGlyphVectorView: View {
         }
     }
 }
+
+/// 蜂蜡桦木 / 烟熏胡桃木内凹声学共鸣槽底板（含纵向深浅渐变、细微木纹平行丝线、顶部内凹阴影唇边与底部高光倒角）
+public struct ChimmoWoodResonatorTray: View {
+    public let palette: ChimmoPalette
+    public var cornerRadius: CGFloat
+
+    public init(palette: ChimmoPalette, cornerRadius: CGFloat = 18) {
+        self.palette = palette
+        self.cornerRadius = cornerRadius
+    }
+
+    public var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [palette.woodTrayTop, palette.woodTrayBottom],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            // 细微纵向/横向木材丝线纹理与内凹槽阴影
+            Canvas { ctx, size in
+                let grainCol = palette.isNight ? Color.white.opacity(0.032) : Color(hex: 0x5E472A).opacity(0.065)
+                let count = max(5, Int(size.height / 14))
+                for idx in 1..<count {
+                    let y = (CGFloat(idx) / CGFloat(count)) * size.height
+                    let drift = CGFloat(((idx * 37) % 7) - 3) * 0.8
+                    var line = Path()
+                    line.move(to: CGPoint(x: 10, y: y + drift))
+                    line.addQuadCurve(
+                        to: CGPoint(x: size.width - 10, y: y - drift),
+                        control: CGPoint(x: size.width * 0.5, y: y + drift * 1.4)
+                    )
+                    ctx.stroke(line, with: .color(grainCol), lineWidth: 0.7)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+
+            // 顶部内凹阴影唇边 + 底部边缘高光倒角
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [palette.recessShadow, .clear, palette.glazeHighlight.opacity(0.45)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1.5
+                )
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// 拉丝黄铜边饰与四角精密微铆钉（为声盘共鸣腔、琴盒与硬件面板提供乐器质感收边）
+public struct ChimmoBrassFrameAccent: View {
+    public let palette: ChimmoPalette
+    public var cornerRadius: CGFloat
+    public var showCornerPins: Bool
+
+    public init(palette: ChimmoPalette, cornerRadius: CGFloat, showCornerPins: Bool = true) {
+        self.palette = palette
+        self.cornerRadius = cornerRadius
+        self.showCornerPins = showCornerPins
+    }
+
+    public var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            palette.brassHairline.opacity(0.68),
+                            palette.brassHairline.opacity(0.24),
+                            palette.brassHairline.opacity(0.54)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.1
+                )
+
+            if showCornerPins {
+                GeometryReader { geo in
+                    let inset = max(10.0, cornerRadius * 0.44)
+                    let pts = [
+                        CGPoint(x: inset, y: inset),
+                        CGPoint(x: geo.size.width - inset, y: inset),
+                        CGPoint(x: inset, y: geo.size.height - inset),
+                        CGPoint(x: geo.size.width - inset, y: geo.size.height - inset)
+                    ]
+                    ForEach(Array(pts.enumerated()), id: \.offset) { _, pt in
+                        ZStack {
+                            Circle()
+                                .fill(palette.brassHairline.opacity(palette.isNight ? 0.85 : 0.78))
+                                .frame(width: 4.5, height: 4.5)
+                            Circle()
+                                .fill(Color.white.opacity(0.75))
+                                .frame(width: 1.5, height: 1.5)
+                                .offset(x: -0.7, y: -0.7)
+                        }
+                        .position(pt)
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 哑光窑陶立体按钮表面（顶边缘高光倒角 + 釉面微渐变 + 黄铜/暖瓷外描边 + 接地柔影）
+public struct ChimmoKilnPillButtonSurface: View {
+    public let palette: ChimmoPalette
+    public var accent: Color?
+    public var isActive: Bool
+    public var cornerRadius: CGFloat
+
+    public init(
+        palette: ChimmoPalette,
+        accent: Color? = nil,
+        isActive: Bool = false,
+        cornerRadius: CGFloat = 14
+    ) {
+        self.palette = palette
+        self.accent = accent
+        self.isActive = isActive
+        self.cornerRadius = cornerRadius
+    }
+
+    public var body: some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let activeTint = accent ?? palette.homeAnchor
+        let topCol = isActive
+            ? activeTint.opacity(palette.isNight ? 0.34 : 0.18)
+            : palette.cardSurface
+        let botCol = isActive
+            ? activeTint.opacity(palette.isNight ? 0.22 : 0.10)
+            : palette.shelfSurface.opacity(palette.isNight ? 0.72 : 0.60)
+        let strokeCol = isActive
+            ? palette.brassHairline.opacity(0.70)
+            : palette.brassHairline.opacity(palette.isNight ? 0.26 : 0.22)
+
+        ZStack {
+            shape
+                .fill(LinearGradient(colors: [topCol, botCol], startPoint: .top, endPoint: .bottom))
+                .shadow(color: palette.recessShadow, radius: isActive ? 7 : 5, y: 2.5)
+
+            shape
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [palette.glazeHighlight, strokeCol],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: isActive ? 1.3 : 1.0
+                )
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}

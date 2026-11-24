@@ -22,6 +22,8 @@ public struct OrbitalStageView: View {
     @State private var rippleWakeTask: Task<Void, Never>? = nil
     @State private var duoGreetingPulse: Bool = false
     @State private var duoGreetingTask: Task<Void, Never>? = nil
+    @State private var stageMiePulse: Bool = false
+    @State private var stageMieTask: Task<Void, Never>? = nil
 
     // 手势交互态（仅局部瞬态，绝不触发重排版死循环）
     @State private var discInteractionMode: DiscDragMode = .none
@@ -97,7 +99,7 @@ public struct OrbitalStageView: View {
                 )
 
                 VStack(spacing: 8) {
-                    topStageHeader
+                    kilnCrownHeader
                         .padding(.horizontal, 14)
 
                     heroStageContainer
@@ -127,71 +129,9 @@ public struct OrbitalStageView: View {
                         .padding(.horizontal, 14)
                         .padding(.bottom, 6)
                 }
-                .padding(.top, 2)
+                .padding(.top, 4)
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Button {
-                        vm.auditionDuoGreeting()
-                        duoGreetingPulse = true
-                        duoGreetingTask?.cancel()
-                        duoGreetingTask = Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: 520_000_000)
-                            if !Task.isCancelled {
-                                duoGreetingPulse = false
-                            }
-                        }
-                    } label: {
-                        let crownGaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
-                        LivingChimmoDuoBadgeView(
-                            isNight: palette.isNight,
-                            accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
-                            melodyActive: !vm.activeLaneIndices.isEmpty || duoGreetingPulse,
-                            cowAwake: vm.cradleEnabled,
-                            gazeBias: crownGaze
-                        )
-                        .frame(width: 38, height: 24)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("咩哞双子问候")
-                    .accessibilityHint("轻点试听小羊与小牛和音")
-                }
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    if vm.canUndo {
-                        Button {
-                            vm.undo()
-                        } label: {
-                            Image(systemName: "arrow.uturn.backward")
-                        }
-                        .accessibilityLabel("撤销上一步")
-                    }
-                }
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        vm.saveCurrentToNotebook()
-                    } label: {
-                        Image(systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark")
-                            .symbolEffect(.bounce, value: vm.lastSavedPulse)
-                    }
-                    .accessibilityLabel("保存到我的曲库")
-
-                    Button {
-                        onOpenSharePostcard()
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                    .accessibilityLabel("分享作品图片、音频与 MIDI")
-
-                    Button {
-                        onOpenAbout()
-                    } label: {
-                        Image(systemName: "info.circle")
-                    }
-                    .accessibilityLabel("关于与隐私承诺")
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
             .alert("作品名称", isPresented: $showRenameAlert) {
                 TextField("", text: $renameDraft)
                 Button("确定") {
@@ -235,6 +175,8 @@ public struct OrbitalStageView: View {
                 ribbonDragAnchorY = nil
                 ribbonMercuryLevel = 0.0
                 vm.endStarVibrato()
+                duoGreetingTask?.cancel()
+                stageMieTask?.cancel()
             }
             .onAppear {
                 if vm.requestOpenDreamSheet {
@@ -263,193 +205,469 @@ public struct OrbitalStageView: View {
         }
     }
 
-    // MARK: - 1. Minimal Floating Header + Pure-Icon Mode Switcher
+    // MARK: - 1. Custom Kiln Ceramic & Brushed Brass Crown Header
 
-    private var topStageHeader: some View {
-        HStack(spacing: 10) {
-            Button {
-                renameDraft = vm.document.title
-                showRenameAlert = true
-            } label: {
-                HStack(spacing: 7) {
-                    Circle()
-                        .fill(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
-                        .frame(width: 8, height: 8)
+    private var kilnCrownHeader: some View {
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let crownGaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
 
-                    Text(vm.document.title)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
+        return HStack(spacing: 8) {
+            // 一体化「双子窑陶铭牌胶囊」：左区双子问候 + 黄铜细竖线 + 右区曲名重命名
+            HStack(spacing: 9) {
+                Button {
+                    vm.auditionDuoGreeting()
+                    duoGreetingPulse = true
+                    duoGreetingTask?.cancel()
+                    duoGreetingTask = Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 520_000_000)
+                        if !Task.isCancelled {
+                            duoGreetingPulse = false
+                        }
+                    }
+                } label: {
+                    LivingChimmoDuoBadgeView(
+                        isNight: palette.isNight,
+                        accentColor: skyColor,
+                        melodyActive: !vm.activeLaneIndices.isEmpty || duoGreetingPulse,
+                        cowAwake: vm.cradleEnabled,
+                        gazeBias: crownGaze
+                    )
+                    .frame(width: 44, height: 28)
                 }
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .accessibilityLabel("咩哞双子问候")
+                .accessibilityHint("轻点试听小羊与小牛和音")
+
+                Rectangle()
+                    .fill(palette.brassHairline.opacity(0.45))
+                    .frame(width: 1, height: 18)
+                    .accessibilityHidden(true)
+
+                Button {
+                    renameDraft = vm.document.title
+                    showRenameAlert = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(skyColor)
+                            .frame(width: 8, height: 8)
+                            .overlay(Circle().stroke(palette.glazeHighlight, lineWidth: 0.8))
+
+                        Text(vm.document.title)
+                            .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                            .foregroundStyle(palette.primaryInk)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("作品名称 \(vm.document.title)")
+                .accessibilityHint("轻点重命名当前旋律")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("作品名称 \(vm.document.title)")
-            .accessibilityHint("轻点重命名当前旋律")
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                ChimmoKilnPillButtonSurface(
+                    palette: palette,
+                    accent: skyColor,
+                    isActive: false,
+                    cornerRadius: 20
+                )
+            )
 
             Spacer(minLength: 4)
 
-            HStack(spacing: 2) {
-                ForEach(StageVisualMode.allCases) { mode in
-                    let active = vm.visualMode == mode
-                    Button {
-                        withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.8)) {
-                            vm.visualMode = mode
-                        }
-                    } label: {
-                        Image(systemName: mode.iconName)
-                            .font(.system(size: 12.5, weight: .bold))
-                            .frame(width: 30, height: 26)
-                            .background(
-                                Capsule().fill(active ? palette.homeAnchor : Color.clear)
-                            )
-                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
+            HStack(spacing: 7) {
+                if vm.canUndo {
+                    hardwareCrownKey(
+                        systemName: "arrow.uturn.backward",
+                        tint: palette.primaryInk,
+                        isHighlighted: false,
+                        accessibilityLabel: "撤销上一步"
+                    ) {
+                        vm.undo()
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("切换到\(mode.rawValue)视图")
+                }
+
+                hardwareCrownKey(
+                    systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark",
+                    tint: vm.currentSavedEntryID != nil ? palette.homeAnchor : palette.primaryInk,
+                    isHighlighted: vm.currentSavedEntryID != nil,
+                    bounceValue: vm.lastSavedPulse,
+                    accessibilityLabel: "保存到我的曲库"
+                ) {
+                    vm.saveCurrentToNotebook()
+                }
+
+                hardwareCrownKey(
+                    systemName: "square.and.arrow.up",
+                    tint: palette.primaryInk,
+                    isHighlighted: false,
+                    accessibilityLabel: "分享作品图片、音频与 MIDI"
+                ) {
+                    onOpenSharePostcard()
+                }
+
+                hardwareCrownKey(
+                    systemName: "info.circle",
+                    tint: palette.primaryInk,
+                    isHighlighted: false,
+                    accessibilityLabel: "关于与隐私承诺"
+                ) {
+                    onOpenAbout()
                 }
             }
-            .fixedSize()
-            .padding(3)
-            .background(Capsule().fill(palette.cardSurface.opacity(palette.isNight ? 0.85 : 0.92)))
-            .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.18 : 0.05), radius: 6, y: 2)
         }
-        .padding(.horizontal, 4)
         .padding(.vertical, 2)
     }
 
-    // MARK: - 2. Hero Stage Container (Orbital Disc OR Flowing River OR Resonance Nebula)
+    private func hardwareCrownKey(
+        systemName: String,
+        tint: Color,
+        isHighlighted: Bool,
+        bounceValue: Int? = nil,
+        accessibilityLabel: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        let icon = Image(systemName: systemName)
+            .font(.system(size: 13, weight: .bold))
+            .foregroundStyle(tint)
+
+        return Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                isHighlighted ? tint.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface,
+                                palette.shelfSurface.opacity(palette.isNight ? 0.85 : 0.72)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        Circle()
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [
+                                        palette.glazeHighlight,
+                                        isHighlighted ? palette.brassHairline.opacity(0.65) : palette.brassHairline.opacity(0.24)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1.0
+                            )
+                    )
+                    .shadow(color: palette.recessShadow, radius: 4, y: 2)
+
+                if let bounceValue {
+                    icon.symbolEffect(.bounce, value: bounceValue)
+                } else {
+                    icon
+                }
+            }
+            .frame(width: 34, height: 34)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    // MARK: - 2. Hero Stage Container (Wood-Brass Resonator Cavity + Relief Mode Dial + Duo Corner Perches)
 
     private var heroStageContainer: some View {
-        let boardBg = palette.isNight ? Color(hex: 0x121936) : Color(hex: 0xFAF6EE)
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let boardBg = palette.isNight ? Color(hex: 0x101733) : Color(hex: 0xFAF5E9)
         let activeCurtainColor: Color? = (vm.cradleEnabled && (vm.isPlaying || vm.selectedBeadID != nil))
             ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
             : nil
-        let borderCol = activeCurtainColor?.opacity(palette.isNight ? 0.50 : 0.44)
-            ?? (palette.isNight ? palette.nightLampGold.opacity(0.20) : Color(hex: 0xCBB18D).opacity(0.32))
-        let stageShadowCol = activeCurtainColor?.opacity(palette.isNight ? 0.34 : 0.16)
-            ?? palette.primaryInk.opacity(palette.isNight ? 0.28 : 0.07)
+        let stageShadowCol = activeCurtainColor?.opacity(palette.isNight ? 0.36 : 0.18)
+            ?? palette.recessShadow
 
         return GeometryReader { geo in
+            let innerSize = CGSize(width: max(40, geo.size.width - 10), height: max(40, geo.size.height - 10))
             ZStack {
-                stageInteractiveCanvas
-                    .modifier(StagePlaybackNavigationActions(vm: vm))
-                    .modifier(StageBeatEditActions(vm: vm))
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { val in
-                                if !isActivelyDraggingStage {
-                                    isActivelyDraggingStage = true
-                                }
-                                switch vm.visualMode {
-                                case .orbitalDisc:
-                                    handleOrbitalDragChanged(val, in: geo.size)
-                                case .flowingRiver:
-                                    handleRiverDragChanged(val, in: geo.size)
-                                case .resonanceNebula:
-                                    handleNebulaDragChanged(val, in: geo.size)
-                                }
-                            }
-                            .onEnded { val in
-                                isActivelyDraggingStage = false
-                                switch vm.visualMode {
-                                case .orbitalDisc:
-                                    handleOrbitalDragEnded(val, in: geo.size)
-                                case .flowingRiver:
-                                    handleRiverDragEnded(val, in: geo.size)
-                                case .resonanceNebula:
-                                    handleNebulaDragEnded(val, in: geo.size)
-                                }
-                            }
-                    )
+                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 30)
 
-                if vm.document.notes.isEmpty {
-                    LivingChimmoDuoBadgeView(
-                        isNight: palette.isNight,
-                        accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
-                        melodyActive: false,
-                        cowAwake: vm.cradleEnabled
-                    )
-                    .frame(width: 78, height: 50)
-                    .opacity(palette.isNight ? 0.44 : 0.38)
+                ZStack {
+                    stageInteractiveCanvas
+                        .modifier(StagePlaybackNavigationActions(vm: vm))
+                        .modifier(StageBeatEditActions(vm: vm))
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { val in
+                                    if !isActivelyDraggingStage {
+                                        isActivelyDraggingStage = true
+                                    }
+                                    switch vm.visualMode {
+                                    case .orbitalDisc:
+                                        handleOrbitalDragChanged(val, in: innerSize)
+                                    case .flowingRiver:
+                                        handleRiverDragChanged(val, in: innerSize)
+                                    case .resonanceNebula:
+                                        handleNebulaDragChanged(val, in: innerSize)
+                                    }
+                                }
+                                .onEnded { val in
+                                    isActivelyDraggingStage = false
+                                    switch vm.visualMode {
+                                    case .orbitalDisc:
+                                        handleOrbitalDragEnded(val, in: innerSize)
+                                    case .flowingRiver:
+                                        handleRiverDragEnded(val, in: innerSize)
+                                    case .resonanceNebula:
+                                        handleNebulaDragEnded(val, in: innerSize)
+                                    }
+                                }
+                        )
+
+                    // 顶部天光漫射帘（随和弦色轻柔铺光）
+                    VStack(spacing: 0) {
+                        LinearGradient(
+                            colors: [
+                                (activeCurtainColor ?? skyColor).opacity(palette.isNight ? 0.20 : 0.14),
+                                .clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 68)
+                        Spacer()
+                    }
                     .allowsHitTesting(false)
 
-                    VStack {
+                    if vm.document.notes.isEmpty {
+                        LivingChimmoDuoBadgeView(
+                            isNight: palette.isNight,
+                            accentColor: skyColor,
+                            melodyActive: false,
+                            cowAwake: vm.cradleEnabled
+                        )
+                        .frame(width: 78, height: 50)
+                        .opacity(palette.isNight ? 0.44 : 0.38)
+                        .allowsHitTesting(false)
+
+                        VStack {
+                            Spacer()
+                            HStack(spacing: 10) {
+                                Button {
+                                    vm.plantDuoStarterMotif()
+                                } label: {
+                                    Label("咩哞起音", systemImage: "sparkles")
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 8)
+                                        .background(Capsule().fill(palette.homeAnchor))
+                                        .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("生成咩哞示范短句")
+
+                                Button {
+                                    showDreamSheet = true
+                                } label: {
+                                    Label("写旋律", systemImage: "wand.and.stars")
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            Capsule()
+                                                .fill(palette.cardSurface.opacity(0.94))
+                                                .overlay(Capsule().strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 1.0))
+                                        )
+                                        .foregroundStyle(palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("打开写旋律面板")
+                            }
+                            .padding(.bottom, 12)
+                        }
+                    } else if !vm.followGlowActive {
+                        stageDuoCornerPerches(skyColor: skyColor)
+                    }
+
+                    // 顶部左：声学状态胶囊 + 右：浮雕三态视窗切换仪 + 异常报错条
+                    VStack(spacing: 6) {
+                        HStack(alignment: .top, spacing: 6) {
+                            if vm.shadowCounterpointEnabled
+                                || abs(vm.playbackRate - 1.0) > 0.01
+                                || vm.document.rootMIDI != 60
+                                || vm.document.grooveStrength > 0.08 {
+                                activeFeaturesOverlay
+                            }
+                            Spacer(minLength: 4)
+                            modeReliefPillSwitcher
+                        }
+                        if let errorMsg = vm.statusToast {
+                            Text(errorMsg)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(palette.melodyTerracotta.opacity(0.92)))
+                                .transition(.opacity)
+                        }
                         Spacer()
-                        HStack(spacing: 10) {
-                            Button {
-                                vm.plantDuoStarterMotif()
-                            } label: {
-                                Label("咩哞起音", systemImage: "sparkles")
-                                    .font(.caption.weight(.bold))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 8)
-                                    .background(Capsule().fill(palette.homeAnchor))
-                                    .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("生成咩哞示范短句")
-
-                            Button {
-                                showDreamSheet = true
-                            } label: {
-                                Label("写旋律", systemImage: "wand.and.stars")
-                                    .font(.caption.weight(.bold))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        Capsule()
-                                            .fill(palette.cardSurface.opacity(0.94))
-                                            .overlay(Capsule().strokeBorder(palette.divider, lineWidth: 1.0))
-                                    )
-                                    .foregroundStyle(palette.primaryInk)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("打开写旋律面板")
-                        }
-                        .padding(.bottom, 12)
                     }
+                    .padding(9)
                 }
+                .background(
+                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                        .fill(boardBg)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                        .strokeBorder(
+                            (activeCurtainColor ?? palette.brassHairline).opacity(activeCurtainColor != nil ? 0.50 : 0.25),
+                            lineWidth: activeCurtainColor != nil ? 1.5 : 0.9
+                        )
+                )
+                .padding(5)
 
-                // 顶部极简声学状态标（无文字堆砌；展示伴唱、倍速、音区移调与律动状态，及麦克风异常提示）
-                VStack {
-                    HStack(alignment: .top) {
-                        if vm.shadowCounterpointEnabled
-                            || abs(vm.playbackRate - 1.0) > 0.01
-                            || vm.document.rootMIDI != 60
-                            || vm.document.grooveStrength > 0.08 {
-                            activeFeaturesOverlay
-                        }
-                        Spacer(minLength: 8)
-                    }
-                    if let errorMsg = vm.statusToast {
-                        Text(errorMsg)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(palette.melodyTerracotta.opacity(0.92)))
-                            .transition(.opacity)
-                    }
-                    Spacer()
-                }
-                .padding(10)
+                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 30, showCornerPins: true)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .fill(boardBg)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .strokeBorder(borderCol, lineWidth: activeCurtainColor != nil ? 1.8 : 1.2)
-            )
             .shadow(color: stageShadowCol, radius: activeCurtainColor != nil ? 18 : 14, y: 5)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
         }
         .frame(minHeight: 220, maxHeight: .infinity)
+    }
+
+    private var modeReliefPillSwitcher: some View {
+        HStack(spacing: 2) {
+            ForEach(StageVisualMode.allCases) { mode in
+                let active = vm.visualMode == mode
+                Button {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.8)) {
+                        vm.visualMode = mode
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: mode.iconName)
+                            .font(.system(size: 11.5, weight: .bold))
+                        if active {
+                            Text(mode.rawValue)
+                                .font(.system(size: 10.5, weight: .heavy, design: .rounded))
+                                .lineLimit(1)
+                        }
+                    }
+                    .padding(.horizontal, active ? 9 : 7.5)
+                    .frame(height: 26)
+                    .background(
+                        Capsule().fill(active ? palette.homeAnchor : Color.clear)
+                    )
+                    .foregroundStyle(
+                        active
+                            ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
+                            : palette.secondaryInk
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("切换到\(mode.rawValue)视图")
+            }
+        }
+        .fixedSize()
+        .padding(3)
+        .background(
+            ChimmoKilnPillButtonSurface(
+                palette: palette,
+                accent: nil,
+                isActive: false,
+                cornerRadius: 16
+            )
+        )
+    }
+
+    private func stageDuoCornerPerches(skyColor: Color) -> some View {
+        let tilt = Double((vm.latestDegree ?? 4) - 4) / 3.5
+        let gaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
+
+        return VStack {
+            Spacer()
+            HStack {
+                Button {
+                    vm.auditionDuoCharacter(.mie)
+                    stageMiePulse = true
+                    stageMieTask?.cancel()
+                    stageMieTask = Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 450_000_000)
+                        if !Task.isCancelled {
+                            stageMiePulse = false
+                        }
+                    }
+                } label: {
+                    TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+                        let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
+                        ChimmoSheepView(
+                            isNight: palette.isNight,
+                            accentColor: skyColor,
+                            isSinging: !vm.activeLaneIndices.isEmpty || stageMiePulse,
+                            tiltProgress: tilt,
+                            phaseTime: phaseTime,
+                            gazeBias: gaze
+                        )
+                        .frame(width: 30, height: 24)
+                        .offset(y: (stageMiePulse && !reduceMotion) ? -2.5 : 0)
+                    }
+                    .frame(width: 42, height: 34)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(palette.cardSurface.opacity(palette.isNight ? 0.80 : 0.88))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.9)
+                            )
+                            .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("小羊咩舞台守护")
+                .accessibilityHint("轻点试听主旋律高音")
+
+                Spacer()
+
+                Button {
+                    if !vm.cradleEnabled {
+                        vm.setChordPreset(.autoMatch)
+                    }
+                    vm.auditionDuoCharacter(.mou)
+                } label: {
+                    TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+                        let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
+                        ChimmoCowView(
+                            isNight: palette.isNight,
+                            accentColor: skyColor,
+                            isAwake: vm.cradleEnabled,
+                            isPlaying: vm.isPlaying && vm.cradleEnabled,
+                            phaseTime: phaseTime,
+                            gazeBias: -0.25
+                        )
+                        .frame(width: 30, height: 24)
+                    }
+                    .frame(width: 42, height: 34)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(palette.cardSurface.opacity(palette.isNight ? 0.80 : 0.88))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(
+                                        (vm.cradleEnabled ? palette.bassRibbon : palette.brassHairline).opacity(0.35),
+                                        lineWidth: 0.9
+                                    )
+                            )
+                            .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("小牛哞舞台守护")
+                .accessibilityHint(vm.cradleEnabled ? "轻点试听低音和声" : "轻点唤醒低音和声伴奏")
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
+        }
     }
 
     private var stageInteractiveCanvas: some View {
@@ -2446,201 +2664,283 @@ public struct OrbitalStageView: View {
         )
     }
 
-    // MARK: - 4. Tactile 8-Key Montessori Rainbow Ribbon (Glissando + Colorblind Glyphs)
+    // MARK: - 4. Tactile 8-Key Beeswax Birch Resonator Box + 3D Kiln Xylophone (Glissando + Colorblind Glyphs)
 
     private var rainbowKeyRibbon: some View {
         let hints = smartHintByLane
         let chordDegrees = vm.activeChordToneDegrees
 
-        return GeometryReader { geo in
-            HStack(alignment: .bottom, spacing: 5) {
-                ForEach(XylophoneLane.allLanes) { lane in
-                    let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
-                    let isFollowTarget = targetFollowLaneIndex == lane.index
-                    let hint = hints[lane.index]
-                    let isChordResonant = !isMuted && !isFollowTarget && hint == nil && chordDegrees.contains(lane.degree)
-                    let isPlayingThis = vm.activeLaneIndices.contains(lane.index) || struckRibbonLane == lane.index
-                    let isSympathetic = !isMuted && !isPlayingThis && vm.sympatheticLaneIndices.contains(lane.index)
-                    let barH = CGFloat(58 - lane.index * 2) // 左侧低音更高厚，右侧高音渐趋精巧
-                    let col = lane.barColor(isNight: palette.isNight)
+        return ZStack {
+            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
 
-                    VStack(spacing: 3) {
-                        PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
-                            .frame(width: 12, height: 12)
-                            .foregroundStyle(.white.opacity(0.95))
+            // 两条横贯琴键背后的细拉丝黄铜声学共鸣导轨
+            VStack(spacing: 22) {
+                Capsule()
+                    .fill(palette.brassHairline.opacity(palette.isNight ? 0.34 : 0.30))
+                    .frame(height: 1.8)
+                Capsule()
+                    .fill(palette.brassHairline.opacity(palette.isNight ? 0.28 : 0.24))
+                    .frame(height: 1.8)
+            }
+            .padding(.horizontal, 14)
+            .allowsHitTesting(false)
 
-                        Text(lane.digitLabel)
-                            .font(.system(size: 12, weight: .heavy, design: .rounded))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: isMuted ? barH - 6 : barH)
-                    .background(
-                        ZStack(alignment: .top) {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [col.opacity(0.95), col],
-                                        startPoint: .top,
-                                        endPoint: .bottom
+            GeometryReader { geo in
+                HStack(alignment: .bottom, spacing: 5) {
+                    ForEach(XylophoneLane.allLanes) { lane in
+                        let isMuted = vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive
+                        let isFollowTarget = targetFollowLaneIndex == lane.index
+                        let hint = hints[lane.index]
+                        let isChordResonant = !isMuted && !isFollowTarget && hint == nil && chordDegrees.contains(lane.degree)
+                        let isPlayingThis = vm.activeLaneIndices.contains(lane.index) || struckRibbonLane == lane.index
+                        let isSympathetic = !isMuted && !isPlayingThis && vm.sympatheticLaneIndices.contains(lane.index)
+                        let elev = KilnKeyPhysics.elevation(
+                            isPressed: isPlayingThis,
+                            isFollowTarget: isFollowTarget || hint != nil,
+                            isMuted: isMuted
+                        )
+                        let baseH = CGFloat(55 - lane.index * 2)
+                        let barH = isMuted ? max(30, baseH - 6) : baseH
+                        let col = lane.barColor(isNight: palette.isNight)
+
+                        VStack(spacing: 3) {
+                            Circle()
+                                .fill(palette.brassHairline.opacity(isMuted ? 0.35 : 0.85))
+                                .frame(width: 3.0, height: 3.0)
+
+                            PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
+                                .frame(width: 11.5, height: 11.5)
+                                .foregroundStyle(.white.opacity(0.96))
+
+                            Text(lane.digitLabel)
+                                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+
+                            Circle()
+                                .fill(palette.brassHairline.opacity(isMuted ? 0.30 : 0.78))
+                                .frame(width: 3.0, height: 3.0)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: barH)
+                        .padding(.bottom, elev.frontLipHeight)
+                        .background(
+                            ZStack(alignment: .bottom) {
+                                // 深色窑釉物理底边厚度立面
+                                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                    .fill(col.opacity(palette.isNight ? 0.45 : 0.62))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                            .fill(Color.black.opacity(palette.isNight ? 0.35 : 0.24))
                                     )
+
+                                // 顶面釉色渐变瓷块
+                                VStack(spacing: 0) {
+                                    ZStack(alignment: .top) {
+                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [col.opacity(0.96), col],
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
+                                            )
+                                        Capsule()
+                                            .fill(Color.white.opacity(palette.isNight ? 0.22 : 0.36))
+                                            .frame(height: 3.2)
+                                            .padding(.horizontal, 6)
+                                            .padding(.top, 2.5)
+                                    }
+                                    Spacer(minLength: elev.frontLipHeight)
+                                }
+                            }
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                .strokeBorder(
+                                    (isFollowTarget || hint != nil)
+                                        ? palette.nightLampGold
+                                        : (isSympathetic
+                                            ? Color.white.opacity(palette.isNight ? 0.55 : 0.75)
+                                            : Color.white.opacity(palette.isNight ? 0.20 : 0.40)),
+                                    lineWidth: (isFollowTarget || hint != nil) ? 2.4 : (isSympathetic ? 1.5 : 0.9)
                                 )
-                            // 顶部窑陶釉面高光条
-                            Capsule()
-                                .fill(Color.white.opacity(palette.isNight ? 0.16 : 0.28))
-                                .frame(height: 3.5)
-                                .padding(.horizontal, 6)
-                                .padding(.top, 3)
-                        }
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(
-                                (isFollowTarget || hint != nil)
-                                    ? palette.nightLampGold
-                                    : (isSympathetic
-                                        ? Color.white.opacity(palette.isNight ? 0.45 : 0.70)
-                                        : Color.white.opacity(palette.isNight ? 0.16 : 0.36)),
-                                lineWidth: (isFollowTarget || hint != nil) ? 2.5 : (isSympathetic ? 1.5 : 0.9)
-                            )
-                    )
-                    .overlay(alignment: .top) {
-                        if isFollowTarget || hint != nil {
-                            Circle()
-                                .fill(palette.nightLampGold)
-                                .frame(width: 5.5, height: 5.5)
-                                .shadow(color: palette.nightLampGold.opacity(0.85), radius: 3)
-                                .offset(y: -3.5)
-                        } else if isSympathetic {
-                            Circle()
-                                .fill(Color.white.opacity(0.75))
-                                .frame(width: 4, height: 4)
-                                .shadow(color: .white.opacity(0.7), radius: 3)
-                                .offset(y: -2.5)
-                        }
-                    }
-                    .overlay(alignment: .bottom) {
-                        ZStack(alignment: .bottom) {
-                            if struckRibbonLane == lane.index && ribbonMercuryLevel > 0.05 {
-                                Capsule()
-                                    .fill(Color.white.opacity(0.62))
-                                    .frame(width: 5, height: max(8, barH * CGFloat(ribbonMercuryLevel) * 0.72))
-                                    .padding(.bottom, 5)
-                            }
-                            if isChordResonant {
-                                Capsule()
-                                    .fill(Color.white.opacity(palette.isNight ? 0.55 : 0.72))
-                                    .frame(width: 14, height: 3)
-                                    .padding(.bottom, 4)
+                        )
+                        .overlay(alignment: .top) {
+                            if isFollowTarget || hint != nil {
+                                Circle()
+                                    .fill(palette.nightLampGold)
+                                    .frame(width: 6.0, height: 6.0)
+                                    .shadow(color: palette.nightLampGold.opacity(0.90), radius: 3.5)
+                                    .offset(y: -4.0)
+                            } else if isSympathetic {
+                                Circle()
+                                    .fill(Color.white.opacity(0.82))
+                                    .frame(width: 4.5, height: 4.5)
+                                    .shadow(color: .white.opacity(0.75), radius: 3)
+                                    .offset(y: -3.0)
                             }
                         }
-                    }
-                    .shadow(
-                        color: (isFollowTarget || hint != nil)
-                            ? palette.nightLampGold.opacity(0.70)
-                            : col.opacity(isPlayingThis ? 0.55 : 0.14),
-                        radius: (isFollowTarget || hint != nil || isPlayingThis) ? 8 : 2,
-                        y: isPlayingThis ? 0.5 : 2.5
-                    )
-                    .offset(y: isPlayingThis ? 2.5 : (isFollowTarget ? -5.0 : (hint != nil ? -2.5 : 0)))
-                    .scaleEffect(isPlayingThis ? 0.94 : (isFollowTarget ? 1.06 : 1.0))
-                    .opacity(isMuted ? 0.24 : 1.0)
-                    .animation(reduceMotion ? nil : .spring(response: 0.20, dampingFraction: 0.65), value: isPlayingThis)
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: isFollowTarget)
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: isSympathetic)
-                    .accessibilityElement()
-                    .accessibilityLabel("\(lane.member.voiceOverSummary)")
-                    .accessibilityValue(isFollowTarget ? "当前亮灯" : (isChordResonant ? "和谐音" : ""))
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction {
-                        vm.strikeXylophoneLane(lane)
+                        .overlay(alignment: .bottom) {
+                            ZStack(alignment: .bottom) {
+                                if struckRibbonLane == lane.index && ribbonMercuryLevel > 0.05 {
+                                    Capsule()
+                                        .fill(Color.white.opacity(0.68))
+                                        .frame(width: 5, height: max(8, barH * CGFloat(ribbonMercuryLevel) * 0.68))
+                                        .padding(.bottom, elev.frontLipHeight + 4)
+                                }
+                                if isChordResonant {
+                                    Capsule()
+                                        .fill(Color.white.opacity(palette.isNight ? 0.58 : 0.78))
+                                        .frame(width: 14, height: 2.8)
+                                        .padding(.bottom, elev.frontLipHeight + 3)
+                                }
+                            }
+                        }
+                        .shadow(
+                            color: (isFollowTarget || hint != nil)
+                                ? palette.nightLampGold.opacity(0.70)
+                                : col.opacity(isPlayingThis ? 0.52 : 0.16),
+                            radius: elev.shadowRadius,
+                            y: elev.shadowOffsetY
+                        )
+                        .offset(y: elev.pressOffsetY)
+                        .scaleEffect(isPlayingThis ? 0.96 : (isFollowTarget ? 1.05 : 1.0))
+                        .opacity(isMuted ? 0.28 : 1.0)
+                        .animation(reduceMotion ? nil : .spring(response: 0.19, dampingFraction: 0.68), value: isPlayingThis)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: isFollowTarget)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: isSympathetic)
+                        .accessibilityElement()
+                        .accessibilityLabel("\(lane.member.voiceOverSummary)")
+                        .accessibilityValue(isFollowTarget ? "当前亮灯" : (isChordResonant ? "和谐音" : ""))
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAction {
+                            vm.strikeXylophoneLane(lane)
+                        }
                     }
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { val in
-                        let w = max(1, geo.size.width)
-                        let h = max(1, geo.size.height)
-                        let idx = max(0, min(7, Int(floor((val.location.x / w) * 8.0))))
-                        if struckRibbonLane != idx {
-                            vm.endStarVibrato()
-                            ribbonMercuryLevel = 0.0
-                            ribbonDragAnchorY = val.location.y
-                            let lane = XylophoneLane.lane(at: idx)
-                            if vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive {
-                                struckRibbonLane = nil
-                                return
-                            }
-                            struckRibbonLane = idx
-                            let normY = Double(max(0, min(1, val.location.y / h)))
-                            let dyn = ExpressiveTouchMapper.dynamics(normalizedY: normY)
-                            wakeRippleTimeline()
-                            vm.strikeXylophoneLane(lane, touchIntensity: dyn.velocity, touchBrightness: dyn.brightness)
-                        } else if !vm.followGlowActive && vm.selectedBeadID == nil,
-                                  let anchorY = ribbonDragAnchorY {
-                            let lane = XylophoneLane.lane(at: idx)
-                            if vm.pentatonicSafe && !lane.isPentatonicSafe {
-                                return
-                            }
-                            let expr = KeyRibbonExpressionMapper.expression(
-                                verticalOffsetPt: val.location.y - anchorY,
-                                barHeightPt: h
-                            )
-                            ribbonMercuryLevel = expr.mercuryFraction
-                            if expr.isVibratoActive {
-                                wakeRippleTimeline()
-                                vm.beginOrUpdateStarVibrato(
-                                    laneIndex: idx,
-                                    dx: expr.vibratoDX,
-                                    dy: expr.vibratoDY,
-                                    hitRadius: 26.0
-                                )
-                            } else {
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { val in
+                            let w = max(1, geo.size.width)
+                            let h = max(1, geo.size.height)
+                            let idx = max(0, min(7, Int(floor((val.location.x / w) * 8.0))))
+                            if struckRibbonLane != idx {
                                 vm.endStarVibrato()
+                                ribbonMercuryLevel = 0.0
+                                ribbonDragAnchorY = val.location.y
+                                let lane = XylophoneLane.lane(at: idx)
+                                if vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive {
+                                    struckRibbonLane = nil
+                                    return
+                                }
+                                struckRibbonLane = idx
+                                let normY = Double(max(0, min(1, val.location.y / h)))
+                                let dyn = ExpressiveTouchMapper.dynamics(normalizedY: normY)
+                                wakeRippleTimeline()
+                                vm.strikeXylophoneLane(lane, touchIntensity: dyn.velocity, touchBrightness: dyn.brightness)
+                            } else if !vm.followGlowActive && vm.selectedBeadID == nil,
+                                      let anchorY = ribbonDragAnchorY {
+                                let lane = XylophoneLane.lane(at: idx)
+                                if vm.pentatonicSafe && !lane.isPentatonicSafe {
+                                    return
+                                }
+                                let expr = KeyRibbonExpressionMapper.expression(
+                                    verticalOffsetPt: val.location.y - anchorY,
+                                    barHeightPt: h
+                                )
+                                ribbonMercuryLevel = expr.mercuryFraction
+                                if expr.isVibratoActive {
+                                    wakeRippleTimeline()
+                                    vm.beginOrUpdateStarVibrato(
+                                        laneIndex: idx,
+                                        dx: expr.vibratoDX,
+                                        dy: expr.vibratoDY,
+                                        hitRadius: 26.0
+                                    )
+                                } else {
+                                    vm.endStarVibrato()
+                                }
                             }
                         }
-                    }
-                    .onEnded { _ in
-                        struckRibbonLane = nil
-                        ribbonDragAnchorY = nil
-                        ribbonMercuryLevel = 0.0
-                        vm.endStarVibrato()
-                    }
-            )
+                        .onEnded { _ in
+                            struckRibbonLane = nil
+                            ribbonDragAnchorY = nil
+                            ribbonMercuryLevel = 0.0
+                            vm.endStarVibrato()
+                        }
+                )
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 7)
+
+            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
-        .frame(height: 62)
+        .frame(height: 76)
+        .shadow(color: palette.recessShadow, radius: 6, y: 2.5)
     }
 
-    // MARK: - 5. Minimal 3-Action Liquid Glass Bottom Dock
+    // MARK: - 5. Clockwork Brass & Kiln Ceramic Transport Console
 
     private var bottomGlassDock: some View {
-        HStack(spacing: 12) {
-            // 1. 旋转播放 / 暂停开关
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let dotCount = StageTransportRingMapper.pentatonicIndicatorCount(isSafe: vm.pentatonicSafe)
+
+        return HStack(spacing: 10) {
+            // 1. 左：黄铜发条进度播放轮 (52×52pt)
             Button {
                 vm.togglePlayback()
             } label: {
-                Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.title3.weight(.bold))
-                    .frame(width: 50, height: 50)
-                    .background(
-                        Circle().fill(vm.isPlaying ? palette.homeAnchor : palette.cardSurface)
-                    )
-                    .foregroundStyle(
-                        vm.isPlaying
-                            ? (palette.isNight ? Color(hex: 0x1B2245) : .white)
-                            : palette.homeAnchor
-                    )
-                    .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.06), radius: 8, y: 2)
+                TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: !vm.isPlaying || reduceMotion)) { _ in
+                    let progress = vm.isPlaying
+                        ? StageTransportRingMapper.loopProgress(
+                            currentTime: vm.clock.currentTime(at: CACurrentMediaTime()),
+                            totalDuration: vm.document.totalDuration
+                        )
+                        : 0.0
+                    ZStack {
+                        Circle()
+                            .stroke(palette.brassHairline.opacity(0.26), lineWidth: 2.2)
+
+                        if vm.isPlaying && progress > 0.005 {
+                            Circle()
+                                .trim(from: 0, to: CGFloat(progress))
+                                .stroke(
+                                    palette.nightLampGold,
+                                    style: StrokeStyle(lineWidth: 2.6, lineCap: .round)
+                                )
+                                .rotationEffect(.degrees(-90))
+                        }
+
+                        Circle()
+                            .fill(vm.isPlaying ? palette.homeAnchor : palette.cardSurface)
+                            .overlay(
+                                Circle().strokeBorder(
+                                    palette.glazeHighlight,
+                                    lineWidth: 0.9
+                                )
+                            )
+                            .frame(width: 42, height: 42)
+                            .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
+
+                        Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(
+                                vm.isPlaying
+                                    ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                    : palette.homeAnchor
+                            )
+                    }
+                    .frame(width: 52, height: 52)
+                }
             }
             .buttonStyle(.plain)
             .accessibilityLabel(vm.isPlaying ? "暂停旋转播放" : "开始旋转播放")
 
-            // 2. 中央主键：纯粹雕塑感图标（录音时显示声波停止，跟灯时显示紧凑进度，常态纯粹创作图标）
+            // 2. 中：主创作雕塑胶囊 (height: 52)
             Button {
                 if vm.capturePipeline.isRecording {
                     vm.finishRelativeContourHum()
@@ -2650,45 +2950,66 @@ public struct OrbitalStageView: View {
                     showDreamSheet = true
                 }
             } label: {
-                Group {
-                    if vm.capturePipeline.isRecording {
-                        HStack(spacing: 8) {
-                            ChimmoCraftMark(.humWave, color: .white)
-                                .frame(width: 18, height: 18)
-                            Image(systemName: "stop.fill")
-                                .font(.subheadline.weight(.bold))
+                let topFill = vm.capturePipeline.isRecording
+                    ? palette.melodyTerracotta
+                    : (vm.followGlowActive ? palette.nightLampGold : palette.homeAnchor)
+
+                ZStack(alignment: .top) {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [topFill, topFill.opacity(0.88)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                    Capsule()
+                        .fill(Color.white.opacity(palette.isNight ? 0.16 : 0.28))
+                        .frame(height: 3.5)
+                        .padding(.horizontal, 22)
+                        .padding(.top, 4)
+
+                    Group {
+                        if vm.capturePipeline.isRecording {
+                            HStack(spacing: 8) {
+                                ChimmoCraftMark(.humWave, color: .white)
+                                    .frame(width: 18, height: 18)
+                                Text("停止")
+                                    .font(.subheadline.weight(.heavy))
+                                Image(systemName: "stop.fill")
+                                    .font(.caption.weight(.bold))
+                            }
+                        } else if vm.followGlowActive {
+                            let cur = min(vm.followGlowIndex + 1, max(1, vm.document.notes.count))
+                            let total = max(1, vm.document.notes.count)
+                            HStack(spacing: 7) {
+                                Image(systemName: "sparkles")
+                                    .font(.subheadline.weight(.bold))
+                                Text("\(cur)/\(total)")
+                                    .font(.subheadline.weight(.bold).monospacedDigit())
+                                Image(systemName: "xmark")
+                                    .font(.caption.weight(.bold))
+                            }
+                        } else {
+                            HStack(spacing: 7) {
+                                Image(systemName: "wand.and.stars")
+                                    .font(.subheadline.weight(.bold))
+                                Text("写旋律")
+                                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                            }
                         }
-                    } else if vm.followGlowActive {
-                        let cur = min(vm.followGlowIndex + 1, max(1, vm.document.notes.count))
-                        let total = max(1, vm.document.notes.count)
-                        HStack(spacing: 7) {
-                            Image(systemName: "sparkles")
-                                .font(.subheadline.weight(.bold))
-                            Text("\(cur)/\(total)")
-                                .font(.subheadline.weight(.bold).monospacedDigit())
-                            Image(systemName: "xmark")
-                                .font(.caption.weight(.bold))
-                        }
-                    } else {
-                        Image(systemName: "wand.and.stars")
-                            .font(.title3.weight(.bold))
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(
-                    Capsule().fill(
-                        vm.capturePipeline.isRecording
-                            ? palette.melodyTerracotta
-                            : (vm.followGlowActive ? palette.nightLampGold : palette.homeAnchor)
-                    )
-                )
+                .frame(height: 52)
                 .foregroundStyle(
                     vm.capturePipeline.isRecording
                         ? .white
-                        : ((vm.followGlowActive || palette.isNight) ? Color(hex: 0x1B2245) : .white)
+                        : ((vm.followGlowActive || palette.isNight) ? Color(hex: 0x0E142C) : .white)
                 )
-                .shadow(color: palette.homeAnchor.opacity(0.28), radius: 10, y: 3)
+                .shadow(color: topFill.opacity(0.30), radius: 9, y: 3)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(
@@ -2697,30 +3018,69 @@ public struct OrbitalStageView: View {
                     : (vm.followGlowActive ? "退出跟灯弹" : "创作旋律")
             )
 
-            // 3. 情绪天空与乐器音色开关
+            // 3. 右：声音与五音守护表盘 (52×52pt)
             Button {
                 showMoodSheet = true
             } label: {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: vm.document.scaleMode.iconName)
-                        .font(.title3.weight(.bold))
-                        .frame(width: 50, height: 50)
-                        .background(Circle().fill(palette.cardSurface))
-                        .foregroundStyle(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
-                        .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.06), radius: 8, y: 2)
-
-                    if vm.pentatonicSafe {
+                ZStack {
+                    ForEach(0..<dotCount, id: \.self) { idx in
+                        let angleDeg = -90.0 + (Double(idx) / Double(dotCount)) * 360.0
+                        let rad = angleDeg * Double.pi / 180.0
+                        let r: CGFloat = 23.0
                         Circle()
-                            .fill(Color(hex: 0x2F9E44))
-                            .frame(width: 10, height: 10)
-                            .overlay(Circle().stroke(palette.cardSurface, lineWidth: 1.5))
-                            .offset(x: -3, y: 3)
+                            .fill(
+                                vm.pentatonicSafe
+                                    ? Color(hex: 0x2F9E44)
+                                    : palette.secondaryInk.opacity(0.45)
+                            )
+                            .frame(width: vm.pentatonicSafe ? 4.4 : 3.2, height: vm.pentatonicSafe ? 4.4 : 3.2)
+                            .offset(x: cos(rad) * r, y: sin(rad) * r)
                     }
+
+                    Circle()
+                        .fill(palette.cardSurface)
+                        .overlay(
+                            Circle().strokeBorder(
+                                (vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.brassHairline).opacity(0.32),
+                                lineWidth: 1.0
+                            )
+                        )
+                        .frame(width: 40, height: 40)
+                        .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
+
+                    Image(systemName: vm.document.scaleMode.iconName)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(skyColor)
                 }
+                .frame(width: 52, height: 52)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("五音模式与声音设置")
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 7)
+        .background(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [palette.cardSurface, palette.shelfSurface.opacity(0.92)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [palette.glazeHighlight, palette.brassHairline.opacity(0.28)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: 1.0
+                        )
+                )
+                .shadow(color: palette.recessShadow, radius: 12, y: 4)
+        )
     }
 }
 
@@ -3324,13 +3684,14 @@ private struct StageHarmonyRibbonView: View {
             } label: {
                 ZStack {
                     Capsule()
-                        .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.22 : 0.14) : palette.cardSurface)
+                        .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.24 : 0.15) : palette.cardSurface)
                         .overlay(
                             Capsule().strokeBorder(
-                                vm.cradleEnabled ? palette.bassRibbon.opacity(0.45) : palette.divider,
-                                lineWidth: 1.0
+                                vm.cradleEnabled ? palette.bassRibbon.opacity(0.65) : palette.brassHairline.opacity(0.24),
+                                lineWidth: vm.cradleEnabled ? 1.2 : 0.9
                             )
                         )
+                        .shadow(color: vm.cradleEnabled ? palette.bassRibbon.opacity(0.24) : .clear, radius: 4, y: 1)
                     ChimmoCowView(
                         isNight: palette.isNight,
                         accentColor: skyCol,
@@ -3339,7 +3700,7 @@ private struct StageHarmonyRibbonView: View {
                     )
                     .frame(width: 24, height: 18)
                 }
-                .frame(width: 36, height: 24)
+                .frame(width: 40, height: 26)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(vm.cradleEnabled ? "关闭小牛哞伴奏" : "开启小牛哞伴奏")
@@ -3359,21 +3720,33 @@ private struct StageHarmonyRibbonView: View {
                                 vm.cycleSpanChord(spanIndex: seg.spanID)
                                 onWakeTimeline()
                             } label: {
-                                Text(seg.romanLabel)
-                                    .font(.system(size: 10.5, weight: .heavy, design: .rounded))
-                                    .foregroundStyle(isActive ? .white : segCol)
-                                    .frame(width: segW, height: 24)
-                                    .background(
-                                        Capsule()
-                                            .fill(isActive ? segCol : segCol.opacity(palette.isNight ? 0.20 : 0.12))
-                                            .overlay(
-                                                Capsule().strokeBorder(
-                                                    segCol.opacity(isActive ? 0.95 : 0.36),
-                                                    lineWidth: isActive ? 1.4 : 0.9
-                                                )
+                                ZStack(alignment: .top) {
+                                    Capsule()
+                                        .fill(
+                                            isActive
+                                                ? AnyShapeStyle(LinearGradient(colors: [segCol.opacity(0.95), segCol], startPoint: .top, endPoint: .bottom))
+                                                : AnyShapeStyle(segCol.opacity(palette.isNight ? 0.20 : 0.12))
+                                        )
+                                        .overlay(
+                                            Capsule().strokeBorder(
+                                                isActive ? palette.glazeHighlight : segCol.opacity(0.36),
+                                                lineWidth: isActive ? 1.2 : 0.9
                                             )
-                                    )
-                                    .shadow(color: isActive ? segCol.opacity(0.32) : .clear, radius: 4, y: 1)
+                                        )
+                                    if isActive {
+                                        Capsule()
+                                            .fill(Color.white.opacity(0.26))
+                                            .frame(height: 2.2)
+                                            .padding(.horizontal, 8)
+                                            .padding(.top, 2)
+                                    }
+                                    Text(seg.romanLabel)
+                                        .font(.system(size: 10.5, weight: .heavy, design: .rounded))
+                                        .foregroundStyle(isActive ? .white : segCol)
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                }
+                                .frame(width: segW, height: 26)
+                                .shadow(color: isActive ? segCol.opacity(0.34) : .clear, radius: 4.5, y: 1.5)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("第 \(seg.spanID + 1) 幕和弦 \(seg.romanLabel) \(seg.chord.moodTitle)")
@@ -3382,7 +3755,7 @@ private struct StageHarmonyRibbonView: View {
                     }
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: vm.activeChordSpanID)
                 }
-                .frame(height: 24)
+                .frame(height: 26)
             } else {
                 Button {
                     vm.setChordPreset(.autoMatch)
@@ -3397,13 +3770,23 @@ private struct StageHarmonyRibbonView: View {
                     }
                     .padding(.horizontal, 10)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 24)
-                    .background(Capsule().fill(palette.cardSurface.opacity(0.75)))
+                    .frame(height: 26)
+                    .background(Capsule().fill(palette.cardSurface.opacity(0.78)))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("开启智能和弦伴奏")
             }
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(palette.shelfSurface.opacity(0.82))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(palette.brassHairline.opacity(0.24), lineWidth: 0.9)
+                )
+        )
     }
 }
 

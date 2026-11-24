@@ -1972,4 +1972,65 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertTrue(vm.pentatonicSafe)
         XCTAssertNil(vm.statusToast)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound27KilnHardwareMaterialsTransportRingAndStageRedesign() throws {
+        // 1. ChimmoPalette 暖窑日光与深夜天鹅绒硬件材质底盘区分
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        XCTAssertNotEqual(day.paper, night.paper)
+        XCTAssertNotEqual(day.woodTrayTop, night.woodTrayTop)
+        XCTAssertNotEqual(day.woodTrayBottom, night.woodTrayBottom)
+        XCTAssertNotEqual(day.brassHairline, night.brassHairline)
+        XCTAssertNotEqual(day.glazeHighlight, night.glazeHighlight)
+        XCTAssertNotEqual(day.recessShadow, night.recessShadow)
+
+        // 2. KilnKeyPhysics 四态物理高度、下压位移与静音压扁边界
+        let rest = KilnKeyPhysics.elevation(isPressed: false, isFollowTarget: false, isMuted: false)
+        let pressed = KilnKeyPhysics.elevation(isPressed: true, isFollowTarget: false, isMuted: false)
+        let follow = KilnKeyPhysics.elevation(isPressed: false, isFollowTarget: true, isMuted: false)
+        let muted = KilnKeyPhysics.elevation(isPressed: true, isFollowTarget: true, isMuted: true)
+
+        XCTAssertEqual(rest.frontLipHeight, 4.2, accuracy: 0.0001)
+        XCTAssertEqual(rest.pressOffsetY, 0.0, accuracy: 0.0001)
+        XCTAssertLessThan(pressed.frontLipHeight, rest.frontLipHeight)
+        XCTAssertGreaterThan(pressed.pressOffsetY, rest.pressOffsetY)
+        XCTAssertGreaterThan(follow.frontLipHeight, rest.frontLipHeight)
+        XCTAssertLessThan(follow.pressOffsetY, rest.pressOffsetY)
+        XCTAssertEqual(muted.frontLipHeight, 1.5, accuracy: 0.0001)
+        XCTAssertEqual(muted.pressOffsetY, 2.0, accuracy: 0.0001)
+
+        // 3. StageTransportRingMapper 零值/非有限/绕圈取模与 5/7 五音表盘刻度计数
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: nil, totalDuration: 4.0), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: .nan, totalDuration: 4.0), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: 2.0, totalDuration: 0.04), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: 2.0, totalDuration: .infinity), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: 1.0, totalDuration: 4.0), 0.25, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: 5.5, totalDuration: 4.0), 0.375, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.loopProgress(currentTime: -1.0, totalDuration: 4.0), 0.75, accuracy: 0.0001)
+        XCTAssertEqual(StageTransportRingMapper.pentatonicIndicatorCount(isSafe: true), 5)
+        XCTAssertEqual(StageTransportRingMapper.pentatonicIndicatorCount(isSafe: false), 7)
+
+        // 4. 舞台双子角守护交互契约（咩试听与哞唤醒/试听保持零例行 Toast）
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r27_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.startBlankCanvas()
+        vm.plantDuoStarterMotif()
+        vm.setChordPreset(.off)
+        XCTAssertFalse(vm.cradleEnabled)
+
+        vm.auditionDuoCharacter(.mie)
+        XCTAssertNil(vm.statusToast)
+
+        if !vm.cradleEnabled {
+            vm.setChordPreset(.autoMatch)
+        }
+        vm.auditionDuoCharacter(.mou)
+        XCTAssertTrue(vm.cradleEnabled)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }
