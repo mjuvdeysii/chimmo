@@ -4044,4 +4044,25 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: day, initialTab: 1))
         XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: night, initialTab: 1))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound62NightLampDynamicTypeAndOpenMotionV13Sync() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r62_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+
+        let hoverTitle = NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 0, pentatonicSafe: true)
+        let idleTitle = NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: nil, pentatonicSafe: true)
+        XCTAssertFalse(hoverTitle.isEmpty)
+        XCTAssertFalse(idleTitle.isEmpty)
+
+        for lane in XylophoneLane.allLanes {
+            XCTAssertEqual(lane.barForegroundHex(isNight: false), 0x1C1D19)
+            XCTAssertEqual(lane.barForegroundHex(isNight: true), 0x0E1430)
+        }
+    }
 }

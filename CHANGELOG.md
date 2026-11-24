@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.69.0 - 2026-11-25
+- 闭眼夜灯动态字体、周边音脊可读性与圆角命中区收口：在 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 中将夜灯画布数字音高标签全面升级为 `.footnote` / `.caption2` 语义 Dynamic Type（配 `.minimumScaleFactor(0.75)`），并将未悬停周边音脊数字/图腾的可见不透明度从多重衰减提升至清晰护眼的 `0.90`（保持引导横条 `0.24` 柔和低刺激），同时将 `tactilePad` 命中边界精确对齐至 `RoundedRectangle(cornerRadius: 28, style: .continuous)`。
+- OpenMotion Design Studio 互动官网升至 `v13` 并精确同步 [docs/index.html](docs/index.html)：全面同步 R59–R62 成果——引入日夜双态 8 音阶窑墨高对比 CSS 变量（`--xylo-1..7` 与 `--xylo-ink`）重构五音彩块琴键与七小只数字徽章可读性，在「创作」页签新增「轻触三偶迎宾和弦」触发器，在「曲本」页签新增「空白书架 1-3-5 迎宾和弦」交互预览并更新至 `v0.69.0`（通过 `openmotion_design_project` 导出 `1,104,336 bytes` 整页 PNG 视觉核验、嵌入式脚本 `node --check` 零报错与全页零 Emoji）。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound62NightLampDynamicTypeAndOpenMotionV13Sync`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.68.0 - 2026-11-25
 - 全 8 音阶彩键与舞台音珠窑墨 WCAG AA/AAA 对比度升级：在 [XylophoneRollEngine.swift](Chimmo/Domain/XylophoneRollEngine.swift) 新增单源 `barForegroundHex(isNight:)` / `barForegroundColor(isNight:)` 方法，并将日光 `6 La`（`0x5C84F0`）与 `7 Si`（`0x9973F0`）窑彩微调至全 8 键对比 `#1C1D19` 均达 `>= 4.65:1`（AA）、夜灯全 8 键对比 `#0E1430` 均达 `>= 7.17:1`（AAA）。
 - 全舞台音珠图腾、彩键唱名与导图明信片同步落地窑墨前景色：全面更新 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 音乐盒花环、流光河谷、星环舞台与底部 `StageChoirKeyboardBar` 音阶图腾/数字/延音刻度前景，以及 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 三套导出渲染图腾，彻底解决亮橙/明黄/薄荷夜彩底面叠白字难以辨识的痛点。

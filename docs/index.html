@@ -35,6 +35,14 @@
   --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10);
   --shadow-prominent: 0 6px 16px rgba(184, 68, 46, 0.24);
   --shadow-hard: rgba(122, 82, 48, 0.14);
+  --xylo-ink: #1C1D19;
+  --xylo-1: #E8534A;
+  --xylo-2: #F58A2C;
+  --xylo-3: #EBB31A;
+  --xylo-4: #40B865;
+  --xylo-5: #15A6AE;
+  --xylo-6: #5C84F0;
+  --xylo-7: #9973F0;
 }
 html[data-theme="night"]{
   --bg: #0E1430;
@@ -66,6 +74,14 @@ html[data-theme="night"]{
   --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
   --shadow-prominent: 0 6px 18px rgba(196, 81, 58, 0.34);
   --shadow-hard: rgba(0, 0, 0, 0.32);
+  --xylo-ink: #0E1430;
+  --xylo-1: #FF7B72;
+  --xylo-2: #FFA94D;
+  --xylo-3: #FFD43B;
+  --xylo-4: #69DB7C;
+  --xylo-5: #4FD8CB;
+  --xylo-6: #74C0FC;
+  --xylo-7: #B197FC;
 }
 *{ box-sizing: border-box; }
 body{
@@ -178,7 +194,7 @@ h1{ margin: 0; font-size: clamp(25px, 4.1vw, 36px); line-height: 1.15; letter-sp
 .figure-btn:hover .figure-svg{ transform: translateY(-3px); }
 .figure-btn.singing .figure-svg{ transform: translateY(-7px) scale(1.06); }
 .figure-meta{ display: grid; justify-items: center; gap: 2px; }
-.figure-deg{ font-size: 10.5px; font-weight: 900; padding: 1px 7px; border-radius: 6px; color: #FFFFFF; }
+.figure-deg{ font-size: 10.5px; font-weight: 900; padding: 1px 7px; border-radius: 6px; color: var(--xylo-ink); border: 1px solid rgba(28, 29, 25, 0.12); }
 .figure-name{ font-size: 11px; font-weight: 800; color: var(--ink); }
 
 /* Choir Xylophone + Kiln-Paper Songbook Cover Bench */
@@ -195,11 +211,12 @@ h1{ margin: 0; font-size: clamp(25px, 4.1vw, 36px); line-height: 1.15; letter-sp
   padding: 10px 8px; border-radius: 16px; background: var(--hill-front); border: 1px solid var(--border);
 }
 .xylo-key{
-  appearance: none; border: 1.5px solid rgba(255, 255, 255, 0.24); border-radius: 14px;
-  color: #FFFFFF; font-weight: 900; font-size: 12.5px; cursor: pointer;
+  appearance: none; border: 1.5px solid rgba(28, 29, 25, 0.14); border-radius: 14px;
+  color: var(--xylo-ink); font-weight: 900; font-size: 12.5px; cursor: pointer;
   display: grid; justify-items: center; align-content: space-between; padding: 6px 4px;
   box-shadow: var(--shadow-btn); transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
+html[data-theme="night"] .xylo-key{ border-color: rgba(14, 20, 48, 0.22); }
 .xylo-key:active, .xylo-key.struck{ transform: translateY(2px); box-shadow: 0 2px 5px rgba(28, 29, 25, 0.14); }
 .key-buddy-chip{
   width: 22px; height: 16px; border-radius: 999px; background: #FFFDF7;
@@ -334,8 +351,8 @@ h1{ margin: 0; font-size: clamp(25px, 4.1vw, 36px); line-height: 1.15; letter-sp
 }
 .sound-hill:nth-child(even){ height: 46%; background: var(--butter); }
 .sound-hill.on{ background: var(--accent); }
-.sound-hill.on.warm{ background: #F7882F; }
-.sound-hill.on.hot{ background: #F25563; }
+.sound-hill.on.warm{ background: var(--xylo-2); }
+.sound-hill.on.hot{ background: var(--xylo-1); }
 
 /* 1-3-5 AppIcon Triptych & Story Moment Showcase */
 .icon-story-bench{ display: grid; grid-template-columns: 1.06fr 1fr; gap: 14px; align-items: stretch; }
@@ -497,7 +514,7 @@ a:hover{ text-decoration: underline; }
       </svg>
     </div>
     <span class="brand-title">咩哞 · CHIMMO</span>
-    <span class="brand-ver">v0.64.0</span>
+    <span class="brand-ver">v0.69.0</span>
   </div>
   <div class="controls">
     <button id="toggleMouBtn" class="pill-btn" type="button" aria-pressed="true">
@@ -641,23 +658,23 @@ a:hover{ text-decoration: underline; }
       <span class="bench-sub">点按试音</span>
     </div>
     <div class="xylo-keys" id="xyloKeys">
-      <button class="xylo-key" type="button" data-deg="1" data-hz="261.63" style="height:82px;background:#F25563">
+      <button class="xylo-key" type="button" data-deg="1" data-hz="261.63" style="height:82px;background:var(--xylo-1)">
         <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
         <span>1 Do</span>
       </button>
-      <button class="xylo-key" type="button" data-deg="2" data-hz="293.66" style="height:76px;background:#F7882F">
+      <button class="xylo-key" type="button" data-deg="2" data-hz="293.66" style="height:76px;background:var(--xylo-2)">
         <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
         <span>2 Re</span>
       </button>
-      <button class="xylo-key" type="button" data-deg="3" data-hz="329.63" style="height:70px;background:#E64980">
+      <button class="xylo-key" type="button" data-deg="3" data-hz="329.63" style="height:70px;background:var(--xylo-3)">
         <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
         <span>3 Mi</span>
       </button>
-      <button class="xylo-key" type="button" data-deg="5" data-hz="392.00" style="height:64px;background:#2E7DB2">
+      <button class="xylo-key" type="button" data-deg="5" data-hz="392.00" style="height:64px;background:var(--xylo-5)">
         <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
         <span>5 Sol</span>
       </button>
-      <button class="xylo-key" type="button" data-deg="6" data-hz="440.00" style="height:58px;background:#6F54B8">
+      <button class="xylo-key" type="button" data-deg="6" data-hz="440.00" style="height:58px;background:var(--xylo-6)">
         <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
         <span>6 La</span>
       </button>
@@ -744,15 +761,15 @@ a:hover{ text-decoration: underline; }
       </button>
       <div class="triad-row">
         <button id="triad1Btn" class="triad-pill lit" type="button" data-deg="1">
-          <span class="triad-dot" style="background:#F25563"></span>
+          <span class="triad-dot" style="background:var(--xylo-1)"></span>
           <span>1 陶诺 Do</span>
         </button>
         <button id="triad3Btn" class="triad-pill mood-happy" type="button" data-deg="3">
-          <span class="triad-dot" style="background:#E64980"></span>
+          <span class="triad-dot" style="background:var(--xylo-3)"></span>
           <span>3 拍咯 Mi</span>
         </button>
         <button id="triad5Btn" class="triad-pill" type="button" data-deg="5">
-          <span class="triad-dot" style="background:#2E7DB2"></span>
+          <span class="triad-dot" style="background:var(--xylo-5)"></span>
           <span>5 壳咯 Sol</span>
         </button>
       </div>
@@ -795,13 +812,13 @@ a:hover{ text-decoration: underline; }
         </svg>
       </div>
       <div class="choir-meter-row" id="choirMeterBuddies" aria-hidden="true">
-        <span class="mini-buddy-badge" data-deg="1" data-c="#F25563"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-        <span class="mini-buddy-badge" data-deg="2" data-c="#F7882F"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-        <span class="mini-buddy-badge" data-deg="3" data-c="#E64980"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-        <span class="mini-buddy-badge" data-deg="4" data-c="#3D7A77"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-        <span class="mini-buddy-badge" data-deg="5" data-c="#2E7DB2"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-        <span class="mini-buddy-badge" data-deg="6" data-c="#6F54B8"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-        <span class="mini-buddy-badge" data-deg="7" data-c="#CF8420"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="1" data-c="var(--xylo-1)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="2" data-c="var(--xylo-2)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="3" data-c="var(--xylo-3)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="4" data-c="var(--xylo-4)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="5" data-c="var(--xylo-5)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="6" data-c="var(--xylo-6)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+        <span class="mini-buddy-badge" data-deg="7" data-c="var(--xylo-7)"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
       </div>
       <div class="sound-hills" id="soundHills" aria-hidden="true">
         <span class="sound-hill"></span><span class="sound-hill"></span><span class="sound-hill"></span>
@@ -818,7 +835,7 @@ a:hover{ text-decoration: underline; }
 <section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
   <div class="icon-triptych-card">
     <div class="bench-label">
-      <span>极简提纯 1-3-5 应用图标（v0.64.0 · 29pt 高辨识）</span>
+      <span>极简提纯 1-3-5 应用图标（v0.69.0 · 29pt 高辨识）</span>
       <span class="bench-sub">单层草坡三态</span>
     </div>
     <div class="icon-triptych-row">
@@ -916,7 +933,7 @@ a:hover{ text-decoration: underline; }
 
 <section class="spaces-bench" aria-label="聆听、创作、曲本与工坊四标签纯血空间闭环体验">
   <div class="bench-label">
-    <span>v0.64.0 四标签纯血叙事空间闭环（聆听 · 创作 · 曲本 · 工坊）</span>
+    <span>v0.69.0 四标签纯血叙事空间闭环（聆听 · 创作 · 曲本 · 工坊）</span>
     <span class="bench-sub" id="spaceMetaReadout">独立快照零串台</span>
   </div>
   <div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
@@ -959,8 +976,9 @@ a:hover{ text-decoration: underline; }
         <button class="seed-btn" type="button" data-seed="hopping">漫步种子 · 梦幻悬浮</button>
       </div>
       <div class="draft-dock">
-        <span class="bench-sub" id="createSaveHint">保存时触发 1→5 液态竖琴归档印音</span>
+        <span class="bench-sub" id="createSaveHint">空白舞台轻触三偶奏欢迎和弦，保存时响起 1→5 液态竖琴印音</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="createEmptyGreetBtn" class="pill-btn soft-celadon" type="button">轻触三偶迎宾和弦</button>
           <button id="auditionDraftBtn" class="pill-btn" type="button">试听草稿</button>
           <button id="saveToSongbookBtn" class="pill-btn" type="button" style="background:var(--prominent);color:#FFFFFF;border-color:transparent">存入曲本</button>
         </div>
@@ -969,6 +987,10 @@ a:hover{ text-decoration: underline; }
 
     <div class="space-pane" data-pane="songbook">
       <div class="songbook-list" id="songbookList"></div>
+      <div class="draft-dock">
+        <span class="bench-sub" id="songbookGreetHint">支持卡片长按上下文菜单与 VoiceOver 自定义动作 · 空白书架可点四重奏迎宾</span>
+        <button id="shelfQuartetGreetBtn" class="pill-btn soft-celadon" type="button">空白书架 1-3-5 迎宾和弦</button>
+      </div>
     </div>
 
     <div class="space-pane" data-pane="settings">
@@ -1020,8 +1042,8 @@ a:hover{ text-decoration: underline; }
         <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
       </svg>
     </div>
-    <h2>窑纸软胶与零视觉夜灯直触</h2>
-    <p>全面清零 UI 硬黑边与偏置砖影，示波窗直触问候、音高七偶聚光与闭眼夜灯 1↑·Do↑ 三珠余韵，与《摸索台灯》同源和谐。</p>
+    <h2>8 音阶窑墨高对比与夜灯直触</h2>
+    <p>全 8 音阶彩键与和声条达到 WCAG AA/AAA 窑墨对比度，结合动态字体与闭眼夜灯 1↑·Do↑ 三珠余韵，日夜同样清晰护眼。</p>
   </article>
   <article class="feature-card">
     <div class="feature-chip" aria-hidden="true">
@@ -1050,13 +1072,13 @@ a:hover{ text-decoration: underline; }
 <script>
 (function () {
   const members = [
-    { deg: 1, name: "陶诺", sol: "Do",  role: "家", color: "#F25563", dark: "#8F1D28", tilt: 0,    hz: 261.63, shape: "taono" },
-    { deg: 2, name: "豆叩", sol: "Re",  role: "迈步", color: "#F7882F", dark: "#8A420A", tilt: 4,    hz: 293.66, shape: "doko" },
-    { deg: 3, name: "拍咯", sol: "Mi",  role: "晴雨", color: "#E64980", dark: "#861942", tilt: 0,    hz: 329.63, shape: "plokko" },
-    { deg: 4, name: "呜嘟", sol: "Fa",  role: "悬步", color: "#3D7A77", dark: "#085E45", tilt: -4.5, hz: 349.23, shape: "udo" },
-    { deg: 5, name: "壳咯", sol: "Sol", role: "远望", color: "#2E7DB2", dark: "#0F4C8A", tilt: 0,    hz: 392.00, shape: "corllo" },
-    { deg: 6, name: "钵莫", sol: "La",  role: "怀旧", color: "#6F54B8", dark: "#3F2299", tilt: 0,    hz: 440.00, shape: "bomo" },
-    { deg: 7, name: "叮尖", sol: "Ti",  role: "踮脚", color: "#CF8420", dark: "#7A4E00", tilt: -9,   hz: 493.88, shape: "tinki" }
+    { deg: 1, name: "陶诺", sol: "Do",  role: "家", color: "var(--xylo-1)", dark: "#8F1D28", tilt: 0,    hz: 261.63, shape: "taono" },
+    { deg: 2, name: "豆叩", sol: "Re",  role: "迈步", color: "var(--xylo-2)", dark: "#8A420A", tilt: 4,    hz: 293.66, shape: "doko" },
+    { deg: 3, name: "拍咯", sol: "Mi",  role: "晴雨", color: "var(--xylo-3)", dark: "#8A5E00", tilt: 0,    hz: 329.63, shape: "plokko" },
+    { deg: 4, name: "呜嘟", sol: "Fa",  role: "悬步", color: "var(--xylo-4)", dark: "#085E45", tilt: -4.5, hz: 349.23, shape: "udo" },
+    { deg: 5, name: "壳咯", sol: "Sol", role: "远望", color: "var(--xylo-5)", dark: "#0C575C", tilt: 0,    hz: 392.00, shape: "corllo" },
+    { deg: 6, name: "钵莫", sol: "La",  role: "怀旧", color: "var(--xylo-6)", dark: "#29469B", tilt: 0,    hz: 440.00, shape: "bomo" },
+    { deg: 7, name: "叮尖", sol: "Ti",  role: "踮脚", color: "var(--xylo-7)", dark: "#4A2FA1", tilt: -9,   hz: 493.88, shape: "tinki" }
   ];
 
   let audioCtx = null;
@@ -1242,7 +1264,7 @@ a:hover{ text-decoration: underline; }
     btn.innerHTML = `
       ${buildFigureSVG(m, idx)}
       <div class="figure-meta">
-        <span class="figure-deg" style="background:${m.color}">${m.deg}</span>
+        <span class="figure-deg" style="background:var(--xylo-${m.deg})">${m.deg}</span>
         <span class="figure-name">${m.name}</span>
       </div>
     `;
@@ -1592,6 +1614,21 @@ a:hover{ text-decoration: underline; }
     });
   }
   renderSongbook();
+
+  document.getElementById("createEmptyGreetBtn").addEventListener("click", () => {
+    playTone(392.00, 0.65, 0, 0.15, "triangle", 5);
+    playTone(130.81, 0.85, 0.11, 0.14, "sine", 1);
+    createSaveHint.textContent = "陶诺、咩哞与壳咯轻声奏出欢迎和弦 · 绝不误写入空白画布";
+  });
+
+  document.getElementById("shelfQuartetGreetBtn").addEventListener("click", () => {
+    const sgHint = document.getElementById("songbookGreetHint");
+    playTone(261.63, 0.55, 0, 0.13, "sine", 1);
+    playTone(329.63, 0.55, 0.09, 0.13, "sine", 3);
+    playTone(392.00, 0.65, 0.18, 0.14, "sine", 5);
+    playTone(130.81, 0.80, 0.18, 0.12, "triangle", 1);
+    sgHint.textContent = "陶诺、咩哞、噗咯与壳咯齐声奏出 C 大调 1-3-5 迎宾三和弦";
+  });
 
   document.getElementById("auditionDraftBtn").addEventListener("click", () => {
     currentDraft.notes.forEach(([hz, deg], i) => playTone(hz, 0.52, i * 0.17, 0.14, currentDraft.type, deg));

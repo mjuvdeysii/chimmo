@@ -225,21 +225,23 @@ public struct NightLampTactileSheet: View {
                     let usable = max(1.0, geo.size.height - pad * 2.0)
                     let yPos = pad + CGFloat(1.0 - normY) * usable
                     let isHover = currentHoverLane == laneIdx
-                    let ridgeCol = isHover ? nightPalette.nightLampGold : lane.barColor(isNight: true).opacity(0.55)
+                    let ridgeCol = isHover ? nightPalette.nightLampGold : lane.barColor(isNight: true)
 
                     HStack(spacing: 8) {
                         Capsule()
-                            .fill(ridgeCol.opacity(isHover ? 0.96 : 0.30))
+                            .fill(ridgeCol.opacity(isHover ? 0.96 : 0.24))
                             .frame(height: isHover ? 4.0 : 1.8)
 
                         HStack(spacing: 4) {
                             PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
                                 .frame(width: isHover ? 12 : 9, height: isHover ? 12 : 9)
-                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.78))
+                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.90))
 
                             Text(lane.digitLabel)
-                                .font(.system(size: isHover ? 14 : 10.5, weight: .heavy, design: .rounded))
-                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.78))
+                                .font(.system(isHover ? .footnote : .caption2, design: .rounded).weight(.heavy))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.90))
                         }
                         .frame(width: 46, alignment: .trailing)
                     }
@@ -299,7 +301,7 @@ public struct NightLampTactileSheet: View {
                     .allowsHitTesting(false)
                 }
             }
-            .contentShape(Rectangle())
+            .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { val in
