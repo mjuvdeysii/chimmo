@@ -14,6 +14,8 @@ public struct MusicBoxShelfView: View {
     public let onShareSavedEntry: (SavedMelodyEntry) -> Void
     public let onStartNewTap: () -> Void
     public let onWillPlayInline: () -> Void
+    public let onRenameSavedEntry: (UUID, String) -> Void
+    public let onDuplicateSavedEntry: (UUID) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSegment: Int = 1 // 默认也可在我的唱片(0)与28首名曲(1)间秒切；有保存作品自动先看0
@@ -22,6 +24,9 @@ public struct MusicBoxShelfView: View {
     @State private var playingEntryID: UUID? = nil
     @State private var inlinePlayStart: Double = 0
     @State private var inlinePlayTask: Task<Void, Never>? = nil
+    @State private var renameTargetID: UUID? = nil
+    @State private var renameDraftText: String = ""
+    @State private var showRenameAlert: Bool = false
 
     public init(
         palette: ChimmoPalette,
@@ -34,7 +39,9 @@ public struct MusicBoxShelfView: View {
         onBorrowAtmosphere: @escaping (MelodyDocument) -> Void = { _ in },
         onShareSavedEntry: @escaping (SavedMelodyEntry) -> Void = { _ in },
         onStartNewTap: @escaping () -> Void,
-        onWillPlayInline: @escaping () -> Void = {}
+        onWillPlayInline: @escaping () -> Void = {},
+        onRenameSavedEntry: @escaping (UUID, String) -> Void = { _, _ in },
+        onDuplicateSavedEntry: @escaping (UUID) -> Void = { _ in }
     ) {
         self.palette = palette
         self.synth = synth
@@ -47,6 +54,8 @@ public struct MusicBoxShelfView: View {
         self.onShareSavedEntry = onShareSavedEntry
         self.onStartNewTap = onStartNewTap
         self.onWillPlayInline = onWillPlayInline
+        self.onRenameSavedEntry = onRenameSavedEntry
+        self.onDuplicateSavedEntry = onDuplicateSavedEntry
         self._selectedSegment = State(initialValue: notebook.entries.isEmpty ? 1 : 0)
     }
 
@@ -178,6 +187,18 @@ public struct MusicBoxShelfView: View {
             .navigationTitle("曲库")
             .navigationBarTitleDisplayMode(.inline)
             .onDisappear { stopInlinePlay() }
+            .alert("作品名称", isPresented: $showRenameAlert) {
+                TextField("", text: $renameDraftText)
+                Button("确定") {
+                    if let targetID = renameTargetID {
+                        onRenameSavedEntry(targetID, renameDraftText)
+                    }
+                    renameTargetID = nil
+                }
+                Button("取消", role: .cancel) {
+                    renameTargetID = nil
+                }
+            }
         }
     }
 
@@ -274,10 +295,18 @@ public struct MusicBoxShelfView: View {
                         .lineLimit(1)
                 }
 
-                Text(entry.document.title)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
+                Button {
+                    renameTargetID = entry.id
+                    renameDraftText = entry.document.title
+                    showRenameAlert = true
+                } label: {
+                    Text(entry.document.title)
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(1)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("轻点重命名作品")
 
                 HStack(spacing: 8) {
                     Button {
@@ -349,6 +378,34 @@ public struct MusicBoxShelfView: View {
                 .strokeBorder(isPlayingThis ? entryModeColor.opacity(0.60) : Color.clear, lineWidth: 1.5)
         )
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.28), value: isPlayingThis)
+        .contextMenu {
+            Button {
+                renameTargetID = entry.id
+                renameDraftText = entry.document.title
+                showRenameAlert = true
+            } label: {
+                Label("重命名", systemImage: "pencil")
+            }
+            Button {
+                onDuplicateSavedEntry(entry.id)
+            } label: {
+                Label("复制副本", systemImage: "plus.square.on.square")
+            }
+            Button(role: .destructive) {
+                if isPlayingThis { stopInlinePlay() }
+                notebook.delete(id: entry.id)
+            } label: {
+                Label("删除", systemImage: "trash")
+            }
+        }
+        .accessibilityAction(named: "重命名") {
+            renameTargetID = entry.id
+            renameDraftText = entry.document.title
+            showRenameAlert = true
+        }
+        .accessibilityAction(named: "复制副本") {
+            onDuplicateSavedEntry(entry.id)
+        }
     }
 
     private func playInline(_ entry: SavedMelodyEntry) {

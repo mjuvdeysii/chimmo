@@ -120,6 +120,63 @@ public final class MelodyNotebookStore: ObservableObject {
         }
     }
 
+    @discardableResult
+    public func rename(id: UUID, newTitle: String) -> SavedMelodyEntry? {
+        let trimmed = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let idx = entries.firstIndex(where: { $0.id == id }) else {
+            return nil
+        }
+        entries[idx].document.title = trimmed
+        entries[idx].document.isSpecimen = false
+        entries[idx].updatedAt = Date()
+        let updated = entries.remove(at: idx)
+        entries.insert(updated, at: 0)
+        persist()
+        return updated
+    }
+
+    @discardableResult
+    public func duplicate(id: UUID) -> SavedMelodyEntry? {
+        guard let source = entries.first(where: { $0.id == id }) else {
+            return nil
+        }
+        let now = Date()
+        let srcDoc = source.document
+        let copyTitle = srcDoc.title.hasSuffix("副本") ? srcDoc.title : "\(srcDoc.title) 副本"
+        let copiedDoc = MelodyDocument(
+            id: UUID(),
+            title: copyTitle,
+            subtitle: srcDoc.subtitle,
+            rootMIDI: srcDoc.rootMIDI,
+            scaleMode: srcDoc.scaleMode,
+            harmonyProfile: srcDoc.harmonyProfile,
+            grooveStrength: srcDoc.grooveStrength,
+            estimatedBPM: srcDoc.estimatedBPM,
+            notes: srcDoc.notes,
+            isSpecimen: false,
+            specimenCategory: srcDoc.specimenCategory,
+            composerInsight: srcDoc.composerInsight,
+            preferredTexture: srcDoc.preferredTexture,
+            preferredVoice: srcDoc.preferredVoice,
+            guidedMoments: srcDoc.guidedMoments
+        )
+        let copyEntry = SavedMelodyEntry(
+            id: UUID(),
+            createdAt: now,
+            updatedAt: now,
+            document: copiedDoc,
+            chordPreset: source.chordPreset,
+            chordOverrides: source.chordOverrides,
+            accompanimentTexture: source.accompanimentTexture,
+            moodSticker: source.moodSticker,
+            summaryNote: source.summaryNote
+        )
+        entries.insert(copyEntry, at: 0)
+        persist()
+        return copyEntry
+    }
+
     public func delete(id: UUID) {
         entries.removeAll { $0.id == id }
         persist()

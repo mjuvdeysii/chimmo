@@ -1537,6 +1537,37 @@ public final class StudioViewModel: ObservableObject {
         AcousticHapticsEngine.shared.playResolutionExhale()
     }
 
+    public func renameCurrentSong(_ newTitle: String) {
+        let trimmed = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            AcousticHapticsEngine.shared.playScrubTick()
+            return
+        }
+        document.title = trimmed
+        document.isSpecimen = false
+        if let savedID = currentSavedEntryID {
+            notebook.rename(id: savedID, newTitle: trimmed)
+        }
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+    }
+
+    public func renameSavedEntry(id: UUID, newTitle: String) {
+        guard let updated = notebook.rename(id: id, newTitle: newTitle) else {
+            AcousticHapticsEngine.shared.playScrubTick()
+            return
+        }
+        if currentSavedEntryID == id {
+            document.title = updated.document.title
+        }
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+    }
+
+    public func duplicateSavedEntry(id: UUID) {
+        if notebook.duplicate(id: id) != nil {
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+        }
+    }
+
     // MARK: - Playback Sequencer (Zero 60Hz SwiftUI Invalidation)
 
     public func togglePlayback() {
@@ -1934,6 +1965,12 @@ public struct StudioView: View {
                     },
                     onWillPlayInline: {
                         vm.stopPlayback()
+                    },
+                    onRenameSavedEntry: { id, newTitle in
+                        vm.renameSavedEntry(id: id, newTitle: newTitle)
+                    },
+                    onDuplicateSavedEntry: { id in
+                        vm.duplicateSavedEntry(id: id)
                     }
                 )
             }

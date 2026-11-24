@@ -1388,4 +1388,71 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound20SongbookAndPostcardCipher() throws {
+        // 1. 曲库重命名与副本复制独立持久化验证
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo-r20-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let store = MelodyNotebookStore(directory: tempDir)
+        let doc = MelodyDocument(
+            title: "初稿",
+            subtitle: "",
+            rootMIDI: 60,
+            scaleMode: .brightMajor,
+            harmonyProfile: .feltSun,
+            grooveStrength: 0.0,
+            notes: [
+                NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.2, rawDuration: 0.4),
+                NoteBead(degree: 5, octaveOffset: 0, rawOnset: 0.7, rawDuration: 0.5)
+            ]
+        )
+        let saved = store.save(
+            document: doc,
+            chordPreset: .autoMatch,
+            chordOverrides: [:],
+            accompanimentTexture: .swanRipple,
+            summaryNote: "晴空草稿"
+        )
+        XCTAssertNil(store.rename(id: saved.id, newTitle: "   \n  "))
+        let renamed = store.rename(id: saved.id, newTitle: "  秋夜钢琴  ")
+        XCTAssertEqual(renamed?.document.title, "秋夜钢琴")
+
+        let copied = store.duplicate(id: saved.id)
+        XCTAssertNotNil(copied)
+        XCTAssertNotEqual(copied?.id, saved.id)
+        XCTAssertNotEqual(copied?.document.id, saved.document.id)
+        XCTAssertEqual(copied?.document.title, "秋夜钢琴 副本")
+        XCTAssertEqual(store.entries.count, 2)
+
+        let reloadedStore = MelodyNotebookStore(directory: tempDir)
+        XCTAssertEqual(reloadedStore.entries.count, 2)
+        XCTAssertTrue(reloadedStore.entries.contains(where: { $0.document.title == "秋夜钢琴" }))
+        XCTAssertTrue(reloadedStore.entries.contains(where: { $0.document.title == "秋夜钢琴 副本" }))
+
+        // 2. StudioViewModel 重命名联动且零 Toast
+        let vm = StudioViewModel(notebookStore: store)
+        vm.openSavedEntry(saved, autoPlay: false)
+        vm.renameCurrentSong("雨后回声")
+        XCTAssertEqual(vm.document.title, "雨后回声")
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertNil(vm.statusToast)
+        XCTAssertEqual(store.entries.first(where: { $0.id == saved.id })?.document.title, "雨后回声")
+
+        // 3. 明信片简谱音符可视条离线快照与 PNG 渲染校验
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        let cipherSnap = VinylPostcardSnapshot(document: swan, isNight: true, visualMode: .orbitalDisc, includeJianpuStrip: true)
+        XCTAssertTrue(cipherSnap.includeJianpuStrip)
+        XCTAssertEqual(cipherSnap.jianpuTokens.count, min(14, swan.notes.count))
+        let pngData = VinylPostcardExporter.renderPNGData(
+            document: swan,
+            isNight: true,
+            visualMode: .orbitalDisc,
+            includeJianpuStrip: true
+        )
+        XCTAssertGreaterThan(pngData?.count ?? 0, 1000)
+    }
 }

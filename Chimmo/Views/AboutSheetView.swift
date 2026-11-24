@@ -50,6 +50,7 @@ public struct VinylPostcardShareSheet: View {
     @State private var exportedWAVURL: URL?
     @State private var isRenderingWAV: Bool = false
     @State private var exportedMIDIURL: URL?
+    @State private var showJianpuStrip: Bool = false
 
     public init(palette: ChimmoPalette, request: VinylPostcardRequest) {
         self.palette = palette
@@ -67,7 +68,8 @@ public struct VinylPostcardShareSheet: View {
             shadowEnabled: request.shadowEnabled,
             isNight: useNightCard,
             headline: request.headline,
-            visualMode: selectedMode
+            visualMode: selectedMode,
+            includeJianpuStrip: showJianpuStrip
         )
     }
 
@@ -75,8 +77,8 @@ public struct VinylPostcardShareSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    // 浅色 / 深色 + 三态画境切换（纯图标，零说明）
-                    HStack(spacing: 10) {
+                    // 浅色 / 深色 + 三态画境切换 + 可选简谱数字记号（纯图标，零说明）
+                    HStack(spacing: 8) {
                         Picker("图片样式", selection: $useNightCard) {
                             Text("浅色").tag(false)
                             Text("深色").tag(true)
@@ -102,6 +104,20 @@ public struct VinylPostcardShareSheet: View {
                         .fixedSize()
                         .padding(3)
                         .background(Capsule().fill(palette.cardSurface))
+
+                        Button {
+                            showJianpuStrip.toggle()
+                            AcousticHapticsEngine.shared.playScrubTick()
+                        } label: {
+                            Image(systemName: "textformat.123")
+                                .font(.system(size: 12.5, weight: .bold))
+                                .frame(width: 34, height: 34)
+                                .background(Capsule().fill(showJianpuStrip ? palette.homeAnchor : palette.cardSurface))
+                                .foregroundStyle(showJianpuStrip ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.secondaryInk)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("在明信片显示简谱音符")
+                        .accessibilityValue(showJianpuStrip ? "已开启" : "已关闭")
                     }
                     .padding(.horizontal, 16)
 
@@ -224,6 +240,9 @@ public struct VinylPostcardShareSheet: View {
             .onChange(of: selectedMode) { _, _ in
                 refreshPostcardOnly()
             }
+            .onChange(of: showJianpuStrip) { _, _ in
+                refreshPostcardOnly()
+            }
         }
         .presentationDetents([.large])
     }
@@ -237,7 +256,8 @@ public struct VinylPostcardShareSheet: View {
             shadowEnabled: request.shadowEnabled,
             isNight: useNightCard,
             headline: request.headline,
-            visualMode: selectedMode
+            visualMode: selectedMode,
+            includeJianpuStrip: showJianpuStrip
         )
     }
 

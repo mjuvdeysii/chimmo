@@ -4,6 +4,17 @@ import SwiftUI
 import UIKit
 #endif
 
+/// 明信片可选简谱可视化音符标记
+public struct PostcardJianpuToken: Sendable, Equatable {
+    public let digit: String
+    public let colorHex: UInt32
+
+    public init(digit: String, colorHex: UInt32) {
+        self.digit = digit
+        self.colorHex = colorHex
+    }
+}
+
 /// 黑胶星轨明信片数据快照（100% 离线、纯值传递，支持任意作品或历史唱片生成高分辨率纪念卡片）
 public struct VinylPostcardSnapshot: Sendable {
     public let title: String
@@ -20,6 +31,8 @@ public struct VinylPostcardSnapshot: Sendable {
     public let isNight: Bool
     public let visualMode: StageVisualMode
     public let rootMIDI: Int
+    public let includeJianpuStrip: Bool
+    public let jianpuTokens: [PostcardJianpuToken]
 
     public init(
         document: MelodyDocument,
@@ -29,7 +42,8 @@ public struct VinylPostcardSnapshot: Sendable {
         shadowEnabled: Bool = false,
         isNight: Bool = false,
         headline: String? = nil,
-        visualMode: StageVisualMode = .orbitalDisc
+        visualMode: StageVisualMode = .orbitalDisc,
+        includeJianpuStrip: Bool = false
     ) {
         self.title = document.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "我的旋律" : document.title
         self.scaleMode = document.scaleMode
@@ -64,6 +78,11 @@ public struct VinylPostcardSnapshot: Sendable {
         self.isNight = isNight
         self.visualMode = visualMode
         self.rootMIDI = document.rootMIDI
+        self.includeJianpuStrip = includeJianpuStrip
+        self.jianpuTokens = self.notes.prefix(14).map { bead in
+            let lane = XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset))
+            return PostcardJianpuToken(digit: lane.digitLabel, colorHex: lane.member.bodyHex)
+        }
     }
 }
 
@@ -148,7 +167,30 @@ public struct VinylPostcardCanvasView: View {
                         drawPostcardNebula(ctx: &ctx, size: size, palette: palette)
                     }
                 }
-                .frame(width: 392, height: 392)
+                .frame(width: 392, height: snapshot.includeJianpuStrip && !snapshot.jianpuTokens.isEmpty ? 364 : 392)
+
+                if snapshot.includeJianpuStrip && !snapshot.jianpuTokens.isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(Array(snapshot.jianpuTokens.enumerated()), id: \.offset) { _, token in
+                            HStack(spacing: 2.5) {
+                                Circle()
+                                    .fill(Color(hex: token.colorHex))
+                                    .frame(width: 5, height: 5)
+                                Text(token.digit)
+                                    .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                                    .foregroundStyle(palette.primaryInk)
+                            }
+                        }
+                        if snapshot.notes.count > snapshot.jianpuTokens.count {
+                            Text("…")
+                                .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(palette.shelfSurface.opacity(snapshot.isNight ? 0.85 : 0.72)))
+                }
 
                 // 底部标题与说明
                 VStack(alignment: .leading, spacing: 8) {
@@ -726,7 +768,8 @@ public enum VinylPostcardExporter {
         shadowEnabled: Bool = false,
         isNight: Bool = false,
         headline: String? = nil,
-        visualMode: StageVisualMode = .orbitalDisc
+        visualMode: StageVisualMode = .orbitalDisc,
+        includeJianpuStrip: Bool = false
     ) -> Data? {
         let snapshot = VinylPostcardSnapshot(
             document: document,
@@ -736,7 +779,8 @@ public enum VinylPostcardExporter {
             shadowEnabled: shadowEnabled,
             isNight: isNight,
             headline: headline,
-            visualMode: visualMode
+            visualMode: visualMode,
+            includeJianpuStrip: includeJianpuStrip
         )
         let cardView = VinylPostcardCanvasView(snapshot: snapshot)
         let renderer = ImageRenderer(content: cardView)
@@ -757,7 +801,8 @@ public enum VinylPostcardExporter {
         shadowEnabled: Bool = false,
         isNight: Bool = false,
         headline: String? = nil,
-        visualMode: StageVisualMode = .orbitalDisc
+        visualMode: StageVisualMode = .orbitalDisc,
+        includeJianpuStrip: Bool = false
     ) throws -> URL {
         guard let data = renderPNGData(
             document: document,
@@ -767,7 +812,8 @@ public enum VinylPostcardExporter {
             shadowEnabled: shadowEnabled,
             isNight: isNight,
             headline: headline,
-            visualMode: visualMode
+            visualMode: visualMode,
+            includeJianpuStrip: includeJianpuStrip
         ) else {
             throw NSError(domain: "app.chimmo.postcard", code: -1, userInfo: [NSLocalizedDescriptionKey: "明信片图像渲染失败"])
         }

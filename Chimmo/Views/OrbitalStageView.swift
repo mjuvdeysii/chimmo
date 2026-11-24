@@ -16,6 +16,8 @@ public struct OrbitalStageView: View {
 
     @State private var showDreamSheet: Bool = false
     @State private var showMoodSheet: Bool = false
+    @State private var showRenameAlert: Bool = false
+    @State private var renameDraft: String = ""
     @State private var rippleWakeActive: Bool = false
     @State private var rippleWakeTask: Task<Void, Never>? = nil
 
@@ -140,7 +142,7 @@ public struct OrbitalStageView: View {
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
-                    .accessibilityLabel("生成黑胶星轨明信片与导出 MIDI")
+                    .accessibilityLabel("分享作品图片、音频与 MIDI")
 
                     Button {
                         onOpenAbout()
@@ -149,6 +151,13 @@ public struct OrbitalStageView: View {
                     }
                     .accessibilityLabel("关于与隐私承诺")
                 }
+            }
+            .alert("作品名称", isPresented: $showRenameAlert) {
+                TextField("", text: $renameDraft)
+                Button("确定") {
+                    vm.renameCurrentSong(renameDraft)
+                }
+                Button("取消", role: .cancel) {}
             }
             .sheet(isPresented: $showDreamSheet) {
                 DreamCaptureSheet(vm: vm, palette: palette)
@@ -206,17 +215,26 @@ public struct OrbitalStageView: View {
 
     private var topStageHeader: some View {
         HStack(spacing: 10) {
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
-                    .frame(width: 7, height: 7)
+            Button {
+                renameDraft = vm.document.title
+                showRenameAlert = true
+            } label: {
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
+                        .frame(width: 7, height: 7)
 
-                Text(vm.document.title)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                    Text(vm.document.title)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("作品名称 \(vm.document.title)")
+            .accessibilityHint("轻点重命名当前旋律")
 
             Spacer(minLength: 4)
 
@@ -2391,11 +2409,12 @@ public struct OrbitalStageView: View {
                             vm.endStarVibrato()
                             ribbonMercuryLevel = 0.0
                             ribbonDragAnchorY = val.location.y
-                            struckRibbonLane = idx
                             let lane = XylophoneLane.lane(at: idx)
                             if vm.pentatonicSafe && !lane.isPentatonicSafe && !vm.followGlowActive {
+                                struckRibbonLane = nil
                                 return
                             }
+                            struckRibbonLane = idx
                             let normY = Double(max(0, min(1, val.location.y / h)))
                             let dyn = ExpressiveTouchMapper.dynamics(normalizedY: normY)
                             wakeRippleTimeline()
