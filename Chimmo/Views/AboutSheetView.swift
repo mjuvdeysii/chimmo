@@ -84,54 +84,74 @@ public struct VinylPostcardShareSheet: View {
 
                 ScrollView {
                     VStack(spacing: 12) {
-                        // 扁平卡通日夜纸卡片 + 三态画境切换 + 简谱印记开关
+                        // 扁平卡通日夜纸卡片 + 三态画境切换 + 简谱印记开关（消除透明热区穿透）
                         HStack(spacing: 8) {
-                            ZStack {
-                                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
-                                HStack(spacing: 2) {
-                                    ForEach([false, true], id: \.self) { nightFlag in
-                                        let active = useNightCard == nightFlag
-                                        Button {
-                                            useNightCard = nightFlag
-                                            AcousticHapticsEngine.shared.playScrubTick()
-                                        } label: {
-                                            Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
-                                                .font(.system(size: 12.5, weight: .bold))
-                                                .frame(width: 34, height: 28)
-                                                .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                                .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
-                                        .accessibilityValue(active ? "已选中" : "")
+                            HStack(spacing: 2) {
+                                ForEach([false, true], id: \.self) { nightFlag in
+                                    let active = useNightCard == nightFlag
+                                    Button {
+                                        useNightCard = nightFlag
+                                        AcousticHapticsEngine.shared.playScrubTick()
+                                    } label: {
+                                        Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
+                                            .font(.system(size: 12.5, weight: .bold))
+                                            .frame(width: 38, height: 34)
+                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                            .contentShape(Capsule())
                                     }
+                                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
+                                    .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
+                                    .accessibilityValue(active ? "已选中" : "")
                                 }
-                                .padding(3)
                             }
+                            .padding(3)
+                            .background(
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.5)
+                                    Capsule()
+                                        .fill(palette.cardSurface)
+                                    Capsule()
+                                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.60 : 0.78), lineWidth: 1.4)
+                                }
+                            )
+                            .contentShape(Capsule())
                             .fixedSize()
 
                             Spacer(minLength: 4)
 
-                            ZStack {
-                                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
-                                HStack(spacing: 2) {
-                                    ForEach(StageVisualMode.allCases) { mode in
-                                        let active = selectedMode == mode
-                                        Button {
-                                            selectedMode = mode
-                                        } label: {
-                                            Image(systemName: mode.iconName)
-                                                .font(.system(size: 12.5, weight: .bold))
-                                                .frame(width: 30, height: 28)
-                                                .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                                .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .accessibilityLabel("\(mode.rawValue)样式")
+                            HStack(spacing: 2) {
+                                ForEach(StageVisualMode.allCases) { mode in
+                                    let active = selectedMode == mode
+                                    Button {
+                                        selectedMode = mode
+                                    } label: {
+                                        Image(systemName: mode.iconName)
+                                            .font(.system(size: 12.5, weight: .bold))
+                                            .frame(width: 36, height: 34)
+                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                            .contentShape(Capsule())
                                     }
+                                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
+                                    .accessibilityLabel("\(mode.rawValue)样式")
                                 }
-                                .padding(3)
                             }
+                            .padding(3)
+                            .background(
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.5)
+                                    Capsule()
+                                        .fill(palette.cardSurface)
+                                    Capsule()
+                                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.60 : 0.78), lineWidth: 1.4)
+                                }
+                            )
+                            .contentShape(Capsule())
                             .fixedSize()
 
                             Button {
@@ -140,7 +160,7 @@ public struct VinylPostcardShareSheet: View {
                             } label: {
                                 Image(systemName: "textformat.123")
                                     .font(.system(size: 12.5, weight: .bold))
-                                    .frame(width: 34, height: 34)
+                                    .frame(width: 38, height: 38)
                                     .background(
                                         ChimmoKilnPillButtonSurface(
                                             palette: palette,
@@ -150,18 +170,12 @@ public struct VinylPostcardShareSheet: View {
                                         )
                                     )
                                     .foregroundStyle(showJianpuStrip ? palette.homeAnchor : palette.secondaryInk)
+                                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("在明信片显示简谱音符")
                             .accessibilityValue(showJianpuStrip ? "已开启" : "已关闭")
                         }
-                        .padding(.horizontal, 14)
-
-                        StorybookScallopDivider(
-                            color: palette.cartoonOutline.opacity(palette.isNight ? 0.48 : 0.34),
-                            stepWidth: 16
-                        )
-                        .frame(height: 6)
                         .padding(.horizontal, 14)
 
                         // 等比缩放呈现 540x680 扁平卡通绘本明信片预览（硬朗无模糊位移阴影 + 暖墨描边）
@@ -207,14 +221,15 @@ public struct VinylPostcardShareSheet: View {
                                         }
                                     )
                                     .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                                 .accessibilityLabel("分享图片 PNG")
                             } else {
                                 ProgressView()
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                                    .background(StorybookQuietCardSurface(palette: palette, cornerRadius: 16))
                             }
 
                             if let wavURL = exportedWAVURL {
@@ -239,8 +254,9 @@ public struct VinylPostcardShareSheet: View {
                                         }
                                     )
                                     .foregroundStyle(palette.primaryInk)
+                                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                                 .accessibilityLabel("分享立体声音频 WAV")
                             } else if isRenderingWAV {
                                 VStack(spacing: 5) {
@@ -251,7 +267,7 @@ public struct VinylPostcardShareSheet: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                                .background(StorybookQuietCardSurface(palette: palette, cornerRadius: 16))
                                 .foregroundStyle(palette.secondaryInk)
                             } else {
                                 VStack(spacing: 5) {
@@ -262,7 +278,7 @@ public struct VinylPostcardShareSheet: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                                .background(StorybookQuietCardSurface(palette: palette, cornerRadius: 16))
                                 .foregroundStyle(palette.secondaryInk.opacity(0.6))
                             }
 
@@ -288,14 +304,15 @@ public struct VinylPostcardShareSheet: View {
                                         }
                                     )
                                     .foregroundStyle(palette.primaryInk)
+                                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                                 .accessibilityLabel("导出 MIDI")
                             } else {
                                 ProgressView()
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(ChimmoKilnPillButtonSurface(palette: palette, cornerRadius: 16))
+                                    .background(StorybookQuietCardSurface(palette: palette, cornerRadius: 16))
                             }
                         }
                         .padding(.horizontal, 14)
@@ -317,8 +334,7 @@ public struct VinylPostcardShareSheet: View {
                         .padding(.vertical, 6)
                         .background(
                             Capsule()
-                                .fill(palette.cardSurface)
-                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.4))
+                                .fill(palette.homeAnchor.opacity(palette.isNight ? 0.20 : 0.12))
                         )
                     }
                     .padding(.vertical, 12)
@@ -498,12 +514,6 @@ public struct AboutSheetView: View {
                             }()
 
                             VStack(alignment: .leading, spacing: 10) {
-                                StorybookScallopDivider(
-                                    color: palette.cartoonOutline.opacity(palette.isNight ? 0.48 : 0.34),
-                                    stepWidth: 16
-                                )
-                                .frame(height: 6)
-
                                 HStack(spacing: 10) {
                                     ForEach(ChimmoDuoCharacter.allCases) { character in
                                         let active = auditioningDuo == character
@@ -558,8 +568,9 @@ public struct AboutSheetView: View {
                                                     cornerRadius: 16
                                                 )
                                             )
+                                            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                         }
-                                        .buttonStyle(.plain)
+                                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                                         .accessibilityLabel(character.accessibilityLabel)
                                         .accessibilityHint("轻点试听专属声部")
                                     }
@@ -646,9 +657,6 @@ public struct AboutSheetView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(
                                 ZStack {
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 3.5)
                                     StorybookCartoonSceneBackground(
                                         palette: palette,
                                         accentTint: skyColor,
@@ -656,11 +664,8 @@ public struct AboutSheetView: View {
                                         showsSkyMotifs: true
                                     )
                                     .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                                    ChimmoBrassFrameAccent(
-                                        palette: palette,
-                                        cornerRadius: 22,
-                                        showCornerPins: true
-                                    )
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.24 : 0.18), lineWidth: 1.2)
                                 }
                             )
                         }
@@ -704,8 +709,9 @@ public struct AboutSheetView: View {
                                     }
                                 )
                                 .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                         }
 
                         // 隐私承诺与可折叠开源/版权说明（100% 保留合规文本但不视觉刷屏）
@@ -719,11 +725,9 @@ public struct AboutSheetView: View {
                                     .foregroundStyle(palette.primaryInk)
                             }
 
-                            StorybookScallopDivider(
-                                color: palette.cartoonOutline.opacity(palette.isNight ? 0.35 : 0.25),
-                                stepWidth: 14
-                            )
-                            .frame(height: 5)
+                            Rectangle()
+                                .fill(palette.divider)
+                                .frame(height: 1)
 
                             DisclosureGroup("隐私与开源版权说明", isExpanded: $showLegalDetails) {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -742,7 +746,7 @@ public struct AboutSheetView: View {
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
-                            ChimmoKilnPillButtonSurface(
+                            StorybookQuietCardSurface(
                                 palette: palette,
                                 cornerRadius: 18
                             )

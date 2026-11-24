@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.44.0 - 2026-11-24
+- **交互热区修复 × 全局视觉降噪 × 两极交互视觉契约（Quiet Flat-Cartoon Affordance Edition v0.44.0）**：
+  - **两极交互视觉契约与紧凑预算引擎（`StorybookAffordanceMetrics` & `ChimmoDesignLanguage`）**：严格区分可交互贴纸按钮（暖墨实线描边 + 无模糊偏移阴影 + `StorybookTactileButtonStyle` 按下物理下沉）与静态展示容器/只读信息标签（新增零硬阴影 `StorybookQuietCardSurface` 与无描边 `StorybookQuietTag`，`ChimmoWoodResonatorTray` 与 `ChimmoEditorialPill` 降噪为轻柔背景容器）；彻底废除全站 `ChimmoBrassFrameAccent` 双层套框叠加与四角圆钉（`showCornerPins`）；
+  - **全画幅降噪底纸与主舞台热区修复（`AmbientPaperBackdrop` & `OrbitalStageView`）**：精简背景底纸，移除 18 颗散点与被卡片遮断的云日装饰，仅留纯净暖纸/夜蓝与底部无描边起伏绘本山坡；修复 `modeReliefPillSwitcher` 与 `activeFeaturesOverlay` 透明胶囊热区过小及向底层 `Canvas` 手势穿透问题（统一扩大至 `36–42pt` 完整 `.contentShape(Capsule())` 热区）；顶栏曲名追加铅笔重命名提示并移除右侧外层双层套框；和声轨、游标卡尺与底部控台消除假按钮框与重边框；
+  - **曲库与弹窗 `.medium` 半屏直达减负（`MusicBoxShelfView`、`SoundPaletteBoxSheet`、`DreamCaptureSheet`、`AboutSheetView`、`NightLampTactileSheet`、`VinylPostcardExporter`）**：将 `MusicBoxShelfView` 三层吸顶头栏收紧为紧凑双行结构（默认隐藏搜索栏，一键展开；单行横向滚动分类与情绪筛选条），曲目卡升级为无硬阴影 `StorybookQuietCardSurface` 并在标题旁补充铅笔重命名提示；合并 `DreamCaptureSheet` 顶栏与标签轨、压低 `SoundPaletteBoxSheet` 示波舞台高度并清除双层框与多余分隔彩带，全面修复浅/深/视窗透明切换胶囊手势穿透并让 `.medium` 半屏立即可用；
+  - **单元测试与构建门禁**：新增 `testCreativeAlchemyRound37AffordanceContractHitTargetsAndCompactChrome`，通过零渐变零模糊阴影、零圆钉双框、零 Emoji 及无模拟器 `xcodebuild build-for-testing`（0 error / 0 warning）校验。
+
 ## 0.43.0 - 2026-11-24
 - **1-3-5 扁平卡通应用图标 × 主舞台绘本分幕角标 × 全站零拟物首触闭环（Kids' Book First-30-Seconds Edition v0.43.0）**：
   - **全新 `1-3-5` 三音主和弦应用图标套件（`AppIcon-Light` / `AppIcon-Dark` / `AppIcon-Tinted` + `Tools/ip/render_flat_app_icons.py`）**：彻底淘汰早年 3D 拟物圆盘图标，严格遵循 IP 正典《1-3-5 主三和弦三人组》（居中前立的珊瑚赤陶铃「1 陶诺」与胸口金珠 + 左后探出的「3 拍咯」+ 右后探出的「5 壳咯」螺旋贝耳）重绘为 1024×1024 零渐变扁平卡通童书图标三态（含 29pt 高辨识粗暖墨描边、星月夜守望态及高对比度单色着染态）；

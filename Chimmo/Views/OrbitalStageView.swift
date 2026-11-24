@@ -226,8 +226,8 @@ public struct OrbitalStageView: View {
         let crownGaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
 
         return HStack(spacing: 8) {
-            // 一体化「双子窑陶铭牌胶囊」：左区双子问候 + 黄铜细竖线 + 右区曲名重命名
-            HStack(spacing: 9) {
+            // 一体化「双子窑陶铭牌胶囊」：左区双子问候 + 细竖线 + 右区曲名重命名（含铅笔提示）
+            HStack(spacing: 8) {
                 Button {
                     vm.auditionDuoGreeting()
                     duoGreetingPulse = true
@@ -247,105 +247,96 @@ public struct OrbitalStageView: View {
                         gazeBias: crownGaze
                     )
                     .frame(width: 44, height: 28)
+                    .frame(minWidth: 44, minHeight: 36)
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("咩哞双子问候")
                 .accessibilityHint("轻点试听小羊与小牛和音")
 
                 Rectangle()
-                    .fill(palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.78))
-                    .frame(width: 1.5, height: 18)
+                    .fill(palette.cartoonOutline.opacity(palette.isNight ? 0.35 : 0.30))
+                    .frame(width: 1.2, height: 18)
                     .accessibilityHidden(true)
 
                 Button {
                     renameDraft = vm.document.title
                     showRenameAlert = true
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 5) {
                         Circle()
                             .fill(skyColor)
-                            .frame(width: 9.5, height: 9.5)
-                            .overlay(Circle().stroke(palette.cartoonOutline, lineWidth: 1.3))
+                            .frame(width: 9.0, height: 9.0)
 
                         Text(vm.document.title)
                             .font(.system(.subheadline, design: .rounded).weight(.heavy))
                             .foregroundStyle(palette.primaryInk)
                             .lineLimit(1)
                             .minimumScaleFactor(0.78)
+
+                        Image(systemName: "pencil")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundStyle(palette.secondaryInk)
                     }
+                    .frame(minHeight: 36)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("作品名称 \(vm.document.title)")
                 .accessibilityHint("轻点重命名当前旋律")
             }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 5.5)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 3)
             .background(
-                ZStack {
-                    ChimmoKilnPillButtonSurface(
-                        palette: palette,
-                        accent: skyColor,
-                        isActive: false,
-                        cornerRadius: 20
-                    )
-                    ChimmoBrassFrameAccent(
-                        palette: palette,
-                        cornerRadius: 20,
-                        showCornerPins: false
-                    )
-                }
+                ChimmoKilnPillButtonSurface(
+                    palette: palette,
+                    accent: skyColor,
+                    isActive: false,
+                    cornerRadius: 20
+                )
             )
 
             Spacer(minLength: 4)
 
-            ZStack {
-                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 20)
-
-                HStack(spacing: 6) {
-                    if vm.canUndo {
-                        hardwareCrownKey(
-                            systemName: "arrow.uturn.backward",
-                            tint: palette.primaryInk,
-                            isHighlighted: false,
-                            accessibilityLabel: "撤销上一步"
-                        ) {
-                            vm.undo()
-                        }
-                    }
-
+            HStack(spacing: 6) {
+                if vm.canUndo {
                     hardwareCrownKey(
-                        systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark",
-                        tint: vm.currentSavedEntryID != nil ? palette.homeAnchor : palette.primaryInk,
-                        isHighlighted: vm.currentSavedEntryID != nil,
-                        bounceValue: vm.lastSavedPulse,
-                        accessibilityLabel: "保存到我的曲库"
-                    ) {
-                        vm.saveCurrentToNotebook()
-                    }
-
-                    hardwareCrownKey(
-                        systemName: "square.and.arrow.up",
+                        systemName: "arrow.uturn.backward",
                         tint: palette.primaryInk,
                         isHighlighted: false,
-                        accessibilityLabel: "分享作品图片、音频与 MIDI"
+                        accessibilityLabel: "撤销上一步"
                     ) {
-                        onOpenSharePostcard()
-                    }
-
-                    hardwareCrownKey(
-                        systemName: "info.circle",
-                        tint: palette.primaryInk,
-                        isHighlighted: false,
-                        accessibilityLabel: "关于与隐私承诺"
-                    ) {
-                        onOpenAbout()
+                        vm.undo()
                     }
                 }
-                .padding(.horizontal, 4.5)
-                .padding(.vertical, 3.5)
 
-                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 20, showCornerPins: false)
+                hardwareCrownKey(
+                    systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark",
+                    tint: vm.currentSavedEntryID != nil ? palette.homeAnchor : palette.primaryInk,
+                    isHighlighted: vm.currentSavedEntryID != nil,
+                    bounceValue: vm.lastSavedPulse,
+                    accessibilityLabel: "保存到我的曲库"
+                ) {
+                    vm.saveCurrentToNotebook()
+                }
+
+                hardwareCrownKey(
+                    systemName: "square.and.arrow.up",
+                    tint: palette.primaryInk,
+                    isHighlighted: false,
+                    accessibilityLabel: "分享作品图片、音频与 MIDI"
+                ) {
+                    onOpenSharePostcard()
+                }
+
+                hardwareCrownKey(
+                    systemName: "info.circle",
+                    tint: palette.primaryInk,
+                    isHighlighted: false,
+                    accessibilityLabel: "关于与隐私承诺"
+                ) {
+                    onOpenAbout()
+                }
             }
             .fixedSize()
         }
@@ -361,17 +352,19 @@ public struct OrbitalStageView: View {
         action: @escaping () -> Void
     ) -> some View {
         let icon = Image(systemName: systemName)
-            .font(.system(size: 13, weight: .bold))
+            .font(.system(size: 13.5, weight: .bold))
             .foregroundStyle(tint)
 
         return Button(action: action) {
             ZStack {
                 Circle()
                     .fill(palette.cartoonShadow)
+                    .frame(width: 36, height: 36)
                     .offset(x: 0, y: 2)
 
                 Circle()
                     .fill(isHighlighted ? tint.opacity(palette.isNight ? 0.30 : 0.18) : palette.cardSurface)
+                    .frame(width: 36, height: 36)
                     .overlay(
                         Circle()
                             .strokeBorder(
@@ -386,13 +379,14 @@ public struct OrbitalStageView: View {
                     icon
                 }
             }
-            .frame(width: 34, height: 34)
+            .frame(width: 40, height: 40)
+            .contentShape(Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(accessibilityLabel)
     }
 
-    // MARK: - 2. Hero Stage Container (Wood-Brass Resonator Cavity + Relief Mode Dial + Duo Corner Perches)
+    // MARK: - 2. Hero Stage Container (Single Clean Storybook Frame + Anti-Pass-Through Mode Pill + Duo Corner Perches)
 
     private var heroStageContainer: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
@@ -402,9 +396,11 @@ public struct OrbitalStageView: View {
             : nil
 
         return GeometryReader { geo in
-            let innerSize = CGSize(width: max(40, geo.size.width - 10), height: max(40, geo.size.height - 10))
+            let innerSize = geo.size
             ZStack {
-                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 28)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(palette.cartoonShadow)
+                    .offset(y: 3)
 
                 ZStack {
                     stageInteractiveCanvas
@@ -439,20 +435,6 @@ public struct OrbitalStageView: View {
                                 }
                         )
 
-                    // 顶部童书扇形波浪天篷（平涂淡彩，零渐变）
-                    VStack(spacing: 0) {
-                        (activeCurtainColor ?? skyColor)
-                            .opacity(palette.isNight ? 0.16 : 0.11)
-                            .frame(height: 44)
-                        StorybookScallopDivider(
-                            color: (activeCurtainColor ?? skyColor).opacity(palette.isNight ? 0.42 : 0.34),
-                            stepWidth: 16
-                        )
-                        .frame(height: 8)
-                        Spacer()
-                    }
-                    .allowsHitTesting(false)
-
                     if vm.document.notes.isEmpty {
                         // 空画布童书立体折页舞台：草原山坡 + 咩哞家族齐声迎接，消灭大片空白
                         VStack(spacing: 0) {
@@ -480,8 +462,8 @@ public struct OrbitalStageView: View {
                                     ctx.fill(hill, with: .color(palette.storybookHillFront))
                                     ctx.stroke(
                                         ridge,
-                                        with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.42 : 0.45)),
-                                        style: StrokeStyle(lineWidth: 2.0, lineCap: .round, lineJoin: .round)
+                                        with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.32 : 0.28)),
+                                        style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round)
                                     )
                                 }
                                 .frame(height: 112)
@@ -519,7 +501,7 @@ public struct OrbitalStageView: View {
                                     )
                                     .scaleEffect(0.84)
                                 }
-                                .padding(.bottom, 54)
+                                .padding(.bottom, 58)
                             }
                         }
                         .allowsHitTesting(false)
@@ -533,7 +515,7 @@ public struct OrbitalStageView: View {
                                     Label("咩哞起音", systemImage: "sparkles")
                                         .font(.caption.weight(.heavy))
                                         .padding(.horizontal, 14)
-                                        .padding(.vertical, 8)
+                                        .frame(minHeight: 40)
                                         .background(
                                             ZStack {
                                                 Capsule()
@@ -545,8 +527,9 @@ public struct OrbitalStageView: View {
                                             }
                                         )
                                         .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                        .contentShape(Capsule())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 2.0))
                                 .accessibilityLabel("生成咩哞示范短句")
 
                                 Button {
@@ -555,7 +538,7 @@ public struct OrbitalStageView: View {
                                     Label("写旋律", systemImage: "wand.and.stars")
                                         .font(.caption.weight(.heavy))
                                         .padding(.horizontal, 14)
-                                        .padding(.vertical, 8)
+                                        .frame(minHeight: 40)
                                         .background(
                                             ChimmoKilnPillButtonSurface(
                                                 palette: palette,
@@ -565,8 +548,9 @@ public struct OrbitalStageView: View {
                                             )
                                         )
                                         .foregroundStyle(palette.primaryInk)
+                                        .contentShape(Capsule())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 2.0))
                                 .accessibilityLabel("打开写旋律面板")
                             }
                             .padding(.bottom, 12)
@@ -575,7 +559,7 @@ public struct OrbitalStageView: View {
                         stageDuoCornerPerches(skyColor: skyColor)
                     }
 
-                    // 顶部左：声学状态胶囊 + 右：三态视窗切换仪 + 异常报错条
+                    // 顶部左：声学状态按钮 + 右：三态视窗切换仪（防手势穿透 >= 36-42pt 热区） + 异常报错条
                     VStack(spacing: 6) {
                         HStack(alignment: .top, spacing: 6) {
                             if vm.shadowCounterpointEnabled
@@ -602,7 +586,7 @@ public struct OrbitalStageView: View {
                         }
                         Spacer()
                     }
-                    .padding(9)
+                    .padding(10)
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -612,13 +596,10 @@ public struct OrbitalStageView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(
-                            (activeCurtainColor ?? palette.cartoonOutline).opacity(activeCurtainColor != nil ? 0.72 : 0.30),
-                            lineWidth: activeCurtainColor != nil ? 2.0 : 1.4
+                            (activeCurtainColor ?? palette.cartoonOutline).opacity(activeCurtainColor != nil ? 0.82 : (palette.isNight ? 0.60 : 0.78)),
+                            lineWidth: activeCurtainColor != nil ? 2.2 : 1.8
                         )
                 )
-                .padding(5)
-
-                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 28, showCornerPins: true)
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
         }
@@ -636,15 +617,15 @@ public struct OrbitalStageView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: mode.iconName)
-                            .font(.system(size: 11.5, weight: .bold))
+                            .font(.system(size: 12, weight: .bold))
                         if active {
                             Text(mode.rawValue)
-                                .font(.system(size: 10.5, weight: .heavy, design: .rounded))
+                                .font(.system(size: 11, weight: .heavy, design: .rounded))
                                 .lineLimit(1)
                         }
                     }
-                    .padding(.horizontal, active ? 9 : 7.5)
-                    .frame(height: 26)
+                    .padding(.horizontal, active ? 10 : 9)
+                    .frame(minWidth: active ? 62 : 38, minHeight: 36)
                     .background(
                         Capsule().fill(active ? palette.homeAnchor : Color.clear)
                     )
@@ -653,21 +634,26 @@ public struct OrbitalStageView: View {
                             ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
                             : palette.secondaryInk
                     )
+                    .contentShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
                 .accessibilityLabel("切换到\(mode.rawValue)视图")
             }
         }
         .fixedSize()
         .padding(3)
         .background(
-            ChimmoKilnPillButtonSurface(
-                palette: palette,
-                accent: nil,
-                isActive: false,
-                cornerRadius: 16
-            )
+            ZStack {
+                Capsule()
+                    .fill(palette.cartoonShadow)
+                    .offset(y: 2)
+                Capsule()
+                    .fill(palette.cardSurface)
+                Capsule()
+                    .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.5)
+            }
         )
+        .contentShape(Capsule())
     }
 
     private func stageDuoCornerPerches(skyColor: Color) -> some View {
@@ -709,33 +695,35 @@ public struct OrbitalStageView: View {
                     } label: {
                         Text("试听此段")
                             .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 5)
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 34)
                             .background(
-                                Capsule()
-                                    .fill(palette.storybookButter)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 2)
+                                    Capsule()
+                                        .fill(palette.storybookButter)
+                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                }
                             )
                             .foregroundStyle(palette.primaryInk)
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("跳转试听 \(chip.badge)")
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .fill(palette.cartoonShadow)
-                            .offset(x: 0, y: 2.5)
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .fill(palette.cardSurface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                    .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
-                            )
-                    }
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(palette.cardSurface)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                .strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.4)
+                        )
                 )
+                .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                 .padding(.horizontal, 12)
                 .transition(.opacity)
             }
@@ -841,32 +829,22 @@ public struct OrbitalStageView: View {
                     )
 
                 VStack(spacing: 0) {
-                    Circle()
-                        .fill(accent.opacity(state.brassPinOpacity))
-                        .overlay(
-                            Circle()
-                                .strokeBorder(palette.cartoonOutline.opacity(0.72), lineWidth: 0.9)
-                        )
-                        .frame(width: 5.0, height: 5.0)
-                        .padding(.top, 3.5)
-
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 2)
 
                     avatar()
                         .offset(y: state.liftPoints)
 
                     Capsule()
                         .fill(meadowFill)
-                        .overlay(
-                            Capsule().strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.0)
-                        )
-                        .frame(width: 38, height: 5.5)
-                        .padding(.bottom, 3)
+                        .frame(width: 38, height: 5.0)
+                        .padding(.top, 2)
+                        .padding(.bottom, 4)
                 }
             }
             .frame(width: 54, height: 44)
+            .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(accessibilityHint)
     }
@@ -909,8 +887,8 @@ public struct OrbitalStageView: View {
                     .font(.system(size: 9.5, weight: .bold))
                     .foregroundStyle(palette.secondaryInk)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 11)
+            .frame(minHeight: 36)
             .background(
                 ZStack {
                     Capsule()
@@ -924,8 +902,9 @@ public struct OrbitalStageView: View {
                         )
                 }
             )
+            .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel("绘本分幕：\(chip.badge)")
         .accessibilityValue(chip.caption)
         .accessibilityHint("轻点展开或收起编曲手账")
@@ -1000,19 +979,26 @@ public struct OrbitalStageView: View {
                         .font(.system(size: 9.5, weight: .bold))
                         .foregroundStyle(palette.homeAnchor)
                 }
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(palette.secondaryInk)
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 5.5)
+            .frame(minHeight: 36)
             .background(
-                ChimmoKilnPillButtonSurface(
-                    palette: palette,
-                    accent: palette.brassHairline,
-                    isActive: false,
-                    cornerRadius: 14
-                )
+                ZStack {
+                    Capsule()
+                        .fill(palette.cartoonShadow)
+                        .offset(y: 2)
+                    Capsule()
+                        .fill(palette.cardSurface)
+                    Capsule()
+                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.5)
+                }
             )
+            .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel("打开声音设置调整伴唱、音区与节奏")
     }
 
@@ -2721,9 +2707,8 @@ public struct OrbitalStageView: View {
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4.5)
-                        .background(Capsule().fill(accentCol))
+                        .background(Capsule().fill(accentCol.opacity(0.90)))
                         .foregroundStyle(.white)
-                        .overlay(Capsule().strokeBorder(palette.glazeHighlight, lineWidth: 0.7))
                         .accessibilityHidden(true)
 
                         VStack(spacing: 3) {
@@ -2740,11 +2725,7 @@ public struct OrbitalStageView: View {
                             .padding(.vertical, 3.5)
                             .background(
                                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                    .fill(palette.cardSurface)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                            .strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.75)
-                                    )
+                                    .fill(palette.cardSurface.opacity(0.75))
                             )
 
                             ZStack(alignment: .leading) {
@@ -2765,7 +2746,7 @@ public struct OrbitalStageView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.caption.weight(.bold))
-                            .frame(width: 30, height: 26)
+                            .frame(width: 36, height: 34)
                             .background(
                                 ChimmoKilnPillButtonSurface(
                                     palette: palette,
@@ -2775,20 +2756,20 @@ public struct OrbitalStageView: View {
                                 )
                             )
                             .foregroundStyle(idx > 0 ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
+                            .contentShape(Capsule())
                     }
                     .disabled(idx <= 0)
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("上一拍")
 
                     Text("\(idx + 1)/\(total)")
                         .font(.caption2.weight(.bold).monospacedDigit())
-                        .foregroundStyle(palette.primaryInk)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3.5)
+                        .foregroundStyle(palette.secondaryInk)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
                         .background(
                             Capsule()
-                                .fill(palette.cardSurface)
-                                .overlay(Capsule().strokeBorder(palette.brassHairline.opacity(0.30), lineWidth: 0.75))
+                                .fill(palette.shelfSurface)
                         )
                         .frame(minWidth: 34)
 
@@ -2797,7 +2778,7 @@ public struct OrbitalStageView: View {
                     } label: {
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.bold))
-                            .frame(width: 30, height: 26)
+                            .frame(width: 36, height: 34)
                             .background(
                                 ChimmoKilnPillButtonSurface(
                                     palette: palette,
@@ -2807,9 +2788,10 @@ public struct OrbitalStageView: View {
                                 )
                             )
                             .foregroundStyle(idx + 1 < total ? palette.homeAnchor : palette.secondaryInk.opacity(0.35))
+                            .contentShape(Capsule())
                     }
                     .disabled(idx + 1 >= total)
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("下一拍")
 
                     Spacer(minLength: 4)
@@ -2819,7 +2801,7 @@ public struct OrbitalStageView: View {
                     } label: {
                         Image(systemName: "lightbulb.fill")
                             .font(.caption.weight(.bold))
-                            .frame(width: 32, height: 26)
+                            .frame(width: 36, height: 34)
                             .background(
                                 ChimmoKilnPillButtonSurface(
                                     palette: palette,
@@ -2829,8 +2811,9 @@ public struct OrbitalStageView: View {
                                 )
                             )
                             .foregroundStyle(vm.smartHintActive ? palette.nightLampGold : palette.nightLampGold.opacity(0.85))
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("推荐音高")
 
                     Button {
@@ -2838,7 +2821,7 @@ public struct OrbitalStageView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.caption2.weight(.bold))
-                            .frame(width: 26, height: 26)
+                            .frame(width: 34, height: 34)
                             .background(
                                 ChimmoKilnPillButtonSurface(
                                     palette: palette,
@@ -2848,8 +2831,9 @@ public struct OrbitalStageView: View {
                                 )
                             )
                             .foregroundStyle(palette.secondaryInk)
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("取消选中当前音符")
                 }
 
@@ -2916,9 +2900,7 @@ public struct OrbitalStageView: View {
                 }
             }
             .padding(.horizontal, 11)
-            .padding(.vertical, 9)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: true)
+            .padding(.vertical, 8)
         }
     }
 
@@ -2934,7 +2916,7 @@ public struct OrbitalStageView: View {
             Image(systemName: systemName)
                 .font(.caption.weight(.bold))
                 .frame(maxWidth: .infinity)
-                .frame(height: 29)
+                .frame(height: 34)
                 .background(
                     ChimmoKilnPillButtonSurface(
                         palette: palette,
@@ -2944,8 +2926,9 @@ public struct OrbitalStageView: View {
                     )
                 )
                 .foregroundStyle(foreground)
+                .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(accessibilityLabel)
     }
 
@@ -3139,8 +3122,6 @@ public struct OrbitalStageView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 7)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
         .frame(height: 86)
     }
@@ -3201,9 +3182,10 @@ public struct OrbitalStageView: View {
                             )
                     }
                     .frame(width: 52, height: 52)
+                    .contentShape(Circle())
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
             .accessibilityLabel(vm.isPlaying ? "暂停旋转播放" : "开始旋转播放")
 
             // 2. 中：主创作扁平贴纸大按键 (height: 50)
@@ -3268,13 +3250,14 @@ public struct OrbitalStageView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
+                .contentShape(Capsule())
                 .foregroundStyle(
                     vm.capturePipeline.isRecording
                         ? .white
                         : ((vm.followGlowActive || palette.isNight) ? Color(hex: 0x0E142C) : .white)
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
             .accessibilityLabel(
                 vm.capturePipeline.isRecording
                     ? "停止哼唱"
@@ -3320,24 +3303,15 @@ public struct OrbitalStageView: View {
                         .foregroundStyle(skyColor)
                 }
                 .frame(width: 52, height: 52)
+                .contentShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
             .accessibilityLabel("五音模式与声音设置")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(palette.cartoonShadow)
-                    .offset(x: 0, y: 3)
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(palette.cardSurface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.68 : 0.85), lineWidth: 1.8)
-                    )
-            }
+            StorybookQuietCardSurface(palette: palette, cornerRadius: 28)
         )
     }
 }
@@ -3363,11 +3337,14 @@ private struct StageHarmonyRibbonView: View {
             } label: {
                 ZStack {
                     Capsule()
+                        .fill(palette.cartoonShadow)
+                        .offset(y: 1.8)
+                    Capsule()
                         .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.18) : palette.cardSurface)
                         .overlay(
                             Capsule().strokeBorder(
                                 vm.cradleEnabled ? palette.bassRibbon : palette.cartoonOutline.opacity(0.65),
-                                lineWidth: vm.cradleEnabled ? 1.8 : 1.4
+                                lineWidth: vm.cradleEnabled ? 1.8 : 1.5
                             )
                         )
                     ChimmoCowView(
@@ -3378,9 +3355,10 @@ private struct StageHarmonyRibbonView: View {
                     )
                     .frame(width: 24, height: 18)
                 }
-                .frame(width: 40, height: 26)
+                .frame(width: 44, height: 34)
+                .contentShape(Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(vm.cradleEnabled ? "关闭小牛哞伴奏" : "开启小牛哞伴奏")
             .accessibilityValue(vm.cradleEnabled ? "已开启" : "纯清唱")
 
@@ -3400,28 +3378,46 @@ private struct StageHarmonyRibbonView: View {
                             } label: {
                                 ZStack {
                                     Capsule()
-                                        .fill(isActive ? segCol : segCol.opacity(palette.isNight ? 0.22 : 0.14))
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.8)
+                                    Capsule()
+                                        .fill(isActive ? segCol : palette.cardSurface)
+                                        .overlay(
+                                            Capsule().fill(isActive ? Color.clear : segCol.opacity(palette.isNight ? 0.18 : 0.10))
+                                        )
                                         .overlay(
                                             Capsule().strokeBorder(
-                                                isActive ? palette.cartoonOutline.opacity(0.85) : segCol.opacity(0.52),
-                                                lineWidth: isActive ? 1.8 : 1.2
+                                                isActive ? palette.cartoonOutline.opacity(0.85) : segCol.opacity(0.75),
+                                                lineWidth: isActive ? 1.8 : 1.5
                                             )
                                         )
-                                    Text(seg.romanLabel)
-                                        .font(.system(size: 10.5, weight: .heavy, design: .rounded))
-                                        .foregroundStyle(isActive ? .white : segCol)
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    HStack(spacing: 3) {
+                                        Text(seg.romanLabel)
+                                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                        if segW >= 54 {
+                                            Image(systemName: "chevron.up.chevron.down")
+                                                .font(.system(size: 7.5, weight: .bold))
+                                                .opacity(0.72)
+                                        } else if segW >= 36 {
+                                            Circle()
+                                                .fill(isActive ? Color.white.opacity(0.85) : segCol.opacity(0.75))
+                                                .frame(width: 3.5, height: 3.5)
+                                        }
+                                    }
+                                    .foregroundStyle(isActive ? .white : segCol)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
-                                .frame(width: segW, height: 26)
+                                .frame(width: segW, height: 34)
+                                .contentShape(Capsule())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("第 \(seg.spanID + 1) 幕和弦 \(seg.romanLabel) \(seg.chord.moodTitle)")
                             .accessibilityHint("轻点切换和弦进行")
                         }
                     }
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: vm.activeChordSpanID)
                 }
-                .frame(height: 26)
+                .frame(height: 34)
             } else {
                 Button {
                     vm.setChordPreset(.autoMatch)
@@ -3436,25 +3432,31 @@ private struct StageHarmonyRibbonView: View {
                     }
                     .padding(.horizontal, 10)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 26)
+                    .frame(height: 34)
                     .background(
-                        Capsule()
-                            .fill(palette.cardSurface)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.35), lineWidth: 1.2))
+                        ZStack {
+                            Capsule()
+                                .fill(palette.cartoonShadow)
+                                .offset(y: 1.8)
+                            Capsule()
+                                .fill(palette.cardSurface)
+                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.55), lineWidth: 1.5))
+                        }
                     )
+                    .contentShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("开启智能和弦伴奏")
             }
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.vertical, 5)
         .background(
             RoundedRectangle(cornerRadius: 15, style: .continuous)
                 .fill(palette.shelfSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.72), lineWidth: 1.6)
+                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.22 : 0.16), lineWidth: 1.0)
                 )
         )
     }

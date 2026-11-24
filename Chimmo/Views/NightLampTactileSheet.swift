@@ -97,9 +97,6 @@ public struct NightLampTactileSheet: View {
             .background(
                 Capsule()
                     .fill(Color(hex: 0x162048))
-                    .overlay(
-                        Capsule().strokeBorder(Color(hex: 0xFFB94E).opacity(0.68), lineWidth: 1.6)
-                    )
             )
 
             Spacer()
@@ -120,8 +117,10 @@ public struct NightLampTactileSheet: View {
                         .font(.subheadline.weight(.heavy))
                         .foregroundStyle(Color(hex: 0xF5ECDD))
                 }
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("关闭")
         }
     }
@@ -372,7 +371,6 @@ public struct NightLampTactileSheet: View {
                     .background(
                         Capsule()
                             .fill(Color(hex: 0x162048))
-                            .overlay(Capsule().strokeBorder(Color(hex: 0xFFB94E).opacity(0.35), lineWidth: 1.4))
                     )
                 } else {
                     ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
@@ -454,9 +452,10 @@ public struct NightLampTactileSheet: View {
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x5B6482) : Color(hex: 0xF5ECDD))
                 }
+                .contentShape(Circle())
             }
             .disabled(capturedBeads.isEmpty)
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("撤销")
 
             Button {
@@ -479,9 +478,10 @@ public struct NightLampTactileSheet: View {
                                 : (auditioningIndex != nil ? Color(hex: 0x0E142C) : Color(hex: 0xFFB94E))
                         )
                 }
+                .contentShape(Circle())
             }
             .disabled(capturedBeads.isEmpty)
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(auditioningIndex != nil ? "停止试听" : "试听已录旋律")
 
             Button {
@@ -511,8 +511,9 @@ public struct NightLampTactileSheet: View {
                     }
                 )
                 .foregroundStyle(localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xF5ECDD))
+                .contentShape(Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(localPentatonicSafe ? "五音模式" : "八音模式")
 
             Button {
@@ -545,9 +546,10 @@ public struct NightLampTactileSheet: View {
                     }
                 )
                 .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x0E142C))
+                .contentShape(Capsule())
             }
             .disabled(capturedBeads.isEmpty)
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("完成并试听")
         }
     }

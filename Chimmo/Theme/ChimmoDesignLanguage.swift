@@ -261,7 +261,7 @@ public struct ChimmoCraftBadge: View {
     }
 }
 
-/// 纯净编辑部质感胶囊标签（用几何微点与精密字体取代 Emoji 表情贴纸）
+/// 纯净编辑部质感胶囊标签（去框去阴影：柔彩底色 + 几何微点 + 精密字体）
 public struct ChimmoEditorialPill: View {
     public let text: String
     public let accent: Color
@@ -288,8 +288,8 @@ public struct ChimmoEditorialPill: View {
         .padding(.vertical, 3.5)
         .background(
             Capsule()
-                .fill(surface)
-                .overlay(Capsule().strokeBorder(accent.opacity(0.24), lineWidth: 0.75))
+                .fill(surface.opacity(0.65))
+                .overlay(Capsule().fill(accent.opacity(0.14)))
         )
     }
 }
@@ -310,7 +310,7 @@ public struct PitchGlyphVectorView: View {
     }
 }
 
-/// 扁平卡通童书纸板面板（零木纹渐变、零立体高光：采用平涂水粉底色 + 清晰暖墨描边 + 硬朗无模糊偏移阴影）
+/// 扁平卡通安静托盘容器（遵守 quietContainer 契约：平涂底色 + 1pt 轻柔细线，零硬阴影，让可交互按钮脱颖而出）
 public struct ChimmoWoodResonatorTray: View {
     public let palette: ChimmoPalette
     public var cornerRadius: CGFloat
@@ -324,79 +324,55 @@ public struct ChimmoWoodResonatorTray: View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         ZStack {
             shape
-                .fill(palette.cartoonShadow)
-                .offset(x: 0, y: 3)
-
-            shape
                 .fill(palette.woodTrayTop)
 
             shape
-                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.85), lineWidth: 1.8)
-        }
-        .accessibilityHidden(true)
-    }
-}
-
-/// 扁平卡通手绘书页框线与纸艺贴纸角落点缀（零金属反光与铆钉）
-public struct ChimmoBrassFrameAccent: View {
-    public let palette: ChimmoPalette
-    public var cornerRadius: CGFloat
-    public var showCornerPins: Bool
-
-    public init(palette: ChimmoPalette, cornerRadius: CGFloat, showCornerPins: Bool = true) {
-        self.palette = palette
-        self.cornerRadius = cornerRadius
-        self.showCornerPins = showCornerPins
-    }
-
-    public var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.88), lineWidth: 2.0)
-
-            if showCornerPins {
-                GeometryReader { geo in
-                    let inset = max(10.0, cornerRadius * 0.42)
-                    let pts = [
-                        CGPoint(x: inset, y: inset),
-                        CGPoint(x: geo.size.width - inset, y: inset),
-                        CGPoint(x: inset, y: geo.size.height - inset),
-                        CGPoint(x: geo.size.width - inset, y: geo.size.height - inset)
-                    ]
-                    ForEach(Array(pts.enumerated()), id: \.offset) { idx, pt in
-                        Circle()
-                            .fill(idx.isMultiple(of: 2) ? palette.nightLampGold : palette.homeAnchor)
-                            .frame(width: 5.5, height: 5.5)
-                            .overlay(
-                                Circle()
-                                    .strokeBorder(palette.cartoonOutline.opacity(0.85), lineWidth: 1.0)
-                            )
-                            .position(pt)
-                    }
-                }
-            }
+                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.22 : 0.16), lineWidth: 1.0)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }
 
-/// 扁平卡通贴纸按键表面（纯平涂底色 + 硬朗卡通偏移阴影 + 清晰墨线外框）
+/// 扁平卡通轻描边边框（已废除四角圆钉，统一收敛为柔和单线轮廓）
+public struct ChimmoBrassFrameAccent: View {
+    public let palette: ChimmoPalette
+    public var cornerRadius: CGFloat
+    public var showCornerPins: Bool
+
+    public init(palette: ChimmoPalette, cornerRadius: CGFloat, showCornerPins: Bool = false) {
+        self.palette = palette
+        self.cornerRadius = cornerRadius
+        self.showCornerPins = showCornerPins
+    }
+
+    public var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.40 : 0.30), lineWidth: 1.4)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
+/// 扁平卡通可交互贴纸按键表面（唯一享有硬朗暖墨描边与无模糊偏移阴影的可点语法）
 public struct ChimmoKilnPillButtonSurface: View {
     public let palette: ChimmoPalette
     public var accent: Color?
     public var isActive: Bool
+    public var isPressed: Bool
     public var cornerRadius: CGFloat
 
     public init(
         palette: ChimmoPalette,
         accent: Color? = nil,
         isActive: Bool = false,
+        isPressed: Bool = false,
         cornerRadius: CGFloat = 14
     ) {
         self.palette = palette
         self.accent = accent
         self.isActive = isActive
+        self.isPressed = isPressed
         self.cornerRadius = cornerRadius
     }
 
@@ -413,16 +389,119 @@ public struct ChimmoKilnPillButtonSurface: View {
         ZStack {
             shape
                 .fill(isActive ? activeTint.opacity(palette.isNight ? 0.45 : 0.28) : palette.cartoonShadow)
-                .offset(x: 0, y: 2.5)
+                .offset(x: 0, y: isPressed ? 0.5 : 2.0)
 
             shape
                 .fill(fillCol)
 
             shape
-                .strokeBorder(strokeCol, lineWidth: isActive ? 2.0 : 1.6)
+                .strokeBorder(strokeCol, lineWidth: isActive ? 1.9 : 1.5)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// 静态展示容器表面（遵守 quietContainer 契约：零偏移阴影、柔和轻边框，专供非整卡可点的曲目卡与说明卡使用）
+public struct StorybookQuietCardSurface: View {
+    public let palette: ChimmoPalette
+    public var accent: Color?
+    public var isHighlighted: Bool
+    public var cornerRadius: CGFloat
+
+    public init(
+        palette: ChimmoPalette,
+        accent: Color? = nil,
+        isHighlighted: Bool = false,
+        cornerRadius: CGFloat = 18
+    ) {
+        self.palette = palette
+        self.accent = accent
+        self.isHighlighted = isHighlighted
+        self.cornerRadius = cornerRadius
+    }
+
+    public var body: some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let activeTint = accent ?? palette.homeAnchor
+        let borderCol = isHighlighted
+            ? activeTint.opacity(0.75)
+            : palette.cartoonOutline.opacity(palette.isNight ? 0.24 : 0.18)
+
+        ZStack {
+            shape
+                .fill(palette.cardSurface)
+
+            if isHighlighted {
+                shape
+                    .fill(activeTint.opacity(palette.isNight ? 0.14 : 0.08))
+            }
+
+            shape
+                .strokeBorder(borderCol, lineWidth: 1.2)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 无交互只读信息标签（遵守 readOnlyLabel 契约：无描边、无阴影，仅以柔和底色与清晰字号区分）
+public struct StorybookQuietTag: View {
+    public let text: String
+    public var systemImage: String?
+    public let tint: Color
+    public let textColor: Color
+    public let isNight: Bool
+
+    public init(
+        text: String,
+        systemImage: String? = nil,
+        tint: Color,
+        textColor: Color,
+        isNight: Bool
+    ) {
+        self.text = text
+        self.systemImage = systemImage
+        self.tint = tint
+        self.textColor = textColor
+        self.isNight = isNight
+    }
+
+    public var body: some View {
+        HStack(spacing: 4) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(tint)
+            }
+            Text(text)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(textColor)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(tint.opacity(isNight ? 0.20 : 0.12))
+        )
+    }
+}
+
+/// 扁平卡通按键物理按压下沉反馈（严格尊重系统「减弱动态效果」）
+public struct StorybookTactileButtonStyle: ButtonStyle {
+    public var sinkY: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    public init(sinkY: CGFloat = 1.8) {
+        self.sinkY = sinkY
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        let pressed = configuration.isPressed && !reduceMotion
+        configuration.label
+            .offset(y: pressed ? sinkY : 0)
+            .scaleEffect(pressed ? 0.985 : 1.0)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.10), value: configuration.isPressed)
     }
 }
 
@@ -569,7 +648,7 @@ public struct StorybookCartoonSceneBackground: View {
         Canvas { ctx, size in
             let w = max(1, size.width)
             let h = max(1, size.height)
-            let outline = palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.72)
+            let outline = palette.cartoonOutline.opacity(palette.isNight ? 0.30 : 0.24)
 
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(palette.paper))
 

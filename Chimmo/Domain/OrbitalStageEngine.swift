@@ -2216,6 +2216,101 @@ public enum StorybookGuidedMomentKinematics {
     }
 }
 
+/// 两极交互视觉契约与紧凑顶栏纯值测量引擎（100% 纯函数、可单测、尊重减弱动态效果）：
+/// - 严格区分可交互按钮（暖墨实线描边 + 硬朗偏移阴影 + 按下物理下沉）与静态容器/只读标签（零硬阴影、零粗描边）；
+/// - 统一校验透明手势热区与紧凑抽屉/曲库顶栏预算高度。
+public enum StorybookAffordanceMetrics {
+    public enum SurfaceRole: Equatable, Sendable {
+        case interactivePrimary
+        case interactiveSecondary
+        case quietContainer
+        case readOnlyLabel
+    }
 
+    public struct SurfaceStyleSpec: Equatable, Sendable {
+        public let borderWidth: CGFloat
+        public let shadowOffsetY: CGFloat
+        public let pressSinkOffsetY: CGFloat
+        public let minHitDimension: CGFloat
+        public let usesHardInkOutline: Bool
 
+        public init(
+            borderWidth: CGFloat,
+            shadowOffsetY: CGFloat,
+            pressSinkOffsetY: CGFloat,
+            minHitDimension: CGFloat,
+            usesHardInkOutline: Bool
+        ) {
+            self.borderWidth = borderWidth
+            self.shadowOffsetY = shadowOffsetY
+            self.pressSinkOffsetY = pressSinkOffsetY
+            self.minHitDimension = minHitDimension
+            self.usesHardInkOutline = usesHardInkOutline
+        }
+    }
+
+    public static func styleSpec(
+        for role: SurfaceRole,
+        isPressed: Bool = false,
+        reduceMotion: Bool = false
+    ) -> SurfaceStyleSpec {
+        let sinkActive = isPressed && !reduceMotion
+        switch role {
+        case .interactivePrimary:
+            return SurfaceStyleSpec(
+                borderWidth: 1.8,
+                shadowOffsetY: sinkActive ? 0.5 : 2.5,
+                pressSinkOffsetY: sinkActive ? 2.0 : 0.0,
+                minHitDimension: 44.0,
+                usesHardInkOutline: true
+            )
+        case .interactiveSecondary:
+            return SurfaceStyleSpec(
+                borderWidth: 1.5,
+                shadowOffsetY: sinkActive ? 0.5 : 2.0,
+                pressSinkOffsetY: sinkActive ? 1.5 : 0.0,
+                minHitDimension: 40.0,
+                usesHardInkOutline: true
+            )
+        case .quietContainer:
+            return SurfaceStyleSpec(
+                borderWidth: 1.0,
+                shadowOffsetY: 0.0,
+                pressSinkOffsetY: 0.0,
+                minHitDimension: 0.0,
+                usesHardInkOutline: false
+            )
+        case .readOnlyLabel:
+            return SurfaceStyleSpec(
+                borderWidth: 0.0,
+                shadowOffsetY: 0.0,
+                pressSinkOffsetY: 0.0,
+                minHitDimension: 0.0,
+                usesHardInkOutline: false
+            )
+        }
+    }
+
+    public static func validatedHitTarget(
+        visualWidth: CGFloat,
+        visualHeight: CGFloat,
+        minimum: CGFloat = 40.0
+    ) -> CGSize {
+        let safeW = visualWidth.isFinite ? max(0.0, visualWidth) : 0.0
+        let safeH = visualHeight.isFinite ? max(0.0, visualHeight) : 0.0
+        let safeMin = minimum.isFinite ? max(24.0, minimum) : 40.0
+        return CGSize(width: max(safeMin, safeW), height: max(safeMin, safeH))
+    }
+
+    public static func shelfHeaderBudgetHeight(
+        isSearchExpanded: Bool,
+        showsFilterRow: Bool
+    ) -> CGFloat {
+        44.0 + (isSearchExpanded ? 42.0 : 0.0) + (showsFilterRow ? 40.0 : 0.0)
+    }
+
+    public static func sheetHeaderBudgetHeight(hasModeRail: Bool) -> CGFloat {
+        hasModeRail ? 52.0 : 48.0
+    }
+}
 

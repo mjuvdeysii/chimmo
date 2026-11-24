@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import Chimmo
 
@@ -2631,5 +2632,78 @@ final class SpecimenIntegrityTests: XCTestCase {
         vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: false)
         vm.endScrubbing()
         XCTAssertNil(vm.statusToast)
+    }
+
+    @MainActor
+    func testCreativeAlchemyRound37AffordanceContractHitTargetsAndCompactChrome() {
+        // 1. 两极交互视觉契约：可点按钮拥有硬阴影与按下下沉，静态容器与只读标签零硬阴影且非零线框隔离
+        let primaryIdle = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary, isPressed: false, reduceMotion: false)
+        let primaryPressed = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary, isPressed: true, reduceMotion: false)
+        let primaryReduced = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary, isPressed: true, reduceMotion: true)
+        XCTAssertTrue(primaryIdle.usesHardInkOutline)
+        XCTAssertGreaterThan(primaryIdle.shadowOffsetY, 0.0)
+        XCTAssertEqual(primaryIdle.minHitDimension, 44.0, accuracy: 1e-6)
+        XCTAssertGreaterThan(primaryPressed.pressSinkOffsetY, 0.0)
+        XCTAssertLessThan(primaryPressed.shadowOffsetY, primaryIdle.shadowOffsetY)
+        XCTAssertEqual(primaryReduced.pressSinkOffsetY, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(primaryReduced.shadowOffsetY, primaryIdle.shadowOffsetY, accuracy: 1e-6)
+
+        let secondaryIdle = StorybookAffordanceMetrics.styleSpec(for: .interactiveSecondary, isPressed: false, reduceMotion: false)
+        let secondaryPressed = StorybookAffordanceMetrics.styleSpec(for: .interactiveSecondary, isPressed: true, reduceMotion: false)
+        XCTAssertTrue(secondaryIdle.usesHardInkOutline)
+        XCTAssertEqual(secondaryIdle.minHitDimension, 40.0, accuracy: 1e-6)
+        XCTAssertGreaterThan(secondaryPressed.pressSinkOffsetY, 0.0)
+        XCTAssertLessThan(secondaryPressed.shadowOffsetY, secondaryIdle.shadowOffsetY)
+
+        let quietSpec = StorybookAffordanceMetrics.styleSpec(for: .quietContainer)
+        XCTAssertFalse(quietSpec.usesHardInkOutline)
+        XCTAssertEqual(quietSpec.shadowOffsetY, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(quietSpec.borderWidth, 1.0, accuracy: 1e-6)
+
+        let labelSpec = StorybookAffordanceMetrics.styleSpec(for: .readOnlyLabel)
+        XCTAssertFalse(labelSpec.usesHardInkOutline)
+        XCTAssertEqual(labelSpec.borderWidth, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(labelSpec.shadowOffsetY, 0.0, accuracy: 1e-6)
+
+        // 2. 触控热区校验（覆盖过小热区扩展、负值、NaN 与无穷大防护）
+        let undersized = StorybookAffordanceMetrics.validatedHitTarget(visualWidth: 26, visualHeight: 26)
+        XCTAssertEqual(undersized.width, 40.0, accuracy: 1e-6)
+        XCTAssertEqual(undersized.height, 40.0, accuracy: 1e-6)
+
+        let roomy = StorybookAffordanceMetrics.validatedHitTarget(visualWidth: 62, visualHeight: 46, minimum: 44)
+        XCTAssertEqual(roomy.width, 62.0, accuracy: 1e-6)
+        XCTAssertEqual(roomy.height, 46.0, accuracy: 1e-6)
+
+        let safeWeird = StorybookAffordanceMetrics.validatedHitTarget(visualWidth: .nan, visualHeight: -12, minimum: .infinity)
+        XCTAssertEqual(safeWeird.width, 40.0, accuracy: 1e-6)
+        XCTAssertEqual(safeWeird.height, 40.0, accuracy: 1e-6)
+
+        // 3. 曲库与弹窗顶栏高度紧凑预算校验
+        let defaultShelfHeight = StorybookAffordanceMetrics.shelfHeaderBudgetHeight(isSearchExpanded: false, showsFilterRow: true)
+        let expandedShelfHeight = StorybookAffordanceMetrics.shelfHeaderBudgetHeight(isSearchExpanded: true, showsFilterRow: true)
+        XCTAssertLessThanOrEqual(defaultShelfHeight, 96.0)
+        XCTAssertGreaterThan(expandedShelfHeight, defaultShelfHeight)
+        XCTAssertLessThanOrEqual(StorybookAffordanceMetrics.sheetHeaderBudgetHeight(hasModeRail: true), 56.0)
+        XCTAssertLessThanOrEqual(StorybookAffordanceMetrics.sheetHeaderBudgetHeight(hasModeRail: false), 56.0)
+
+        // 4. 全站降噪视图与双态明信片实例化与渲染校验
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        let vm = StudioViewModel()
+        let req = VinylPostcardRequest(document: vm.document, visualMode: .orbitalDisc)
+
+        XCTAssertNotNil(AmbientPaperBackdrop(palette: dayPalette))
+        XCTAssertNotNil(StorybookQuietCardSurface(palette: nightPalette, accent: nightPalette.homeAnchor, isHighlighted: true))
+        XCTAssertNotNil(StorybookQuietTag(text: "只读", systemImage: "lock.fill", tint: dayPalette.homeAnchor, textColor: dayPalette.primaryInk, isNight: false))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(MusicBoxShelfView(palette: dayPalette, synth: vm.synth, notebook: vm.notebook, currentDocumentID: vm.document.id, onLoadSavedToBoard: { _ in }, onPlayAlongSpecimen: { _ in }, onEditSpecimenOnBoard: { _ in }, onStartNewTap: {}))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(AboutSheetView(palette: dayPalette, currentDocument: vm.document, cradleEnabled: vm.cradleEnabled))
+        XCTAssertNotNil(VinylPostcardShareSheet(palette: nightPalette, request: req))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+
+        XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: false, visualMode: .orbitalDisc, includeJianpuStrip: true))
+        XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: true, visualMode: .flowingRiver, includeJianpuStrip: true))
     }
 }

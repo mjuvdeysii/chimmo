@@ -44,14 +44,6 @@ public struct DreamCaptureSheet: View {
         brushNormY = nil
     }
 
-    private var currentTabSymbol: ChimmoCraftSymbol {
-        switch modeTab {
-        case 0: return .drumPulse
-        case 1: return .humWave
-        default: return .origamiPrism
-        }
-    }
-
     public var body: some View {
         NavigationStack {
             ZStack {
@@ -61,19 +53,9 @@ public struct DreamCaptureSheet: View {
                 )
 
                 VStack(spacing: 8) {
-                    workbenchCrownHeader
+                    workbenchUnifiedTopBar
                         .padding(.horizontal, 12)
                         .padding(.top, 8)
-
-                    workbenchModeRail
-                        .padding(.horizontal, 12)
-
-                    StorybookScallopDivider(
-                        color: palette.cartoonOutline.opacity(palette.isNight ? 0.32 : 0.24),
-                        stepWidth: 14
-                    )
-                    .frame(height: 5)
-                    .padding(.horizontal, 14)
 
                     ScrollView {
                         VStack(spacing: 10) {
@@ -109,34 +91,40 @@ public struct DreamCaptureSheet: View {
         }
     }
 
-    // MARK: - 0. Bespoke Kiln Workbench Chrome
+    // MARK: - 0. Unified Compact Top Bar (.medium Ready)
 
-    private var workbenchCrownHeader: some View {
-        let skyCol = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let isRec = vm.capturePipeline.isRecording
-        return HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                ChimmoCraftBadge(
-                    currentTabSymbol,
-                    accent: palette.brassHairline,
-                    surface: palette.cardSurface,
-                    size: 32
+    private var workbenchUnifiedTopBar: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 4) {
+                workbenchTabButton(
+                    index: 0,
+                    title: "节奏",
+                    symbol: .drumPulse,
+                    accent: palette.homeAnchor
                 )
-
-                Text("捕梦工坊")
-                    .font(.system(.headline, design: .rounded).weight(.heavy))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
-
-                ChimmoEditorialPill(
-                    text: isRec ? "收音中" : vm.document.scaleMode.label,
-                    accent: isRec ? palette.melodyTerracotta : skyCol,
-                    surface: palette.cardSurface,
-                    textColor: isRec ? palette.melodyTerracotta : palette.primaryInk
+                workbenchTabButton(
+                    index: 1,
+                    title: "轻哼",
+                    symbol: .humWave,
+                    accent: palette.nightLampGold
+                )
+                workbenchTabButton(
+                    index: 2,
+                    title: "折纸",
+                    symbol: .origamiPrism,
+                    accent: palette.harmonyWash
                 )
             }
-
-            Spacer(minLength: 4)
+            .padding(4)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(palette.shelfSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.22 : 0.16), lineWidth: 1.0)
+                    )
+            )
+            .frame(height: 44)
 
             Button {
                 stopActiveCaptureSessions()
@@ -145,8 +133,8 @@ public struct DreamCaptureSheet: View {
                 Text("完成")
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 13)
+                    .frame(minHeight: 36)
                     .background(
                         ChimmoKilnPillButtonSurface(
                             palette: palette,
@@ -155,41 +143,12 @@ public struct DreamCaptureSheet: View {
                             cornerRadius: 17
                         )
                     )
+                    .contentShape(Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("完成创作")
         }
-    }
-
-    private var workbenchModeRail: some View {
-        ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
-
-            HStack(spacing: 6) {
-                workbenchTabButton(
-                    index: 0,
-                    title: "节奏画室",
-                    symbol: .drumPulse,
-                    accent: palette.homeAnchor
-                )
-                workbenchTabButton(
-                    index: 1,
-                    title: "轻哼电台",
-                    symbol: .humWave,
-                    accent: palette.nightLampGold
-                )
-                workbenchTabButton(
-                    index: 2,
-                    title: "折纸工坊",
-                    symbol: .origamiPrism,
-                    accent: palette.harmonyWash
-                )
-            }
-            .padding(5)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
-        }
-        .frame(height: 50)
+        .accessibilityElement(children: .contain)
     }
 
     private func workbenchTabButton(
@@ -206,7 +165,7 @@ public struct DreamCaptureSheet: View {
             }
             AcousticHapticsEngine.shared.playScrubTick()
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 ChimmoCraftMark(
                     symbol,
                     color: isSelected ? accent : palette.secondaryInk,
@@ -220,7 +179,7 @@ public struct DreamCaptureSheet: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 38)
+            .frame(height: 36)
             .background(
                 Group {
                     if isSelected {
@@ -228,19 +187,19 @@ public struct DreamCaptureSheet: View {
                             palette: palette,
                             accent: accent,
                             isActive: true,
-                            cornerRadius: 13
+                            cornerRadius: 12
                         )
                     }
                 }
             )
-            .contentShape(Rectangle())
+            .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    // MARK: - Tab 0: Brass Monitor + Kiln Drum Machine + Stave Parchment Sketch Pad + Curve Presets
+    // MARK: - Tab 0: Duo Monitor + Kiln Drum Machine + Stave Parchment Sketch Pad + Curve Presets
 
     private var dreamDuoReactiveHeader: some View {
         let skyCol = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
@@ -279,10 +238,6 @@ public struct DreamCaptureSheet: View {
                                     width: active ? (isDownbeatDot ? 9 : 7.5) : 5.5,
                                     height: active ? (isDownbeatDot ? 9 : 7.5) : 5.5
                                 )
-                                .overlay(
-                                    Circle()
-                                        .strokeBorder(palette.cartoonOutline.opacity(active ? 0.90 : 0.45), lineWidth: 1.1)
-                                )
                                 .animation(
                                     reduceMotion ? nil : .spring(response: 0.2, dampingFraction: 0.65),
                                     value: vm.liveTapTimestamps.count
@@ -290,11 +245,10 @@ public struct DreamCaptureSheet: View {
                         }
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 5)
                     .background(
                         Capsule()
                             .fill(palette.storybookButter.opacity(palette.isNight ? 0.40 : 0.72))
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
                     )
                     .frame(maxWidth: .infinity)
 
@@ -309,16 +263,14 @@ public struct DreamCaptureSheet: View {
                     .frame(width: 34, height: 28)
                 }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-
-                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 16, showCornerPins: false)
+                .padding(.vertical, 5)
             }
         }
         .accessibilityHidden(true)
     }
 
     private var rhythmAndSketchSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
             dreamDuoReactiveHeader
             drumMachineModule
             parchmentSketchTrayModule
@@ -331,7 +283,7 @@ public struct DreamCaptureSheet: View {
         let hasTaps = !vm.liveTapTimestamps.isEmpty
 
         return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 22)
+            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 20)
 
             Button {
                 if !vm.isTappingRhythm {
@@ -363,19 +315,19 @@ public struct DreamCaptureSheet: View {
                         ZStack {
                             Circle()
                                 .strokeBorder(palette.nightLampGold.opacity(drumShockwaveOpacity), lineWidth: 2.4)
-                                .frame(width: 60, height: 60)
+                                .frame(width: 56, height: 56)
                                 .scaleEffect(drumShockwaveScale)
                             Circle()
                                 .strokeBorder(palette.cartoonOutline.opacity(0.80), lineWidth: 1.8)
-                                .frame(width: 58, height: 58)
+                                .frame(width: 54, height: 54)
                             Circle()
                                 .strokeBorder(palette.homeAnchor.opacity(0.45), lineWidth: 1.2)
-                                .frame(width: 48, height: 48)
+                                .frame(width: 44, height: 44)
                             ChimmoCraftBadge(
                                 .drumPulse,
                                 accent: palette.nightLampGold,
                                 surface: palette.storybookButter,
-                                size: 42
+                                size: 38
                             )
                         }
 
@@ -384,7 +336,7 @@ public struct DreamCaptureSheet: View {
                                 .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                        .strokeBorder(palette.cartoonOutline.opacity(0.78), lineWidth: 1.5)
+                                        .strokeBorder(palette.cartoonOutline.opacity(0.45), lineWidth: 1.2)
                                 )
 
                             if barMetrics.isEmpty {
@@ -401,9 +353,6 @@ public struct DreamCaptureSheet: View {
                                         Circle()
                                             .fill(idx == 0 ? palette.nightLampGold : palette.homeAnchor.opacity(0.65))
                                             .frame(width: idx == 0 ? 10 : 7, height: idx == 0 ? 10 : 7)
-                                            .overlay(
-                                                Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.0)
-                                            )
                                     }
                                 }
                                 .padding(.horizontal, 12)
@@ -415,10 +364,6 @@ public struct DreamCaptureSheet: View {
                                             let barColor = bar.isDownbeat ? palette.nightLampGold : palette.homeAnchor
                                             RoundedRectangle(cornerRadius: 4, style: .continuous)
                                                 .fill(barColor.opacity(isLatest ? 1.0 : 0.85))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                                        .strokeBorder(palette.cartoonOutline.opacity(0.78), lineWidth: 1.0)
-                                                )
                                                 .frame(width: bar.widthPt, height: bar.heightPt)
                                         }
                                     }
@@ -427,10 +372,10 @@ public struct DreamCaptureSheet: View {
                                 .padding(.trailing, 48)
                             }
                         }
-                        .frame(height: 52)
+                        .frame(height: 44)
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 11)
+                    .padding(.vertical, 9)
 
                     if hasTaps {
                         Text("\(vm.liveTapTimestamps.count)")
@@ -441,16 +386,16 @@ public struct DreamCaptureSheet: View {
                             .background(
                                 Capsule()
                                     .fill(palette.storybookButter)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.3))
                             )
                             .padding(.trailing, 18)
-                            .padding(.bottom, 14)
+                            .padding(.bottom, 12)
                     }
                 }
                 .scaleEffect(drumScale)
+                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            .buttonStyle(.plain)
-            .padding(8)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+            .padding(7)
             .overlay(alignment: .topTrailing) {
                 if hasTaps {
                     HStack(spacing: 6) {
@@ -459,36 +404,48 @@ public struct DreamCaptureSheet: View {
                                 vm.commitRhythmTaps()
                                 dismiss()
                             } label: {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.caption.weight(.bold))
-                                    .padding(6.5)
-                                    .background(
-                                        Circle()
-                                            .fill(palette.cardSurface)
-                                            .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
-                                    )
-                                    .foregroundStyle(palette.homeAnchor)
+                                ZStack {
+                                    Circle()
+                                        .fill(palette.cartoonShadow)
+                                        .frame(width: 32, height: 32)
+                                        .offset(y: 1.5)
+                                    Circle()
+                                        .fill(palette.cardSurface)
+                                        .frame(width: 32, height: 32)
+                                        .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(palette.homeAnchor)
+                                }
+                                .frame(width: 34, height: 34)
+                                .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("按当前节奏生成旋律")
                         }
                         Button {
                             vm.resetRhythmTaps()
                         } label: {
-                            Image(systemName: "arrow.counterclockwise")
-                                .font(.caption2.weight(.bold))
-                                .padding(7)
-                                .background(
-                                    Circle()
-                                        .fill(palette.cardSurface)
-                                        .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.78), lineWidth: 1.4))
-                                )
-                                .foregroundStyle(palette.secondaryInk)
+                            ZStack {
+                                Circle()
+                                    .fill(palette.cartoonShadow)
+                                    .frame(width: 32, height: 32)
+                                    .offset(y: 1.5)
+                                Circle()
+                                    .fill(palette.cardSurface)
+                                    .frame(width: 32, height: 32)
+                                    .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.78), lineWidth: 1.5))
+                                Image(systemName: "arrow.counterclockwise")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(palette.secondaryInk)
+                            }
+                            .frame(width: 34, height: 34)
+                            .contentShape(Circle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("重敲节奏")
                     }
-                    .padding(14)
+                    .padding(12)
                 }
             }
             .accessibilityLabel("敲击鼓面输入节奏")
@@ -498,204 +455,201 @@ public struct DreamCaptureSheet: View {
                     dismiss()
                 }
             }
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 22, showCornerPins: true)
         }
     }
 
     private var parchmentSketchTrayModule: some View {
         let staveLaneIndices = vm.pentatonicSafe ? [0, 1, 2, 4, 5] : Array(0...7)
 
-        return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 22)
+        return GeometryReader { geo in
+            ZStack {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(palette.cardSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.6)
+                    )
 
-            GeometryReader { geo in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(palette.cardSurface)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.6)
+                // 绘本山坡剪影托底 + 五声/八度校准标尺线（消除空白，强化风景感）
+                Canvas { ctx, size in
+                    var meadow = Path()
+                    let baseY = size.height * 0.78
+                    meadow.move(to: CGPoint(x: 0, y: baseY + 6))
+                    meadow.addQuadCurve(to: CGPoint(x: size.width * 0.52, y: baseY - 4), control: CGPoint(x: size.width * 0.26, y: baseY - 14))
+                    meadow.addQuadCurve(to: CGPoint(x: size.width, y: baseY + 4), control: CGPoint(x: size.width * 0.78, y: baseY + 10))
+                    var meadowFill = meadow
+                    meadowFill.addLine(to: CGPoint(x: size.width, y: size.height))
+                    meadowFill.addLine(to: CGPoint(x: 0, y: size.height))
+                    meadowFill.closeSubpath()
+                    ctx.fill(meadowFill, with: .color(palette.storybookHillFront.opacity(0.70)))
+                    ctx.stroke(meadow, with: .color(palette.cartoonOutline.opacity(0.28)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+
+                    let padX: CGFloat = 18
+                    let padY: CGFloat = 14
+                    let h = max(1, size.height - padY * 2)
+                    for laneIdx in staveLaneIndices {
+                        let y = padY + (1.0 - CGFloat(laneIdx) / 7.0) * h
+                        var line = Path()
+                        line.move(to: CGPoint(x: padX + 8, y: y))
+                        line.addLine(to: CGPoint(x: size.width - padX, y: y))
+                        ctx.stroke(
+                            line,
+                            with: .color(palette.divider.opacity(laneIdx == 0 ? 0.9 : 0.6)),
+                            style: StrokeStyle(lineWidth: laneIdx == 0 ? 1.0 : 0.75, dash: laneIdx == 0 ? [] : [3, 5])
                         )
-
-                    // 绘本山坡剪影托底 + 五声/八度校准标尺线（消除空白，强化风景感）
-                    Canvas { ctx, size in
-                        var meadow = Path()
-                        let baseY = size.height * 0.78
-                        meadow.move(to: CGPoint(x: 0, y: baseY + 6))
-                        meadow.addQuadCurve(to: CGPoint(x: size.width * 0.52, y: baseY - 4), control: CGPoint(x: size.width * 0.26, y: baseY - 14))
-                        meadow.addQuadCurve(to: CGPoint(x: size.width, y: baseY + 4), control: CGPoint(x: size.width * 0.78, y: baseY + 10))
-                        var meadowFill = meadow
-                        meadowFill.addLine(to: CGPoint(x: size.width, y: size.height))
-                        meadowFill.addLine(to: CGPoint(x: 0, y: size.height))
-                        meadowFill.closeSubpath()
-                        ctx.fill(meadowFill, with: .color(palette.storybookHillFront.opacity(0.70)))
-                        ctx.stroke(meadow, with: .color(palette.cartoonOutline.opacity(0.28)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
-
-                        let padX: CGFloat = 18
-                        let padY: CGFloat = 14
-                        let h = max(1, size.height - padY * 2)
-                        for laneIdx in staveLaneIndices {
-                            let y = padY + (1.0 - CGFloat(laneIdx) / 7.0) * h
-                            var line = Path()
-                            line.move(to: CGPoint(x: padX + 8, y: y))
-                            line.addLine(to: CGPoint(x: size.width - padX, y: y))
-                            ctx.stroke(
-                                line,
-                                with: .color(palette.divider.opacity(laneIdx == 0 ? 0.9 : 0.6)),
-                                style: StrokeStyle(lineWidth: laneIdx == 0 ? 1.0 : 0.75, dash: laneIdx == 0 ? [] : [3, 5])
-                            )
-                            let laneCol = XylophoneLane.lane(at: laneIdx).barColor(isNight: palette.isNight)
-                            let beadRect = CGRect(x: padX - 4, y: y - 2.6, width: 5.2, height: 5.2)
-                            ctx.fill(Path(ellipseIn: beadRect), with: .color(laneCol))
-                            ctx.stroke(Path(ellipseIn: beadRect), with: .color(palette.cartoonOutline.opacity(0.75)), lineWidth: 0.9)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .allowsHitTesting(false)
-
-                    if sketchPoints.isEmpty {
-                        Canvas { ctx, size in
-                            let padX: CGFloat = 32
-                            let w = max(1, size.width - padX * 2)
-                            let midY = size.height * 0.52
-                            let amp = size.height * 0.23
-                            var ghost = Path()
-                            let steps = 40
-                            for i in 0...steps {
-                                let t = Double(i) / Double(steps)
-                                let x = padX + CGFloat(t) * w
-                                let y = midY - CGFloat(sin(t * Double.pi * 2.0 - 0.35)) * amp
-                                if i == 0 { ghost.move(to: CGPoint(x: x, y: y)) }
-                                else { ghost.addLine(to: CGPoint(x: x, y: y)) }
-                            }
-                            ctx.stroke(
-                                ghost,
-                                with: .color(palette.homeAnchor.opacity(0.55)),
-                                style: StrokeStyle(lineWidth: 2.6, lineCap: .round, dash: [5, 7])
-                            )
-                            let startPt = CGPoint(x: padX, y: midY - CGFloat(sin(-0.35)) * amp)
-                            let startRect = CGRect(x: startPt.x - 5.5, y: startPt.y - 5.5, width: 11, height: 11)
-                            ctx.fill(Path(ellipseIn: startRect), with: .color(palette.nightLampGold))
-                            ctx.stroke(Path(ellipseIn: startRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
-                        }
-                        .allowsHitTesting(false)
-                    } else {
-                        Canvas { ctx, _ in
-                            var path = Path()
-                            path.move(to: sketchPoints[0])
-                            for pt in sketchPoints.dropFirst() {
-                                path.addLine(to: pt)
-                            }
-                            ctx.stroke(
-                                path,
-                                with: .color(palette.cartoonOutline.opacity(0.85)),
-                                style: StrokeStyle(lineWidth: 7.5, lineCap: .round, lineJoin: .round)
-                            )
-                            ctx.stroke(
-                                path,
-                                with: .color(palette.homeAnchor),
-                                style: StrokeStyle(lineWidth: 3.8, lineCap: .round, lineJoin: .round)
-                            )
-                            if let tip = sketchPoints.last {
-                                let tipRect = CGRect(x: tip.x - 5.5, y: tip.y - 5.5, width: 11, height: 11)
-                                ctx.fill(Path(ellipseIn: tipRect), with: .color(palette.nightLampGold))
-                                ctx.stroke(Path(ellipseIn: tipRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
-                            }
-                        }
+                        let laneCol = XylophoneLane.lane(at: laneIdx).barColor(isNight: palette.isNight)
+                        let beadRect = CGRect(x: padX - 4, y: y - 2.6, width: 5.2, height: 5.2)
+                        ctx.fill(Path(ellipseIn: beadRect), with: .color(laneCol))
+                        ctx.stroke(Path(ellipseIn: beadRect), with: .color(palette.cartoonOutline.opacity(0.75)), lineWidth: 0.9)
                     }
                 }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { val in
-                            let clamped = CGPoint(
-                                x: max(0, min(geo.size.width, val.location.x)),
-                                y: max(0, min(geo.size.height, val.location.y))
-                            )
-                            if sketchPoints.isEmpty {
-                                sketchPoints = [clamped]
-                            } else if hypot(clamped.x - sketchPoints.last!.x, clamped.y - sketchPoints.last!.y) > 4 {
-                                sketchPoints.append(clamped)
-                            }
-                            let normY = Double(clamped.y / max(1, geo.size.height))
-                            let normX = Double(clamped.x / max(1, geo.size.width))
-                            brushNormX = normX
-                            brushNormY = normY
-                            let brushLane = SketchPitchBrushMapper.laneIndex(
-                                normalizedTopToBottomY: normY,
-                                pentatonicSafe: vm.pentatonicSafe
-                            )
-                            let now = Date().timeIntervalSinceReferenceDate
-                            if brushLane != lastBrushLane && SketchPitchBrushMapper.shouldTrigger(lastTriggerTime: lastBrushTime, now: now) {
-                                lastBrushLane = brushLane
-                                lastBrushTime = now
-                                let lane = XylophoneLane.lane(at: brushLane)
-                                let hz = vm.document.scaleMode.frequencyHz(
-                                    rootMIDI: vm.document.rootMIDI,
-                                    degree: lane.degree,
-                                    octaveOffset: lane.octaveOffset
-                                )
-                                let pan = SketchPitchBrushMapper.spatialPan(normalizedX: normX)
-                                vm.synth.ensureRunning()
-                                vm.synth.playNote(
-                                    frequency: hz,
-                                    velocity: 0.34,
-                                    decay: 0.58,
-                                    brightness: 0.92,
-                                    timbre: FeltPianoSynth.Timbre.from(voice: vm.melodyVoice),
-                                    pan: pan
-                                )
-                                AcousticHapticsEngine.shared.playPitchTouch(
-                                    laneIndex: brushLane,
-                                    isHome: lane.degree == 1,
-                                    isTension: lane.member.isTensionDegree
-                                )
-                            }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .allowsHitTesting(false)
+
+                if sketchPoints.isEmpty {
+                    Canvas { ctx, size in
+                        let padX: CGFloat = 32
+                        let w = max(1, size.width - padX * 2)
+                        let midY = size.height * 0.52
+                        let amp = size.height * 0.23
+                        var ghost = Path()
+                        let steps = 40
+                        for i in 0...steps {
+                            let t = Double(i) / Double(steps)
+                            let x = padX + CGFloat(t) * w
+                            let y = midY - CGFloat(sin(t * Double.pi * 2.0 - 0.35)) * amp
+                            if i == 0 { ghost.move(to: CGPoint(x: x, y: y)) }
+                            else { ghost.addLine(to: CGPoint(x: x, y: y)) }
                         }
-                        .onEnded { _ in
-                            resetBrushTracking()
-                            guard sketchPoints.count >= 2 else {
-                                sketchPoints.removeAll()
-                                return
-                            }
-                            let targetSlots = max(6, vm.liveTapTimestamps.count >= 2 ? vm.liveTapTimestamps.count : max(6, vm.document.notes.count))
-                            let heights = ContourSketchSampler.sampleContour(points: sketchPoints, in: geo.size, slotCount: targetSlots)
-                            if vm.liveTapTimestamps.count >= 2 {
-                                vm.commitRhythmTaps(withDrawnHeights: heights)
-                            } else {
-                                vm.applyDrawnHillContour(heights)
-                            }
-                            dismiss()
+                        ctx.stroke(
+                            ghost,
+                            with: .color(palette.homeAnchor.opacity(0.55)),
+                            style: StrokeStyle(lineWidth: 2.6, lineCap: .round, dash: [5, 7])
+                        )
+                        let startPt = CGPoint(x: padX, y: midY - CGFloat(sin(-0.35)) * amp)
+                        let startRect = CGRect(x: startPt.x - 5.5, y: startPt.y - 5.5, width: 11, height: 11)
+                        ctx.fill(Path(ellipseIn: startRect), with: .color(palette.nightLampGold))
+                        ctx.stroke(Path(ellipseIn: startRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
+                    }
+                    .allowsHitTesting(false)
+                } else {
+                    Canvas { ctx, _ in
+                        var path = Path()
+                        path.move(to: sketchPoints[0])
+                        for pt in sketchPoints.dropFirst() {
+                            path.addLine(to: pt)
                         }
-                )
-                .overlay(alignment: .topTrailing) {
-                    if !sketchPoints.isEmpty {
-                        Button {
-                            sketchPoints.removeAll()
-                            resetBrushTracking()
-                        } label: {
-                            Image(systemName: "arrow.counterclockwise")
-                                .font(.caption2.weight(.bold))
-                                .padding(7)
-                                .background(
-                                    Circle()
-                                        .fill(palette.shelfSurface)
-                                        .overlay(Circle().strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.8))
-                                )
-                                .foregroundStyle(palette.secondaryInk)
+                        ctx.stroke(
+                            path,
+                            with: .color(palette.cartoonOutline.opacity(0.85)),
+                            style: StrokeStyle(lineWidth: 7.5, lineCap: .round, lineJoin: .round)
+                        )
+                        ctx.stroke(
+                            path,
+                            with: .color(palette.homeAnchor),
+                            style: StrokeStyle(lineWidth: 3.8, lineCap: .round, lineJoin: .round)
+                        )
+                        if let tip = sketchPoints.last {
+                            let tipRect = CGRect(x: tip.x - 5.5, y: tip.y - 5.5, width: 11, height: 11)
+                            ctx.fill(Path(ellipseIn: tipRect), with: .color(palette.nightLampGold))
+                            ctx.stroke(Path(ellipseIn: tipRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
                         }
-                        .buttonStyle(.plain)
-                        .padding(8)
-                        .accessibilityLabel("重画线条")
                     }
                 }
             }
-            .padding(8)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 22, showCornerPins: true)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { val in
+                        let clamped = CGPoint(
+                            x: max(0, min(geo.size.width, val.location.x)),
+                            y: max(0, min(geo.size.height, val.location.y))
+                        )
+                        if sketchPoints.isEmpty {
+                            sketchPoints = [clamped]
+                        } else if hypot(clamped.x - sketchPoints.last!.x, clamped.y - sketchPoints.last!.y) > 4 {
+                            sketchPoints.append(clamped)
+                        }
+                        let normY = Double(clamped.y / max(1, geo.size.height))
+                        let normX = Double(clamped.x / max(1, geo.size.width))
+                        brushNormX = normX
+                        brushNormY = normY
+                        let brushLane = SketchPitchBrushMapper.laneIndex(
+                            normalizedTopToBottomY: normY,
+                            pentatonicSafe: vm.pentatonicSafe
+                        )
+                        let now = Date().timeIntervalSinceReferenceDate
+                        if brushLane != lastBrushLane && SketchPitchBrushMapper.shouldTrigger(lastTriggerTime: lastBrushTime, now: now) {
+                            lastBrushLane = brushLane
+                            lastBrushTime = now
+                            let lane = XylophoneLane.lane(at: brushLane)
+                            let hz = vm.document.scaleMode.frequencyHz(
+                                rootMIDI: vm.document.rootMIDI,
+                                degree: lane.degree,
+                                octaveOffset: lane.octaveOffset
+                            )
+                            let pan = SketchPitchBrushMapper.spatialPan(normalizedX: normX)
+                            vm.synth.ensureRunning()
+                            vm.synth.playNote(
+                                frequency: hz,
+                                velocity: 0.34,
+                                decay: 0.58,
+                                brightness: 0.92,
+                                timbre: FeltPianoSynth.Timbre.from(voice: vm.melodyVoice),
+                                pan: pan
+                            )
+                            AcousticHapticsEngine.shared.playPitchTouch(
+                                laneIndex: brushLane,
+                                isHome: lane.degree == 1,
+                                isTension: lane.member.isTensionDegree
+                            )
+                        }
+                    }
+                    .onEnded { _ in
+                        resetBrushTracking()
+                        guard sketchPoints.count >= 2 else {
+                            sketchPoints.removeAll()
+                            return
+                        }
+                        let targetSlots = max(6, vm.liveTapTimestamps.count >= 2 ? vm.liveTapTimestamps.count : max(6, vm.document.notes.count))
+                        let heights = ContourSketchSampler.sampleContour(points: sketchPoints, in: geo.size, slotCount: targetSlots)
+                        if vm.liveTapTimestamps.count >= 2 {
+                            vm.commitRhythmTaps(withDrawnHeights: heights)
+                        } else {
+                            vm.applyDrawnHillContour(heights)
+                        }
+                        dismiss()
+                    }
+            )
+            .overlay(alignment: .topTrailing) {
+                if !sketchPoints.isEmpty {
+                    Button {
+                        sketchPoints.removeAll()
+                        resetBrushTracking()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(palette.cartoonShadow)
+                                .frame(width: 32, height: 32)
+                                .offset(y: 1.5)
+                            Circle()
+                                .fill(palette.cardSurface)
+                                .frame(width: 32, height: 32)
+                                .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+                        .frame(width: 34, height: 34)
+                        .contentShape(Circle())
+                    }
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                    .padding(8)
+                    .accessibilityLabel("重画线条")
+                }
+            }
         }
-        .frame(height: 152)
+        .frame(height: 136)
         .accessibilityLabel("单指绘制高低旋律线")
         .accessibilityHint("也可使用下方预设旋律弧线或进入闭眼滑音逐音录制")
     }
@@ -732,8 +686,9 @@ public struct DreamCaptureSheet: View {
                             cornerRadius: 16
                         )
                     )
+                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel(hill.label)
             }
         }
@@ -767,21 +722,11 @@ public struct DreamCaptureSheet: View {
 
                     Spacer(minLength: 4)
 
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(isRec ? palette.melodyTerracotta : palette.homeAnchor)
-                            .frame(width: 7, height: 7)
-                            .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.0))
-                        Text(isRec ? "轻哼合唱" : "准备合唱")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .foregroundStyle(palette.primaryInk)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        Capsule()
-                            .fill(palette.storybookButter)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                    StorybookQuietTag(
+                        text: isRec ? "轻哼合唱" : "准备合唱",
+                        tint: isRec ? palette.melodyTerracotta : palette.homeAnchor,
+                        textColor: palette.primaryInk,
+                        isNight: palette.isNight
                     )
                 }
 
@@ -840,8 +785,9 @@ public struct DreamCaptureSheet: View {
                                 .font(.title2.weight(.bold))
                                 .foregroundStyle(.white)
                         }
+                        .contentShape(Circle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                     .accessibilityLabel(isRec ? "停止录音" : "开始哼唱录音")
                 }
 
@@ -860,8 +806,6 @@ public struct DreamCaptureSheet: View {
                 }
             }
             .padding(14)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 22, showCornerPins: true)
         }
         .frame(maxWidth: .infinity)
     }
@@ -890,7 +834,7 @@ public struct DreamCaptureSheet: View {
                     .foregroundStyle(palette.primaryInk)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .frame(minHeight: 38)
             .background(
                 ChimmoKilnPillButtonSurface(
                     palette: palette,
@@ -899,8 +843,9 @@ public struct DreamCaptureSheet: View {
                     cornerRadius: 16
                 )
             )
+            .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(voiceLabel)
     }
 
@@ -1032,8 +977,9 @@ public struct DreamCaptureSheet: View {
                                 .strokeBorder(Color(hex: 0xFFB94E), lineWidth: 2.0)
                         }
                     )
+                    .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
 
                 Button {
                     if !vm.followGlowActive {
@@ -1062,8 +1008,9 @@ public struct DreamCaptureSheet: View {
                             cornerRadius: 18
                         )
                     )
+                    .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
 
                 Button {
                     vm.startBlankCanvas()
@@ -1092,8 +1039,9 @@ public struct DreamCaptureSheet: View {
                             cornerRadius: 18
                         )
                     )
+                    .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             }
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 9) {
@@ -1107,8 +1055,9 @@ public struct DreamCaptureSheet: View {
                             shortTitle: shortMotifLabel(op),
                             palette: palette
                         )
+                        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel(op.label)
                     .accessibilityHint(op.philosophyNote)
                 }
@@ -1137,17 +1086,22 @@ public struct DreamCaptureSheet: View {
                                 seedShifts = [0, 0, 0]
                                 AcousticHapticsEngine.shared.playScrubTick()
                             } label: {
-                                Image(systemName: "arrow.counterclockwise")
-                                    .font(.caption.weight(.bold))
-                                    .padding(12)
-                                    .background(
-                                        Circle()
-                                            .fill(palette.cardSurface)
-                                            .overlay(Circle().strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.9))
-                                    )
-                                    .foregroundStyle(palette.secondaryInk)
+                                ZStack {
+                                    Circle()
+                                        .fill(palette.cartoonShadow)
+                                        .frame(width: 40, height: 40)
+                                        .offset(y: 1.8)
+                                    Circle()
+                                        .fill(palette.cardSurface)
+                                        .frame(width: 40, height: 40)
+                                        .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
+                                    Image(systemName: "arrow.counterclockwise")
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                                .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("重置变奏")
                         }
 
@@ -1159,7 +1113,7 @@ public struct DreamCaptureSheet: View {
                             Label("变奏", systemImage: "wand.and.stars")
                                 .font(.system(.subheadline, design: .rounded).weight(.heavy))
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 11)
+                                .frame(minHeight: 42)
                                 .background(
                                     ZStack {
                                         Capsule()
@@ -1173,14 +1127,13 @@ public struct DreamCaptureSheet: View {
                                     }
                                 )
                                 .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
                         .accessibilityLabel("生成变奏")
                     }
                 }
                 .padding(12)
-
-                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 20, showCornerPins: true)
             }
         }
     }

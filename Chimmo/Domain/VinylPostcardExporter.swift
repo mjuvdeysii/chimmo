@@ -116,14 +116,11 @@ public struct VinylPostcardCanvasView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
-                ChimmoBrassFrameAccent(
-                    palette: palette,
-                    cornerRadius: 24,
-                    showCornerPins: true
-                )
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
 
                 VStack(spacing: 8) {
-                    // 顶部栏（嵌「咩 × 哞」双子印章 + 调式与音色扁平贴纸角标）
+                    // 顶部栏（嵌「咩 × 哞」双子印章 + 调式与音色扁平无框只读标签）
                     HStack(spacing: 8) {
                         ChimmoDuoBadgeView(
                             isNight: snapshot.isNight,
@@ -147,7 +144,6 @@ public struct VinylPostcardCanvasView: View {
                             .background(
                                 Capsule()
                                     .fill(skyColor.opacity(snapshot.isNight ? 0.24 : 0.16))
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
                             )
                             .foregroundStyle(palette.primaryInk)
 
@@ -157,20 +153,17 @@ public struct VinylPostcardCanvasView: View {
                             .padding(.vertical, 3.5)
                             .background(
                                 Capsule()
-                                    .fill(palette.cardSurface)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
+                                    .fill(palette.shelfSurface)
                             )
                             .foregroundStyle(palette.primaryInk)
                     }
                     .padding(.horizontal, 26)
                     .padding(.top, 20)
 
-                    StorybookScallopDivider(
-                        color: palette.cartoonOutline.opacity(snapshot.isNight ? 0.55 : 0.40),
-                        stepWidth: 16
-                    )
-                    .frame(height: 6)
-                    .padding(.horizontal, 26)
+                    Rectangle()
+                        .fill(palette.divider)
+                        .frame(height: 1)
+                        .padding(.horizontal, 26)
 
                     // 中央画境视觉（随当前主舞台模式切换：转盘 / 曲线 / 星环）
                     Canvas { ctx, size in

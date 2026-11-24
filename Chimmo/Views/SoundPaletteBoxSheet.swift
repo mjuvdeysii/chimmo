@@ -66,13 +66,6 @@ public struct SoundPaletteBoxSheet: View {
                         .padding(.horizontal, 12)
                         .padding(.top, 8)
 
-                    StorybookScallopDivider(
-                        color: palette.cartoonOutline.opacity(palette.isNight ? 0.34 : 0.24),
-                        stepWidth: 14
-                    )
-                    .frame(height: 6)
-                    .padding(.horizontal, 14)
-
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 9) {
                             soundBoxDioramaOscilloscope
@@ -125,8 +118,8 @@ public struct SoundPaletteBoxSheet: View {
                         AcousticHapticsEngine.shared.playScrubTick()
                     } label: {
                         Image(systemName: appearanceIcon(for: pref))
-                            .font(.system(size: 11.5, weight: .bold))
-                            .frame(width: 28, height: 26)
+                            .font(.system(size: 12, weight: .bold))
+                            .frame(width: 34, height: 34)
                             .background(
                                 Capsule().fill(active ? palette.homeAnchor : Color.clear)
                             )
@@ -135,8 +128,9 @@ public struct SoundPaletteBoxSheet: View {
                                     ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
                                     : palette.secondaryInk
                             )
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
                     .accessibilityLabel(pref.label)
                     .accessibilityValue(active ? "已选中" : "")
                 }
@@ -144,13 +138,17 @@ public struct SoundPaletteBoxSheet: View {
             .fixedSize()
             .padding(3)
             .background(
-                ChimmoKilnPillButtonSurface(
-                    palette: palette,
-                    accent: palette.brassHairline,
-                    isActive: false,
-                    cornerRadius: 16
-                )
+                ZStack {
+                    Capsule()
+                        .fill(palette.cartoonShadow)
+                        .offset(y: 1.8)
+                    Capsule()
+                        .fill(palette.cardSurface)
+                    Capsule()
+                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.5)
+                }
             )
+            .contentShape(Capsule())
 
             Button {
                 auditionResetTask?.cancel()
@@ -161,7 +159,7 @@ public struct SoundPaletteBoxSheet: View {
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
                     .padding(.horizontal, 13)
-                    .padding(.vertical, 8)
+                    .frame(minHeight: 36)
                     .background(
                         ChimmoKilnPillButtonSurface(
                             palette: palette,
@@ -170,13 +168,14 @@ public struct SoundPaletteBoxSheet: View {
                             cornerRadius: 17
                         )
                     )
+                    .contentShape(Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("完成声音设置")
         }
     }
 
-    // MARK: - 2. Flat Cartoon Storybook Meadow Oscilloscope + Mie / 1-3-5 Triad / Mou Chorus
+    // MARK: - 2. Compact Storybook Meadow Oscilloscope + Mie / 1-3-5 Triad / Mou Chorus
 
     private var soundBoxDioramaOscilloscope: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
@@ -184,182 +183,167 @@ public struct SoundPaletteBoxSheet: View {
         let focusedDeg = SoundPaletteBoxKinematics.triadFocusDegree(for: activeChannel)
         let shelfFigures: [ChimmoMember] = [.taono, .plokko, .corllo]
 
-        return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 20)
+        return TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+            let now = CACurrentMediaTime()
+            let phaseTime = reduceMotion ? 0.0 : now
+            let isMieSinging = vm.isPlaying
+                || activeChannel == .voice
+                || activeChannel == .scale
+                || activeChannel == .pitch
+                || activeChannel == .tempo
+                || activeChannel == .character(5)
+            let isMouPulsing = vm.isPlaying
+                || activeChannel == .texture
+                || activeChannel == .chord
+                || activeChannel == .character(1)
+            let sweep: Double? = (activeChannel != nil && !reduceMotion)
+                ? AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: now - auditionStartTime)
+                : nil
+            let samples = SoundPaletteBoxKinematics.oscilloscopeSamples(
+                for: vm.melodyVoice,
+                rootMIDI: vm.document.rootMIDI,
+                playbackRate: vm.playbackRate,
+                phase: reduceMotion ? 0.0 : phaseTime * 2.4,
+                sampleCount: 28
+            )
 
-            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
-                let now = CACurrentMediaTime()
-                let phaseTime = reduceMotion ? 0.0 : now
-                let isMieSinging = vm.isPlaying
-                    || activeChannel == .voice
-                    || activeChannel == .scale
-                    || activeChannel == .pitch
-                    || activeChannel == .tempo
-                    || activeChannel == .character(5)
-                let isMouPulsing = vm.isPlaying
-                    || activeChannel == .texture
-                    || activeChannel == .chord
-                    || activeChannel == .character(1)
-                let sweep: Double? = (activeChannel != nil && !reduceMotion)
-                    ? AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: now - auditionStartTime)
-                    : nil
-                let samples = SoundPaletteBoxKinematics.oscilloscopeSamples(
-                    for: vm.melodyVoice,
-                    rootMIDI: vm.document.rootMIDI,
-                    playbackRate: vm.playbackRate,
-                    phase: reduceMotion ? 0.0 : phaseTime * 2.4,
-                    sampleCount: 28
-                )
+            ZStack(alignment: .bottom) {
+                Canvas { ctx, size in
+                    let w = max(1, size.width)
+                    let h = max(1, size.height)
+                    let ink = palette.cartoonOutline.opacity(palette.isNight ? 0.45 : 0.42)
 
-                ZStack(alignment: .bottom) {
-                    Canvas { ctx, size in
-                        let w = max(1, size.width)
-                        let h = max(1, size.height)
-                        let ink = palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.78)
-                        let cloudFill = palette.isNight ? Color(hex: 0x1D2856) : palette.cardSurface
-
-                        if palette.isNight {
-                            let moonC = CGPoint(x: w * 0.88, y: 20)
-                            var moon = Path()
-                            moon.addArc(center: moonC, radius: 10, startAngle: .degrees(30), endAngle: .degrees(290), clockwise: false)
-                            moon.addQuadCurve(
-                                to: CGPoint(x: moonC.x + 10 * cos(30 * .pi / 180), y: moonC.y + 10 * sin(30 * .pi / 180)),
-                                control: CGPoint(x: moonC.x - 2, y: moonC.y - 1)
-                            )
-                            ctx.fill(moon, with: .color(palette.nightLampGold))
-                            ctx.stroke(moon, with: .color(ink), lineWidth: 1.2)
-                        } else {
-                            let sunC = CGPoint(x: w * 0.89, y: 20)
-                            let sun = Path(ellipseIn: CGRect(x: sunC.x - 10, y: sunC.y - 10, width: 20, height: 20))
-                            ctx.fill(sun, with: .color(palette.storybookButter))
-                            ctx.stroke(sun, with: .color(ink), lineWidth: 1.3)
-                            for i in 0..<6 {
-                                let a = Double(i) * Double.pi / 3.0
-                                var r = Path()
-                                r.move(to: CGPoint(x: sunC.x + CGFloat(cos(a)) * 13, y: sunC.y + CGFloat(sin(a)) * 13))
-                                r.addLine(to: CGPoint(x: sunC.x + CGFloat(cos(a)) * 16.5, y: sunC.y + CGFloat(sin(a)) * 16.5))
-                                ctx.stroke(r, with: .color(palette.brassHairline), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-                            }
-                        }
-
-                        for (cxFrac, cyPt, sc) in [(0.16, 20.0, 0.56), (0.64, 17.0, 0.44)] {
-                            let c = CGPoint(x: w * cxFrac, y: cyPt)
-                            var cloud = Path()
-                            cloud.addRoundedRect(in: CGRect(x: c.x - 24 * sc, y: c.y - 4 * sc, width: 48 * sc, height: 14 * sc), cornerSize: CGSize(width: 7 * sc, height: 7 * sc))
-                            cloud.addEllipse(in: CGRect(x: c.x - 15 * sc, y: c.y - 13 * sc, width: 20 * sc, height: 18 * sc))
-                            cloud.addEllipse(in: CGRect(x: c.x - 2 * sc, y: c.y - 10 * sc, width: 18 * sc, height: 15 * sc))
-                            ctx.fill(cloud, with: .color(cloudFill))
-                            ctx.stroke(cloud, with: .color(ink.opacity(0.6)), lineWidth: 1.1)
-                        }
-
-                        var hill = Path()
-                        let hillY = h * 0.72
-                        hill.move(to: CGPoint(x: 0, y: hillY + 4))
-                        hill.addQuadCurve(to: CGPoint(x: w * 0.5, y: hillY - 3), control: CGPoint(x: w * 0.25, y: hillY - 10))
-                        hill.addQuadCurve(to: CGPoint(x: w, y: hillY + 2), control: CGPoint(x: w * 0.75, y: hillY + 8))
-                        var area = hill
-                        area.addLine(to: CGPoint(x: w, y: h))
-                        area.addLine(to: CGPoint(x: 0, y: h))
-                        area.closeSubpath()
-                        ctx.fill(area, with: .color(palette.storybookHillFront))
-                        ctx.stroke(hill, with: .color(ink), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                    .allowsHitTesting(false)
-
-                    VStack(spacing: 2) {
-                        SoundBoxOscilloscopeWindow(
-                            samples: samples,
-                            waveColor: skyColor,
-                            outlineColor: palette.cartoonOutline,
-                            dotColor: palette.nightLampGold,
-                            sweepProgress: sweep
+                    if palette.isNight {
+                        let moonC = CGPoint(x: w * 0.90, y: 16)
+                        var moon = Path()
+                        moon.addArc(center: moonC, radius: 8.5, startAngle: .degrees(30), endAngle: .degrees(290), clockwise: false)
+                        moon.addQuadCurve(
+                            to: CGPoint(x: moonC.x + 8.5 * cos(30 * .pi / 180), y: moonC.y + 8.5 * sin(30 * .pi / 180)),
+                            control: CGPoint(x: moonC.x - 1.8, y: moonC.y - 1)
                         )
-                        .frame(height: 36)
-
-                        HStack(alignment: .bottom, spacing: 6) {
-                            Button {
-                                vm.auditionDuoCharacter(.mie)
-                                triggerAudition(.character(5))
-                            } label: {
-                                ChimmoSheepView(
-                                    isNight: palette.isNight,
-                                    accentColor: skyColor,
-                                    isSinging: isMieSinging,
-                                    phaseTime: phaseTime,
-                                    gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? 0.25
-                                )
-                                .frame(width: 40, height: 36)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("小羊咩，试听高音主旋律")
-
-                            ForEach(shelfFigures) { member in
-                                let isMemberSinging = vm.isPlaying
-                                    ? (vm.latestDegree == member.degree)
-                                    : (focusedDeg == member.degree)
-                                Button {
-                                    vm.auditionChimmoMember(member)
-                                    triggerAudition(.character(member.degree))
-                                } label: {
-                                    ChimmoFigureView(
-                                        member: member,
-                                        isNight: palette.isNight,
-                                        isMinor: vm.document.scaleMode.isMinorFlavored,
-                                        isSinging: isMemberSinging,
-                                        focusedDegree: focusedDeg,
-                                        time: phaseTime,
-                                        listeningTilt: 0
-                                    )
-                                    .scaleEffect(0.68, anchor: .bottom)
-                                    .frame(width: 38, height: 44, alignment: .bottom)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("\(member.degree) \(member.chineseName) \(member.solfege)")
-                                .accessibilityHint("轻点试听音级")
-                            }
-
-                            Button {
-                                if !vm.cradleEnabled {
-                                    vm.setChordPreset(.autoMatch)
-                                }
-                                vm.auditionDuoCharacter(.mou)
-                                triggerAudition(.character(1))
-                            } label: {
-                                ChimmoCowView(
-                                    isNight: palette.isNight,
-                                    accentColor: skyColor,
-                                    isAwake: vm.cradleEnabled,
-                                    isPlaying: isMouPulsing && vm.cradleEnabled,
-                                    phaseTime: phaseTime,
-                                    gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? -0.25
-                                )
-                                .frame(width: 40, height: 36)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("小牛哞，试听低音伴奏")
+                        ctx.fill(moon, with: .color(palette.nightLampGold))
+                        ctx.stroke(moon, with: .color(ink), lineWidth: 1.1)
+                    } else {
+                        let sunC = CGPoint(x: w * 0.90, y: 16)
+                        let sun = Path(ellipseIn: CGRect(x: sunC.x - 8.5, y: sunC.y - 8.5, width: 17, height: 17))
+                        ctx.fill(sun, with: .color(palette.storybookButter))
+                        ctx.stroke(sun, with: .color(ink), lineWidth: 1.2)
+                        for i in 0..<6 {
+                            let a = Double(i) * Double.pi / 3.0
+                            var r = Path()
+                            r.move(to: CGPoint(x: sunC.x + CGFloat(cos(a)) * 11, y: sunC.y + CGFloat(sin(a)) * 11))
+                            r.addLine(to: CGPoint(x: sunC.x + CGFloat(cos(a)) * 14, y: sunC.y + CGFloat(sin(a)) * 14))
+                            ctx.stroke(r, with: .color(palette.brassHairline), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 3)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-                    .padding(.bottom, 4)
+
+                    var hill = Path()
+                    let hillY = h * 0.72
+                    hill.move(to: CGPoint(x: 0, y: hillY + 4))
+                    hill.addQuadCurve(to: CGPoint(x: w * 0.5, y: hillY - 3), control: CGPoint(x: w * 0.25, y: hillY - 10))
+                    hill.addQuadCurve(to: CGPoint(x: w, y: hillY + 2), control: CGPoint(x: w * 0.75, y: hillY + 8))
+                    var area = hill
+                    area.addLine(to: CGPoint(x: w, y: h))
+                    area.addLine(to: CGPoint(x: 0, y: h))
+                    area.closeSubpath()
+                    ctx.fill(area, with: .color(palette.storybookHillFront))
+                    ctx.stroke(hill, with: .color(ink), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
                 }
-                .background(
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .fill(skyBg)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.6)
-                        )
-                )
-                .padding(7)
-            }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .allowsHitTesting(false)
 
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 20, showCornerPins: true)
+                VStack(spacing: 2) {
+                    SoundBoxOscilloscopeWindow(
+                        samples: samples,
+                        waveColor: skyColor,
+                        outlineColor: palette.cartoonOutline,
+                        dotColor: palette.nightLampGold,
+                        sweepProgress: sweep
+                    )
+                    .frame(height: 26)
+
+                    HStack(alignment: .bottom, spacing: 6) {
+                        Button {
+                            vm.auditionDuoCharacter(.mie)
+                            triggerAudition(.character(5))
+                        } label: {
+                            ChimmoSheepView(
+                                isNight: palette.isNight,
+                                accentColor: skyColor,
+                                isSinging: isMieSinging,
+                                phaseTime: phaseTime,
+                                gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? 0.25
+                            )
+                            .frame(width: 36, height: 32)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .accessibilityLabel("小羊咩，试听高音主旋律")
+
+                        ForEach(shelfFigures) { member in
+                            let isMemberSinging = vm.isPlaying
+                                ? (vm.latestDegree == member.degree)
+                                : (focusedDeg == member.degree)
+                            Button {
+                                vm.auditionChimmoMember(member)
+                                triggerAudition(.character(member.degree))
+                            } label: {
+                                ChimmoFigureView(
+                                    member: member,
+                                    isNight: palette.isNight,
+                                    isMinor: vm.document.scaleMode.isMinorFlavored,
+                                    isSinging: isMemberSinging,
+                                    focusedDegree: focusedDeg,
+                                    time: phaseTime,
+                                    listeningTilt: 0
+                                )
+                                .scaleEffect(0.62, anchor: .bottom)
+                                .frame(width: 34, height: 36, alignment: .bottom)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                            .accessibilityLabel("\(member.degree) \(member.chineseName) \(member.solfege)")
+                            .accessibilityHint("轻点试听音级")
+                        }
+
+                        Button {
+                            if !vm.cradleEnabled {
+                                vm.setChordPreset(.autoMatch)
+                            }
+                            vm.auditionDuoCharacter(.mou)
+                            triggerAudition(.character(1))
+                        } label: {
+                            ChimmoCowView(
+                                isNight: palette.isNight,
+                                accentColor: skyColor,
+                                isAwake: vm.cradleEnabled,
+                                isPlaying: isMouPulsing && vm.cradleEnabled,
+                                phaseTime: phaseTime,
+                                gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? -0.25
+                            )
+                            .frame(width: 36, height: 32)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .accessibilityLabel("小牛哞，试听低音伴奏")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 2)
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(skyBg)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.35 : 0.25), lineWidth: 1.2)
+                    )
+            )
         }
-        .frame(height: 124)
+        .frame(height: 96)
     }
 
     // MARK: - 3. Flat Cartoon Pull-Tab Toggle Bank
@@ -403,8 +387,6 @@ public struct SoundPaletteBoxSheet: View {
                 }
             }
             .padding(8)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
     }
 
@@ -474,8 +456,9 @@ public struct SoundPaletteBoxSheet: View {
                     cornerRadius: 13
                 )
             )
+            .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(accessibilityTitle)
         .accessibilityValue(isOn ? "已开启" : "已关闭")
     }
@@ -527,15 +510,14 @@ public struct SoundPaletteBoxSheet: View {
                                 cornerRadius: 13
                             )
                         )
+                        .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("\(mode.label)风格")
                     .accessibilityValue(selected ? "已选中" : "")
                 }
             }
             .padding(8)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
     }
 
@@ -562,33 +544,37 @@ public struct SoundPaletteBoxSheet: View {
                             Text(label)
                                 .font(.caption.weight(.heavy).monospacedDigit())
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
+                                .frame(minHeight: 34)
                                 .background(
-                                    Capsule()
-                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                        .overlay(
-                                            Capsule().strokeBorder(
-                                                palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
-                                                lineWidth: active ? 1.8 : 1.4
+                                    ZStack {
+                                        Capsule()
+                                            .fill(palette.cartoonShadow)
+                                            .offset(y: 1.5)
+                                        Capsule()
+                                            .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                            .overlay(
+                                                Capsule().strokeBorder(
+                                                    palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
+                                                    lineWidth: active ? 1.8 : 1.5
+                                                )
                                             )
-                                        )
+                                    }
                                 )
                                 .foregroundStyle(
                                     active
                                         ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
                                         : palette.primaryInk
                                 )
+                                .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("播放速度 \(label)")
                     }
                 }
 
-                StorybookScallopDivider(
-                    color: palette.cartoonOutline.opacity(0.28),
-                    stepWidth: 14
-                )
-                .frame(height: 6)
+                Rectangle()
+                    .fill(palette.divider)
+                    .frame(height: 1)
 
                 HStack(spacing: 6) {
                     Image(systemName: "metronome")
@@ -609,29 +595,33 @@ public struct SoundPaletteBoxSheet: View {
                             )
                             .frame(height: 16)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 7)
+                            .frame(minHeight: 34)
                             .background(
-                                Capsule()
-                                    .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                    .overlay(
-                                        Capsule().strokeBorder(
-                                            palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
-                                            lineWidth: active ? 1.8 : 1.4
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.5)
+                                    Capsule()
+                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                        .overlay(
+                                            Capsule().strokeBorder(
+                                                palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
+                                                lineWidth: active ? 1.8 : 1.5
+                                            )
                                         )
-                                    )
+                                }
                             )
+                            .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("节奏\(label)")
                         .accessibilityValue(active ? "已选中" : "")
                     }
                 }
 
-                StorybookScallopDivider(
-                    color: palette.cartoonOutline.opacity(0.28),
-                    stepWidth: 14
-                )
-                .frame(height: 6)
+                Rectangle()
+                    .fill(palette.divider)
+                    .frame(height: 1)
 
                 HStack(spacing: 6) {
                     Image(systemName: "tuningfork")
@@ -660,32 +650,36 @@ public struct SoundPaletteBoxSheet: View {
                                     .frame(width: barWidth, height: 2.8)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
+                            .frame(minHeight: 34)
                             .background(
-                                Capsule()
-                                    .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                    .overlay(
-                                        Capsule().strokeBorder(
-                                            palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
-                                            lineWidth: active ? 1.8 : 1.4
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.5)
+                                    Capsule()
+                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                        .overlay(
+                                            Capsule().strokeBorder(
+                                                palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
+                                                lineWidth: active ? 1.8 : 1.5
+                                            )
                                         )
-                                    )
+                                }
                             )
                             .foregroundStyle(
                                 active
                                     ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
                                     : palette.primaryInk
                             )
+                            .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("音区\(RootTranspositionHelper.accessibilityLabel(forRootMIDI: targetMIDI))")
                         .accessibilityValue(active ? "已选中" : "")
                     }
                 }
             }
             .padding(9)
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
     }
 
@@ -721,16 +715,26 @@ public struct SoundPaletteBoxSheet: View {
                                 Text("咩 · 音色")
                                     .font(.system(.caption, design: .rounded).weight(.heavy))
                                     .foregroundStyle(palette.primaryInk)
+
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.system(size: 9.5, weight: .bold))
+                                    .foregroundStyle(palette.secondaryInk)
                             }
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
+                            .frame(minHeight: 32)
                             .background(
-                                Capsule()
-                                    .fill(palette.storybookButter)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.8)
+                                    Capsule()
+                                        .fill(palette.storybookButter)
+                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                }
                             )
+                            .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("小羊咩，试听主旋律")
 
                         Spacer()
@@ -781,8 +785,9 @@ public struct SoundPaletteBoxSheet: View {
                                             )
                                     }
                                 )
+                                .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("\(v.label)音色")
                             .accessibilityValue(active ? "已选中" : "")
                         }
@@ -790,8 +795,6 @@ public struct SoundPaletteBoxSheet: View {
                 }
                 .padding(10)
             }
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: true)
         }
     }
 
@@ -831,16 +834,26 @@ public struct SoundPaletteBoxSheet: View {
                                 Text("哞 · 伴奏")
                                     .font(.system(.caption, design: .rounded).weight(.heavy))
                                     .foregroundStyle(palette.primaryInk)
+
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.system(size: 9.5, weight: .bold))
+                                    .foregroundStyle(palette.secondaryInk)
                             }
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
+                            .frame(minHeight: 32)
                             .background(
-                                Capsule()
-                                    .fill(palette.storybookMint)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.8)
+                                    Capsule()
+                                        .fill(palette.storybookMint)
+                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                }
                             )
+                            .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("小牛哞，试听低音伴奏")
 
                         Spacer()
@@ -899,8 +912,9 @@ public struct SoundPaletteBoxSheet: View {
                                     }
                                 )
                                 .opacity(vm.cradleEnabled ? 1.0 : 0.65)
+                                .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("\(tex.label)伴奏")
                             .accessibilityValue(active ? "已选中" : "")
                         }
@@ -908,8 +922,6 @@ public struct SoundPaletteBoxSheet: View {
                 }
                 .padding(10)
             }
-
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: true)
         }
     }
 }
@@ -1137,18 +1149,24 @@ private struct ChordPresetBarcodeStrip: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .strokeBorder(
-                                        selected ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.52),
-                                        lineWidth: selected ? 1.8 : 1.2
-                                    )
-                            )
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(palette.cartoonShadow)
+                                .offset(y: 1.5)
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .strokeBorder(
+                                            selected ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.55),
+                                            lineWidth: selected ? 1.8 : 1.4
+                                        )
+                                )
+                        }
                     )
+                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel(preset.label)
                 .accessibilityValue(selected ? "已选中" : "")
             }
