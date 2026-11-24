@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.76.0 - 2026-11-25
+- VoiceOver 标题转盘（Heading Rotor）全域地标闭环：在 [SettingsView.swift](Chimmo/Views/SettingsView.swift)（「咩哞 · Chimmo」卡片首标题与「外观」）、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)（「声音调色盒」、「主旋律音色」与「和声与伴奏」）以及 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift) 品牌标题补齐 `.accessibilityAddTraits(.isHeader)`，方便读屏用户通过标题转盘快速直达各核心区块。
+- 曲库命中边界与无障碍操作提示增强：将 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 中 `shelfTabButton` 的点击热区由 `Capsule()` 精确对齐为视觉圆角一致的 `RoundedRectangle(cornerRadius: 12, style: .continuous)`；为 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 折纸工坊三枚入口按键（「闭眼滑音」、「跟灯弹」、「新画布」）与 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 调式切换/写入按钮补齐语义化 `.accessibilityHint`。
+- 闭眼夜灯语义投影统一：将 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 全部 5 处 `Color.black.opacity(...)` 硬编码阴影替换为单源 `nightPalette.elevationShadow(...)`，保持全站零原始暗黑投影残余。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound69VoiceOverHeadingRotorAndNightLampShadowParity`，校验 `ChimmoSectionTitle` 与全部核心弹窗/标签页日夜双态构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.75.0 - 2026-11-25
 - OpenMotion Design Studio 互动官网模块化重构（`v14`–`v16`）与全维度无障碍能力同源同步 [docs/index.html](docs/index.html)：将官网源码规范拆分为 `styles.css`、`app.js` 与 `index.html` 后经 OpenMotion 导出内联单文件独立 HTML（`105,905 bytes`）并完成整页 PNG（`1,136,041 bytes`）视觉抽检与 `node --check` 语法零报错校验。
 - 网页端新增与端内严格对称的两项视觉无障碍交互控件及语义规范：`#toggleCalmBtn`（「减弱动态 · 15Hz」，同步监听 `prefers-reduced-motion: reduce` 与 `data-reduce-motion`）、`#toggleClarityBtn`（「高清晰边线」，同步 `prefers-contrast: more` 与 `data-high-clarity` 实底加粗描边）；补齐夜间 `--glow-1..7`（对应正典 `ChimmoMember.nightGlowHex` `#FF7582..#FFD94A`）、全 4 组 `.sb-chip` 选项 `aria-pressed` 读屏选中态以及 `v0.75.0` 全站文案与目录特性同步。

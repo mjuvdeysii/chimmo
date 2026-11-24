@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.75.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.76.0"
     }
 
     private var appBuild: String {
@@ -73,6 +73,7 @@ public struct SettingsView: View {
                     Text("咩哞 · Chimmo")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(palette.primaryInk)
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("离线声学音乐绘本与轻创作工具")
                         .font(.subheadline)
@@ -181,6 +182,7 @@ public struct SettingsView: View {
                 Text("外观")
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
                     .foregroundStyle(palette.primaryInk)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 Text(vm.appearance.label)
                     .font(.caption.weight(.semibold))

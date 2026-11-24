@@ -4401,4 +4401,42 @@ final class SpecimenIntegrityTests: XCTestCase {
             XCTAssertNotNil(OrbitalStageView(vm: vm, palette: p, onOpenAbout: {}))
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound69VoiceOverHeadingRotorAndNightLampShadowParity() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r69_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            XCTAssertNotNil(ChimmoSectionTitle(title: "声学与舞台设定", isNight: p.isNight, tint: p.celadonAccent))
+            XCTAssertNotNil(SettingsView(vm: vm, palette: p, onOpenSharePostcard: {}))
+            XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: p))
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: p, initialTab: 2))
+            XCTAssertNotNil(
+                MusicBoxShelfView(
+                    palette: p,
+                    synth: vm.synth,
+                    notebook: vm.notebook,
+                    currentDocumentID: vm.document.id,
+                    initialSegment: 0,
+                    onLoadSavedToBoard: { _ in },
+                    onPlayAlongSpecimen: { _ in },
+                    onEditSpecimenOnBoard: { _ in },
+                    onStartNewTap: {}
+                )
+            )
+            XCTAssertNotNil(
+                AboutSheetView(
+                    palette: p,
+                    currentDocument: vm.document,
+                    cradleEnabled: vm.cradleEnabled
+                )
+            )
+        }
+    }
 }

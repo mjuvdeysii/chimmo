@@ -107,6 +107,7 @@ public struct SoundPaletteBoxSheet: View {
                     .foregroundStyle(palette.primaryInk)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
+                    .accessibilityAddTraits(.isHeader)
             }
 
             Spacer(minLength: 4)
@@ -734,6 +735,7 @@ public struct SoundPaletteBoxSheet: View {
                             Text("主旋律音色 · \(vm.melodyVoice.label)")
                                 .font(.system(.caption, design: .rounded).weight(.heavy))
                                 .foregroundStyle(palette.primaryInk)
+                                .accessibilityAddTraits(.isHeader)
                         }
 
                         Spacer()
@@ -852,6 +854,7 @@ public struct SoundPaletteBoxSheet: View {
                             Text("和声与伴奏 · \(vm.cradleEnabled ? vm.accompanimentTexture.label : "休息")")
                                 .font(.system(.caption, design: .rounded).weight(.heavy))
                                 .foregroundStyle(palette.primaryInk)
+                                .accessibilityAddTraits(.isHeader)
                         }
 
                         Spacer()

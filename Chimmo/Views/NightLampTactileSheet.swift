@@ -140,7 +140,7 @@ public struct NightLampTactileSheet: View {
                     Circle()
                         .fill(nightPalette.shelfSurface)
                         .frame(width: 36, height: 36)
-                        .shadow(color: Color.black.opacity(0.38), radius: 5, y: 2.5)
+                        .shadow(color: nightPalette.elevationShadow(dayOpacity: 0.38, nightOpacity: 0.38), radius: 5, y: 2.5)
                         .overlay(Circle().strokeBorder(nightPalette.primaryInk.opacity(0.16), lineWidth: 1.0))
                     Image(systemName: "xmark")
                         .font(.subheadline.weight(.heavy))
@@ -477,7 +477,7 @@ public struct NightLampTactileSheet: View {
                     Circle()
                         .fill(nightPalette.cardSurface)
                         .frame(width: 44, height: 44)
-                        .shadow(color: Color.black.opacity(0.36), radius: 5, y: 2.5)
+                        .shadow(color: nightPalette.elevationShadow(dayOpacity: 0.36, nightOpacity: 0.36), radius: 5, y: 2.5)
                         .overlay(
                             Circle()
                                 .strokeBorder(
@@ -507,7 +507,7 @@ public struct NightLampTactileSheet: View {
                     Circle()
                         .fill(isPlayActive ? nightPalette.nightLampGold : nightPalette.cardSurface)
                         .frame(width: 44, height: 44)
-                        .shadow(color: Color.black.opacity(0.36), radius: 5, y: 2.5)
+                        .shadow(color: nightPalette.elevationShadow(dayOpacity: 0.36, nightOpacity: 0.36), radius: 5, y: 2.5)
                         .overlay(
                             Circle()
                                 .strokeBorder(
@@ -550,7 +550,7 @@ public struct NightLampTactileSheet: View {
                 .background(
                     Capsule()
                         .fill(nightPalette.cardSurface)
-                        .shadow(color: Color.black.opacity(0.36), radius: 5, y: 2.5)
+                        .shadow(color: nightPalette.elevationShadow(dayOpacity: 0.36, nightOpacity: 0.36), radius: 5, y: 2.5)
                         .overlay(
                             Capsule()
                                 .strokeBorder(modeColor.opacity(localPentatonicSafe ? 0.48 : 0.22), lineWidth: 1.1)
@@ -561,6 +561,7 @@ public struct NightLampTactileSheet: View {
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(localPentatonicSafe ? "五音模式" : "八音模式")
+            .accessibilityHint("切换五音防跑调或完整八音阶")
 
             Button {
                 guard !capturedBeads.isEmpty else { return }
@@ -585,7 +586,7 @@ public struct NightLampTactileSheet: View {
                         .shadow(
                             color: canCommit
                                 ? nightPalette.nightLampGold.opacity(0.28)
-                                : Color.black.opacity(0.24),
+                                : nightPalette.elevationShadow(dayOpacity: 0.24, nightOpacity: 0.24),
                             radius: canCommit ? 7 : 4,
                             y: 2.5
                         )
@@ -605,6 +606,7 @@ public struct NightLampTactileSheet: View {
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(capturedBeads.isEmpty ? "请先在夜灯画布滑选音符" : "写入并试听 \(capturedBeads.count) 个音符")
+            .accessibilityHint("将已录夜灯音珠写入当前创作画布")
         }
     }
 

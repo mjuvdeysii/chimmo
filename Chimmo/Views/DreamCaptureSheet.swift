@@ -992,6 +992,7 @@ public struct DreamCaptureSheet: View {
                     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityHint("打开全屏低刺激夜灯触控创作板")
 
                 Button {
                     if !vm.followGlowActive {
@@ -1025,6 +1026,7 @@ public struct DreamCaptureSheet: View {
                 .disabled(vm.document.notes.isEmpty)
                 .opacity(vm.document.notes.isEmpty ? 0.45 : 1.0)
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityHint("返回主舞台开启跟灯提示练习当前旋律")
 
                 Button {
                     vm.startBlankCanvas()
@@ -1056,6 +1058,7 @@ public struct DreamCaptureSheet: View {
                     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityHint("清空当前画布开始创作新旋律")
             }
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 9) {

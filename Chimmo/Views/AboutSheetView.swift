@@ -467,7 +467,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.75.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.76.0"
     }
 
     private var appBuild: String {
@@ -487,6 +487,7 @@ public struct AboutSheetView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("咩哞 · Chimmo")
                                 .font(.headline)
+                                .accessibilityAddTraits(.isHeader)
                             Text("100% 本机离线声学音乐绘本")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)

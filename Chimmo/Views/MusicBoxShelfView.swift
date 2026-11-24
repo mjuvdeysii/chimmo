@@ -386,7 +386,7 @@ public struct MusicBoxShelfView: View {
                     }
                 }
             )
-            .contentShape(Capsule())
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
         .accessibilityLabel("\(title) \(countText)")
