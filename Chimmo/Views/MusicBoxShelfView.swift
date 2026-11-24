@@ -153,16 +153,19 @@ public struct MusicBoxShelfView: View {
                     boutiqueCompactTopBar
                         .padding(.horizontal, 16)
                         .padding(.top, 4)
+                        .accessibilitySortPriority(4)
 
                     if isSearchExpanded || !searchText.isEmpty {
                         boutiqueInlineSearchBar
                             .padding(.horizontal, 16)
                             .transition(.opacity)
+                            .accessibilitySortPriority(3)
                     }
 
                     if selectedSegment == 1 || !notebook.entries.isEmpty {
                         boutiqueCompactFilterRibbon
                             .padding(.horizontal, 16)
+                            .accessibilitySortPriority(2)
                     }
 
                     ScrollView {
@@ -181,6 +184,7 @@ public struct MusicBoxShelfView: View {
                         .padding(.top, 2)
                         .padding(.bottom, 24)
                     }
+                    .accessibilitySortPriority(1)
                 }
             }
             .modifier(
@@ -502,6 +506,7 @@ public struct MusicBoxShelfView: View {
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("重置全部筛选")
+                .accessibilityHint("清除当前分类、心情与搜索关键词")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -569,6 +574,7 @@ public struct MusicBoxShelfView: View {
                 Text("书架暂无曲本")
                     .font(.subheadline.weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
+                    .accessibilityAddTraits(.isHeader)
 
                 Button {
                     onStartNewTap()
@@ -580,6 +586,7 @@ public struct MusicBoxShelfView: View {
                 }
                 .buttonStyle(.chimmoVinyl(palette: palette, prominent: true))
                 .accessibilityLabel("去写一段")
+                .accessibilityHint("前往创作画室写下第一首原创旋律")
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 20)
@@ -593,6 +600,7 @@ public struct MusicBoxShelfView: View {
                         showsSkyMotifs: true
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .accessibilityHidden(true)
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .strokeBorder(palette.divider, lineWidth: 1.0)
                 }
@@ -632,6 +640,7 @@ public struct MusicBoxShelfView: View {
             Text("暂无匹配曲目")
                 .font(.subheadline.weight(.heavy))
                 .foregroundStyle(palette.primaryInk)
+                .accessibilityAddTraits(.isHeader)
 
             Button {
                 resetAllFilters()
@@ -652,6 +661,7 @@ public struct MusicBoxShelfView: View {
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 2.0))
             .accessibilityLabel("重置全部筛选")
+            .accessibilityHint("清除当前分类、心情与搜索关键词")
         }
         .padding(.vertical, 22)
         .padding(.horizontal, 16)
@@ -665,6 +675,7 @@ public struct MusicBoxShelfView: View {
                     showsSkyMotifs: true
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .accessibilityHidden(true)
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .strokeBorder(palette.divider, lineWidth: 1.0)
             }
@@ -694,12 +705,14 @@ public struct MusicBoxShelfView: View {
                     Circle()
                         .fill(entryModeColor)
                         .frame(width: 7, height: 7)
+                        .accessibilityHidden(true)
 
                     Text(entry.document.title)
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                         .foregroundStyle(palette.primaryInk)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
+                        .accessibilityAddTraits(.isHeader)
 
                     Spacer(minLength: 4)
 
@@ -758,6 +771,7 @@ public struct MusicBoxShelfView: View {
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("在聆听区播放 \(entry.document.title)")
+                        .accessibilityHint("在聆听剧场中完整播放")
                     }
 
                     Button {
@@ -788,6 +802,7 @@ public struct MusicBoxShelfView: View {
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("在创作区打开编辑 \(entry.document.title)")
+                    .accessibilityHint("在创作画室打开编辑")
 
                     Spacer()
 
@@ -849,6 +864,7 @@ public struct MusicBoxShelfView: View {
                             .contentShape(Circle())
                     }
                     .accessibilityLabel("管理作品 \(entry.document.title)")
+                    .accessibilityHint("打开重命名、复制、分享和删除选项")
                 }
             }
         }
@@ -1098,12 +1114,14 @@ public struct MusicBoxShelfView: View {
                         Circle()
                             .fill(modeColor)
                             .frame(width: 6.5, height: 6.5)
+                            .accessibilityHidden(true)
 
                         Text(spec.title)
                             .font(.system(.subheadline, design: .rounded).weight(.heavy))
                             .foregroundStyle(palette.primaryInk)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
+                            .accessibilityAddTraits(.isHeader)
 
                         Spacer(minLength: 4)
 
@@ -1161,6 +1179,7 @@ public struct MusicBoxShelfView: View {
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("在聆听区播放 \(spec.title)")
+                        .accessibilityHint("在聆听剧场中完整播放")
 
                         Button {
                             stopInlinePlay()
@@ -1190,6 +1209,7 @@ public struct MusicBoxShelfView: View {
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("跟灯弹 \(spec.title)")
+                        .accessibilityHint("进入聆听区开启亮灯跟弹")
 
                         if let onForkSpecimenToCreate {
                             Button {
@@ -1220,6 +1240,7 @@ public struct MusicBoxShelfView: View {
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("改编 \(spec.title)")
+                            .accessibilityHint("复制到创作画室自由改写")
                         }
 
                         Spacer(minLength: 0)
@@ -1247,6 +1268,7 @@ public struct MusicBoxShelfView: View {
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("套用 \(spec.title) 风格")
+                        .accessibilityHint("将这首曲目的和声与调式氛围套用到当前创作")
                     }
                 }
             }
@@ -1526,6 +1548,7 @@ private struct StorybookSongbookCoverThumb: View {
         }
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(isPlaying ? "停止试听 \(document.title)" : "试听 \(document.title)")
+        .accessibilityHint(isPlaying ? "轻点停止试听" : "轻点试听旋律片段")
     }
 }
 

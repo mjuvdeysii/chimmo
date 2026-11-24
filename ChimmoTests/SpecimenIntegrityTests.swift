@@ -4490,4 +4490,67 @@ final class SpecimenIntegrityTests: XCTestCase {
             XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: p))
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound72SongbookHeadingRotorAndFigureAccessibility() throws {
+        XCTAssertEqual(ChimmoMember.allCases.count, 7)
+        for isNight in [false, true] {
+            for member in ChimmoMember.allCases {
+                XCTAssertNotNil(
+                    ChimmoFigureView(
+                        member: member,
+                        isNight: isNight,
+                        isMinor: false,
+                        isSinging: false
+                    )
+                )
+            }
+        }
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r72_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            XCTAssertNotNil(
+                MusicBoxShelfView(
+                    palette: p,
+                    synth: vm.synth,
+                    notebook: vm.notebook,
+                    currentDocumentID: vm.document.id,
+                    initialSegment: 0,
+                    onLoadSavedToBoard: { _ in },
+                    onPlayAlongSpecimen: { _ in },
+                    onEditSpecimenOnBoard: { _ in },
+                    onStartNewTap: {}
+                )
+            )
+        }
+
+        vm.switchSpace(to: .create)
+        vm.plantCreationStarter(.sunnyMeadow)
+        vm.stopPlayback()
+        vm.saveCurrentToNotebook()
+        XCTAssertEqual(vm.notebook.entries.count, 1)
+
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            for seg in [0, 1] {
+                XCTAssertNotNil(
+                    MusicBoxShelfView(
+                        palette: p,
+                        synth: vm.synth,
+                        notebook: vm.notebook,
+                        currentDocumentID: vm.document.id,
+                        initialSegment: seg,
+                        onLoadSavedToBoard: { _ in },
+                        onPlayAlongSpecimen: { _ in },
+                        onEditSpecimenOnBoard: { _ in },
+                        onStartNewTap: {}
+                    )
+                )
+            }
+        }
+    }
 }

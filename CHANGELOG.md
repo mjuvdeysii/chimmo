@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.79.0 - 2026-11-25
+- 曲本页 VoiceOver 标题转盘地标、操作提示与排序优先级全闭环：在 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 为主列表区顶部切换栏/搜索栏/筛选条/曲本列表配置 `.accessibilitySortPriority`（`4 -> 1`），为全部自创作品与名曲卡标题及双空态主标题（「书架暂无曲本」、「暂无匹配曲目」）补充 `.accessibilityAddTraits(.isHeader)` 支持标题转盘直达，为封面试听、聆听/编辑/跟灯/改编/套用风格/管理菜单及筛选重置补充 `.accessibilityHint`，并屏蔽曲目色点与空态插画背景 `StorybookCartoonSceneBackground` 的读屏干扰。
+- 七小只形象视图无障碍策略对齐：在 [ChimmoFigureView.swift](Chimmo/Views/ChimmoFigureView.swift) 根视图补充 `.accessibilityHidden(true)`，与小羊咩、小牛哞及双子徽章保持统一（由外层交互按钮承担明确语义播报，杜绝零散椭圆矢量打扰读屏）。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound72SongbookHeadingRotorAndFigureAccessibility`，验证七小只日夜构造及空书架与已存曲本双态构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.78.0 - 2026-11-25
 - 节奏鼓面防吞触修复与双滑条自动滚屏追随：在 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 为 `drumMachineModule` 内嵌横向柱条 `ScrollView` 添加 `.allowsHitTesting(false)`，彻底解决点按鼓面右侧波形区偶发被滚动容器截胡不触发敲拍的问题，并接入 `ScrollViewReader` 随拍数自动向右滚屏显示最新重音柱及补齐「已敲 N 拍」VoiceOver 实时读数与提示；同步在 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 为已录音珠条 `capturedStrip` 接入受 `reduceMotion` 门控的 `ScrollViewReader` 自动末尾追随与空白装饰珠屏蔽。
 - 全主舞台确定性 VoiceOver 焦点排序与工坊工具提示闭环：为 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 聆听舞台顶栏、主画布 `ZStack`（空态 CTA 优先于背景画布及角标）、分幕导览条、七小只琴键与底部控制坞，以及 [CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 创作工作台全六层区块配置确定性 `.accessibilitySortPriority`；屏蔽创作空画布背景山坡读屏干扰，并为底部三枚工具键（「轻哼捕音」、「节奏灵感」、「音色和声」）与右上角「更多创作操作」菜单补全 `.accessibilityHint`。

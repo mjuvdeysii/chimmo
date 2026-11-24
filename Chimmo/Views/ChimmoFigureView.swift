@@ -134,6 +134,7 @@ public struct ChimmoFigureView: View {
         .frame(width: 50, height: 58)
         .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.58), value: isSinging)
         .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.72), value: isMinor)
+        .accessibilityHidden(true)
     }
 
     // MARK: - Expressive Glazed Eyes (Idle / Gaze / Blink / Singing Happy Arc)
