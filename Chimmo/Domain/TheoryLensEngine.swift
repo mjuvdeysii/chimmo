@@ -140,7 +140,7 @@ public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable
     public func colorHex(isNight: Bool) -> UInt32 {
         switch self {
         case .I: return isNight ? 0xFF7582 : 0xC93848
-        case .ii: return isNight ? 0xFFA959 : 0xB8560A
+        case .ii: return isNight ? 0xFFA959 : 0xB35208
         case .iii: return isNight ? 0xFF74A6 : 0xBE2E66
         case .IV: return isNight ? 0x38E4B7 : 0x0E7E5D
         case .V: return isNight ? 0x5CB3FF : 0x1B6EC2
