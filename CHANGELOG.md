@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.66.0 - 2026-11-25
+- 创作空白舞台交互灵动升级与层叠解耦：[CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 将空白画布底部的陶诺、咩哞与壳咯三重奏与“轻哼一段旋律 / 起音种子”从上下叠压解耦为单一有序纵列，并让主角三重奏成为可触碰的欢迎和弦按钮（点按触发 `auditionDuoGreeting()` 并激活三偶动态合声反馈，同时在 `.onDisappear` 严密回收异步计时任务，背景山坡保持穿透点击画布），严守零多余文案与零重边框降噪原则。
+- 曲本上下文菜单、VoiceOver 自定义动作与精确命中边界对齐：[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 为自创作品长按菜单与 VoiceOver 补齐「在聆听区播放 / 打开编辑 / 分享导出 / 重命名 / 复制副本 / 删除作品」全套动作，将管理圆按钮修正为 `34x34` 正圆配合柔和接触投影及 `40x40` `Circle()` 命中区；同时为典藏曲目卡补全长按菜单与条件化 VoiceOver 操作（仅在可改编时暴露「改编创作」），并将全部胶囊与圆形按钮的 `.contentShape(Rectangle())` 替换为精确匹配的 `Capsule()` / `Circle()`。
+- 回归校验：新增 `testCreativeAlchemyRound59LivingEmptyStageAndSongbookActionParity`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.65.0 - 2026-11-25
 - 窑纸软胶接触投影与对比前景色全站单一数据源收口：
   - 在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `elevationShadowColor(isNight:dayOpacity:nightOpacity:)` / `elevationShadow(...)` 柔和投影单源公式、`contrastInkOnAccent`、`contrastInkOnHighlight`、`warmButterHighlight` 与 `figureContourInk` 语义 Token。

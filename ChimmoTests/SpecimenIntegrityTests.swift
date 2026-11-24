@@ -3832,4 +3832,59 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(CreateStudioView(vm: vm, palette: day, onOpenSharePostcard: {}))
         XCTAssertNotNil(AboutSheetView(palette: day, currentDocument: vm.document, cradleEnabled: true))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound59LivingEmptyStageAndSongbookActionParity() throws {
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r59_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.startBlankCanvas()
+        XCTAssertTrue(vm.document.notes.isEmpty)
+
+        vm.auditionDuoGreeting()
+        XCTAssertTrue(vm.document.notes.isEmpty, "空白舞台点按主角欢迎和弦不应误写入音符")
+
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: day, onOpenSharePostcard: {}))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: night, onOpenSharePostcard: {}))
+
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: day,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                onLoadSavedToBoard: { _ in },
+                onPlaySavedInShowcase: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onBorrowAtmosphere: { _ in },
+                onShareSavedEntry: { _ in },
+                onForkSpecimenToCreate: { _ in },
+                onStartNewTap: {},
+                onDeleteSavedEntry: { _ in }
+            )
+        )
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: night,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                onLoadSavedToBoard: { _ in },
+                onPlaySavedInShowcase: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onBorrowAtmosphere: { _ in },
+                onShareSavedEntry: { _ in },
+                onForkSpecimenToCreate: { _ in },
+                onStartNewTap: {},
+                onDeleteSavedEntry: { _ in }
+            )
+        )
+    }
 }

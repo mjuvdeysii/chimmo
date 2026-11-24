@@ -23,6 +23,8 @@ public struct CreateStudioView: View {
     @State private var renameDraft: String = ""
     @State private var showDiscardConfirm: Bool = false
     @State private var wakeSignal: Int = 0
+    @State private var isEmptyMascotGreeting: Bool = false
+    @State private var emptyGreetingTask: Task<Void, Never>?
 
     public init(
         vm: StudioViewModel,
@@ -263,6 +265,11 @@ public struct CreateStudioView: View {
                     vm.requestOpenDreamSheet = false
                 }
             }
+            .onDisappear {
+                emptyGreetingTask?.cancel()
+                emptyGreetingTask = nil
+                isEmptyMascotGreeting = false
+            }
         }
     }
 
@@ -438,65 +445,69 @@ public struct CreateStudioView: View {
     private var emptyCreationCanvasOverlay: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
 
-        return ZStack {
-            VStack(spacing: 0) {
-                Spacer()
-                ZStack(alignment: .bottom) {
-                    Canvas { ctx, size in
-                        let profile = StorybookIllustrationLayout.rollingHillProfile(
-                            sampleCount: 14,
-                            amplitude: 0.16,
-                            phaseShift: 1.1
+        return ZStack(alignment: .bottom) {
+            Canvas { ctx, size in
+                let profile = StorybookIllustrationLayout.rollingHillProfile(
+                    sampleCount: 14,
+                    amplitude: 0.16,
+                    phaseShift: 1.1
+                )
+                guard !profile.isEmpty else { return }
+                var hill = Path()
+                hill.move(to: CGPoint(x: 0, y: size.height))
+                for pt in profile {
+                    hill.addLine(
+                        to: CGPoint(
+                            x: CGFloat(pt.xFraction) * size.width,
+                            y: size.height * 0.28 + CGFloat(pt.yFraction - 0.5) * size.height * 0.32
                         )
-                        guard !profile.isEmpty else { return }
-                        var hill = Path()
-                        hill.move(to: CGPoint(x: 0, y: size.height))
-                        for pt in profile {
-                            hill.addLine(
-                                to: CGPoint(
-                                    x: CGFloat(pt.xFraction) * size.width,
-                                    y: size.height * 0.28 + CGFloat(pt.yFraction - 0.5) * size.height * 0.32
-                                )
-                            )
-                        }
-                        hill.addLine(to: CGPoint(x: size.width, y: size.height))
-                        hill.closeSubpath()
-                        ctx.fill(hill, with: .color(palette.storybookHillFront))
-                    }
-                    .frame(height: 112)
+                    )
+                }
+                hill.addLine(to: CGPoint(x: size.width, y: size.height))
+                hill.closeSubpath()
+                ctx.fill(hill, with: .color(palette.storybookHillFront))
+            }
+            .frame(height: 112)
+            .allowsHitTesting(false)
 
+            VStack(spacing: 8) {
+                Spacer(minLength: 4)
+
+                Button {
+                    triggerEmptyMascotGreeting()
+                } label: {
                     HStack(alignment: .bottom, spacing: 10) {
                         ChimmoFigureView(
                             member: .taono,
                             isNight: palette.isNight,
                             isMinor: vm.document.scaleMode.isMinorFlavored,
-                            isSinging: false
+                            isSinging: isEmptyMascotGreeting
                         )
-                        .scaleEffect(0.84)
+                        .scaleEffect(0.80)
 
                         LivingChimmoDuoBadgeView(
                             isNight: palette.isNight,
                             accentColor: skyColor,
-                            melodyActive: false,
+                            melodyActive: isEmptyMascotGreeting,
                             cowAwake: vm.cradleEnabled
                         )
-                        .frame(width: 84, height: 56)
+                        .frame(width: 78, height: 52)
 
                         ChimmoFigureView(
                             member: .corllo,
                             isNight: palette.isNight,
                             isMinor: vm.document.scaleMode.isMinorFlavored,
-                            isSinging: false
+                            isSinging: isEmptyMascotGreeting
                         )
-                        .scaleEffect(0.84)
+                        .scaleEffect(0.80)
                     }
-                    .padding(.bottom, 64)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .contentShape(Capsule())
                 }
-            }
-            .allowsHitTesting(false)
-
-            VStack(spacing: 10) {
-                Spacer()
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                .accessibilityLabel("轻触陶诺、咩哞与壳咯听欢迎和弦")
+                .accessibilityHint("播放双主角欢迎和弦并让小偶合声")
 
                 Button {
                     dreamInitialTab = 1
@@ -540,7 +551,22 @@ public struct CreateStudioView: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(palette.secondaryInk)
             }
-            .padding(.bottom, 14)
+            .padding(.bottom, 12)
+        }
+    }
+
+    private func triggerEmptyMascotGreeting() {
+        emptyGreetingTask?.cancel()
+        vm.auditionDuoGreeting()
+        withAnimation(reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.68)) {
+            isEmptyMascotGreeting = true
+        }
+        emptyGreetingTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 850_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
+                isEmptyMascotGreeting = false
+            }
         }
     }
 

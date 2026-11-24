@@ -740,7 +740,7 @@ public struct MusicBoxShelfView: View {
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("在聆听区播放 \(entry.document.title)")
@@ -770,7 +770,7 @@ public struct MusicBoxShelfView: View {
                         )
                         .foregroundStyle(palette.primaryInk)
                         .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                        .contentShape(Rectangle())
+                        .contentShape(Capsule())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("在创作区打开编辑 \(entry.document.title)")
@@ -811,7 +811,7 @@ public struct MusicBoxShelfView: View {
                         Image(systemName: "ellipsis")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
-                            .frame(width: 38, height: 34)
+                            .frame(width: 34, height: 34)
                             .background(
                                 Circle()
                                     .fill(palette.cardSurface)
@@ -821,13 +821,18 @@ public struct MusicBoxShelfView: View {
                                             lineWidth: 0.9
                                         )
                                     )
+                                    .shadow(
+                                        color: palette.elevationShadow(dayOpacity: 0.08, nightOpacity: 0.20),
+                                        radius: 4,
+                                        x: 0,
+                                        y: 2
+                                    )
                             )
-                            .contentShape(Capsule())
                             .frame(
                                 minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                 minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                             )
-                            .contentShape(Rectangle())
+                            .contentShape(Circle())
                     }
                     .accessibilityLabel("管理作品 \(entry.document.title)")
                 }
@@ -844,6 +849,27 @@ public struct MusicBoxShelfView: View {
         )
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.26), value: isPlayingThis)
         .contextMenu {
+            if let onPlaySavedInShowcase {
+                Button {
+                    stopInlinePlay()
+                    onPlaySavedInShowcase(entry)
+                } label: {
+                    Label("在聆听区播放", systemImage: "play.fill")
+                }
+            }
+            Button {
+                stopInlinePlay()
+                onLoadSavedToBoard(entry)
+            } label: {
+                Label("打开编辑", systemImage: "pencil.line")
+            }
+            Button {
+                stopInlinePlay()
+                onShareSavedEntry(entry)
+            } label: {
+                Label("分享导出", systemImage: "square.and.arrow.up")
+            }
+            Divider()
             Button {
                 renameTargetID = entry.id
                 renameDraftText = entry.document.title
@@ -856,6 +882,7 @@ public struct MusicBoxShelfView: View {
             } label: {
                 Label("复制副本", systemImage: "plus.square.on.square")
             }
+            Divider()
             Button(role: .destructive) {
                 if isPlayingThis { stopInlinePlay() }
                 if let onDeleteSavedEntry {
@@ -864,7 +891,7 @@ public struct MusicBoxShelfView: View {
                     notebook.delete(id: entry.id)
                 }
             } label: {
-                Label("删除", systemImage: "trash")
+                Label("删除作品", systemImage: "trash")
             }
         }
         .accessibilityAction(named: "重命名") {
@@ -874,6 +901,18 @@ public struct MusicBoxShelfView: View {
         }
         .accessibilityAction(named: "复制副本") {
             onDuplicateSavedEntry(entry.id)
+        }
+        .accessibilityAction(named: "分享导出") {
+            stopInlinePlay()
+            onShareSavedEntry(entry)
+        }
+        .accessibilityAction(named: "删除作品") {
+            if isPlayingThis { stopInlinePlay() }
+            if let onDeleteSavedEntry {
+                onDeleteSavedEntry(entry.id)
+            } else {
+                notebook.delete(id: entry.id)
+            }
         }
     }
 
@@ -1050,7 +1089,7 @@ public struct MusicBoxShelfView: View {
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("在聆听区播放 \(spec.title)")
@@ -1079,7 +1118,7 @@ public struct MusicBoxShelfView: View {
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
+                            .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("跟灯弹 \(spec.title)")
@@ -1109,7 +1148,7 @@ public struct MusicBoxShelfView: View {
                                 )
                                 .foregroundStyle(palette.primaryInk)
                                 .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                                .contentShape(Rectangle())
+                                .contentShape(Capsule())
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("改编 \(spec.title)")
@@ -1123,7 +1162,7 @@ public struct MusicBoxShelfView: View {
                         } label: {
                             ChimmoCraftMark(.atmosphereHorizon, color: modeColor)
                                 .frame(width: 13, height: 13)
-                                .frame(width: 36, height: 34)
+                                .frame(width: 34, height: 34)
                                 .background(
                                     ChimmoKilnPillButtonSurface(
                                         palette: palette,
@@ -1136,7 +1175,7 @@ public struct MusicBoxShelfView: View {
                                     minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                     minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                                 )
-                                .contentShape(Rectangle())
+                                .contentShape(Circle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("套用 \(spec.title) 风格")
@@ -1153,6 +1192,56 @@ public struct MusicBoxShelfView: View {
                 )
             )
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.26), value: isPlayingThis)
+            .contextMenu {
+                Button {
+                    stopInlinePlay()
+                    onEditSpecimenOnBoard(spec)
+                } label: {
+                    Label("在聆听区播放", systemImage: "play.fill")
+                }
+                Button {
+                    stopInlinePlay()
+                    onPlayAlongSpecimen(spec)
+                } label: {
+                    Label("跟灯弹", systemImage: "sparkles")
+                }
+                if let onForkSpecimenToCreate {
+                    Button {
+                        stopInlinePlay()
+                        onForkSpecimenToCreate(spec)
+                    } label: {
+                        Label("改编创作", systemImage: "wand.and.stars")
+                    }
+                }
+                Button {
+                    stopInlinePlay()
+                    onBorrowAtmosphere(spec)
+                } label: {
+                    Label("套用风格", systemImage: "paintpalette")
+                }
+            }
+            .modifier(
+                SpecimenCardAccessibilityActions(
+                    onListen: {
+                        stopInlinePlay()
+                        onEditSpecimenOnBoard(spec)
+                    },
+                    onPlayAlong: {
+                        stopInlinePlay()
+                        onPlayAlongSpecimen(spec)
+                    },
+                    onBorrowAtmosphere: {
+                        stopInlinePlay()
+                        onBorrowAtmosphere(spec)
+                    },
+                    onFork: onForkSpecimenToCreate.map { fork in
+                        {
+                            stopInlinePlay()
+                            fork(spec)
+                        }
+                    }
+                )
+            )
         }
     }
 }
@@ -1448,6 +1537,26 @@ private struct ShelfNavigationChromeModifier: ViewModifier {
         } else {
             content
                 .toolbar(.hidden, for: .navigationBar)
+        }
+    }
+}
+
+private struct SpecimenCardAccessibilityActions: ViewModifier {
+    let onListen: () -> Void
+    let onPlayAlong: () -> Void
+    let onBorrowAtmosphere: () -> Void
+    let onFork: (() -> Void)?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        let base = content
+            .accessibilityAction(named: "在聆听区播放", onListen)
+            .accessibilityAction(named: "跟灯弹", onPlayAlong)
+            .accessibilityAction(named: "套用风格", onBorrowAtmosphere)
+        if let onFork {
+            base.accessibilityAction(named: "改编创作", onFork)
+        } else {
+            base
         }
     }
 }
