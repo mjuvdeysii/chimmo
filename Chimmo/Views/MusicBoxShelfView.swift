@@ -10,6 +10,7 @@ public struct MusicBoxShelfView: View {
     public let navigationTitleText: String?
     public let showsDismissButton: Bool
     public let onLoadSavedToBoard: (SavedMelodyEntry) -> Void
+    public let onPlaySavedInShowcase: ((SavedMelodyEntry) -> Void)?
     public let onPlayAlongSpecimen: (MelodyDocument) -> Void
     public let onEditSpecimenOnBoard: (MelodyDocument) -> Void
     public let onBorrowAtmosphere: (MelodyDocument) -> Void
@@ -44,6 +45,7 @@ public struct MusicBoxShelfView: View {
         navigationTitleText: String? = nil,
         showsDismissButton: Bool = false,
         onLoadSavedToBoard: @escaping (SavedMelodyEntry) -> Void,
+        onPlaySavedInShowcase: ((SavedMelodyEntry) -> Void)? = nil,
         onPlayAlongSpecimen: @escaping (MelodyDocument) -> Void,
         onEditSpecimenOnBoard: @escaping (MelodyDocument) -> Void,
         onBorrowAtmosphere: @escaping (MelodyDocument) -> Void = { _ in },
@@ -62,6 +64,7 @@ public struct MusicBoxShelfView: View {
         self.navigationTitleText = navigationTitleText
         self.showsDismissButton = showsDismissButton
         self.onLoadSavedToBoard = onLoadSavedToBoard
+        self.onPlaySavedInShowcase = onPlaySavedInShowcase
         self.onPlayAlongSpecimen = onPlayAlongSpecimen
         self.onEditSpecimenOnBoard = onEditSpecimenOnBoard
         self.onBorrowAtmosphere = onBorrowAtmosphere
@@ -650,7 +653,7 @@ public struct MusicBoxShelfView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.24 : 0.18), lineWidth: 1.2)
+                    .strokeBorder(palette.divider, lineWidth: 1.0)
             }
         )
     }
@@ -711,7 +714,38 @@ public struct MusicBoxShelfView: View {
                         .fill(palette.shelfSurface.opacity(0.75))
                 )
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    if let onPlaySavedInShowcase {
+                        Button {
+                            stopInlinePlay()
+                            onPlaySavedInShowcase(entry)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "play.fill")
+                                    .font(.caption2.weight(.bold))
+                                Text("聆听")
+                                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
+                            }
+                            .padding(.horizontal, 12)
+                            .frame(height: 34)
+                            .background(
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.celadonAccent,
+                                    isActive: true,
+                                    cornerRadius: 17
+                                )
+                            )
+                            .foregroundStyle(palette.primaryInk)
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .accessibilityLabel("在聆听区播放 \(entry.document.title)")
+                    }
+
                     Button {
                         stopInlinePlay()
                         onLoadSavedToBoard(entry)
@@ -719,7 +753,7 @@ public struct MusicBoxShelfView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "pencil.line")
                                 .font(.caption.weight(.bold))
-                            Text("打开编辑")
+                            Text(onPlaySavedInShowcase != nil ? "编辑" : "打开编辑")
                                 .font(.system(.caption, design: .rounded).weight(.heavy))
                                 .lineLimit(1)
                                 .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
@@ -729,8 +763,8 @@ public struct MusicBoxShelfView: View {
                         .background(
                             ChimmoKilnPillButtonSurface(
                                 palette: palette,
-                                accent: palette.celadonAccent,
-                                isActive: true,
+                                accent: onPlaySavedInShowcase != nil ? palette.homeAnchor : palette.celadonAccent,
+                                isActive: onPlaySavedInShowcase == nil,
                                 cornerRadius: 17
                             )
                         )
@@ -1154,7 +1188,8 @@ private struct StorybookSongbookCoverThumb: View {
             isMinor: document.scaleMode.isMinorFlavored,
             reduceMotion: reduceMotion
         )
-        let ink = palette.cartoonOutline
+        let ink = palette.primaryInk
+        let pageHairline = ink.opacity(palette.isNight ? 0.22 : 0.14)
 
         Button {
             onTogglePlay()
@@ -1167,7 +1202,7 @@ private struct StorybookSongbookCoverThumb: View {
                         VStack(alignment: .trailing, spacing: 5) {
                             ForEach(0..<3, id: \.self) { lineIdx in
                                 Capsule()
-                                    .fill(ink.opacity(0.28))
+                                    .fill(ink.opacity(0.24))
                                     .frame(width: lineIdx == 1 ? 14 : 18, height: 1.6)
                             }
                         }
@@ -1177,7 +1212,7 @@ private struct StorybookSongbookCoverThumb: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .strokeBorder(ink.opacity(palette.isNight ? 0.68 : 0.82), lineWidth: 1.4)
+                            .strokeBorder(pageHairline, lineWidth: 1.1)
                     )
                     .frame(width: 58, height: 64)
                     .offset(x: bookState.pagePeekOffsetX, y: 2)
@@ -1201,7 +1236,7 @@ private struct StorybookSongbookCoverThumb: View {
                         bottomTrailingRadius: 5,
                         topTrailingRadius: 2
                     )
-                    .strokeBorder(ink.opacity(0.85), lineWidth: 1.2)
+                    .strokeBorder(ink.opacity(palette.isNight ? 0.24 : 0.16), lineWidth: 1.0)
                 )
                 .frame(width: 11, height: 18 + bookState.bookmarkDropY)
                 .offset(x: 47, y: -2 + bookState.bookmarkDropY * 0.45)
@@ -1280,12 +1315,12 @@ private struct StorybookSongbookCoverThumb: View {
                                     .fill(Color(hex: hero.bodyHex).opacity(palette.isNight ? 0.34 : 0.24))
                                     .frame(width: 30, height: 30)
                                     .overlay(
-                                        Circle().strokeBorder(ink.opacity(0.65), lineWidth: 1.2)
+                                        Circle().strokeBorder(ink.opacity(palette.isNight ? 0.26 : 0.18), lineWidth: 1.0)
                                     )
 
                                 ChimmoCartoonKeyBuddyView(
                                     member: hero,
-                                    outlineColor: ink,
+                                    outlineColor: ink.opacity(0.78),
                                     isSinging: isPlaying,
                                     isMinor: document.scaleMode.isMinorFlavored
                                 )
@@ -1301,7 +1336,7 @@ private struct StorybookSongbookCoverThumb: View {
                                 .background(
                                     Circle()
                                         .fill(palette.cardSurface)
-                                        .overlay(Circle().strokeBorder(ink.opacity(0.72), lineWidth: 1.0))
+                                        .overlay(Circle().strokeBorder(ink.opacity(palette.isNight ? 0.28 : 0.20), lineWidth: 0.9))
                                 )
                                 .offset(x: 5, y: 3)
                         }
@@ -1319,7 +1354,7 @@ private struct StorybookSongbookCoverThumb: View {
                 // 4. 右下角清晰试听/暂停印章按钮
                 Circle()
                     .fill(isPlaying ? palette.nightLampGold : palette.cardSurface)
-                    .overlay(Circle().strokeBorder(ink.opacity(0.88), lineWidth: 1.5))
+                    .overlay(Circle().strokeBorder(ink.opacity(palette.isNight ? 0.34 : 0.24), lineWidth: 1.2))
                     .frame(width: 24, height: 24)
                     .overlay(
                         Image(systemName: isPlaying ? "pause.fill" : "play.fill")

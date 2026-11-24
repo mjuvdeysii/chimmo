@@ -2143,6 +2143,31 @@ public final class StudioViewModel: ObservableObject {
             creationSnapshot = captureWorkspaceSnapshot()
         }
         AcousticHapticsEngine.shared.playResolutionExhale()
+        if !isPlaying {
+            synth.ensureRunning()
+            let mode = document.scaleMode
+            let rootMIDI = document.rootMIDI
+            let homeHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: 1, octaveOffset: 0)
+            let fifthHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: 5, octaveOffset: 0)
+            synth.playNote(
+                frequency: homeHz,
+                velocity: 0.36,
+                decay: 0.85,
+                brightness: 0.92,
+                timbre: .liquidHarp,
+                delaySeconds: 0.0,
+                pan: -0.10
+            )
+            synth.playNote(
+                frequency: fifthHz,
+                velocity: 0.42,
+                decay: 1.15,
+                brightness: 0.96,
+                timbre: .liquidHarp,
+                delaySeconds: 0.075,
+                pan: 0.10
+            )
+        }
     }
 
     public func renameCurrentSong(_ newTitle: String) {
@@ -2591,6 +2616,10 @@ public struct StudioView: View {
                     },
                     onShareSavedEntry: { entry in
                         presentPostcardAfterSheetDismiss(makePostcardRequest(for: entry))
+                    },
+                    onOpenSavedInCreate: { entry in
+                        vm.openSavedEntryInCreate(entry, autoPlay: false)
+                        selectedTab = .create
                     }
                 )
             } label: {
@@ -2615,6 +2644,11 @@ public struct StudioView: View {
                     },
                     onShareSavedEntry: { entry in
                         presentPostcardAfterSheetDismiss(makePostcardRequest(for: entry))
+                    },
+                    onOpenSavedInShowcase: { entry in
+                        vm.switchSpace(to: .showcase)
+                        vm.openSavedEntry(entry, autoPlay: true)
+                        selectedTab = .showcase
                     }
                 )
             } label: {
@@ -2633,6 +2667,11 @@ public struct StudioView: View {
                         vm.switchSpace(to: .create)
                         vm.openSavedEntryInCreate(entry, autoPlay: false)
                         selectedTab = .create
+                    },
+                    onPlaySavedInShowcase: { entry in
+                        vm.switchSpace(to: .showcase)
+                        vm.openSavedEntry(entry, autoPlay: true)
+                        selectedTab = .showcase
                     },
                     onPlayAlongSpecimen: { spec in
                         vm.switchSpace(to: .showcase)

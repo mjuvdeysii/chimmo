@@ -104,10 +104,6 @@ public struct VinylPostcardCanvasView: View {
             palette.paper
 
             ZStack {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(palette.cartoonShadow)
-                    .offset(x: 4, y: 5)
-
                 StorybookCartoonSceneBackground(
                     palette: palette,
                     accentTint: skyColor,
@@ -115,9 +111,18 @@ public struct VinylPostcardCanvasView: View {
                     showsSkyMotifs: true
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .background {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(palette.cardSurface)
+                        .shadow(
+                            color: snapshot.isNight ? Color.black.opacity(0.30) : Color(hex: 0x7A5230).opacity(0.12),
+                            radius: 10,
+                            y: 4
+                        )
+                }
 
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
+                    .strokeBorder(palette.primaryInk.opacity(snapshot.isNight ? 0.16 : 0.10), lineWidth: 1.0)
 
                 VStack(spacing: 8) {
                     // 顶部栏（嵌「咩 × 哞」双子印章 + 调式与音色扁平无框只读标签）
@@ -204,7 +209,7 @@ public struct VinylPostcardCanvasView: View {
                         .background(
                             Capsule()
                                 .fill(palette.cardSurface)
-                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
+                                .overlay(Capsule().strokeBorder(palette.divider, lineWidth: 1.0))
                         )
                     }
 
@@ -271,15 +276,17 @@ public struct VinylPostcardCanvasView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
                         .background(
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .fill(palette.cartoonShadow)
-                                    .offset(y: 3)
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .fill(palette.cardSurface)
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
-                            }
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(palette.cardSurface)
+                                .shadow(
+                                    color: snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.10),
+                                    radius: 6,
+                                    y: 3
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .strokeBorder(palette.primaryInk.opacity(snapshot.isNight ? 0.14 : 0.08), lineWidth: 1.0)
+                                )
                         )
                     }
                     .padding(.horizontal, 24)
@@ -321,18 +328,19 @@ public struct VinylPostcardCanvasView: View {
             ctx.stroke(Path(ellipseIn: pearlRect), with: .color(col), lineWidth: 1.3)
         }
 
-        // 2. 极简扁平卡通音乐盒花环（零音槽纹路，单层暖墨描边）
+        // 2. 极简窑纸软胶音乐盒花环（零音槽纹路，柔和接触影 + 细暖墨发丝边）
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
+        let contactWash = snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09)
         ctx.fill(
-            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 4.5)),
-            with: .color(palette.cartoonShadow)
+            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 3.5)),
+            with: .color(contactWash)
         )
-        let platterFill = snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface
+        let platterFill = palette.cardSurface
         ctx.fill(
             Path(ellipseIn: platterRect),
             with: .color(platterFill)
         )
-        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.cartoonOutline), lineWidth: 2.6)
+        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.18 : 0.12)), lineWidth: 1.4)
 
         for laneIdx in 0..<8 {
             let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
@@ -423,7 +431,7 @@ public struct VinylPostcardCanvasView: View {
             let orbR: CGFloat = 8.4
             let orbRect = CGRect(x: item.pt.x - orbR, y: item.pt.y - orbR, width: orbR * 2, height: orbR * 2)
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
-            ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
+            ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.42 : 0.28)), lineWidth: 1.2)
 
             let gs = orbR * 1.1
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
@@ -456,7 +464,7 @@ public struct VinylPostcardCanvasView: View {
             Path(ellipseIn: hubRect),
             with: .color(palette.storybookButter)
         )
-        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.cartoonOutline), lineWidth: 1.8)
+        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.24 : 0.16)), lineWidth: 1.3)
 
         let amp = hubR * 0.55
         var wave = Path()
@@ -484,7 +492,7 @@ public struct VinylPostcardCanvasView: View {
         }
         starPath.closeSubpath()
         ctx.fill(starPath, with: .color(palette.nightLampGold))
-        ctx.stroke(starPath, with: .color(palette.cartoonOutline), lineWidth: 1.4)
+        ctx.stroke(starPath, with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.32 : 0.24)), lineWidth: 1.0)
 
         if snapshot.notes.isEmpty {
             for ring in PreLinguisticGuideGeometry.emptyCanvasPulseRadii(phase: 0.28, maxRadius: outerR * 0.85) {
@@ -501,15 +509,16 @@ public struct VinylPostcardCanvasView: View {
     private func drawPostcardRiver(ctx: inout GraphicsContext, size: CGSize, palette: ChimmoPalette) {
         let cardRect = CGRect(x: 12, y: 16, width: size.width - 24, height: size.height - 34)
         let cardPath = RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect)
+        let contactWash = snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09)
         ctx.fill(
-            RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect.offsetBy(dx: 0, dy: 5)),
-            with: .color(palette.cartoonShadow)
+            RoundedRectangle(cornerRadius: 24, style: .continuous).path(in: cardRect.offsetBy(dx: 0, dy: 3.5)),
+            with: .color(contactWash)
         )
         ctx.fill(
             cardPath,
-            with: .color(snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface)
+            with: .color(palette.cardSurface)
         )
-        ctx.stroke(cardPath, with: .color(palette.cartoonOutline), lineWidth: 2.6)
+        ctx.stroke(cardPath, with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.18 : 0.12)), lineWidth: 1.4)
 
         let padX: CGFloat = 28
         let usableW = max(1, size.width - padX * 2)
@@ -681,7 +690,7 @@ public struct VinylPostcardCanvasView: View {
             let orbR: CGFloat = 8.4
             let orbRect = CGRect(x: item.pt.x - orbR, y: item.pt.y - orbR, width: orbR * 2, height: orbR * 2)
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
-            ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
+            ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.42 : 0.28)), lineWidth: 1.2)
             let gs = orbR * 1.1
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
             ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(.white.opacity(0.95)), style: FillStyle(eoFill: true))
@@ -708,17 +717,18 @@ public struct VinylPostcardCanvasView: View {
             ctx.stroke(arc, with: .color(col.opacity(0.80)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
         }
 
-        // 2. 扁平卡通星盘底盘与同心星环
+        // 2. 窑纸软胶星盘底盘与同心星环
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
+        let contactWash = snapshot.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09)
         ctx.fill(
-            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 6)),
-            with: .color(palette.cartoonShadow)
+            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 3.5)),
+            with: .color(contactWash)
         )
         ctx.fill(
             Path(ellipseIn: platterRect),
-            with: .color(snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface)
+            with: .color(palette.cardSurface)
         )
-        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.cartoonOutline), lineWidth: 3.0)
+        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.18 : 0.12)), lineWidth: 1.4)
 
         for mult in [0.42, 0.72] {
             let rr = platterR * CGFloat(mult)
@@ -786,7 +796,7 @@ public struct VinylPostcardCanvasView: View {
             Path(ellipseIn: coreRect),
             with: .color(palette.storybookButter)
         )
-        ctx.stroke(Path(ellipseIn: coreRect), with: .color(palette.cartoonOutline), lineWidth: 1.8)
+        ctx.stroke(Path(ellipseIn: coreRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.24 : 0.16)), lineWidth: 1.3)
 
         let amp = coreR * 0.62
         var wave = Path()

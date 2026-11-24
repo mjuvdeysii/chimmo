@@ -12,6 +12,7 @@ public struct OrbitalStageView: View {
     public let onOpenSharePostcard: () -> Void
     public let onForkToCreate: (() -> Void)?
     public let onShareSavedEntry: ((SavedMelodyEntry) -> Void)?
+    public let onOpenSavedInCreate: ((SavedMelodyEntry) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -25,7 +26,8 @@ public struct OrbitalStageView: View {
         onOpenAbout: @escaping () -> Void,
         onOpenSharePostcard: @escaping () -> Void = {},
         onForkToCreate: (() -> Void)? = nil,
-        onShareSavedEntry: ((SavedMelodyEntry) -> Void)? = nil
+        onShareSavedEntry: ((SavedMelodyEntry) -> Void)? = nil,
+        onOpenSavedInCreate: ((SavedMelodyEntry) -> Void)? = nil
     ) {
         self.vm = vm
         self.palette = palette
@@ -33,6 +35,7 @@ public struct OrbitalStageView: View {
         self.onOpenSharePostcard = onOpenSharePostcard
         self.onForkToCreate = onForkToCreate
         self.onShareSavedEntry = onShareSavedEntry
+        self.onOpenSavedInCreate = onOpenSavedInCreate
     }
 
     public var body: some View {
@@ -105,6 +108,14 @@ public struct OrbitalStageView: View {
                     navigationTitleText: "选择曲目",
                     showsDismissButton: true,
                     onLoadSavedToBoard: { entry in
+                        showSongPicker = false
+                        if let onOpenSavedInCreate {
+                            onOpenSavedInCreate(entry)
+                        } else {
+                            vm.openSavedEntry(entry, autoPlay: true)
+                        }
+                    },
+                    onPlaySavedInShowcase: { entry in
                         showSongPicker = false
                         vm.openSavedEntry(entry, autoPlay: true)
                     },

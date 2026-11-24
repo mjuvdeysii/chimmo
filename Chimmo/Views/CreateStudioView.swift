@@ -11,6 +11,7 @@ public struct CreateStudioView: View {
     public let onOpenSharePostcard: () -> Void
     public let onOpenShowcaseSpecimen: (MelodyDocument, Bool) -> Void
     public let onShareSavedEntry: ((SavedMelodyEntry) -> Void)?
+    public let onOpenSavedInShowcase: ((SavedMelodyEntry) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -28,13 +29,15 @@ public struct CreateStudioView: View {
         palette: ChimmoPalette,
         onOpenSharePostcard: @escaping () -> Void = {},
         onOpenShowcaseSpecimen: @escaping (MelodyDocument, Bool) -> Void = { _, _ in },
-        onShareSavedEntry: ((SavedMelodyEntry) -> Void)? = nil
+        onShareSavedEntry: ((SavedMelodyEntry) -> Void)? = nil,
+        onOpenSavedInShowcase: ((SavedMelodyEntry) -> Void)? = nil
     ) {
         self.vm = vm
         self.palette = palette
         self.onOpenSharePostcard = onOpenSharePostcard
         self.onOpenShowcaseSpecimen = onOpenShowcaseSpecimen
         self.onShareSavedEntry = onShareSavedEntry
+        self.onOpenSavedInShowcase = onOpenSavedInShowcase
     }
 
     private var selectedBeatIndex: Int? {
@@ -190,6 +193,12 @@ public struct CreateStudioView: View {
                         showWorksDrawer = false
                         vm.openSavedEntryInCreate(entry, autoPlay: false)
                     },
+                    onPlaySavedInShowcase: onOpenSavedInShowcase.map { callback in
+                        { entry in
+                            showWorksDrawer = false
+                            callback(entry)
+                        }
+                    },
                     onPlayAlongSpecimen: { spec in
                         showWorksDrawer = false
                         onOpenShowcaseSpecimen(spec, true)
@@ -261,29 +270,45 @@ public struct CreateStudioView: View {
 
     private var creationTopBar: some View {
         return HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    ChimmoResonanceBead(
-                        size: 9,
-                        isNight: palette.isNight,
-                        tint: palette.celadonAccent
-                    )
-                    Text(vm.document.title)
-                        .font(.system(.headline, design: .rounded).weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
+            Button {
+                renameDraft = vm.document.title
+                showRenameAlert = true
+                AcousticHapticsEngine.shared.playScrubTick()
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        ChimmoResonanceBead(
+                            size: 9,
+                            isNight: palette.isNight,
+                            tint: palette.celadonAccent
+                        )
+                        Text(vm.document.title)
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(palette.primaryInk)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                        Image(systemName: "pencil.line")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(palette.secondaryInk)
+                    }
+
+                    Text(draftStatusText)
+                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                        .foregroundStyle(draftStatusColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
+                        .padding(.leading, 15)
                 }
-
-                Text(draftStatusText)
-                    .font(.system(.caption2, design: .rounded).weight(.semibold))
-                    .foregroundStyle(draftStatusColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                    .padding(.leading, 15)
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                    alignment: .leading
+                )
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
+            .accessibilityLabel("作品名称 \(vm.document.title)，\(draftStatusText)")
+            .accessibilityHint("轻点重命名当前创作作品")
 
             HStack(spacing: 6) {
                 if vm.canUndo {

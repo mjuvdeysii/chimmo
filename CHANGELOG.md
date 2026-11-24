@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.58.0 - 2026-11-25
+- 全仓明信片与绘本封面窑纸纯化：彻底清除 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 中最后 3 处 `0x18234E` 残色、5 处硬砖 `cartoonShadow` 及粗黑 `cartoonOutline` 外框（全部 Domain + Views 文件实现 `cartoonShadow = 0` 与旧夜色六进制零残留），离线导出 PNG 统一接入日/夜双态窑陶软胶质感；同步柔化 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 书页与空态边框。
+- 创作命名、存盘回声与曲本双动线闭环：[CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 创作顶栏升级为显式 `pencil.line` 点按重命名按钮（同时严格保留聆听区不可误改边界）；`saveCurrentToNotebook()` 在非播停状态下轻奏温润 `1-5` 窑印和声封缄回音（零例行弹窗）；[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 与 [StudioView.swift](Chimmo/Views/StudioView.swift) 联合为「我的曲本」补齐「聆听」（保护创作快照切入剧场欣赏）与「编辑」对称双动线。
+- 回归校验：新增 `testCreativeAlchemyRound51PostcardZeroShadowAndCreationSongbookLoop` 校验日/夜三态明信片离线导出、创作快照跨区隔离与双回调实例化，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.57.0 - 2026-11-25
 - 里程碑 50 主舞台与全视图纯化：彻底清零 `Chimmo/Views/` 全部 12 份视图中的 `cartoonShadow`（消除音乐盒花环旧投影砖块、`0x18234E` 残色及 `2.4pt` 粗黑描边），并将主舞台错误横幅升级为 `Capsule` + 高对比 `prominentFill` 白字胶囊。
 - 遗留夜灯六进制全面消杀：将 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift)、[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 与 [ChimmoFigureView.swift](Chimmo/Views/ChimmoFigureView.swift) 剩余旧暗色/暖金 hex 全面同步至 `ChimmoPalette` 正典体系，柔化轻哼示波与筛选空态细框，并更新 [StudioView.swift](Chimmo/Views/StudioView.swift) 四标签架构注释。

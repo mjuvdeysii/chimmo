@@ -3513,4 +3513,91 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
         XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette, initialTab: 1))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound51PostcardZeroShadowAndCreationSongbookLoop() throws {
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r51_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.switchSpace(to: .create)
+        vm.plantCreationStarter(.sunnyMeadow)
+        vm.renameCurrentSong("晨露窑钟")
+        let pulseBeforeSave = vm.lastSavedPulse
+        vm.saveCurrentToNotebook()
+
+        let savedID = try XCTUnwrap(vm.currentSavedEntryID)
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+        XCTAssertEqual(vm.lastSavedPulse, pulseBeforeSave + 1)
+        XCTAssertNil(vm.statusToast)
+
+        let savedEntry = try XCTUnwrap(vm.notebook.entries.first(where: { $0.id == savedID }))
+
+        // 1. 窑纸明信片导出（日/夜 × 三画境）均能离线非空渲染
+        for isNight in [false, true] {
+            for mode in StageVisualMode.allCases {
+                let png = VinylPostcardExporter.renderPNGData(
+                    document: savedEntry.document,
+                    shadowEnabled: true,
+                    isNight: isNight,
+                    visualMode: mode,
+                    includeJianpuStrip: true
+                )
+                XCTAssertNotNil(png)
+            }
+        }
+
+        // 2. 从创作修改草稿后切至「聆听」播放曲本作品，切回创作仍保留未保存编辑快照
+        let countBeforeMutation = vm.document.notes.count
+        vm.placeNoteOnCanvas(degree: 5, octaveOffset: 0, atTime: 2.2)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        let mutatedCount = vm.document.notes.count
+        XCTAssertGreaterThan(mutatedCount, countBeforeMutation)
+
+        vm.switchSpace(to: .showcase)
+        vm.openSavedEntry(savedEntry, autoPlay: false)
+        XCTAssertEqual(vm.document.notes.count, countBeforeMutation)
+
+        vm.switchSpace(to: .create)
+        XCTAssertEqual(vm.document.notes.count, mutatedCount)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+
+        // 3. 新版「聆听 / 编辑」双回调在日/夜与弹窗下均可安全实例化
+        XCTAssertNotNil(
+            CreateStudioView(
+                vm: vm,
+                palette: dayPalette,
+                onOpenSavedInShowcase: { _ in }
+            )
+        )
+        XCTAssertNotNil(
+            OrbitalStageView(
+                vm: vm,
+                palette: nightPalette,
+                onOpenAbout: {},
+                onOpenSharePostcard: {},
+                onOpenSavedInCreate: { _ in }
+            )
+        )
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: nightPalette,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                navigationTitleText: "曲本",
+                showsDismissButton: false,
+                onLoadSavedToBoard: { _ in },
+                onPlaySavedInShowcase: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+    }
 }
