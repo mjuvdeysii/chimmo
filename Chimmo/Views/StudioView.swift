@@ -2133,6 +2133,7 @@ public struct StudioView: View {
     @State private var selectedTab: ChimmoTab = .board
     @State private var showAbout: Bool = false
     @State private var postcardTarget: VinylPostcardRequest? = nil
+    @State private var deferredPostcardTask: Task<Void, Never>? = nil
 
     public init() {}
 
@@ -2263,15 +2264,22 @@ public struct StudioView: View {
                         visualMode: vm.visualMode
                     )
                     showAbout = false
-                    Task { @MainActor in
+                    deferredPostcardTask?.cancel()
+                    deferredPostcardTask = Task { @MainActor in
                         try? await Task.sleep(nanoseconds: 320_000_000)
-                        postcardTarget = req
+                        if !Task.isCancelled {
+                            postcardTarget = req
+                        }
                     }
                 }
             )
         }
         .sheet(item: $postcardTarget) { req in
             VinylPostcardShareSheet(palette: palette, request: req)
+        }
+        .onDisappear {
+            deferredPostcardTask?.cancel()
+            deferredPostcardTask = nil
         }
     }
 }

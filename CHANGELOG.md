@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.38.0 - 2026-11-24
+- **主舞台冠栏、角落木铜底座与黄铜游标卡尺重构（StageHardwareCaliperKinematics v0.38.0）**：
+  - 在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增纯函数运动学引擎 `StageHardwareCaliperKinematics`，解耦音符时长刻度尺、位置浮标与「咩 / 哞」舞台底座激活/静卧态光效及减弱动态效果位移；
+  - 在 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 全面升级主舞台核心硬件语法：
+    - `kilnCrownHeader` 左侧双子铭牌增加活体调色圈拉丝黄铜外圈与边饰，右侧撤销/收藏/分享/关于圆键收纳入一体化嵌入式 `ChimmoWoodResonatorTray` 黄铜键槽；
+    - `stageDuoCornerPerches` 抽取统一共用底座 `cornerPerchTile`，内置顶部黄铜微铆钉、底部蜂蜡桦木小木架与发声抬升反馈；
+    - `compactSelectionPill` 重构为「黄铜音符游标卡尺面板」（四角黄铜铆钉木托盘 + 8 格点亮时值刻尺 + 节拍序列滑标轨 + 窑釉倒角编辑按键），并将 `activeFeaturesOverlay` 对齐至统一 `ChimmoKilnPillButtonSurface`。
+- **OpenMotion Design Studio 互动绘本官网同步 v4（`docs/index.html`）**：
+  - 按 `openmotion-design` 工作流将互动绘本官网升级至 `v0.38.0` 并回写 [index.html](docs/index.html)：新增「童书声音调色木盒（4 种音色实时 SVG 示波窗、3 种调式联动 `1·3·5` 三音偶及双机械拨杆）」与「模拟黄铜 VU 声压表（9 段灯条 + 指针联动全站发声）」交互工作台，同步修正 `mouSleepArcs` 牛角避让弧线并完成桌面 PNG 渲染验收。
+- **全局对齐、生命周期修复与单元测试（Fix, Alignment & Tests）**：
+  - 为 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) `.onDisappear` 与 `.onChange(of: vm.document.id)` 补齐 `rippleWakeTask` 与 `coastTask` 取消及归零，为 [StudioView.swift](Chimmo/Views/StudioView.swift) 增加 `deferredPostcardTask` 退场取消保护；
+  - 将 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift) 中 `VinylPostcardShareSheet` 顶栏控件统一接入 `ChimmoWoodResonatorTray`、`ChimmoBrassFrameAccent` 与 `ChimmoKilnPillButtonSurface`；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound31StageHardwareCaliperAndPerchKinematics`。
+
 ## 0.37.0 - 2026-11-24
 - **童书声音调色木盒硬件重构（SoundPaletteBoxSheet & SoundPaletteBoxKinematics v0.37.0）**：
   - 将原扁平 `MoodAndSoundSheet` 全面重构为 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 暖窑象牙 × 蜂蜡桦木 × 拉丝黄铜童书调色木盒：

@@ -153,6 +153,10 @@ public struct OrbitalStageView: View {
             }
             .onChange(of: vm.document.id) { _, _ in
                 manualRiverScrollX = 0
+                coastTask?.cancel()
+                coastTask = nil
+                rippleWakeTask?.cancel()
+                rippleWakeTask = nil
                 vm.endStarVibrato()
                 wakeRippleTimeline()
             }
@@ -176,7 +180,14 @@ public struct OrbitalStageView: View {
                 ribbonMercuryLevel = 0.0
                 vm.endStarVibrato()
                 duoGreetingTask?.cancel()
+                duoGreetingTask = nil
                 stageMieTask?.cancel()
+                stageMieTask = nil
+                rippleWakeTask?.cancel()
+                rippleWakeTask = nil
+                coastTask?.cancel()
+                coastTask = nil
+                rippleWakeActive = false
             }
             .onAppear {
                 if vm.requestOpenDreamSheet {
@@ -250,8 +261,13 @@ public struct OrbitalStageView: View {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(skyColor)
-                            .frame(width: 8, height: 8)
-                            .overlay(Circle().stroke(palette.glazeHighlight, lineWidth: 0.8))
+                            .frame(width: 9, height: 9)
+                            .overlay(Circle().stroke(palette.glazeHighlight, lineWidth: 0.9))
+                            .overlay(
+                                Circle()
+                                    .strokeBorder(palette.brassHairline.opacity(0.68), lineWidth: 0.9)
+                                    .padding(-2.2)
+                            )
 
                         Text(vm.document.title)
                             .font(.system(.subheadline, design: .rounded).weight(.heavy))
@@ -265,59 +281,75 @@ public struct OrbitalStageView: View {
                 .accessibilityLabel("作品名称 \(vm.document.title)")
                 .accessibilityHint("轻点重命名当前旋律")
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 11)
+            .padding(.vertical, 5.5)
             .background(
-                ChimmoKilnPillButtonSurface(
-                    palette: palette,
-                    accent: skyColor,
-                    isActive: false,
-                    cornerRadius: 20
-                )
+                ZStack {
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: skyColor,
+                        isActive: false,
+                        cornerRadius: 20
+                    )
+                    ChimmoBrassFrameAccent(
+                        palette: palette,
+                        cornerRadius: 20,
+                        showCornerPins: false
+                    )
+                }
             )
 
             Spacer(minLength: 4)
 
-            HStack(spacing: 7) {
-                if vm.canUndo {
+            ZStack {
+                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 20)
+
+                HStack(spacing: 6) {
+                    if vm.canUndo {
+                        hardwareCrownKey(
+                            systemName: "arrow.uturn.backward",
+                            tint: palette.primaryInk,
+                            isHighlighted: false,
+                            accessibilityLabel: "撤销上一步"
+                        ) {
+                            vm.undo()
+                        }
+                    }
+
                     hardwareCrownKey(
-                        systemName: "arrow.uturn.backward",
+                        systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark",
+                        tint: vm.currentSavedEntryID != nil ? palette.homeAnchor : palette.primaryInk,
+                        isHighlighted: vm.currentSavedEntryID != nil,
+                        bounceValue: vm.lastSavedPulse,
+                        accessibilityLabel: "保存到我的曲库"
+                    ) {
+                        vm.saveCurrentToNotebook()
+                    }
+
+                    hardwareCrownKey(
+                        systemName: "square.and.arrow.up",
                         tint: palette.primaryInk,
                         isHighlighted: false,
-                        accessibilityLabel: "撤销上一步"
+                        accessibilityLabel: "分享作品图片、音频与 MIDI"
                     ) {
-                        vm.undo()
+                        onOpenSharePostcard()
+                    }
+
+                    hardwareCrownKey(
+                        systemName: "info.circle",
+                        tint: palette.primaryInk,
+                        isHighlighted: false,
+                        accessibilityLabel: "关于与隐私承诺"
+                    ) {
+                        onOpenAbout()
                     }
                 }
+                .padding(.horizontal, 4.5)
+                .padding(.vertical, 3.5)
 
-                hardwareCrownKey(
-                    systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark",
-                    tint: vm.currentSavedEntryID != nil ? palette.homeAnchor : palette.primaryInk,
-                    isHighlighted: vm.currentSavedEntryID != nil,
-                    bounceValue: vm.lastSavedPulse,
-                    accessibilityLabel: "保存到我的曲库"
-                ) {
-                    vm.saveCurrentToNotebook()
-                }
-
-                hardwareCrownKey(
-                    systemName: "square.and.arrow.up",
-                    tint: palette.primaryInk,
-                    isHighlighted: false,
-                    accessibilityLabel: "分享作品图片、音频与 MIDI"
-                ) {
-                    onOpenSharePostcard()
-                }
-
-                hardwareCrownKey(
-                    systemName: "info.circle",
-                    tint: palette.primaryInk,
-                    isHighlighted: false,
-                    accessibilityLabel: "关于与隐私承诺"
-                ) {
-                    onOpenAbout()
-                }
+                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 20, showCornerPins: false)
             }
+            .fixedSize()
         }
         .padding(.vertical, 2)
     }
@@ -584,11 +616,28 @@ public struct OrbitalStageView: View {
     private func stageDuoCornerPerches(skyColor: Color) -> some View {
         let tilt = Double((vm.latestDegree ?? 4) - 4) / 3.5
         let gaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
+        let mieActive = !vm.activeLaneIndices.isEmpty || stageMiePulse
+        let mieState = StageHardwareCaliperKinematics.cornerPerchState(
+            isAwake: true,
+            isActive: mieActive,
+            reduceMotion: reduceMotion
+        )
+        let mouActive = vm.isPlaying && vm.cradleEnabled
+        let mouState = StageHardwareCaliperKinematics.cornerPerchState(
+            isAwake: vm.cradleEnabled,
+            isActive: mouActive,
+            reduceMotion: reduceMotion
+        )
 
         return VStack {
             Spacer()
             HStack {
-                Button {
+                cornerPerchTile(
+                    accent: skyColor,
+                    state: mieState,
+                    accessibilityLabel: "小羊咩舞台守护",
+                    accessibilityHint: "轻点试听主旋律高音"
+                ) {
                     vm.auditionDuoCharacter(.mie)
                     stageMiePulse = true
                     stageMieTask?.cancel()
@@ -598,76 +647,109 @@ public struct OrbitalStageView: View {
                             stageMiePulse = false
                         }
                     }
-                } label: {
+                } avatar: {
                     TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
                         let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
                         ChimmoSheepView(
                             isNight: palette.isNight,
                             accentColor: skyColor,
-                            isSinging: !vm.activeLaneIndices.isEmpty || stageMiePulse,
+                            isSinging: mieActive,
                             tiltProgress: tilt,
                             phaseTime: phaseTime,
                             gazeBias: gaze
                         )
                         .frame(width: 30, height: 24)
-                        .offset(y: (stageMiePulse && !reduceMotion) ? -2.5 : 0)
                     }
-                    .frame(width: 42, height: 34)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(palette.cardSurface.opacity(palette.isNight ? 0.80 : 0.88))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.9)
-                            )
-                            .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
-                    )
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("小羊咩舞台守护")
-                .accessibilityHint("轻点试听主旋律高音")
 
                 Spacer()
 
-                Button {
+                cornerPerchTile(
+                    accent: vm.cradleEnabled ? palette.bassRibbon : palette.brassHairline,
+                    state: mouState,
+                    accessibilityLabel: "小牛哞舞台守护",
+                    accessibilityHint: vm.cradleEnabled ? "轻点试听低音和声" : "轻点唤醒低音和声伴奏"
+                ) {
                     if !vm.cradleEnabled {
                         vm.setChordPreset(.autoMatch)
                     }
                     vm.auditionDuoCharacter(.mou)
-                } label: {
+                } avatar: {
                     TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
                         let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
                         ChimmoCowView(
                             isNight: palette.isNight,
                             accentColor: skyColor,
                             isAwake: vm.cradleEnabled,
-                            isPlaying: vm.isPlaying && vm.cradleEnabled,
+                            isPlaying: mouActive,
                             phaseTime: phaseTime,
                             gazeBias: -0.25
                         )
                         .frame(width: 30, height: 24)
                     }
-                    .frame(width: 42, height: 34)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(palette.cardSurface.opacity(palette.isNight ? 0.80 : 0.88))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .strokeBorder(
-                                        (vm.cradleEnabled ? palette.bassRibbon : palette.brassHairline).opacity(0.35),
-                                        lineWidth: 0.9
-                                    )
-                            )
-                            .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
-                    )
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("小牛哞舞台守护")
-                .accessibilityHint(vm.cradleEnabled ? "轻点试听低音和声" : "轻点唤醒低音和声伴奏")
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
         }
+    }
+
+    private func cornerPerchTile<Avatar: View>(
+        accent: Color,
+        state: StageHardwareCaliperKinematics.CornerPerchState,
+        accessibilityLabel: String,
+        accessibilityHint: String,
+        action: @escaping () -> Void,
+        @ViewBuilder avatar: () -> Avatar
+    ) -> some View {
+        Button(action: action) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(palette.cardSurface.opacity(palette.isNight ? 0.84 : 0.90))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(accent.opacity((palette.isNight ? 0.14 : 0.08) * state.glowOpacity))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(
+                                accent.opacity(0.22 + 0.42 * state.glowOpacity),
+                                lineWidth: state.glowOpacity > 0.7 ? 1.25 : 0.9
+                            )
+                    )
+                    .shadow(color: palette.recessShadow, radius: 5, y: 2)
+
+                VStack(spacing: 0) {
+                    Circle()
+                        .fill(palette.brassHairline.opacity(state.brassPinOpacity))
+                        .frame(width: 3.5, height: 3.5)
+                        .padding(.top, 3.5)
+
+                    Spacer(minLength: 0)
+
+                    avatar()
+                        .offset(y: state.liftPoints)
+
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [palette.woodTrayTop, palette.woodTrayBottom],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .overlay(
+                            Capsule().strokeBorder(palette.brassHairline.opacity(0.42), lineWidth: 0.6)
+                        )
+                        .frame(width: 36, height: 4.5)
+                        .padding(.bottom, 3)
+                }
+            }
+            .frame(width: 48, height: 40)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityHint(accessibilityHint)
     }
 
     private var stageInteractiveCanvas: some View {
@@ -740,12 +822,15 @@ public struct OrbitalStageView: View {
                         .foregroundStyle(palette.homeAnchor)
                 }
             }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5.5)
             .background(
-                Capsule()
-                    .fill(palette.cardSurface.opacity(palette.isNight ? 0.85 : 0.92))
-                    .shadow(color: Color.black.opacity(0.06), radius: 4, y: 1)
+                ChimmoKilnPillButtonSurface(
+                    palette: palette,
+                    accent: palette.brassHairline,
+                    isActive: false,
+                    cornerRadius: 14
+                )
             )
         }
         .buttonStyle(.plain)
@@ -2479,189 +2564,261 @@ public struct OrbitalStageView: View {
         discInteractionMode = .none
     }
 
-    // MARK: - 3. Compact Zero-Overflow Visual Selection Dock
+    // MARK: - 3. Tactile Brass Beat Caliper Inspector
 
     private var compactSelectionPill: some View {
         let idx = selectedBeatIndex ?? 0
         let total = vm.document.notes.count
         let selectedBead = vm.document.notes.indices.contains(idx) ? vm.document.notes[idx] : nil
         let selectedLane = selectedBead.map { XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: $0.degree, octaveOffset: $0.octaveOffset)) }
+        let caliper = StageHardwareCaliperKinematics.caliperReading(
+            rawDuration: selectedBead?.rawDuration ?? 0.5,
+            beatIndex: idx,
+            totalCount: total,
+            tickCount: 8
+        )
+        let accentCol = selectedLane?.barColor(isNight: palette.isNight) ?? palette.homeAnchor
 
-        return VStack(spacing: 6) {
-            HStack(spacing: 6) {
-                if let lane = selectedLane {
-                    HStack(spacing: 4) {
-                        PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
-                            .frame(width: 10, height: 10)
-                        Text(lane.digitLabel)
-                            .font(.caption2.weight(.heavy).monospacedDigit())
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(lane.barColor(isNight: palette.isNight)))
-                    .foregroundStyle(.white)
-                    .accessibilityHidden(true)
+        return ZStack {
+            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
 
-                    if let bead = selectedBead {
-                        let durFrac = max(0.18, min(1.0, NightLampPhraseHelper.normalizedDurationRatio(for: bead.rawDuration)))
-                        let laneCol = lane.barColor(isNight: palette.isNight)
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(palette.shelfSurface)
-                                .frame(width: 28, height: 5)
-                            Capsule()
-                                .fill(laneCol.opacity(0.88))
-                                .frame(width: 28 * CGFloat(durFrac), height: 5)
+            VStack(spacing: 7) {
+                HStack(spacing: 6) {
+                    if let lane = selectedLane {
+                        HStack(spacing: 4) {
+                            PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
+                                .frame(width: 10, height: 10)
+                            Text(lane.digitLabel)
+                                .font(.caption2.weight(.heavy).monospacedDigit())
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4.5)
+                        .background(Capsule().fill(accentCol))
+                        .foregroundStyle(.white)
+                        .overlay(Capsule().strokeBorder(palette.glazeHighlight, lineWidth: 0.7))
+                        .accessibilityHidden(true)
+
+                        VStack(spacing: 3) {
+                            HStack(spacing: 2.5) {
+                                ForEach(0..<caliper.tickCount, id: \.self) { tickIdx in
+                                    let isLit = tickIdx < caliper.highlightedTickCount
+                                    let isEdge = tickIdx == caliper.highlightedTickCount - 1
+                                    Capsule()
+                                        .fill(isLit ? accentCol : palette.brassHairline.opacity(0.28))
+                                        .frame(width: 2.5, height: isEdge ? 11 : 7)
+                                }
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3.5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                    .fill(palette.cardSurface)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                            .strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.75)
+                                    )
+                            )
+
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(palette.brassHairline.opacity(0.28))
+                                    .frame(width: 34, height: 2)
+                                Circle()
+                                    .fill(palette.nightLampGold)
+                                    .frame(width: 4.5, height: 4.5)
+                                    .offset(x: CGFloat(caliper.positionFraction) * 29.5)
+                            }
                         }
                         .accessibilityHidden(true)
                     }
+
+                    Button {
+                        vm.stepSelectedBeat(delta: -1)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.caption.weight(.bold))
+                            .frame(width: 30, height: 26)
+                            .background(
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.homeAnchor,
+                                    isActive: false,
+                                    cornerRadius: 13
+                                )
+                            )
+                            .foregroundStyle(idx > 0 ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
+                    }
+                    .disabled(idx <= 0)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("上一拍")
+
+                    Text("\(idx + 1)/\(total)")
+                        .font(.caption2.weight(.bold).monospacedDigit())
+                        .foregroundStyle(palette.primaryInk)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3.5)
+                        .background(
+                            Capsule()
+                                .fill(palette.cardSurface)
+                                .overlay(Capsule().strokeBorder(palette.brassHairline.opacity(0.30), lineWidth: 0.75))
+                        )
+                        .frame(minWidth: 34)
+
+                    Button {
+                        vm.stepSelectedBeat(delta: 1)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
+                            .frame(width: 30, height: 26)
+                            .background(
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.homeAnchor,
+                                    isActive: false,
+                                    cornerRadius: 13
+                                )
+                            )
+                            .foregroundStyle(idx + 1 < total ? palette.homeAnchor : palette.secondaryInk.opacity(0.35))
+                    }
+                    .disabled(idx + 1 >= total)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("下一拍")
+
+                    Spacer(minLength: 4)
+
+                    Button {
+                        vm.toggleSmartPitchHints()
+                    } label: {
+                        Image(systemName: "lightbulb.fill")
+                            .font(.caption.weight(.bold))
+                            .frame(width: 32, height: 26)
+                            .background(
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.nightLampGold,
+                                    isActive: vm.smartHintActive,
+                                    cornerRadius: 13
+                                )
+                            )
+                            .foregroundStyle(vm.smartHintActive ? palette.nightLampGold : palette.nightLampGold.opacity(0.85))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("推荐音高")
+
+                    Button {
+                        vm.selectedBeadID = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption2.weight(.bold))
+                            .frame(width: 26, height: 26)
+                            .background(
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.brassHairline,
+                                    isActive: false,
+                                    cornerRadius: 13
+                                )
+                            )
+                            .foregroundStyle(palette.secondaryInk)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("取消选中当前音符")
                 }
 
-                Button {
-                    vm.stepSelectedBeat(delta: -1)
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.caption.weight(.bold))
-                        .frame(width: 30, height: 26)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(idx > 0 ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
+                HStack(spacing: 6) {
+                    caliperActionKey(
+                        systemName: "minus.circle",
+                        foreground: palette.primaryInk,
+                        accent: palette.brassHairline,
+                        isHighlighted: false,
+                        accessibilityLabel: "缩短音符"
+                    ) {
+                        vm.adjustSelectedBeadDuration(delta: -0.18)
+                    }
+
+                    caliperActionKey(
+                        systemName: "plus.circle",
+                        foreground: palette.primaryInk,
+                        accent: palette.brassHairline,
+                        isHighlighted: false,
+                        accessibilityLabel: "延长音符"
+                    ) {
+                        vm.adjustSelectedBeadDuration(delta: 0.22)
+                    }
+
+                    caliperActionKey(
+                        systemName: "arrow.left.to.line",
+                        foreground: palette.primaryInk,
+                        accent: palette.brassHairline,
+                        isHighlighted: false,
+                        accessibilityLabel: "提前一格"
+                    ) {
+                        vm.nudgeSelectedBeadTiming(delta: -0.10)
+                    }
+
+                    caliperActionKey(
+                        systemName: "arrow.right.to.line",
+                        foreground: palette.primaryInk,
+                        accent: palette.brassHairline,
+                        isHighlighted: false,
+                        accessibilityLabel: "延后一格"
+                    ) {
+                        vm.nudgeSelectedBeadTiming(delta: 0.10)
+                    }
+
+                    caliperActionKey(
+                        systemName: "plus.square.on.square",
+                        foreground: palette.bassRibbon,
+                        accent: palette.bassRibbon,
+                        isHighlighted: true,
+                        accessibilityLabel: "插入一拍"
+                    ) {
+                        vm.insertBeatAfterSelected()
+                    }
+
+                    caliperActionKey(
+                        systemName: "trash",
+                        foreground: palette.melodyTerracotta,
+                        accent: palette.melodyTerracotta,
+                        isHighlighted: true,
+                        accessibilityLabel: "删除当前音符"
+                    ) {
+                        vm.deleteSelectedBead()
+                    }
                 }
-                .disabled(idx <= 0)
-                .buttonStyle(.plain)
-                .accessibilityLabel("上一拍")
-
-                Text("\(idx + 1)/\(total)")
-                    .font(.caption2.weight(.bold).monospacedDigit())
-                    .foregroundStyle(palette.primaryInk)
-                    .frame(minWidth: 32)
-
-                Button {
-                    vm.stepSelectedBeat(delta: 1)
-                } label: {
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
-                        .frame(width: 30, height: 26)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(idx + 1 < total ? palette.homeAnchor : palette.secondaryInk.opacity(0.35))
-                }
-                .disabled(idx + 1 >= total)
-                .buttonStyle(.plain)
-                .accessibilityLabel("下一拍")
-
-                Spacer(minLength: 4)
-
-                Button {
-                    vm.toggleSmartPitchHints()
-                } label: {
-                    Image(systemName: "lightbulb.fill")
-                        .font(.caption.weight(.bold))
-                        .frame(width: 32, height: 26)
-                        .background(Capsule().fill(vm.smartHintActive ? palette.nightLampGold : palette.nightLampGold.opacity(0.18)))
-                        .foregroundStyle(vm.smartHintActive ? Color(hex: 0x0E142C) : palette.nightLampGold)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("推荐音高")
-
-                Button {
-                    vm.selectedBeadID = nil
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption2.weight(.bold))
-                        .frame(width: 26, height: 26)
-                        .background(Circle().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.secondaryInk)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("取消选中当前音符")
             }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 9)
 
-            HStack(spacing: 6) {
-                Button {
-                    vm.adjustSelectedBeadDuration(delta: -0.18)
-                } label: {
-                    Image(systemName: "minus.circle")
-                        .font(.caption.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("缩短音符")
-
-                Button {
-                    vm.adjustSelectedBeadDuration(delta: 0.22)
-                } label: {
-                    Image(systemName: "plus.circle")
-                        .font(.caption.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("延长音符")
-
-                Button {
-                    vm.nudgeSelectedBeadTiming(delta: -0.10)
-                } label: {
-                    Image(systemName: "arrow.left.to.line")
-                        .font(.caption.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("提前一格")
-
-                Button {
-                    vm.nudgeSelectedBeadTiming(delta: 0.10)
-                } label: {
-                    Image(systemName: "arrow.right.to.line")
-                        .font(.caption.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.primaryInk)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("延后一格")
-
-                Button {
-                    vm.insertBeatAfterSelected()
-                } label: {
-                    Image(systemName: "plus.square.on.square")
-                        .font(.caption.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(palette.bassRibbon.opacity(0.18)))
-                        .foregroundStyle(palette.bassRibbon)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("插入一拍")
-
-                Button {
-                    vm.deleteSelectedBead()
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.caption.weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(palette.melodyTerracotta.opacity(0.15)))
-                        .foregroundStyle(palette.melodyTerracotta)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("删除当前音符")
-            }
+            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: true)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(palette.cardSurface)
-                .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.20 : 0.06), radius: 8, y: 2)
-        )
+    }
+
+    private func caliperActionKey(
+        systemName: String,
+        foreground: Color,
+        accent: Color,
+        isHighlighted: Bool,
+        accessibilityLabel: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.caption.weight(.bold))
+                .frame(maxWidth: .infinity)
+                .frame(height: 29)
+                .background(
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: accent,
+                        isActive: isHighlighted,
+                        cornerRadius: 14
+                    )
+                )
+                .foregroundStyle(foreground)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     // MARK: - 4. Tactile 8-Key Beeswax Birch Resonator Box + 3D Kiln Xylophone (Glissando + Colorblind Glyphs)

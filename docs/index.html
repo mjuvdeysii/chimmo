@@ -20,7 +20,9 @@
       --gold: #C88F2D;
       --gold-soft: rgba(200, 143, 45, 0.18);
       --terra: #E64B58;
-      --border: rgba(200, 143, 45, 0.24);
+      --blue: #257BD4;
+      --violet: #6C4AD6;
+      --border: rgba(200, 143, 45, 0.26);
       --recess: rgba(58, 46, 30, 0.12);
       --shadow: 0 14px 34px rgba(58, 46, 30, 0.09);
     }
@@ -39,7 +41,9 @@
       --gold: #FFB94E;
       --gold-soft: rgba(255, 185, 78, 0.18);
       --terra: #FF7B82;
-      --border: rgba(229, 170, 74, 0.26);
+      --blue: #66B5FF;
+      --violet: #B39BFF;
+      --border: rgba(229, 170, 74, 0.28);
       --recess: rgba(0, 0, 0, 0.42);
       --shadow: 0 18px 42px rgba(5, 8, 22, 0.48);
     }
@@ -340,6 +344,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       font-size: 12.5px;
       font-weight: 800;
       color: var(--sub);
@@ -432,6 +437,183 @@
     }
     .vinyl-boutique-card.spinning .tonearm-svg {
       transform: rotate(20deg);
+    }
+
+    /* Sound Palette Box & Brass VU Bench (v0.37.0 - v0.38.0) */
+    .soundbox-bench {
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      border: 1.3px solid var(--brass);
+      border-radius: 26px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1.38fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+      box-shadow: var(--shadow);
+    }
+    .soundbox-card, .vu-meter-card {
+      background: var(--paper);
+      border-radius: 19px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: space-between;
+    }
+    .osc-glass {
+      border-radius: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 3px 9px var(--recess);
+      padding: 8px 10px 6px;
+      display: grid;
+      gap: 6px;
+    }
+    .triad-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .triad-pill {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: linear-gradient(180deg, var(--card), var(--shelf));
+      color: var(--ink);
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 6px 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    }
+    .triad-pill:hover { border-color: var(--brass); }
+    .triad-pill.lit {
+      border-color: var(--brass);
+      box-shadow: 0 0 0 2px var(--gold-soft);
+    }
+    .triad-pill.mood-happy { transform: translateY(-2px); }
+    .triad-pill.mood-soft { transform: translateY(1px); opacity: 0.92; }
+    .triad-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      flex: 0 0 9px;
+    }
+    .sb-controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sb-chip {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--shelf);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.16s ease, background-color 0.16s ease;
+    }
+    .sb-chip:hover { border-color: var(--brass); }
+    .sb-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #FFFFFF;
+    }
+    html[data-theme="night"] .sb-chip.active {
+      color: #0E142C;
+    }
+    .lever-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .lever-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: inset 0 2px 5px var(--recess);
+    }
+    .lever-track {
+      width: 34px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--paper);
+      border: 1px solid var(--brass);
+      position: relative;
+      flex: 0 0 34px;
+    }
+    .lever-knob {
+      position: absolute;
+      top: 1.5px;
+      left: 2px;
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      background: var(--sub);
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
+    }
+    .lever-btn[aria-pressed="true"] .lever-knob {
+      transform: translateX(17px);
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold);
+    }
+    .vu-dial-box {
+      border-radius: 15px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 3px 10px var(--recess);
+      padding: 10px 10px 6px;
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+    }
+    .vu-needle {
+      transform-origin: 120px 106px;
+      transform: rotate(-44deg);
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .vu-leds {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 4px;
+    }
+    .vu-led {
+      height: 7px;
+      border-radius: 999px;
+      background: var(--shelf);
+      border: 1px solid var(--border);
+      transition: background-color 0.14s ease, box-shadow 0.14s ease;
+    }
+    .vu-led.on {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .vu-led.on.warm {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+    .vu-led.on.hot {
+      background: var(--terra);
+      border-color: var(--terra);
+      box-shadow: 0 0 6px var(--terra);
     }
 
     .cards-grid {
@@ -527,11 +709,15 @@
       .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd {
         animation: none !important;
       }
+      .vu-needle, .lever-knob, .triad-pill {
+        transition: none !important;
+      }
     }
     @media (max-width: 740px) {
-      .duo-stage, .workshop-bench, .cards-grid { grid-template-columns: 1fr; }
+      .duo-stage, .workshop-bench, .soundbox-bench, .cards-grid { grid-template-columns: 1fr; }
       .choir-grid { gap: 3px; }
       .figure-name { font-size: 10px; }
+      .lever-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -547,7 +733,7 @@
           </svg>
         </div>
         <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.35.0</span>
+        <span class="brand-ver">v0.38.0</span>
       </div>
 
       <div class="controls">
@@ -569,7 +755,7 @@
         <div class="hero-head">
           <div>
             <h1>把脑海里的旋律唱出来、看得见</h1>
-            <p class="lead">暖窑象牙宣纸 × 蜂蜡桦木 × 拉丝黄铜高定乐器体验。点按下方窑陶声学伙伴与木琴琴块，实时试听真实音高、呼吸与和声对话。</p>
+            <p class="lead">暖窑象牙宣纸 × 蜂蜡桦木 × 拉丝黄铜高定乐器体验。点按下方窑陶声学伙伴、调色示波木盒与木琴琴块，实时试听真实音高、呼吸与和声对话。</p>
           </div>
         </div>
 
@@ -628,8 +814,8 @@
               <ellipse cx="56" cy="83" rx="31" ry="5" fill="rgba(0,0,0,0.14)"/>
               <g class="cow-body-anim">
                 <g id="mouSleepArcs" opacity="0">
-                  <path class="sleep-arc-1" d="M77 25 Q81 21 85 25" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path class="sleep-arc-2" d="M84 19 Q89 14 94 19" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round"/>
+                  <path class="sleep-arc-1" d="M88 21 Q92 17 96 21" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
+                  <path class="sleep-arc-2" d="M95 14 Q99.5 9.5 104 14" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round"/>
                 </g>
                 <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
                 <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
@@ -708,6 +894,103 @@
       </button>
     </section>
 
+    <section class="soundbox-bench" aria-label="童书声音调色木盒与黄铜 VU 示波台">
+      <div class="soundbox-card">
+        <div class="bench-label">
+          <span>童书声音调色木盒（音色 × 调式 × 三音偶）</span>
+          <span id="soundStatusText">暖阳钢琴 · 1·3·5 和鸣</span>
+        </div>
+
+        <div class="osc-glass">
+          <svg width="100%" height="78" viewBox="0 0 420 78" aria-label="声音调色实时声学示波窗">
+            <line x1="12" y1="39" x2="408" y2="39" stroke="rgba(200,143,45,0.34)" stroke-width="1.2" stroke-dasharray="5 5"/>
+            <path id="soundOscSoft" d="" fill="none" stroke="rgba(14,118,110,0.22)" stroke-width="7" stroke-linecap="round"/>
+            <path id="soundOscWave" d="" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/>
+          </svg>
+          <div class="triad-row">
+            <button id="triad1Btn" class="triad-pill lit" type="button" data-deg="1">
+              <span class="triad-dot" style="background:#C4513A"></span>
+              <span>1 陶诺 Do</span>
+            </button>
+            <button id="triad3Btn" class="triad-pill mood-happy" type="button" data-deg="3">
+              <span class="triad-dot" style="background:#CF5B68"></span>
+              <span>3 拍咯 Mi</span>
+            </button>
+            <button id="triad5Btn" class="triad-pill" type="button" data-deg="5">
+              <span class="triad-dot" style="background:#C88F2D"></span>
+              <span>5 壳咯 Sol</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sb-controls-row" id="voiceButtons" role="group" aria-label="主旋律音色选择">
+          <button class="sb-chip active" type="button" data-voice="piano">毛毡钢琴</button>
+          <button class="sb-chip" type="button" data-voice="harp">液态竖琴</button>
+          <button class="sb-chip" type="button" data-voice="cello">歌唱大提琴</button>
+          <button class="sb-chip" type="button" data-voice="celesta">晶透钢片琴</button>
+        </div>
+
+        <div class="sb-controls-row" id="moodButtons" role="group" aria-label="极光调式色彩">
+          <button class="sb-chip active" type="button" data-mood="major">暖阳大调</button>
+          <button class="sb-chip" type="button" data-mood="minor">微酸小调</button>
+          <button class="sb-chip" type="button" data-mood="pentatonic">东方五声</button>
+        </div>
+
+        <div class="lever-row">
+          <button id="leverPentaBtn" class="lever-btn" type="button" aria-pressed="true">
+            <span>五音安心拨杆</span>
+            <span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
+          </button>
+          <button id="leverBachBtn" class="lever-btn" type="button" aria-pressed="false">
+            <span>巴赫影子伴唱</span>
+            <span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="vu-meter-card">
+        <div class="bench-label">
+          <span>模拟黄铜 VU 声压表</span>
+          <span id="vuReadoutBadge">静候入画 · -48 dB</span>
+        </div>
+
+        <div class="vu-dial-box">
+          <svg width="220" height="114" viewBox="0 0 240 120" aria-hidden="true">
+            <path d="M36 106 A84 84 0 0 1 204 106" fill="none" stroke="rgba(200,143,45,0.28)" stroke-width="6" stroke-linecap="round"/>
+            <path d="M162 34 A84 84 0 0 1 204 106" fill="none" stroke="var(--terra)" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
+            <g stroke="var(--brass)" stroke-width="1.6" opacity="0.72">
+              <line x1="48" y1="74" x2="56" y2="79"/>
+              <line x1="74" y1="44" x2="80" y2="52"/>
+              <line x1="120" y1="22" x2="120" y2="32"/>
+              <line x1="166" y1="44" x2="160" y2="52"/>
+              <line x1="192" y1="74" x2="184" y2="79"/>
+            </g>
+            <g id="vuNeedle" class="vu-needle">
+              <line x1="120" y1="106" x2="120" y2="32" stroke="var(--terra)" stroke-width="2.8" stroke-linecap="round"/>
+            </g>
+            <circle cx="120" cy="106" r="8" fill="var(--brass)"/>
+            <circle cx="120" cy="106" r="3.4" fill="var(--card)"/>
+          </svg>
+
+          <div class="vu-leds" id="vuSegments" aria-hidden="true">
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+            <span class="vu-led"></span>
+          </div>
+        </div>
+
+        <button id="vuPingBtn" class="pill-btn" type="button" style="justify-content:center">
+          <span>点按敲击木鼓 · 联动校准指针</span>
+        </button>
+      </div>
+    </section>
+
     <section class="cards-grid">
       <article class="feature-card">
         <div class="feature-chip" aria-hidden="true">
@@ -716,8 +999,8 @@
             <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
           </svg>
         </div>
-        <h2>木框黄铜共鸣腔与星盘三态</h2>
-        <p>单指手摇黑胶星盘搓盘、随光束流淌的旋律山河，以及四角双子声部守护的星座星云。</p>
+        <h2>木框黄铜底座与舞台游标卡尺</h2>
+        <p>全新 v0.38.0 升级双子四角木框座与音符黄铜游标卡尺，单指手摇星盘搓盘、流淌山河与星座星云三态联动。</p>
       </article>
 
       <article class="feature-card">
@@ -726,8 +1009,8 @@
             <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>零乐理捕梦与音高实时联动</h2>
-        <p>轻敲木鼓定拍、单指画山坡即划即响且小羊同步侧耳跟唱、支持轻哼与闭眼夜灯滑音。</p>
+        <h2>童书声音调色盒与模拟 VU 电台</h2>
+        <p>内凹示波窗随音色与移调重绘波形，1·3·5 三音偶响应大/小调情绪变化，支持轻敲木鼓与无延迟轻哼捕梦。</p>
       </article>
 
       <article class="feature-card">
@@ -738,7 +1021,7 @@
           </svg>
         </div>
         <h2>28 首黑胶唱片馆与离线导出</h2>
-        <p>木纹陈列架收纳 20 首公版古典与 8 首原创曲目，纯本机离线导出明信片、WAV 与 MIDI。</p>
+        <p>木纹陈列架收纳 20 首公版古典与 8 首原创曲目，纯本机离线导出黄铜黑胶明信片、WAV 音频与标准 MIDI。</p>
       </article>
     </section>
 
@@ -771,6 +1054,33 @@
       let activeDegree = null;
       let clearTimer = null;
       let vinylTimer = null;
+      let vuTimer = null;
+
+      const vuNeedle = document.getElementById("vuNeedle");
+      const vuBadge = document.getElementById("vuReadoutBadge");
+      const vuLeds = Array.from(document.querySelectorAll("#vuSegments .vu-led"));
+
+      function pulseVUMeter(level) {
+        const lv = Math.max(0.08, Math.min(1.0, level || 0.55));
+        const curved = Math.pow(lv, 0.72);
+        const angle = -44 + curved * 88;
+        vuNeedle.style.transform = `rotate(${angle.toFixed(1)}deg)`;
+        const lit = Math.max(1, Math.min(9, Math.round(curved * 9)));
+        vuLeds.forEach((led, idx) => {
+          const isOn = idx < lit;
+          led.classList.toggle("on", isOn);
+          led.classList.toggle("warm", isOn && idx >= 5 && idx < 7);
+          led.classList.toggle("hot", isOn && idx >= 7);
+        });
+        const db = Math.round(-36 + lv * 34);
+        vuBadge.textContent = lv >= 0.74 ? `饱满泛音 · ${db} dB` : `实时声压 · ${db} dB`;
+        clearTimeout(vuTimer);
+        vuTimer = setTimeout(() => {
+          vuNeedle.style.transform = "rotate(-44deg)";
+          vuLeds.forEach((led) => led.classList.remove("on", "warm", "hot"));
+          vuBadge.textContent = "静候入画 · -48 dB";
+        }, 720);
+      }
 
       function ensureAudio() {
         const AC = window.AudioContext || window.webkitAudioContext;
@@ -781,6 +1091,7 @@
       }
 
       function playTone(freq, durationSec, delaySec, gainPeak, type) {
+        pulseVUMeter(Math.min(0.95, 0.42 + (gainPeak || 0.16) * 2.5));
         const ctx = ensureAudio();
         if (!ctx) return;
         const t0 = ctx.currentTime + (delaySec || 0);
@@ -968,6 +1279,95 @@
           vinylStatus.textContent = "轻点唱片滑出封套，黄铜唱臂自动落针试听";
         }
       });
+
+      /* Sound Palette Box Oscilloscope + Triad + Brass Toggles */
+      const voiceSpecs = {
+        piano:   { name: "毛毡钢琴", cycles: 4.0, ratio: 2.5, hw: 0.22, waveType: "triangle", color: "var(--accent)", hz: 329.63 },
+        harp:    { name: "液态竖琴", cycles: 5.0, ratio: 3.0, hw: 0.26, waveType: "sine",     color: "var(--blue)",   hz: 392.00 },
+        cello:   { name: "歌唱大提琴", cycles: 3.2, ratio: 2.0, hw: 0.30, waveType: "sawtooth", color: "var(--gold)",   hz: 261.63 },
+        celesta: { name: "晶透钢片琴", cycles: 6.2, ratio: 4.0, hw: 0.32, waveType: "sine",     color: "var(--violet)", hz: 523.25 }
+      };
+      const moodSpecs = {
+        major:      { name: "暖阳大调", thirdHz: 329.63, envScale: 1.00, plokkoClass: "mood-happy", plokkoLabel: "3 拍咯 Mi" },
+        minor:      { name: "微酸小调", thirdHz: 311.13, envScale: 0.84, plokkoClass: "mood-soft",  plokkoLabel: "3 拍咯 m3" },
+        pentatonic: { name: "东方五声", thirdHz: 329.63, envScale: 0.92, plokkoClass: "mood-happy", plokkoLabel: "3 拍咯 Mi" }
+      };
+      let currentVoice = "piano";
+      let currentMood = "major";
+      const oscWave = document.getElementById("soundOscWave");
+      const oscSoft = document.getElementById("soundOscSoft");
+      const soundStatus = document.getElementById("soundStatusText");
+      const triad3Btn = document.getElementById("triad3Btn");
+
+      function renderOscilloscope() {
+        const v = voiceSpecs[currentVoice];
+        const m = moodSpecs[currentMood];
+        const pts = [];
+        const samples = 44;
+        for (let i = 0; i < samples; i++) {
+          const u = i / (samples - 1);
+          const x = (12 + u * 396).toFixed(1);
+          const env = Math.sin(u * Math.PI) * m.envScale;
+          const ang = u * Math.PI * 2 * v.cycles;
+          const val = (Math.sin(ang) + v.hw * Math.sin(ang * v.ratio + 0.45)) / (1 + v.hw);
+          const y = (39 - env * val * 26).toFixed(1);
+          pts.push((i === 0 ? "M" : "L") + x + " " + y);
+        }
+        const d = pts.join(" ");
+        oscWave.setAttribute("d", d);
+        oscSoft.setAttribute("d", d);
+        oscWave.style.stroke = v.color;
+        soundStatus.textContent = `${v.name} · ${m.name}`;
+      }
+
+      document.querySelectorAll("#voiceButtons .sb-chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          currentVoice = btn.dataset.voice;
+          document.querySelectorAll("#voiceButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+          renderOscilloscope();
+          const v = voiceSpecs[currentVoice];
+          playTone(v.hz, 0.72, 0, 0.14, v.waveType === "sawtooth" ? "triangle" : v.waveType);
+        });
+      });
+
+      document.querySelectorAll("#moodButtons .sb-chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          currentMood = btn.dataset.mood;
+          document.querySelectorAll("#moodButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+          const m = moodSpecs[currentMood];
+          triad3Btn.classList.remove("mood-happy", "mood-soft");
+          triad3Btn.classList.add(m.plokkoClass);
+          triad3Btn.querySelectorAll("span")[1].textContent = m.plokkoLabel;
+          renderOscilloscope();
+          playTone(261.63, 0.55, 0, 0.12, "triangle");
+          playTone(m.thirdHz, 0.65, 0.08, 0.13, "triangle");
+          playTone(392.00, 0.72, 0.16, 0.12, "triangle");
+        });
+      });
+
+      [document.getElementById("triad1Btn"), triad3Btn, document.getElementById("triad5Btn")].forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const deg = Number(btn.dataset.deg);
+          document.querySelectorAll(".triad-pill").forEach((p) => p.classList.toggle("lit", p === btn));
+          const hz = deg === 1 ? 261.63 : (deg === 3 ? moodSpecs[currentMood].thirdHz : 392.00);
+          playTone(hz, 0.78, 0, 0.16, "triangle");
+        });
+      });
+
+      document.querySelectorAll("#leverPentaBtn, #leverBachBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const next = btn.getAttribute("aria-pressed") !== "true";
+          btn.setAttribute("aria-pressed", next ? "true" : "false");
+          playTone(next ? 523.25 : 392.00, 0.35, 0, 0.11, "sine");
+        });
+      });
+
+      document.getElementById("vuPingBtn").addEventListener("click", () => {
+        playTone(196.00, 0.28, 0, 0.22, "triangle");
+        pulseVUMeter(0.84);
+      });
+
+      renderOscilloscope();
 
       const mieCard = document.getElementById("mieCard");
       const mouCard = document.getElementById("mouCard");

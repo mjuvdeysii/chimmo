@@ -78,51 +78,57 @@ public struct VinylPostcardShareSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    // 浅色 / 深色（纯日月图标，对齐声音面板） + 三态画境切换 + 可选简谱数字记号
+                    // 浅色 / 深色（蜂蜡桦木托槽 + 黄铜窑瓷按键） + 三态画境切换 + 简谱开关
                     HStack(spacing: 8) {
-                        HStack(spacing: 2) {
-                            ForEach([false, true], id: \.self) { nightFlag in
-                                let active = useNightCard == nightFlag
-                                Button {
-                                    useNightCard = nightFlag
-                                    AcousticHapticsEngine.shared.playScrubTick()
-                                } label: {
-                                    Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
-                                        .font(.system(size: 12.5, weight: .bold))
-                                        .frame(width: 34, height: 28)
-                                        .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                        ZStack {
+                            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
+                            HStack(spacing: 2) {
+                                ForEach([false, true], id: \.self) { nightFlag in
+                                    let active = useNightCard == nightFlag
+                                    Button {
+                                        useNightCard = nightFlag
+                                        AcousticHapticsEngine.shared.playScrubTick()
+                                    } label: {
+                                        Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
+                                            .font(.system(size: 12.5, weight: .bold))
+                                            .frame(width: 34, height: 28)
+                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
+                                    .accessibilityValue(active ? "已选中" : "")
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(nightFlag ? "深色明信片" : "浅色明信片")
-                                .accessibilityValue(active ? "已选中" : "")
                             }
+                            .padding(3)
+                            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 16, showCornerPins: false)
                         }
                         .fixedSize()
-                        .padding(3)
-                        .background(Capsule().fill(palette.cardSurface))
 
                         Spacer(minLength: 4)
 
-                        HStack(spacing: 2) {
-                            ForEach(StageVisualMode.allCases) { mode in
-                                let active = selectedMode == mode
-                                Button {
-                                    selectedMode = mode
-                                } label: {
-                                    Image(systemName: mode.iconName)
-                                        .font(.system(size: 12.5, weight: .bold))
-                                        .frame(width: 30, height: 28)
-                                        .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                        ZStack {
+                            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 16)
+                            HStack(spacing: 2) {
+                                ForEach(StageVisualMode.allCases) { mode in
+                                    let active = selectedMode == mode
+                                    Button {
+                                        selectedMode = mode
+                                    } label: {
+                                        Image(systemName: mode.iconName)
+                                            .font(.system(size: 12.5, weight: .bold))
+                                            .frame(width: 30, height: 28)
+                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
+                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("\(mode.rawValue)样式")
                                 }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("\(mode.rawValue)样式")
                             }
+                            .padding(3)
+                            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 16, showCornerPins: false)
                         }
                         .fixedSize()
-                        .padding(3)
-                        .background(Capsule().fill(palette.cardSurface))
 
                         Button {
                             showJianpuStrip.toggle()
@@ -131,8 +137,15 @@ public struct VinylPostcardShareSheet: View {
                             Image(systemName: "textformat.123")
                                 .font(.system(size: 12.5, weight: .bold))
                                 .frame(width: 34, height: 34)
-                                .background(Capsule().fill(showJianpuStrip ? palette.homeAnchor : palette.cardSurface))
-                                .foregroundStyle(showJianpuStrip ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                .background(
+                                    ChimmoKilnPillButtonSurface(
+                                        palette: palette,
+                                        accent: palette.homeAnchor,
+                                        isActive: showJianpuStrip,
+                                        cornerRadius: 14
+                                    )
+                                )
+                                .foregroundStyle(showJianpuStrip ? palette.homeAnchor : palette.secondaryInk)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("在明信片显示简谱音符")

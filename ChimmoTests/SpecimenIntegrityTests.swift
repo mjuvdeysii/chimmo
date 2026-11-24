@@ -2248,4 +2248,72 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound31StageHardwareCaliperAndPerchKinematics() throws {
+        // 1. StageHardwareCaliperKinematics 时值标尺与异常数值防护
+        let shortCaliper = StageHardwareCaliperKinematics.caliperReading(
+            rawDuration: 0.14,
+            beatIndex: 0,
+            totalCount: 5,
+            tickCount: 8
+        )
+        let midCaliper = StageHardwareCaliperKinematics.caliperReading(
+            rawDuration: 0.55,
+            beatIndex: 2,
+            totalCount: 5,
+            tickCount: 8
+        )
+        let longCaliper = StageHardwareCaliperKinematics.caliperReading(
+            rawDuration: 1.20,
+            beatIndex: 4,
+            totalCount: 5,
+            tickCount: 8
+        )
+
+        XCTAssertEqual(shortCaliper.tickCount, 8)
+        XCTAssertEqual(shortCaliper.positionFraction, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(midCaliper.positionFraction, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(longCaliper.positionFraction, 1.0, accuracy: 0.0001)
+
+        XCTAssertGreaterThanOrEqual(shortCaliper.highlightedTickCount, 1)
+        XCTAssertLessThanOrEqual(shortCaliper.highlightedTickCount, midCaliper.highlightedTickCount)
+        XCTAssertLessThanOrEqual(midCaliper.highlightedTickCount, longCaliper.highlightedTickCount)
+        XCTAssertLessThanOrEqual(longCaliper.highlightedTickCount, 8)
+
+        let nanCaliper = StageHardwareCaliperKinematics.caliperReading(
+            rawDuration: .nan,
+            beatIndex: -4,
+            totalCount: 0,
+            tickCount: 0
+        )
+        XCTAssertTrue(nanCaliper.durationFraction.isFinite)
+        XCTAssertEqual(nanCaliper.durationFraction, 0.15, accuracy: 0.0001)
+        XCTAssertEqual(nanCaliper.positionFraction, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(nanCaliper.tickCount, 1)
+        XCTAssertEqual(nanCaliper.highlightedTickCount, 1)
+
+        let soloCaliper = StageHardwareCaliperKinematics.caliperReading(
+            rawDuration: 0.50,
+            beatIndex: 0,
+            totalCount: 1,
+            tickCount: 8
+        )
+        XCTAssertEqual(soloCaliper.positionFraction, 0.5, accuracy: 0.0001)
+
+        // 2. StageHardwareCaliperKinematics 舞台双子底座三态与减弱动态效果尊重
+        let sleeping = StageHardwareCaliperKinematics.cornerPerchState(isAwake: false, isActive: false, reduceMotion: false)
+        let standby = StageHardwareCaliperKinematics.cornerPerchState(isAwake: true, isActive: false, reduceMotion: false)
+        let singing = StageHardwareCaliperKinematics.cornerPerchState(isAwake: true, isActive: true, reduceMotion: false)
+        let reduced = StageHardwareCaliperKinematics.cornerPerchState(isAwake: true, isActive: true, reduceMotion: true)
+
+        XCTAssertLessThan(sleeping.glowOpacity, standby.glowOpacity)
+        XCTAssertLessThan(standby.glowOpacity, singing.glowOpacity)
+        XCTAssertLessThan(sleeping.brassPinOpacity, standby.brassPinOpacity)
+        XCTAssertLessThan(standby.brassPinOpacity, singing.brassPinOpacity)
+        XCTAssertEqual(sleeping.liftPoints, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(standby.liftPoints, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(singing.liftPoints, -2.5, accuracy: 0.0001)
+        XCTAssertEqual(reduced.liftPoints, 0.0, accuracy: 0.0001)
+    }
 }

@@ -1760,4 +1760,95 @@ public enum SoundPaletteBoxKinematics {
     }
 }
 
+/// 主舞台角落声学双子底座与音符黄铜游标卡尺运动学（100% 纯函数、可单测、尊重减弱动态效果）。
+public enum StageHardwareCaliperKinematics {
+    public struct CaliperReading: Equatable, Sendable {
+        public let durationFraction: Double
+        public let positionFraction: Double
+        public let tickCount: Int
+        public let highlightedTickCount: Int
+
+        public init(
+            durationFraction: Double,
+            positionFraction: Double,
+            tickCount: Int,
+            highlightedTickCount: Int
+        ) {
+            self.durationFraction = durationFraction
+            self.positionFraction = positionFraction
+            self.tickCount = tickCount
+            self.highlightedTickCount = highlightedTickCount
+        }
+    }
+
+    public struct CornerPerchState: Equatable, Sendable {
+        public let glowOpacity: Double
+        public let liftPoints: CGFloat
+        public let brassPinOpacity: Double
+
+        public init(glowOpacity: Double, liftPoints: CGFloat, brassPinOpacity: Double) {
+            self.glowOpacity = glowOpacity
+            self.liftPoints = liftPoints
+            self.brassPinOpacity = brassPinOpacity
+        }
+    }
+
+    public static func caliperReading(
+        rawDuration: Double,
+        beatIndex: Int,
+        totalCount: Int,
+        tickCount: Int = 8
+    ) -> CaliperReading {
+        let safeTicks = max(1, tickCount)
+        let normDur = rawDuration.isFinite
+            ? NightLampPhraseHelper.normalizedDurationRatio(for: rawDuration)
+            : 0.15
+        let clampedDur = max(0.15, min(1.0, normDur))
+
+        let posFrac: Double
+        if totalCount <= 0 {
+            posFrac = 0.0
+        } else if totalCount == 1 {
+            posFrac = 0.5
+        } else {
+            let clampedIndex = max(0, min(totalCount - 1, beatIndex))
+            posFrac = Double(clampedIndex) / Double(totalCount - 1)
+        }
+
+        let lit = max(1, min(safeTicks, Int((clampedDur * Double(safeTicks)).rounded())))
+        return CaliperReading(
+            durationFraction: clampedDur,
+            positionFraction: max(0.0, min(1.0, posFrac)),
+            tickCount: safeTicks,
+            highlightedTickCount: lit
+        )
+    }
+
+    public static func cornerPerchState(
+        isAwake: Bool,
+        isActive: Bool,
+        reduceMotion: Bool
+    ) -> CornerPerchState {
+        if isActive {
+            return CornerPerchState(
+                glowOpacity: 0.90,
+                liftPoints: reduceMotion ? 0.0 : -2.5,
+                brassPinOpacity: 1.0
+            )
+        }
+        if isAwake {
+            return CornerPerchState(
+                glowOpacity: 0.42,
+                liftPoints: 0.0,
+                brassPinOpacity: 0.72
+            )
+        }
+        return CornerPerchState(
+            glowOpacity: 0.18,
+            liftPoints: 0.0,
+            brassPinOpacity: 0.38
+        )
+    }
+}
+
 
