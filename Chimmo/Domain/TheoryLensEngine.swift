@@ -201,7 +201,7 @@ public struct GuidedStoryMoment: Identifiable, Codable, Equatable, Sendable {
 
     public init(id: Int, timeFraction: Double, badge: String, caption: String) {
         self.id = id
-        self.timeFraction = max(0, min(1, timeFraction))
+        self.timeFraction = timeFraction.isFinite ? max(0.0, min(1.0, timeFraction)) : 0.0
         self.badge = badge
         self.caption = caption
     }

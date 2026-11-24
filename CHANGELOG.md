@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.45.0 - 2026-11-24
+- **告别黑胶隐喻 × 全宽绘本山坡默认主舞台 × 29pt 提纯 1-3-5 AppIcon（Pure Storybook Identity Edition v0.45.0）**：
+  - **修复 CI NaN 境界校验漏洞（`TheoryLensEngine`）**：修复 `GuidedStoryMoment.init` 中 `min(1, .nan)` 返回 `1.0` 的 Swift 浮点数边界问题（改用 `timeFraction.isFinite ? max(0.0, min(1.0, timeFraction)) : 0.0`），确保 `testCreativeAlchemyRound36AppIconCanonsAndStorybookGuidedMoments` 全绿通过；
+  - **全宽绘本山坡默认主舞台 & 极简音乐盒花环（`StudioView`、`OrbitalStageEngine`、`OrbitalStageView`、`VinylPostcardExporter`）**：主舞台默认切换为全宽扁平绘本山坡乐谱模式（`StageVisualMode.flowingRiver` / 标签「山坡」），彻底消灭竖屏圆形主舞台上下留白并叠加无描边远景草坡与书签星章读谱指针；重塑圆形「花环」模式与离线明信片，彻底移除 22 道黑胶音槽、12 枚刻度、外环铜边及右上角机械唱臂，升级为轻盈 12 点钟金色书签星阅读指针；
+  - **TabBar 与「绘本曲谱书架」全面去黑胶化（`StudioView`、`MusicBoxShelfView`、`ChimmoDesignLanguage`、`AboutSheetView`）**：主底栏告别 `record.circle.fill` 与 `opticaldisc.fill`，改用 `music.quarternote.3`（「演奏」）与 `books.vertical.fill`（「曲库」）；曲库页升级为「绘本曲谱书架」（`StorybookSongbookCoverThumb` 替代滑盘唱臂封套，呈现翻开奶油乐谱页、丝带书签、硬朗偏移阴影与一键试听章）；`ChimmoCraftSymbol.vinylSeal` 重绘为开卷双页书本与四芒旋律星章；
+  - **极简提纯 29pt 1-3-5 扁平卡通应用图标（`Tools/ip/render_flat_app_icons.py`）**：剥离浅色云日射线、深色背景灰环/零散星点与双层描边山丘，改用单层无描边草坡并放大居中 1-3-5 三人组（`+13%` 比例与加粗暖墨描边），三态 1024×1024 不透明 PNG 已重新生成并逐一视觉核验；
+  - **单元测试补强**：新增 `testCreativeAlchemyRound38StorybookHillStageWreathAndSongbookShelf`，覆盖 `GuidedStoryMoment` NaN/Inf 归零、默认山坡模式、非黑胶图标契约、绘本封面运动学及三态明信片导出。
+
 ## 0.44.0 - 2026-11-24
 - **交互热区修复 × 全局视觉降噪 × 两极交互视觉契约（Quiet Flat-Cartoon Affordance Edition v0.44.0）**：
   - **两极交互视觉契约与紧凑预算引擎（`StorybookAffordanceMetrics` & `ChimmoDesignLanguage`）**：严格区分可交互贴纸按钮（暖墨实线描边 + 无模糊偏移阴影 + `StorybookTactileButtonStyle` 按下物理下沉）与静态展示容器/只读信息标签（新增零硬阴影 `StorybookQuietCardSurface` 与无描边 `StorybookQuietTag`，`ChimmoWoodResonatorTray` 与 `ChimmoEditorialPill` 降噪为轻柔背景容器）；彻底废除全站 `ChimmoBrassFrameAccent` 双层套框叠加与四角圆钉（`showCornerPins`）；

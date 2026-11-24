@@ -39,7 +39,7 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
     }
 }
 
-/// 离线扁平卡通黑胶星轨明信片、可播音频 & 标准 MIDI 分享抽屉（零 Emoji，零模糊投影，童书绘本印刷体验）
+/// 离线扁平卡通音乐盒花环与山坡绘本明信片、可播音频 & 标准 MIDI 分享抽屉（零 Emoji，零模糊投影，童书绘本印刷体验）
 public struct VinylPostcardShareSheet: View {
     public let palette: ChimmoPalette
     public let request: VinylPostcardRequest
@@ -123,7 +123,7 @@ public struct VinylPostcardShareSheet: View {
                             Spacer(minLength: 4)
 
                             HStack(spacing: 2) {
-                                ForEach(StageVisualMode.allCases) { mode in
+                                ForEach(StageVisualMode.displayOrder) { mode in
                                     let active = selectedMode == mode
                                     Button {
                                         selectedMode = mode
@@ -136,7 +136,7 @@ public struct VinylPostcardShareSheet: View {
                                             .contentShape(Capsule())
                                     }
                                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
-                                    .accessibilityLabel("\(mode.rawValue)样式")
+                                    .accessibilityLabel("\(mode.storybookLabel)样式")
                                 }
                             }
                             .padding(3)

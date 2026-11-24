@@ -71,7 +71,7 @@ public final class StageRippleBus {
 public final class StudioViewModel: ObservableObject {
     @Published public var document: MelodyDocument = SpecimenLibrary.saintSaensTheSwan
     @Published public var appearance: AppearancePreference = .auto
-    @Published public var visualMode: StageVisualMode = .orbitalDisc
+    @Published public var visualMode: StageVisualMode = .flowingRiver
     @Published public var melodyVoice: MelodyVoice = .singingCello
     @Published public var accompanimentTexture: AccompanimentTexture = .swanRipple
     @Published public var chordPreset: ChordProgressionPreset = .autoMatch
@@ -2151,7 +2151,7 @@ public struct StudioView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("演奏", systemImage: "record.circle.fill", value: ChimmoTab.board) {
+            Tab("演奏", systemImage: "music.quarternote.3", value: ChimmoTab.board) {
                 OrbitalStageView(
                     vm: vm,
                     palette: palette,
@@ -2174,7 +2174,7 @@ public struct StudioView: View {
                 )
             }
 
-            Tab("曲库", systemImage: "opticaldisc.fill", value: ChimmoTab.musicBox) {
+            Tab("曲库", systemImage: "books.vertical.fill", value: ChimmoTab.musicBox) {
                 MusicBoxShelfView(
                     palette: palette,
                     synth: vm.synth,

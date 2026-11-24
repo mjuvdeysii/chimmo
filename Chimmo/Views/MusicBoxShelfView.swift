@@ -1,7 +1,7 @@
 import QuartzCore
 import SwiftUI
 
-/// 咩哞 v0.35.0 Tab 2：「黑胶唱片工坊」—— 窑陶黑胶陈列木柜、实景斜角封套滑出唱盘与黄铜落针交互
+/// 咩哞 v0.45.0 Tab 2：「绘本曲谱书架」—— 扁平卡通精装绘本封面、轻翻奶油书页、丝带书签与主舞台直连交互
 public struct MusicBoxShelfView: View {
     public let palette: ChimmoPalette
     public let synth: FeltPianoSynth
@@ -210,9 +210,9 @@ public struct MusicBoxShelfView: View {
         return HStack(spacing: 8) {
             HStack(spacing: 4) {
                 shelfTabButton(
-                    title: "我的黑胶",
+                    title: "我的曲本",
                     countText: "\(notebook.entries.count)",
-                    icon: "opticaldisc.fill",
+                    icon: "book.closed.fill",
                     isSelected: selectedSegment == 0
                 ) {
                     withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.82)) {
@@ -222,9 +222,9 @@ public struct MusicBoxShelfView: View {
                 }
 
                 shelfTabButton(
-                    title: "名曲殿堂",
+                    title: "绘本名曲",
                     countText: "\(SpecimenLibrary.all.count)",
-                    icon: "music.quarternote.3",
+                    icon: "books.vertical.fill",
                     isSelected: selectedSegment == 1
                 ) {
                     withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.82)) {
@@ -531,7 +531,7 @@ public struct MusicBoxShelfView: View {
                     .frame(width: 34, height: 42)
                 }
 
-                Text("唱片架暂无作品")
+                Text("书架暂无曲本")
                     .font(.subheadline.weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
 
@@ -541,7 +541,7 @@ public struct MusicBoxShelfView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "plus")
                             .font(.subheadline.weight(.heavy))
-                        Text("刻录首张黑胶")
+                        Text("写下第一首曲子")
                             .font(.subheadline.weight(.heavy))
                     }
                     .padding(.horizontal, 20)
@@ -611,7 +611,7 @@ public struct MusicBoxShelfView: View {
                 .frame(width: 34, height: 42)
             }
 
-            Text("暂无匹配唱片")
+            Text("暂无匹配曲目")
                 .font(.subheadline.weight(.heavy))
                 .foregroundStyle(palette.primaryInk)
 
@@ -660,12 +660,11 @@ public struct MusicBoxShelfView: View {
         let entryVoice = entry.document.preferredVoice ?? .singingCello
 
         return HStack(spacing: 12) {
-            VinylBoutiqueSleeveThumb(
+            StorybookSongbookCoverThumb(
                 document: entry.document,
                 palette: palette,
                 isPlaying: isPlayingThis,
                 reduceMotion: reduceMotion,
-                spinStartTime: inlinePlayStart,
                 chordPreset: entry.chordPreset,
                 chordOverrides: entry.chordOverrides
             ) {
@@ -736,7 +735,7 @@ public struct MusicBoxShelfView: View {
                         onLoadSavedToBoard(entry)
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: "record.circle")
+                            Image(systemName: "music.note")
                                 .font(.caption.weight(.bold))
                             Text("上台")
                                 .font(.system(size: 11, weight: .heavy, design: .rounded))
@@ -938,7 +937,7 @@ public struct MusicBoxShelfView: View {
         playingEntryID = nil
     }
 
-    // MARK: - 2. 28 Playable Masterpiece Vinyl Boutique Sleeves
+    // MARK: - 2. 28 Playable Masterpiece Storybook Songbook Covers
 
     private var masterpieceDiscsSection: some View {
         ForEach(filteredSpecimens) { spec in
@@ -948,12 +947,11 @@ public struct MusicBoxShelfView: View {
             let modeColor = spec.scaleMode.skyAuroraColor(isNight: palette.isNight)
 
             HStack(alignment: .center, spacing: 12) {
-                VinylBoutiqueSleeveThumb(
+                StorybookSongbookCoverThumb(
                     document: spec,
                     palette: palette,
                     isPlaying: isPlayingThis,
-                    reduceMotion: reduceMotion,
-                    spinStartTime: inlinePlayStart
+                    reduceMotion: reduceMotion
                 ) {
                     if isPlayingThis {
                         stopInlinePlay()
@@ -1041,7 +1039,7 @@ public struct MusicBoxShelfView: View {
                             onEditSpecimenOnBoard(spec)
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "record.circle")
+                                Image(systemName: "music.note")
                                     .font(.caption.weight(.bold))
                                 Text("上台")
                                     .font(.system(size: 11, weight: .heavy, design: .rounded))
@@ -1104,19 +1102,18 @@ public struct MusicBoxShelfView: View {
     }
 }
 
-/// 扁平卡通绘本唱片封套 × 半露转盘 × 轻快漫画唱臂缩略图组件（零拟物渐变与模糊投影，内置曲目主角小偶）
-private struct VinylBoutiqueSleeveThumb: View {
+/// 扁平卡通绘本曲本封面 × 探出奶油乐谱书页 × 丝带书签 × 一键试听章（零黑胶、零机械唱臂，内置曲目主角小偶）
+private struct StorybookSongbookCoverThumb: View {
     let document: MelodyDocument
     let palette: ChimmoPalette
     let isPlaying: Bool
     let reduceMotion: Bool
-    let spinStartTime: Double
     var chordPreset: ChordProgressionPreset = .autoMatch
     var chordOverrides: [Int: DiatonicChord] = [:]
     let onTogglePlay: () -> Void
 
-    private var tonearmState: VinylBoutiqueKinematics.TonearmState {
-        VinylBoutiqueKinematics.state(isPlaying: isPlaying, reduceMotion: reduceMotion)
+    private var bookState: StorybookWreathAndSongbookKinematics.BookCoverState {
+        StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: isPlaying, reduceMotion: reduceMotion)
     }
 
     var body: some View {
@@ -1141,37 +1138,58 @@ private struct VinylBoutiqueSleeveThumb: View {
         Button {
             onTogglePlay()
         } label: {
-            ZStack(alignment: .leading) {
-                // 1. 滑动半露的转盘与中央播放圆帽
-                ZStack {
-                    MiniOrbitalDiscPreview(
-                        document: document,
-                        isNight: palette.isNight,
-                        isPlaying: isPlaying,
-                        reduceMotion: reduceMotion,
-                        spinStartTime: spinStartTime,
-                        chordPreset: chordPreset,
-                        chordOverrides: chordOverrides
+            ZStack(alignment: .topLeading) {
+                // 1. 探出封底的奶油乐谱书页（试听翻开露出更多乐谱横线）
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(palette.storybookButter)
+                    .overlay(
+                        VStack(alignment: .trailing, spacing: 5) {
+                            ForEach(0..<3, id: \.self) { lineIdx in
+                                Capsule()
+                                    .fill(ink.opacity(0.28))
+                                    .frame(width: lineIdx == 1 ? 14 : 18, height: 1.6)
+                            }
+                        }
+                        .padding(.trailing, 5)
+                        .padding(.vertical, 12),
+                        alignment: .trailing
                     )
-                    .frame(width: 62, height: 62)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .strokeBorder(ink.opacity(palette.isNight ? 0.68 : 0.82), lineWidth: 1.4)
+                    )
+                    .frame(width: 58, height: 64)
+                    .offset(x: bookState.pagePeekOffsetX, y: 2)
+                    .animation(
+                        reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.78),
+                        value: isPlaying
+                    )
 
-                    Circle()
-                        .fill(palette.cardSurface)
-                        .overlay(Circle().strokeBorder(ink.opacity(0.85), lineWidth: 1.5))
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(isPlaying ? palette.nightLampGold : palette.homeAnchor)
-                        )
-                }
-                .offset(x: tonearmState.discPeekOffsetX)
+                // 2. 右上方顺滑垂落的绘本丝带书签
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 2,
+                    bottomLeadingRadius: 5,
+                    bottomTrailingRadius: 5,
+                    topTrailingRadius: 2
+                )
+                .fill(isPlaying ? palette.nightLampGold : modeColor)
+                .overlay(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 2,
+                        bottomLeadingRadius: 5,
+                        bottomTrailingRadius: 5,
+                        topTrailingRadius: 2
+                    )
+                    .strokeBorder(ink.opacity(0.85), lineWidth: 1.2)
+                )
+                .frame(width: 11, height: 18 + bookState.bookmarkDropY)
+                .offset(x: 47, y: -2 + bookState.bookmarkDropY * 0.45)
                 .animation(
-                    reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.78),
+                    reduceMotion ? nil : .spring(response: 0.30, dampingFraction: 0.76),
                     value: isPlaying
                 )
 
-                // 2. 扁平卡通绘本唱片封套（硬朗无模糊投影 + 书脊色条 + 草坡边饰 + 曲目主角小偶）
+                // 3. 扁平卡通精装绘本封面（硬朗偏移投影 + 缝线书脊 + 4 幕色带 + 草坡 + 主角小偶）
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 11, style: .continuous)
                         .fill(palette.cartoonShadow)
@@ -1214,14 +1232,13 @@ private struct VinylBoutiqueSleeveThumb: View {
                             )
                     )
 
-                    // 左侧书脊色带
+                    // 左侧绘本缝线书脊
                     RoundedRectangle(cornerRadius: 2, style: .continuous)
                         .fill(modeColor)
                         .frame(width: 4.5, height: 54)
                         .padding(.leading, 4)
 
                     VStack(spacing: 5) {
-                        // 顶缘和声条码
                         HStack(spacing: 2) {
                             ForEach(spans.prefix(4)) { sp in
                                 Capsule()
@@ -1234,7 +1251,6 @@ private struct VinylBoutiqueSleeveThumb: View {
 
                         Spacer(minLength: 0)
 
-                        // 封套中央主角小偶 + 定音图腾章
                         ZStack(alignment: .bottomTrailing) {
                             ZStack {
                                 Circle()
@@ -1270,210 +1286,34 @@ private struct VinylBoutiqueSleeveThumb: View {
                         Spacer(minLength: 0)
                     }
                 }
-                .frame(width: 62, height: 66)
-
-                // 3. 右上角扁平暖墨小唱臂
-                Canvas { ctx, size in
-                    let pivot = CGPoint(x: size.width - 7, y: 8)
-                    let tip = CGPoint(x: size.width - 15, y: 31)
-                    var arm = Path()
-                    arm.move(to: pivot)
-                    arm.addLine(to: tip)
-                    ctx.stroke(
-                        arm,
-                        with: .color(ink),
-                        style: StrokeStyle(lineWidth: 2.2, lineCap: .round)
-                    )
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(x: pivot.x - 3.4, y: pivot.y - 3.4, width: 6.8, height: 6.8)),
-                        with: .color(palette.nightLampGold)
-                    )
-                    ctx.stroke(
-                        Path(ellipseIn: CGRect(x: pivot.x - 3.4, y: pivot.y - 3.4, width: 6.8, height: 6.8)),
-                        with: .color(ink),
-                        lineWidth: 1.1
-                    )
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(x: tip.x - 2.5, y: tip.y - 2.5, width: 5.0, height: 5.0)),
-                        with: .color(isPlaying ? palette.nightLampGold : palette.storybookButter)
-                    )
-                    ctx.stroke(
-                        Path(ellipseIn: CGRect(x: tip.x - 2.5, y: tip.y - 2.5, width: 5.0, height: 5.0)),
-                        with: .color(ink),
-                        lineWidth: 1.0
-                    )
-                }
-                .frame(width: 92, height: 70)
-                .rotationEffect(
-                    .degrees(tonearmState.tonearmAngleDeg),
-                    anchor: UnitPoint(x: 0.92, y: 0.11)
-                )
+                .frame(width: 64, height: 68)
+                .rotationEffect(.degrees(bookState.coverTiltDegrees), anchor: .bottomLeading)
                 .animation(
-                    reduceMotion ? nil : .spring(response: 0.36, dampingFraction: 0.74),
+                    reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.78),
                     value: isPlaying
                 )
-                .allowsHitTesting(false)
+
+                // 4. 右下角清晰试听/暂停印章按钮
+                Circle()
+                    .fill(isPlaying ? palette.nightLampGold : palette.cardSurface)
+                    .overlay(Circle().strokeBorder(ink.opacity(0.88), lineWidth: 1.5))
+                    .frame(width: 24, height: 24)
+                    .overlay(
+                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(isPlaying ? (palette.isNight ? Color(hex: 0x0E142C) : palette.primaryInk) : palette.homeAnchor)
+                    )
+                    .offset(x: 52, y: 48)
             }
-            .frame(width: 94, height: 70, alignment: .leading)
-            .contentShape(Rectangle())
+            .frame(width: 78, height: 74, alignment: .topLeading)
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
         .accessibilityLabel(isPlaying ? "停止试听 \(document.title)" : "试听 \(document.title)")
     }
 }
 
-/// 迷你陶瓷星盘唱片缩略图（试听播放时同步转动、点亮正在唱出的音符并沿盘缘推进和弦彩环与金弧进度）
-private struct MiniOrbitalDiscPreview: View {
-    let document: MelodyDocument
-    let isNight: Bool
-    let isPlaying: Bool
-    let reduceMotion: Bool
-    let spinStartTime: Double
-    private let cachedSpans: [ChordSpan]
-
-    init(
-        document: MelodyDocument,
-        isNight: Bool,
-        isPlaying: Bool,
-        reduceMotion: Bool,
-        spinStartTime: Double,
-        chordPreset: ChordProgressionPreset = .autoMatch,
-        chordOverrides: [Int: DiatonicChord] = [:]
-    ) {
-        self.document = document
-        self.isNight = isNight
-        self.isPlaying = isPlaying
-        self.reduceMotion = reduceMotion
-        self.spinStartTime = spinStartTime
-        self.cachedSpans = TheoryLensEngine.buildChordSpans(
-            document: document,
-            preset: chordPreset,
-            overrides: chordOverrides
-        )
-    }
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isPlaying)) { _ in
-            let now = CACurrentMediaTime()
-            let total = max(1.0, document.totalDuration)
-            let elapsed = isPlaying ? max(0.0, now - spinStartTime) : 0.0
-            let progress = isPlaying ? StageTransportRingMapper.loopProgress(currentTime: elapsed, totalDuration: total) : 0.0
-            let rot: Double = (isPlaying && !reduceMotion) ? -(elapsed / total) * 2.0 * Double.pi : 0.0
-
-            Canvas { ctx, size in
-                let c = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
-                let maxR = min(size.width, size.height) * 0.455
-                let discRect = CGRect(x: c.x - maxR, y: c.y - maxR, width: maxR * 2, height: maxR * 2)
-                let discBg = isNight ? Color(hex: 0x161E44) : Color(hex: 0xFFFDF7)
-                let rimCol = isNight ? Color(hex: 0xFFB94E) : Color(hex: 0x231B15)
-
-                ctx.fill(Path(ellipseIn: discRect), with: .color(discBg))
-                ctx.stroke(Path(ellipseIn: discRect), with: .color(rimCol), lineWidth: 1.8)
-
-                if !cachedSpans.isEmpty {
-                    let rimArcR = maxR - 0.8
-                    for span in cachedSpans {
-                        let a0 = -Double.pi / 2.0 + (span.startTime / total) * 2.0 * Double.pi + rot + 0.04
-                        let a1 = -Double.pi / 2.0 + (span.endTime / total) * 2.0 * Double.pi + rot - 0.04
-                        guard a1 > a0 else { continue }
-                        var arc = Path()
-                        arc.addArc(center: c, radius: rimArcR, startAngle: .radians(a0), endAngle: .radians(a1), clockwise: false)
-                        let activeSpan = isPlaying && elapsed >= span.startTime && elapsed < span.endTime
-                        let spanCol = span.chord.color(isNight: isNight)
-                        ctx.stroke(
-                            arc,
-                            with: .color(spanCol.opacity(activeSpan ? 0.90 : 0.42)),
-                            style: StrokeStyle(lineWidth: activeSpan ? 2.4 : 1.5, lineCap: .round)
-                        )
-                    }
-                }
-
-                for ring in [0.46, 0.66, 0.84] {
-                    let rr = maxR * CGFloat(ring)
-                    ctx.stroke(
-                        Path(ellipseIn: CGRect(x: c.x - rr, y: c.y - rr, width: rr * 2, height: rr * 2)),
-                        with: .color(Color.gray.opacity(0.18)),
-                        lineWidth: 0.6
-                    )
-                }
-
-                let groove = document.grooveStrength
-                let notes = document.notes.sorted { $0.displayOnset(grooveStrength: groove) < $1.displayOnset(grooveStrength: groove) }
-                let innerR = maxR * 0.30
-                let outerR = maxR * 0.88
-                var pts: [(pt: CGPoint, col: Color, laneIdx: Int, onset: Double, dur: Double)] = []
-                for bead in notes {
-                    let onset = bead.displayOnset(grooveStrength: groove)
-                    let dur = bead.displayDuration(grooveStrength: groove)
-                    let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
-                    let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
-                    let ang = -Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: onset, totalDuration: total) + rot
-                    let pt = CGPoint(x: c.x + CGFloat(cos(ang)) * r, y: c.y + CGFloat(sin(ang)) * r)
-                    let col = XylophoneLane.lane(at: laneIdx).barColor(isNight: isNight)
-                    pts.append((pt, col, laneIdx, onset, dur))
-                }
-
-                if pts.count > 1 {
-                    for i in 1..<pts.count {
-                        let a = pts[i - 1]
-                        let b = pts[i]
-                        var seg = Path()
-                        seg.move(to: a.pt)
-                        seg.addLine(to: b.pt)
-                        let style = IntervalSilkStyle.metrics(fromLane: a.laneIdx, toLane: b.laneIdx, isNight: isNight)
-                        ctx.stroke(
-                            seg,
-                            with: .color(b.col.opacity(style.coreOpacity * 0.72)),
-                            style: StrokeStyle(lineWidth: max(1.1, style.coreWidth * 0.58), lineCap: .round)
-                        )
-                    }
-                }
-
-                for item in pts {
-                    let durWin = max(0.18, item.dur * 0.85)
-                    let isActive = isPlaying && elapsed >= item.onset && elapsed < item.onset + durWin
-                    if isActive {
-                        ctx.fill(
-                            Path(ellipseIn: CGRect(x: item.pt.x - 5.2, y: item.pt.y - 5.2, width: 10.4, height: 10.4)),
-                            with: .color(Color(hex: 0xFFB84D).opacity(0.45))
-                        )
-                    }
-                    let dotR: CGFloat = isActive ? 3.3 : 2.5
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(x: item.pt.x - dotR, y: item.pt.y - dotR, width: dotR * 2, height: dotR * 2)),
-                        with: .color(isActive ? Color(hex: 0xFFB84D) : item.col)
-                    )
-                }
-
-                let hubR = maxR * 0.22
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: c.x - hubR, y: c.y - hubR, width: hubR * 2, height: hubR * 2)),
-                    with: .color(Color(hex: 0xC88F2D).opacity(0.88))
-                )
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: c.x - 1.4, y: c.y - 1.4, width: 2.8, height: 2.8)),
-                    with: .color(Color.white.opacity(0.72))
-                )
-
-                if isPlaying && progress > 0.002 {
-                    let ringR = maxR + 1.2
-                    var arc = Path()
-                    arc.addArc(
-                        center: c,
-                        radius: ringR,
-                        startAngle: .radians(-Double.pi / 2.0),
-                        endAngle: .radians(-Double.pi / 2.0 + progress * 2.0 * Double.pi),
-                        clockwise: false
-                    )
-                    ctx.stroke(arc, with: .color(Color(hex: 0xFFB84D).opacity(0.28)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
-                    ctx.stroke(arc, with: .color(Color(hex: 0xFFB84D).opacity(0.92)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
-                }
-            }
-        }
-    }
-}
-
-/// 微型旋律高低走势彩线（在曲库唱片卡片上直接看懂每首旋律的轮廓起伏，无需文字解释）。
+/// 微型旋律高低走势彩线（在绘本曲谱卡片上直接看懂每首旋律的轮廓起伏，无需文字解释）。
 private struct MiniMelodySparkline: View {
     let document: MelodyDocument
     let isNight: Bool

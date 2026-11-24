@@ -2706,4 +2706,67 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: false, visualMode: .orbitalDisc, includeJianpuStrip: true))
         XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: true, visualMode: .flowingRiver, includeJianpuStrip: true))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound38StorybookHillStageWreathAndSongbookShelf() {
+        // 1. GuidedStoryMoment NaN / Inf 安全边界修复回归校验（CI 绿灯防线）
+        let nanMoment = GuidedStoryMoment(id: 1, timeFraction: .nan, badge: "保护", caption: "测试")
+        XCTAssertEqual(nanMoment.timeFraction, 0.0, accuracy: 1e-6)
+        let infMoment = GuidedStoryMoment(id: 2, timeFraction: .infinity, badge: "无穷大", caption: "测试")
+        XCTAssertEqual(infMoment.timeFraction, 0.0, accuracy: 1e-6)
+
+        // 2. 主舞台默认展示全宽绘本山坡乐谱视图（消灭竖屏圆形留白）且彻底告别黑胶图标
+        let vm = StudioViewModel()
+        XCTAssertEqual(vm.visualMode, .flowingRiver)
+        XCTAssertEqual(StageVisualMode.displayOrder, [.flowingRiver, .orbitalDisc, .resonanceNebula])
+        XCTAssertEqual(StageVisualMode.displayOrder.map(\.storybookLabel), ["山坡", "花环", "星环"])
+        for icon in StageVisualMode.allCases.map(\.iconName) {
+            XCTAssertFalse(icon.contains("record"), "视图模式图标不应包含旧黑胶隐喻: \(icon)")
+            XCTAssertFalse(icon.contains("opticaldisc"), "视图模式图标不应包含旧光盘隐喻: \(icon)")
+        }
+
+        // 3. 绘本曲本封面翻页与丝带书签状态机（静态 / 试听 / 减弱动态效果）
+        let idleBook = StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: false, reduceMotion: false)
+        XCTAssertEqual(idleBook.pagePeekOffsetX, 3.0, accuracy: 1e-6)
+        XCTAssertEqual(idleBook.bookmarkDropY, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(idleBook.coverTiltDegrees, 0.0, accuracy: 1e-6)
+
+        let playingBook = StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: true, reduceMotion: false)
+        XCTAssertEqual(playingBook.pagePeekOffsetX, 9.0, accuracy: 1e-6)
+        XCTAssertEqual(playingBook.bookmarkDropY, 3.5, accuracy: 1e-6)
+        XCTAssertEqual(playingBook.coverTiltDegrees, -2.0, accuracy: 1e-6)
+
+        let reducedBook = StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: true, reduceMotion: true)
+        XCTAssertEqual(reducedBook.pagePeekOffsetX, 6.0, accuracy: 1e-6)
+        XCTAssertEqual(reducedBook.bookmarkDropY, 2.0, accuracy: 1e-6)
+        XCTAssertEqual(reducedBook.coverTiltDegrees, 0.0, accuracy: 1e-6)
+
+        // 4. 绘本山坡天际线采样器（含空值/NaN 回退与单调边界校验）
+        let fallbackCrest = StorybookWreathAndSongbookKinematics.hillCrestPoints(from: [.nan, .infinity])
+        XCTAssertEqual(fallbackCrest.count, 12)
+        for pt in fallbackCrest {
+            XCTAssertTrue(pt.yFraction.isFinite && (0.0...1.0).contains(pt.yFraction))
+        }
+
+        let pitchCrest = StorybookWreathAndSongbookKinematics.hillCrestPoints(from: [0.1, 0.9, 0.4], sampleCount: 12)
+        XCTAssertEqual(pitchCrest.count, 12)
+        XCTAssertEqual(pitchCrest.first?.xFraction ?? -1, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(pitchCrest.last?.xFraction ?? -1, 1.0, accuracy: 1e-6)
+        for i in 1..<pitchCrest.count {
+            XCTAssertGreaterThan(pitchCrest[i].xFraction, pitchCrest[i - 1].xFraction)
+            XCTAssertTrue(pitchCrest[i].yFraction.isFinite && (0.0...1.0).contains(pitchCrest[i].yFraction))
+        }
+
+        // 5. 花环 12 点钟书签角标角度（含 NaN 与 Reduce Motion 分支）
+        XCTAssertEqual(StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: .nan, reduceMotion: false), -Double.pi / 2.0, accuracy: 1e-6)
+        XCTAssertEqual(StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.5, reduceMotion: false), -Double.pi / 2.0, accuracy: 1e-6)
+        XCTAssertEqual(StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.5, reduceMotion: true), Double.pi / 2.0, accuracy: 1e-6)
+
+        // 6. 三态明信片（山坡 / 花环 / 星环）与去黑胶开卷星章印记渲染校验
+        for mode in StageVisualMode.displayOrder {
+            XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: false, visualMode: mode, includeJianpuStrip: true))
+            XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: true, visualMode: mode, includeJianpuStrip: true))
+        }
+        XCTAssertNotNil(ChimmoCraftMark(.vinylSeal, color: ChimmoPalette(isNight: false).nightLampGold))
+    }
 }

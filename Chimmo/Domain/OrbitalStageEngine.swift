@@ -2,8 +2,8 @@ import Foundation
 import SwiftUI
 
 /// 主画布显示模式：
-/// - `orbitalDisc`: 旋转音乐盒星盘（盘面随旋律顺滑旋转，每个发声的音符正好转到 12 点钟黄铜唱针下方绽放涟漪）
-/// - `flowingRiver`: 流动山河画卷（金色光束锚定在 28% 处，整片旋律山河随歌声平滑向左流淌，永远停在视线中心）
+/// - `orbitalDisc`: 童书音乐盒花环（花环随旋律顺滑旋转，每个发声的音符正好转到 12 点钟金色书签星下方绽放涟漪）
+/// - `flowingRiver`: 全宽绘本山坡乐谱舞台（金色书签阅读线锚定在 28% 处，整片旋律山坡随歌声平滑向左流淌）
 /// - `resonanceNebula`: 星云万花筒（8 颗星辰环绕中央利萨如谐振星核，流星顺着旋律轨迹飞舞，点按或滑过即兴共鸣）
 public enum StageVisualMode: String, CaseIterable, Identifiable, Sendable {
     case orbitalDisc = "转盘"
@@ -14,10 +14,22 @@ public enum StageVisualMode: String, CaseIterable, Identifiable, Sendable {
 
     public var iconName: String {
         switch self {
-        case .orbitalDisc: return "record.circle"
-        case .flowingRiver: return "water.waves"
+        case .orbitalDisc: return "rays"
+        case .flowingRiver: return "mountain.2.fill"
         case .resonanceNebula: return "sparkles"
         }
+    }
+
+    public var storybookLabel: String {
+        switch self {
+        case .orbitalDisc: return "花环"
+        case .flowingRiver: return "山坡"
+        case .resonanceNebula: return "星环"
+        }
+    }
+
+    public static var displayOrder: [StageVisualMode] {
+        [.flowingRiver, .orbitalDisc, .resonanceNebula]
     }
 }
 
@@ -2313,4 +2325,65 @@ public enum StorybookAffordanceMetrics {
         hasModeRail ? 52.0 : 48.0
     }
 }
+
+/// 绘本山坡主舞台、极简音乐盒花环与绘本曲谱封面运动学（100% 纯函数、可单测、尊重减弱动态效果）。
+public enum StorybookWreathAndSongbookKinematics {
+    public struct BookCoverState: Equatable, Sendable {
+        public let pagePeekOffsetX: CGFloat
+        public let bookmarkDropY: CGFloat
+        public let coverTiltDegrees: Double
+
+        public init(pagePeekOffsetX: CGFloat, bookmarkDropY: CGFloat, coverTiltDegrees: Double) {
+            self.pagePeekOffsetX = pagePeekOffsetX
+            self.bookmarkDropY = bookmarkDropY
+            self.coverTiltDegrees = coverTiltDegrees
+        }
+    }
+
+    public static func bookCoverState(isPlaying: Bool, reduceMotion: Bool) -> BookCoverState {
+        if !isPlaying {
+            return BookCoverState(pagePeekOffsetX: 3.0, bookmarkDropY: 0.0, coverTiltDegrees: 0.0)
+        }
+        if reduceMotion {
+            return BookCoverState(pagePeekOffsetX: 6.0, bookmarkDropY: 2.0, coverTiltDegrees: 0.0)
+        }
+        return BookCoverState(pagePeekOffsetX: 9.0, bookmarkDropY: 3.5, coverTiltDegrees: -2.0)
+    }
+
+    public static func hillCrestPoints(
+        from normalizedPitches: [Double],
+        sampleCount: Int = 12
+    ) -> [StorybookIllustrationLayout.HillCrestPoint] {
+        let count = max(2, min(32, sampleCount))
+        let clean = normalizedPitches.compactMap { v -> Double? in
+            guard v.isFinite else { return nil }
+            return max(0.0, min(1.0, v))
+        }
+        if clean.isEmpty {
+            return StorybookIllustrationLayout.rollingHillProfile(
+                sampleCount: count,
+                amplitude: 0.14,
+                phaseShift: 0.4
+            )
+        }
+        return (0..<count).map { idx in
+            let xFrac = Double(idx) / Double(count - 1)
+            let scaled = xFrac * Double(max(0, clean.count - 1))
+            let lowIdx = min(clean.count - 1, max(0, Int(scaled.rounded(.down))))
+            let highIdx = min(clean.count - 1, lowIdx + 1)
+            let t = scaled - Double(lowIdx)
+            let pitchBlend = clean[lowIdx] * (1.0 - t) + clean[highIdx] * t
+            let gentleWave = 0.08 * sin(xFrac * Double.pi * 2.0 + 0.4)
+            let rawY = (1.0 - pitchBlend) * 0.65 + 0.18 + gentleWave
+            let yFrac = max(0.08, min(0.92, rawY))
+            return StorybookIllustrationLayout.HillCrestPoint(xFraction: xFrac, yFraction: yFrac)
+        }
+    }
+
+    public static func wreathBookmarkAngle(forPlayheadFraction fraction: Double, reduceMotion: Bool) -> Double {
+        let clamped = fraction.isFinite ? max(0.0, min(1.0, fraction)) : 0.0
+        return reduceMotion ? (-Double.pi / 2.0 + clamped * 2.0 * Double.pi) : (-Double.pi / 2.0)
+    }
+}
+
 

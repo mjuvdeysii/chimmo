@@ -608,7 +608,7 @@ public struct OrbitalStageView: View {
 
     private var modeReliefPillSwitcher: some View {
         HStack(spacing: 2) {
-            ForEach(StageVisualMode.allCases) { mode in
+            ForEach(StageVisualMode.displayOrder) { mode in
                 let active = vm.visualMode == mode
                 Button {
                     withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.8)) {
@@ -619,7 +619,7 @@ public struct OrbitalStageView: View {
                         Image(systemName: mode.iconName)
                             .font(.system(size: 12, weight: .bold))
                         if active {
-                            Text(mode.rawValue)
+                            Text(mode.storybookLabel)
                                 .font(.system(size: 11, weight: .heavy, design: .rounded))
                                 .lineLimit(1)
                         }
@@ -637,7 +637,7 @@ public struct OrbitalStageView: View {
                     .contentShape(Capsule())
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
-                .accessibilityLabel("切换到\(mode.rawValue)视图")
+                .accessibilityLabel("切换到\(mode.storybookLabel)视图")
             }
         }
         .fixedSize()
@@ -1002,7 +1002,7 @@ public struct OrbitalStageView: View {
         .accessibilityLabel("打开声音设置调整伴唱、音区与节奏")
     }
 
-    // MARK: - 2A. Orbital Turntable Disc Rendering
+    // MARK: - 2A. Minimalist Storybook Music-Box Wreath Rendering
 
     private struct OrbitalMetrics {
         let center: CGPoint
@@ -1077,14 +1077,14 @@ public struct OrbitalStageView: View {
             }
         }
 
-        // 2. 扁平卡通绘本唱盘盘面 + 22 道同心微音槽 + 清晰暖墨描边（零渐变与立体高光）
+        // 2. 极简扁平卡通童书音乐盒花环底盘（零黑胶刻槽、零节拍外圈刻度、单层暖墨描边）
         let platterRect = CGRect(
             x: m.center.x - m.platterRadius,
             y: m.center.y - m.platterRadius,
             width: m.platterRadius * 2,
             height: m.platterRadius * 2
         )
-        let shadowRect = platterRect.offsetBy(dx: 0, dy: 6)
+        let shadowRect = platterRect.offsetBy(dx: 0, dy: 4.5)
         ctx.fill(
             Path(ellipseIn: shadowRect),
             with: .color(palette.cartoonShadow)
@@ -1096,48 +1096,17 @@ public struct OrbitalStageView: View {
             with: .color(platterFill)
         )
 
-        // 22 道细微同心声学刻槽
-        let grooveStart = m.innerRadius * 0.94
-        let grooveEnd = m.outerRadius * 1.04
-        for g in 0..<22 {
-            let gr = grooveStart + (CGFloat(g) / 21.0) * (grooveEnd - grooveStart)
-            let gRect = CGRect(x: m.center.x - gr, y: m.center.y - gr, width: gr * 2, height: gr * 2)
-            ctx.stroke(
-                Path(ellipseIn: gRect),
-                with: .color((palette.isNight ? Color.white : Color(hex: 0x6B5237)).opacity(0.06)),
-                lineWidth: 0.65
-            )
-        }
-
-        // 外缘漫画粗暖墨描边
+        // 单层外缘暖墨描边 + 轻声响起微暖金呼吸
         ctx.stroke(
             Path(ellipseIn: platterRect),
             with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.78 : 0.88)),
-            lineWidth: 2.8
+            lineWidth: 2.4
         )
-        let rimColor = palette.isNight ? Color(hex: 0x524036).opacity(0.75) : Color(hex: 0xD2B48C).opacity(0.85)
-        ctx.stroke(Path(ellipseIn: platterRect), with: .color(rimColor), lineWidth: 3.4)
         if acoustic.rmsEnergy > 0.01 {
             ctx.stroke(
                 Path(ellipseIn: platterRect),
-                with: .color(palette.nightLampGold.opacity(acoustic.rmsEnergy * 0.36)),
-                lineWidth: 3.4 + CGFloat(acoustic.rmsEnergy) * 2.5
-            )
-        }
-
-        // 12 枚随盘面同转的极简节拍刻度（让任何缓慢旋律的旋转与声学共鸣一目了然）
-        for tick in 0..<12 {
-            let ta = -Double.pi / 2.0 + Double(tick) * (Double.pi / 6.0) + discRot
-            let r0 = m.platterRadius * (tick % 3 == 0 ? 0.932 : 0.950)
-            let r1 = m.platterRadius * 0.980
-            var tp = Path()
-            tp.move(to: CGPoint(x: m.center.x + CGFloat(cos(ta)) * r0, y: m.center.y + CGFloat(sin(ta)) * r0))
-            tp.addLine(to: CGPoint(x: m.center.x + CGFloat(cos(ta)) * r1, y: m.center.y + CGFloat(sin(ta)) * r1))
-            let baseOp = tick % 3 == 0 ? 0.72 : 0.35
-            ctx.stroke(
-                tp,
-                with: .color((tick % 3 == 0 ? palette.nightLampGold : palette.secondaryInk).opacity(min(1.0, baseOp + acoustic.rmsEnergy * 0.22))),
-                style: StrokeStyle(lineWidth: tick % 3 == 0 ? 1.8 : 1.1, lineCap: .round)
+                with: .color(palette.nightLampGold.opacity(acoustic.rmsEnergy * 0.34)),
+                lineWidth: 2.8 + CGFloat(acoustic.rmsEnergy) * 2.2
             )
         }
 
@@ -1151,7 +1120,7 @@ public struct OrbitalStageView: View {
         diamond.closeSubpath()
         ctx.fill(diamond, with: .color(palette.nightLampGold.opacity(0.92)))
 
-        // 节拍律动辐射引力线（仅当开启「微稳/整齐」律动吸附时温柔显影，随转盘共转）
+        // 节拍律动辐射引力线（仅当开启「微稳/整齐」律动吸附时温柔显影，随花环共转）
         if vm.document.grooveStrength > 0.08 {
             let beatStep = GrooveAlignmentEngine.estimatedBeatStep(for: vm.document.notes)
             let spokes = GrooveAlignmentEngine.beatSpokeAngles(
@@ -1408,14 +1377,14 @@ public struct OrbitalStageView: View {
         // 6. 中央利萨如谐振花纹玻璃圆心（实时映照当前声学和谐比例与实时响度呼吸）
         drawCenterMandalaHub(ctx: &ctx, center: m.center, hubRadius: m.innerRadius * 0.76, mediaNow: mediaNow, acoustic: acoustic)
 
-        // 7. 12 点钟黄铜唱针与声波涟漪绽放 + 跟灯弹光桥
+        // 7. 12 点钟金色书签丝带阅读指针与声波涟漪绽放 + 跟灯弹光桥
         if vm.followGlowActive,
            let targetLane = targetFollowLaneIndex,
            let targetPt = followTargetPt {
             drawFollowLightBridge(ctx: &ctx, from: targetPt, toLaneIndex: targetLane, canvasSize: size)
         }
         drawRipplesOnDisc(ctx: &ctx, metrics: m, discRot: discRot, needleAngle: needleAngle, mediaNow: mediaNow)
-        drawTonearmNeedle(ctx: &ctx, metrics: m, needleAngle: needleAngle, isPlaying: vm.isPlaying, mediaNow: mediaNow)
+        drawWreathBookmarkPointer(ctx: &ctx, metrics: m, needleAngle: needleAngle, isPlaying: vm.isPlaying, mediaNow: mediaNow)
     }
 
     private var currentAcousticEnvelope: AcousticEnvelopeSnapshot {
@@ -1646,68 +1615,55 @@ public struct OrbitalStageView: View {
         }
     }
 
-    private func drawTonearmNeedle(ctx: inout GraphicsContext, metrics: OrbitalMetrics, needleAngle: Double, isPlaying: Bool, mediaNow: Double) {
-        // 物理弹簧微颤：仅主旋律音珠触及唱针 0.18 秒内激发轻微阻尼微震
+    private func drawWreathBookmarkPointer(ctx: inout GraphicsContext, metrics: OrbitalMetrics, needleAngle: Double, isPlaying: Bool, mediaNow: Double) {
+        // 绘本轻跳回应：仅主旋律音珠经过阅读丝线 0.18 秒内激发轻微阻尼弹跳
         var kickOffset: CGFloat = 0
         if !reduceMotion, let newest = vm.rippleBus.events.last(where: { !$0.isShadow }) {
             let age = mediaNow - newest.birthMediaTime
             if age >= 0 && age < 0.18 {
-                kickOffset = CGFloat(sin(age * 35.0) * exp(-age * 14.0) * 3.5)
+                kickOffset = CGFloat(sin(age * 35.0) * exp(-age * 14.0) * 3.0)
             }
         }
 
-        // 12 点钟发光读取线（把盘上每一圈的同心点连向轴心，极高清晰度）
+        // 12 点钟发光书签读取线（极简轻盈，告别厚重唱臂机械）
         let innerEdge = CGPoint(
             x: metrics.center.x + CGFloat(cos(needleAngle)) * (metrics.innerRadius * 0.85),
             y: metrics.center.y + CGFloat(sin(needleAngle)) * (metrics.innerRadius * 0.85)
         )
         let outerEdge = CGPoint(
-            x: metrics.center.x + CGFloat(cos(needleAngle)) * (metrics.outerRadius + 10),
-            y: metrics.center.y + CGFloat(sin(needleAngle)) * (metrics.outerRadius + 10)
+            x: metrics.center.x + CGFloat(cos(needleAngle)) * (metrics.outerRadius + 9) + kickOffset * 0.45,
+            y: metrics.center.y + CGFloat(sin(needleAngle)) * (metrics.outerRadius + 9)
         )
         var beam = Path()
         beam.move(to: innerEdge)
         beam.addLine(to: outerEdge)
         ctx.stroke(
             beam,
-            with: .color(palette.nightLampGold.opacity(isPlaying ? 0.92 : 0.58)),
-            style: StrokeStyle(lineWidth: isPlaying ? 3.0 : 2.0, lineCap: .round)
+            with: .color(palette.nightLampGold.opacity(isPlaying ? 0.94 : 0.62)),
+            style: StrokeStyle(lineWidth: isPlaying ? 3.0 : 2.1, lineCap: .round)
         )
 
-        // 右上方斜插而下的扁平卡通暖墨描边唱臂
-        let pivot = CGPoint(
-            x: metrics.center.x + metrics.platterRadius * 0.78,
-            y: max(24.0, metrics.center.y - metrics.platterRadius * 1.24)
+        // 顶端小书签星章（扁平暖墨描边 + 奶油金填充，轻巧标注当前聆听时刻）
+        let starCenter = CGPoint(
+            x: metrics.center.x + CGFloat(cos(needleAngle)) * (metrics.outerRadius + 13) + kickOffset * 0.6,
+            y: metrics.center.y + CGFloat(sin(needleAngle)) * (metrics.outerRadius + 13)
         )
-        let stylusHead = CGPoint(
-            x: metrics.center.x + CGFloat(cos(needleAngle)) * (metrics.outerRadius + 8) + kickOffset,
-            y: metrics.center.y + CGFloat(sin(needleAngle)) * (metrics.outerRadius + 8)
-        )
-        var arm = Path()
-        arm.move(to: pivot)
-        arm.addLine(to: stylusHead)
+        let starR: CGFloat = 7.2
+        let starInner: CGFloat = 3.1
+        var star = Path()
+        for idx in 0..<8 {
+            let ang = Double(idx) * (Double.pi / 4.0)
+            let rad = (idx % 2 == 0) ? starR : starInner
+            let pt = CGPoint(x: starCenter.x + CGFloat(cos(ang)) * rad, y: starCenter.y + CGFloat(sin(ang)) * rad)
+            if idx == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
+        }
+        star.closeSubpath()
         let inkOutline = palette.cartoonOutline.opacity(palette.isNight ? 0.85 : 0.90)
-        ctx.stroke(
-            arm,
-            with: .color(inkOutline),
-            style: StrokeStyle(lineWidth: 5.4, lineCap: .round)
-        )
-        ctx.stroke(
-            arm,
-            with: .color(palette.nightLampGold),
-            style: StrokeStyle(lineWidth: 2.6, lineCap: .round)
-        )
-
-        let pivotCap = CGRect(x: pivot.x - 6.0, y: pivot.y - 6.0, width: 12, height: 12)
-        ctx.fill(Path(ellipseIn: pivotCap), with: .color(palette.storybookButter))
-        ctx.stroke(Path(ellipseIn: pivotCap), with: .color(inkOutline), lineWidth: 1.8)
-
-        let headDot = CGRect(x: stylusHead.x - 5.0, y: stylusHead.y - 5.0, width: 10.0, height: 10.0)
-        ctx.fill(Path(ellipseIn: headDot), with: .color(palette.homeAnchor))
-        ctx.stroke(Path(ellipseIn: headDot), with: .color(inkOutline), lineWidth: 1.8)
+        ctx.fill(star, with: .color(palette.nightLampGold))
+        ctx.stroke(star, with: .color(inkOutline), lineWidth: 1.5)
     }
 
-    // MARK: - 2B. Flowing Mountain-River Canvas Rendering
+    // MARK: - 2B. Full-Width Storybook Hill Score Canvas Rendering
 
     private func riverLayout(for size: CGSize) -> (anchorX: CGFloat, pxPerSec: CGFloat, padV: CGFloat, rowH: CGFloat, totalDur: Double) {
         let totalDur = max(3.6, vm.document.totalDuration + 0.5)
@@ -1728,6 +1684,29 @@ public struct OrbitalStageView: View {
             manualScrollX: manualRiverScrollX,
             pxPerSecond: lay.pxPerSec
         )
+
+        // 0. 绘本远景柔和草坡剪影（无描边，烘托童书山坡阅读气氛）
+        let backProfile = StorybookIllustrationLayout.rollingHillProfile(
+            sampleCount: 14,
+            amplitude: 0.14,
+            phaseShift: 0.5
+        )
+        if backProfile.count > 1 {
+            let hillTop = size.height * 0.72
+            var backHill = Path()
+            backHill.move(to: CGPoint(x: 0, y: size.height))
+            for pt in backProfile {
+                let hx = CGFloat(pt.xFraction) * size.width
+                let hy = hillTop + CGFloat(pt.yFraction - 0.5) * 32.0
+                backHill.addLine(to: CGPoint(x: hx, y: hy))
+            }
+            backHill.addLine(to: CGPoint(x: size.width, y: size.height))
+            backHill.closeSubpath()
+            ctx.fill(
+                backHill,
+                with: .color(palette.storybookHillBack.opacity(palette.isNight ? 0.55 : 0.65))
+            )
+        }
 
         // 1. 4 幕和声天光色带背景 + 顶部彩色天际帽条（对齐星盘外环与下方 4 幕色带）
         for span in vm.chordSpans {
@@ -1821,7 +1800,7 @@ public struct OrbitalStageView: View {
 
             ctx.fill(
                 mountainFill,
-                with: .color(palette.homeAnchor.opacity(palette.isNight ? 0.14 : 0.11))
+                with: .color(palette.storybookHillFront.opacity(palette.isNight ? 0.52 : 0.62))
             )
             if acoustic.rmsEnergy > 0.01 {
                 ctx.stroke(
@@ -1848,20 +1827,6 @@ public struct OrbitalStageView: View {
                     extraEnergy: acoustic.rmsEnergy
                 )
             }
-
-            // 湖面倒影轮廓（让《天鹅》等抒情曲线呈现在静水湖面之上）
-            let horizonY = size.height - lay.padV * 0.8
-            var mirrorCurve = Path()
-            mirrorCurve.move(to: CGPoint(x: pts[0].pt.x, y: horizonY + (horizonY - pts[0].pt.y) * 0.18))
-            for i in 1..<pts.count {
-                let p0 = pts[i - 1].pt
-                let p1 = pts[i].pt
-                let m0y = horizonY + (horizonY - p0.y) * 0.18
-                let m1y = horizonY + (horizonY - p1.y) * 0.18
-                let midX = (p0.x + p1.x) * 0.5
-                mirrorCurve.addCurve(to: CGPoint(x: p1.x, y: m1y), control1: CGPoint(x: midX, y: m0y), control2: CGPoint(x: midX, y: m1y))
-            }
-            ctx.stroke(mirrorCurve, with: .color(palette.homeAnchor.opacity(0.14)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
         }
 
         var followTargetPt: CGPoint? = nil
@@ -1925,7 +1890,11 @@ public struct OrbitalStageView: View {
                 )
             }
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
-            ctx.stroke(Path(ellipseIn: orbRect), with: .color(.white.opacity(0.6)), lineWidth: 1.0)
+            ctx.stroke(
+                Path(ellipseIn: orbRect),
+                with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.82 : 0.90)),
+                lineWidth: 1.6
+            )
 
             let gs = orbR * 1.15
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
@@ -1960,11 +1929,26 @@ public struct OrbitalStageView: View {
             drawFollowLightBridge(ctx: &ctx, from: targetPt, toLaneIndex: targetLane, canvasSize: size)
         }
         var beam = Path()
-        beam.move(to: CGPoint(x: lay.anchorX, y: 12))
+        beam.move(to: CGPoint(x: lay.anchorX, y: 14))
         beam.addLine(to: CGPoint(x: lay.anchorX, y: size.height - 12))
         let beamHaloAlpha = (vm.isPlaying ? 0.24 : 0.12) + acoustic.shimmerEnergy * 0.26
         ctx.stroke(beam, with: .color(palette.nightLampGold.opacity(beamHaloAlpha)), lineWidth: 9.0 + CGFloat(acoustic.shimmerEnergy) * 6.0)
         ctx.stroke(beam, with: .color(palette.nightLampGold.opacity(vm.isPlaying ? 0.94 : 0.52)), lineWidth: 2.6)
+
+        // 书签星章帽标（与花环模式 12 点钟书签星相呼应）
+        let capCenter = CGPoint(x: lay.anchorX, y: 14.0)
+        let starOuter: CGFloat = 6.8
+        let starInner: CGFloat = 2.9
+        var starCap = Path()
+        for idx in 0..<8 {
+            let ang = Double(idx) * (Double.pi / 4.0)
+            let rad = (idx % 2 == 0) ? starOuter : starInner
+            let pt = CGPoint(x: capCenter.x + CGFloat(cos(ang)) * rad, y: capCenter.y + CGFloat(sin(ang)) * rad)
+            if idx == 0 { starCap.move(to: pt) } else { starCap.addLine(to: pt) }
+        }
+        starCap.closeSubpath()
+        ctx.fill(starCap, with: .color(palette.nightLampGold))
+        ctx.stroke(starCap, with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.82 : 0.90)), lineWidth: 1.5)
 
         for ev in vm.rippleBus.activeEvents(at: mediaNow) {
             let age = mediaNow - ev.birthMediaTime
@@ -2413,7 +2397,7 @@ public struct OrbitalStageView: View {
             let instVel = dtTime / wallDt
             lastScrubVelocity = lastScrubVelocity * 0.55 + instVel * 0.45
 
-            // 逆时针拨动唱盘 = 把后面的音符拉向 12 点钟唱针（时间向前推进）
+            // 逆时针拨动花环 = 把后面的音符拉向 12 点钟书签星（时间向前推进）
             scrubAnchorTime += dtTime
             if scrubAnchorTime < 0 { scrubAnchorTime += total }
             scrubAnchorTime = scrubAnchorTime.truncatingRemainder(dividingBy: total)
@@ -2483,7 +2467,7 @@ public struct OrbitalStageView: View {
         discInteractionMode = .none
     }
 
-    /// 真实黑胶手推惯性滑行（松手后按指数阻尼滑行约 0.35 秒，滑过音珠自然响起）。
+    /// 手拨花环的柔和阻尼惯性滑行（松手后按指数阻尼滑行约 0.35 秒，滑过音珠自然响起）。
     private func startVinylMomentumCoast(initialVelocity: Double, fromTime: Double, totalDuration: Double) {
         coastTask?.cancel()
         wakeRippleTimeline()

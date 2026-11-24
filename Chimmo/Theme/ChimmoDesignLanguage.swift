@@ -12,7 +12,7 @@ public enum ChimmoCraftSymbol: String, CaseIterable, Sendable {
     case seedBloom          // 大师三颗火种同心花
     case followBeacon       // 亮灯跟弹定锚星标
     case atmosphereHorizon  // 五色天光借景地平线
-    case vinylSeal          // 黑胶声纹明信片唱片印章
+    case vinylSeal          // 绘本曲谱开卷星章印记
     case drumPulse          // 敲拍节奏木鼓双圈
     case humWave            // 轻哼声波对称波纹
     case appearanceDial     // 光暗昼夜半月平衡仪
@@ -180,10 +180,48 @@ public struct ChimmoCraftMark: View {
                 ctx.stroke(arc, with: .color(accent), style: stroke)
 
             case .vinylSeal:
-                // 黑胶音槽唱片与斜插黄铜唱臂
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - s * 0.39, y: cy - s * 0.39, width: s * 0.78, height: s * 0.78)), with: .color(color), style: stroke)
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - s * 0.19, y: cy - s * 0.19, width: s * 0.38, height: s * 0.38)), with: .color(accent), style: StrokeStyle(lineWidth: lw * 0.75))
-                ctx.fill(Path(ellipseIn: CGRect(x: cx - s * 0.06, y: cy - s * 0.06, width: s * 0.12, height: s * 0.12)), with: .color(color))
+                // 扁平绘本开卷双页书本与上方旋律四芒星章
+                var leftPage = Path()
+                leftPage.move(to: CGPoint(x: cx, y: cy + s * 0.24))
+                leftPage.addQuadCurve(
+                    to: CGPoint(x: cx - s * 0.38, y: cy + s * 0.20),
+                    control: CGPoint(x: cx - s * 0.18, y: cy + s * 0.12)
+                )
+                leftPage.addLine(to: CGPoint(x: cx - s * 0.38, y: cy - s * 0.10))
+                leftPage.addQuadCurve(
+                    to: CGPoint(x: cx, y: cy - s * 0.04),
+                    control: CGPoint(x: cx - s * 0.18, y: cy - s * 0.16)
+                )
+                leftPage.closeSubpath()
+                ctx.stroke(leftPage, with: .color(color), style: stroke)
+
+                var rightPage = Path()
+                rightPage.move(to: CGPoint(x: cx, y: cy + s * 0.24))
+                rightPage.addQuadCurve(
+                    to: CGPoint(x: cx + s * 0.38, y: cy + s * 0.20),
+                    control: CGPoint(x: cx + s * 0.18, y: cy + s * 0.12)
+                )
+                rightPage.addLine(to: CGPoint(x: cx + s * 0.38, y: cy - s * 0.10))
+                rightPage.addQuadCurve(
+                    to: CGPoint(x: cx, y: cy - s * 0.04),
+                    control: CGPoint(x: cx + s * 0.18, y: cy - s * 0.16)
+                )
+                rightPage.closeSubpath()
+                ctx.stroke(rightPage, with: .color(color), style: stroke)
+
+                // 上方四芒旋律星章
+                let sc = CGPoint(x: cx, y: cy - s * 0.26)
+                let outerR = s * 0.15
+                let innerR = s * 0.06
+                var star = Path()
+                for idx in 0..<8 {
+                    let ang = Double(idx) * (Double.pi / 4.0)
+                    let rad = (idx % 2 == 0) ? outerR : innerR
+                    let pt = CGPoint(x: sc.x + CGFloat(cos(ang)) * rad, y: sc.y + CGFloat(sin(ang)) * rad)
+                    if idx == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
+                }
+                star.closeSubpath()
+                ctx.fill(star, with: .color(accent))
 
             case .drumPulse:
                 // 同心敲拍木鼓圆环

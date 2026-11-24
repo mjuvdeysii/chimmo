@@ -15,7 +15,7 @@ public struct PostcardJianpuToken: Sendable, Equatable {
     }
 }
 
-/// 黑胶星轨明信片数据快照（100% 离线、纯值传递，支持任意作品或历史唱片生成高分辨率纪念卡片）
+/// 离线扁平卡通童书明信片数据快照（100% 离线、纯值传递，支持任意作品生成高分辨率纪念卡片）
 public struct VinylPostcardSnapshot: Sendable {
     public let title: String
     public let scaleMode: ScaleMode
@@ -88,7 +88,7 @@ public struct VinylPostcardSnapshot: Sendable {
     }
 }
 
-/// 扁平卡通童书风格离线黑胶星轨明信片静态视图（540×680 pt，在 `ImageRenderer` 下 2x 导出为 `1080×1360` 高清 PNG，零渐变零模糊）
+/// 扁平卡通童书风格离线音乐明信片静态视图（540×680 pt，在 `ImageRenderer` 下 2x 导出为 `1080×1360` 高清 PNG，零渐变零模糊）
 public struct VinylPostcardCanvasView: View {
     public let snapshot: VinylPostcardSnapshot
 
@@ -165,7 +165,7 @@ public struct VinylPostcardCanvasView: View {
                         .frame(height: 1)
                         .padding(.horizontal, 26)
 
-                    // 中央画境视觉（随当前主舞台模式切换：转盘 / 曲线 / 星环）
+                    // 中央画境视觉（随当前主舞台模式切换：花环 / 山坡 / 星环）
                     Canvas { ctx, size in
                         switch snapshot.visualMode {
                         case .orbitalDisc:
@@ -321,10 +321,10 @@ public struct VinylPostcardCanvasView: View {
             ctx.stroke(Path(ellipseIn: pearlRect), with: .color(col), lineWidth: 1.3)
         }
 
-        // 2. 扁平卡通绘本唱盘 + 微音槽 + 暖墨描边
+        // 2. 极简扁平卡通音乐盒花环（零音槽纹路，单层暖墨描边）
         let platterRect = CGRect(x: center.x - platterR, y: center.y - platterR, width: platterR * 2, height: platterR * 2)
         ctx.fill(
-            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 6)),
+            Path(ellipseIn: platterRect.offsetBy(dx: 0, dy: 4.5)),
             with: .color(palette.cartoonShadow)
         )
         let platterFill = snapshot.isNight ? Color(hex: 0x18234E) : palette.cardSurface
@@ -332,15 +332,7 @@ public struct VinylPostcardCanvasView: View {
             Path(ellipseIn: platterRect),
             with: .color(platterFill)
         )
-        for g in 0..<18 {
-            let gr = innerR * 0.94 + (CGFloat(g) / 17.0) * (outerR * 1.04 - innerR * 0.94)
-            ctx.stroke(
-                Path(ellipseIn: CGRect(x: center.x - gr, y: center.y - gr, width: gr * 2, height: gr * 2)),
-                with: .color((snapshot.isNight ? Color.white : Color(hex: 0x6B5237)).opacity(0.06)),
-                lineWidth: 0.7
-            )
-        }
-        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.cartoonOutline), lineWidth: 3.0)
+        ctx.stroke(Path(ellipseIn: platterRect), with: .color(palette.cartoonOutline), lineWidth: 2.6)
 
         for laneIdx in 0..<8 {
             let r = OrbitalGeometry.orbitRadius(laneIndex: laneIdx, innerRadius: innerR, outerRadius: outerR)
@@ -431,7 +423,7 @@ public struct VinylPostcardCanvasView: View {
             let orbR: CGFloat = 8.4
             let orbRect = CGRect(x: item.pt.x - orbR, y: item.pt.y - orbR, width: orbR * 2, height: orbR * 2)
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
-            ctx.stroke(Path(ellipseIn: orbRect), with: .color(.white.opacity(0.6)), lineWidth: 0.9)
+            ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
 
             let gs = orbR * 1.1
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
@@ -479,6 +471,21 @@ public struct VinylPostcardCanvasView: View {
         let pinRect = CGRect(x: center.x - 4.0, y: center.y - 4.0, width: 8.0, height: 8.0)
         ctx.fill(Path(ellipseIn: pinRect), with: .color(palette.nightLampGold))
 
+        // 12 点钟金色书签星章
+        let starC = CGPoint(x: center.x, y: center.y - outerR - 11.0)
+        let starOuter: CGFloat = 6.5
+        let starInner: CGFloat = 2.8
+        var starPath = Path()
+        for idx in 0..<8 {
+            let ang = Double(idx) * (Double.pi / 4.0)
+            let rad = (idx % 2 == 0) ? starOuter : starInner
+            let pt = CGPoint(x: starC.x + CGFloat(cos(ang)) * rad, y: starC.y + CGFloat(sin(ang)) * rad)
+            if idx == 0 { starPath.move(to: pt) } else { starPath.addLine(to: pt) }
+        }
+        starPath.closeSubpath()
+        ctx.fill(starPath, with: .color(palette.nightLampGold))
+        ctx.stroke(starPath, with: .color(palette.cartoonOutline), lineWidth: 1.4)
+
         if snapshot.notes.isEmpty {
             for ring in PreLinguisticGuideGeometry.emptyCanvasPulseRadii(phase: 0.28, maxRadius: outerR * 0.85) {
                 let rRect = CGRect(x: center.x - ring.radius, y: center.y - ring.radius, width: ring.radius * 2, height: ring.radius * 2)
@@ -510,6 +517,29 @@ public struct VinylPostcardCanvasView: View {
         let bottomY: CGFloat = size.height - 48
         let usableH = max(1, bottomY - topY)
         let total = snapshot.totalDuration
+
+        // 0. 绘本远景柔和山坡剪影（无描边，烘托童书明信片山坡舞台）
+        let backHillProfile = StorybookIllustrationLayout.rollingHillProfile(
+            sampleCount: 12,
+            amplitude: 0.14,
+            phaseShift: 0.5
+        )
+        if backHillProfile.count > 1 {
+            let hillTop = bottomY - usableH * 0.28
+            var backHill = Path()
+            backHill.move(to: CGPoint(x: padX - 8, y: bottomY + 12))
+            for pt in backHillProfile {
+                let hx = (padX - 8) + CGFloat(pt.xFraction) * (usableW + 16)
+                let hy = hillTop + CGFloat(pt.yFraction - 0.5) * 26.0
+                backHill.addLine(to: CGPoint(x: hx, y: hy))
+            }
+            backHill.addLine(to: CGPoint(x: size.width - padX + 8, y: bottomY + 12))
+            backHill.closeSubpath()
+            ctx.fill(
+                backHill,
+                with: .color(palette.storybookHillBack.opacity(snapshot.isNight ? 0.50 : 0.62))
+            )
+        }
 
         // 1. 和声天光色带
         for span in snapshot.chordSpans {
@@ -598,7 +628,7 @@ public struct VinylPostcardCanvasView: View {
             area.closeSubpath()
             ctx.fill(
                 area,
-                with: .color(palette.homeAnchor.opacity(snapshot.isNight ? 0.16 : 0.12))
+                with: .color(palette.storybookHillFront.opacity(snapshot.isNight ? 0.50 : 0.62))
             )
 
             // 扁平卡通音程色线
@@ -651,7 +681,7 @@ public struct VinylPostcardCanvasView: View {
             let orbR: CGFloat = 8.4
             let orbRect = CGRect(x: item.pt.x - orbR, y: item.pt.y - orbR, width: orbR * 2, height: orbR * 2)
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
-            ctx.stroke(Path(ellipseIn: orbRect), with: .color(.white.opacity(0.62)), lineWidth: 0.9)
+            ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.cartoonOutline), lineWidth: 1.5)
             let gs = orbR * 1.1
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
             ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(.white.opacity(0.95)), style: FillStyle(eoFill: true))
@@ -781,7 +811,7 @@ public struct VinylPostcardCanvasView: View {
     }
 }
 
-/// 纯离线高清黑胶星轨明信片 PNG 生成与导出器
+/// 纯离线高清绘本音乐明信片 PNG 生成与导出器
 @MainActor
 public enum VinylPostcardExporter {
 
