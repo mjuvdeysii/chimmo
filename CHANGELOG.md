@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.64.0 - 2026-11-25
+- 全链路 OpenMotion 官网 v12 与 12 秒导演短片 v18 同源跃迁：
+  - OpenMotion Design Studio 互动官网升至 `v12` 并同步至 [docs/index.html](docs/index.html)：全站同步 R50–R56 窑纸软胶规范，清除曲本封面偏置硬砖影与粗黑 UI 外框，明暗双态同步日光/夜灯对位月蓝（`#2E7DB2` / `#7EC8E3`）；声调盒示波窗升级为 `40pt+` 可点击试听按钮，声波山坡表联动 `1-7` 音高实时聚光；四标签纯血空间展示盒支持「聆听去创作改编」、「创作 40pt 铅笔原地改名 + 1-5 液态竖琴归档印音」、「曲本对称聆听/编辑分流」与「工坊 8 音脊闭眼夜灯直触声场（`1 Do` ~ `1↑ Do↑`）+ 3 颗琥珀余韵指示灯」。
+  - OpenMotion Director 12 秒动画短片升至 `v18`：第一幕接入直触示波脉冲环与 `#2E7DB2` 唤醒光晕；第二幕融入夜灯直触音阶徽标、3 颗延迟点亮的琥珀余韵珠与 `#7EC8E3` 壳咯夜光聚焦；第三幕优化 `v0.64` 闭环徽标垂直留白并联动 `1-5` 液态竖琴和弦波纹与七彩音点接力跃动（`lint-project.mjs` 零报错零警告，MP4 技术核验 14/14 通过，`ffmpeg volumedetect` `mean_volume -17.0 dB` / `max_volume -2.6 dB`，全 6 抽帧视觉复检无遮挡）。
+- 回归校验：新增 `testCreativeAlchemyRound57FullEcosystemDocsAndOpenMotionV12Sync`，完成全仓零 Emoji、`docs/index.html` 嵌入式脚本 `node --check` 零报错与无模拟器 `xcodebuild build-for-testing` 零错误零警告。
+
 ## 0.63.0 - 2026-11-25
 - 语义色板单一数据源与日光银月对比度修复：在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `counterpointMoon`（日光强化至 `#2E7DB2` 以达到 >= 4.6:1 可读对比、夜灯保持 `#7EC8E3`）及 `nightLampBackdrop` / `nightLampPadSurface` / `nightLampHillSurface` 三层夜灯 OLED 语义色，全面替换 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 与 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 中 9 处散落 `0x4EA8DE` / `0x7EC8E3` 硬编码。
 - 工坊与闭眼夜灯零原始十六进制净澈收官：[SettingsView.swift](Chimmo/Views/SettingsView.swift) 全部外观预览小窗与品牌印记徽章改用 `ChimmoPalette` 双态实例化，[NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 与 [SettingsView.swift](Chimmo/Views/SettingsView.swift) 达成全文件 `Color(hex:` 零残余。

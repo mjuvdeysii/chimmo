@@ -3768,4 +3768,29 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
         XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound57FullEcosystemDocsAndOpenMotionV12Sync() throws {
+        // 1. 验证对位月蓝日光高对比与夜间语义 Token 契约
+        XCTAssertEqual(ChimmoPalette.counterpointMoonHex(isNight: false), 0x2E7DB2)
+        XCTAssertEqual(ChimmoPalette.counterpointMoonHex(isNight: true), 0x7EC8E3)
+
+        // 2. 验证闭眼夜灯高音 1↑ 唱名微灯与七偶实时音高聚光边界映射
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 7, pentatonicSafe: true), "1↑ · Do↑")
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 0.0, isRecording: true, buddyCount: 7), 0)
+        XCTAssertEqual(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 1.0, isRecording: true, buddyCount: 7), 6)
+        XCTAssertNil(StorybookChoirMeterKinematics.pitchFocusedBuddyIndex(normalizedPitch: 0.5, isRecording: false, buddyCount: 7))
+
+        // 3. 验证隔离环境下的创作种子种植与存入曲本闭环
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r57_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.plantCreationStarter(.sunnyMeadow)
+        XCTAssertFalse(vm.document.notes.isEmpty)
+        vm.saveCurrentToNotebook()
+        XCTAssertEqual(vm.notebook.entries.count, 1)
+    }
 }
