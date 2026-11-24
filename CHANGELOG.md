@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.49.0 - 2026-11-24
+- Round 42 (Visual-First Alchemy Loop): Full-chain OpenMotion brand synchronization & Three-Space Showcase alignment:
+  - OpenMotion Design Studio website upgraded to v10 (`f60f9ab2-f447-4d3c-a5ef-ae1c270c0f7d`) and synced to `docs/index.html` (`SHA-256: 2232fe7343ecf876c7edf01ea6f1f4adaa5d965e9f04a8ff475d0393d7d37286`), showcasing the Three-Space Showcase/Create/Settings architecture, interactive Creation starter seeds, Swan chapter navigation, and Two-Pole Affordance tag polish (no pill outlines on read-only badges).
+  - OpenMotion Director short film upgraded to v15 (`ea36d037-a0fb-479e-bdd1-3d1ccf653b14`), removing legacy corner pins (`.s1-pin*`/`.s2-pin*`), scalloped top awnings (`#s1-awning`/`#s2-awning`), and floating stray dots while upgrading to borderless storybook hills, quiet kickers, and Three-Space copy; verified with 0-error/0-warning Hyperframes lint, 14/14 MP4 technical checks (`1894621 bytes`), `ffmpeg volumedetect` (`mean_volume: -17.0 dB`, `max_volume: -2.6 dB`), 8-frame PNG visual review, and `record_review` passed.
+  - Added `testCreativeAlchemyRound42FullChainThreeSpaceAndOpenMotionAlignment` verifying Three-Space tab identity, starter seed scale/prefix invariants, Two-Pole affordance metrics, and `StorybookGuidedMomentKinematics` chapter navigation bounds on `SpecimenLibrary.dvorakGoingHome`.
+
 ## 0.48.0 - 2026-11-24
 - Codified the user-calibrated development methodology and 10-point Pre-Commit Self-Audit Checklist in [docs/METHODOLOGY.md](file:///Users/someone/Projects/chimmo/docs/METHODOLOGY.md).
 - Added 3 curated starter seeds (`CreationStarterSeed` with live inline playback), live `StageHarmonyRibbonView` chord exploration, `CreationDraftMetrics` note-count/duration header readout, and a non-trapping `Follow-Glow` exit bar in `CreateStudioView`.

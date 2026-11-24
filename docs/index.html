@@ -95,13 +95,12 @@
       letter-spacing: 0.04em;
     }
     .brand-ver {
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 800;
-      color: #231B15;
-      background: #FFE49E;
-      border: 1.5px solid #231B15;
-      padding: 1px 8px;
-      border-radius: 999px;
+      color: var(--ink);
+      background: var(--butter);
+      padding: 2px 8px;
+      border-radius: 6px;
     }
     .controls {
       display: flex;
@@ -183,11 +182,10 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
+      padding: 3px 9px;
+      border-radius: 6px;
       background: var(--butter);
       color: var(--ink);
-      border: 1.8px solid var(--outline);
       font-size: 11px;
       font-weight: 800;
       margin-bottom: 6px;
@@ -333,9 +331,8 @@
       font-size: 10.5px;
       font-weight: 900;
       padding: 1px 7px;
-      border-radius: 999px;
+      border-radius: 6px;
       color: #FFFFFF;
-      border: 1.5px solid #231B15;
     }
     .figure-name { font-size: 11px; font-weight: 800; color: var(--ink); }
 
@@ -785,6 +782,105 @@
       line-height: 1.48;
     }
 
+
+    .spaces-bench {
+      background: var(--paper);
+      border: 2.2px solid var(--outline);
+      border-radius: 22px;
+      padding: 14px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
+      display: grid;
+      gap: 11px;
+    }
+    .space-tabs-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .space-tab-btn {
+      appearance: none;
+      border: 2px solid var(--outline);
+      border-radius: 14px;
+      background: var(--shelf);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 12.5px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 3px 0 var(--shadow-hard);
+      transition: transform 0.14s ease, background-color 0.16s ease;
+    }
+    .space-tab-btn[aria-selected="true"] {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+    html[data-theme="night"] .space-tab-btn[aria-selected="true"] { color: #0E142C; }
+    .space-stage-card {
+      background: var(--shelf);
+      border: 1.6px solid rgba(35, 27, 21, 0.24);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: grid;
+      gap: 9px;
+    }
+    html[data-theme="night"] .space-stage-card { border-color: rgba(255, 185, 78, 0.30); }
+    .seed-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .seed-btn {
+      appearance: none;
+      border: 2px solid var(--outline);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--shadow-hard);
+      transition: transform 0.14s ease, background-color 0.14s ease;
+    }
+    .seed-btn.primary {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+    html[data-theme="night"] .seed-btn.primary { color: #0E142C; }
+    .seed-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--shadow-hard); }
+    .story-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .story-nav-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .circle-step-btn {
+      appearance: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1.8px solid var(--outline);
+      background: var(--card);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 2px 0 var(--shadow-hard);
+      display: grid;
+      place-items: center;
+    }
+    .circle-step-btn:disabled { opacity: 0.42; cursor: default; }
+
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -876,6 +972,7 @@
       .choir-grid { gap: 2px; }
       .figure-name { font-size: 10px; }
       .lever-row { grid-template-columns: 1fr; }
+      .space-tabs-row, .seed-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -892,7 +989,7 @@
           </svg>
         </div>
         <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.46.0</span>
+        <span class="brand-ver">v0.49.0</span>
       </div>
 
       <div class="controls">
@@ -1112,7 +1209,7 @@
       <div class="postcard-frame" id="postcardPreviewFrame">
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:900">
           <span>咩哞 · 绘本明信片</span>
-          <span id="postcardModePill" style="padding:1px 7px;border-radius:999px;background:var(--mint);border:1.4px solid var(--outline)">绘本山坡</span>
+          <span id="postcardModePill" style="padding:2px 7px;border-radius:6px;background:var(--mint)">绘本山坡</span>
         </div>
         <svg id="postcardArtSvg" width="100%" height="122" viewBox="0 0 200 122" aria-hidden="true"></svg>
         <div class="postcard-meta-plaque">
@@ -1238,7 +1335,7 @@
     <section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
       <div class="icon-triptych-card">
         <div class="bench-label">
-          <span>极简提纯 1-3-5 应用图标（v0.46.0 · 29pt 高辨识）</span>
+          <span>极简提纯 1-3-5 应用图标（v0.49.0 · 29pt 高辨识）</span>
           <span class="bench-sub">单层草坡三态</span>
         </div>
         <div class="icon-triptych-row">
@@ -1315,8 +1412,8 @@
 
       <div class="story-moments-card">
         <div class="bench-label">
-          <span>绘本分幕故事角标 · 《天鹅》三幕</span>
-          <span class="bench-sub" id="storyMomentBadge">陶诺领唱</span>
+          <span>绘本分幕翻页 · 《天鹅》三幕</span>
+          <span class="bench-sub" id="storyProgressLabel">1/3 · 陶诺领唱</span>
         </div>
         <div class="sb-controls-row" id="storyMomentButtons" role="group" aria-label="天鹅故事分幕">
           <button class="sb-chip active" type="button" data-story="0">1 · 天鹅入水</button>
@@ -1330,6 +1427,37 @@
           </div>
           <p class="story-whisper-text" id="storyWhisperCaption">从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。</p>
         </div>
+        <div class="story-nav-row">
+          <div class="story-nav-btns">
+            <button id="storyPrevBtn" class="circle-step-btn" type="button" aria-label="上一幕" disabled>&lt;</button>
+            <button id="storyNextBtn" class="circle-step-btn" type="button" aria-label="下一幕">&gt;</button>
+          </div>
+          <button id="storyAuditionBtn" class="pill-btn" type="button" style="background:var(--butter);color:#231B15;padding:5px 12px;font-size:12px">试听此段</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="spaces-bench" aria-label="欣赏、创作与商业设置三域隔离体验">
+      <div class="bench-label">
+        <span>v0.49.0 三域独立空间（欣赏不误改 · 创作有草稿 · 设置对标商用 HIG）</span>
+        <span class="bench-sub" id="spaceMetaReadout">独立快照零串台</span>
+      </div>
+      <div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
+        <button class="space-tab-btn" type="button" role="tab" aria-selected="true" data-space="showcase">1 · 欣赏引导</button>
+        <button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="create">2 · 创作工坊</button>
+        <button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="settings">3 · 商业设置</button>
+      </div>
+      <div class="space-stage-card" id="spaceStagePanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <strong id="spacePanelTitle" style="font-size:14px">欣赏域：切曲选择器 + 绘本分幕翻页 + 一键「去改编」</strong>
+          <span id="spacePanelStatus" style="font-size:11.5px;font-weight:800;color:var(--accent);background:var(--paper);padding:2px 8px;border-radius:6px">非破坏赏析模式</span>
+        </div>
+        <p id="spacePanelDesc" style="margin:0;font-size:12.5px;font-weight:600;color:var(--sub)">左上角是清晰的曲库切换器而非隐蔽改名，琴键随时跟弹伴奏；想二次创作时点按「去改编」复制副本进入独立创作工坊。</p>
+        <div class="seed-row" aria-label="创作起音灵感种子试听">
+          <button class="seed-btn primary" type="button" data-seed="sunny">晴空种子 · 明亮大调</button>
+          <button class="seed-btn" type="button" data-seed="moonlight">晚风种子 · 柔和抒情</button>
+          <button class="seed-btn" type="button" data-seed="hopping">漫步种子 · 梦幻悬浮</button>
+        </div>
       </div>
     </section>
 
@@ -1337,12 +1465,12 @@
       <article class="feature-card">
         <div class="feature-chip" aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+            <rect x="4" y="5" width="7" height="14" rx="2" stroke="currentColor" stroke-width="2.2"/>
+            <rect x="13" y="5" width="7" height="14" rx="2" stroke="currentColor" stroke-width="2.2"/>
           </svg>
         </div>
-        <h2>极简降噪 1-3-5 图标与全宽绘本山坡</h2>
-        <p>全面升级为纯粹童书绘本语言，默认全宽绘本山坡主舞台与极简音乐盒花环，让零乐理用户首触 30 秒即懂旋律呼吸。</p>
+        <h2>严格隔离欣赏与自由创作空间</h2>
+        <p>「欣赏」专注名曲分幕翻页与跟灯跟弹；「创作」拥有独立草稿快照、三颗起音种子、四幕和声直调与醒目「试听 / 保存作品」底栏。</p>
       </article>
 
       <article class="feature-card">
@@ -1351,8 +1479,8 @@
             <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>咩哞七小只直接化作每枚琴键</h2>
-        <p>陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫与叮尖按调内音级住进琴键与空画布折页，眼神、笑眼与倾角随旋律同步呼吸。</p>
+        <h2>两极视觉契约与七小只灵动交互</h2>
+        <p>暖墨描边与硬偏移阴影专属于可点击按钮，只读标签彻底去胶囊去框；陶诺、拍咯与壳咯等七小只随音级、音准与调式同步呼吸。</p>
       </article>
 
       <article class="feature-card">
@@ -1362,8 +1490,8 @@
             <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>28 首绘本曲谱书架与离线导出</h2>
-        <p>收纳 20 首公版古典与 8 首原创曲本，精装书页轻翻即听，100% 本机离线运行，支持明信片 PNG、WAV 与标准 MIDI 导出。</p>
+        <h2>商业级原生设置与 28 首离线曲库</h2>
+        <p>遵循 iOS HIG 原生分组列表呈现偏好、隐私条款与开源致谢，100% 离线运行并支持明信片 PNG、WAV 与标准 MIDI 导出。</p>
       </article>
     </section>
 
@@ -1747,21 +1875,85 @@
           notes: [349.23, 329.63, 293.66, 261.63]
         }
       ];
-      const storyBadge = document.getElementById("storyMomentBadge");
+      const storyBadge = document.getElementById("storyProgressLabel");
       const storyTitle = document.getElementById("storyWhisperTitle");
       const storySolfege = document.getElementById("storyWhisperSolfege");
       const storyCaption = document.getElementById("storyWhisperCaption");
+      const storyPrevBtn = document.getElementById("storyPrevBtn");
+      const storyNextBtn = document.getElementById("storyNextBtn");
+      const storyAuditionBtn = document.getElementById("storyAuditionBtn");
+      let currentStoryIdx = 0;
+
+      function selectStoryChapter(idx, shouldPlay) {
+        currentStoryIdx = Math.max(0, Math.min(storyMoments.length - 1, idx));
+        const m = storyMoments[currentStoryIdx];
+        document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((b) => {
+          b.classList.toggle("active", Number(b.dataset.story) === currentStoryIdx);
+        });
+        storyBadge.textContent = `${currentStoryIdx + 1}/${storyMoments.length} · ${m.badge}`;
+        storyTitle.textContent = m.title;
+        storySolfege.textContent = m.solfege;
+        storyCaption.textContent = m.caption;
+        storyPrevBtn.disabled = currentStoryIdx <= 0;
+        storyNextBtn.disabled = currentStoryIdx >= storyMoments.length - 1;
+        if (shouldPlay) {
+          m.notes.forEach((hz, i) => playTone(hz, 0.56, i * 0.16, 0.14, "triangle"));
+        }
+      }
 
       document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((btn) => {
+        btn.addEventListener("click", () => selectStoryChapter(Number(btn.dataset.story) || 0, true));
+      });
+      storyPrevBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx - 1, true));
+      storyNextBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx + 1, true));
+      storyAuditionBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx, true));
+
+      const spaceSpecs = {
+        showcase: {
+          title: "欣赏域：切曲选择器 + 绘本分幕翻页 + 一键「去改编」",
+          status: "非破坏赏析模式",
+          meta: "经典曲库只读保护",
+          desc: "左上角是清晰的曲库切换器而非隐蔽改名，琴键随时跟弹伴奏；想二次创作时点按「去改编」复制副本进入独立创作工坊。"
+        },
+        create: {
+          title: "创作域：起音灵感种子 + 四幕和声直调 + 「试听 / 保存作品」",
+          status: "实时草稿与时长计数",
+          meta: "切曲不覆盖未保存编曲",
+          desc: "支持哼唱捉珠、节奏画线、七小只点写、跟灯安全切换及四幕和弦实时改写，底部常驻「试听」与「保存作品」。"
+        },
+        settings: {
+          title: "商业级原生设置：Preferences · 隐私政策 · 开源鸣谢",
+          status: "iOS HIG insetGrouped",
+          meta: "零广告 · 纯本地离线",
+          desc: "外观、默认舞台、触感反馈与五音防跑调一目了然，结构化承载隐私条款、使用协议、SwiftF0 MIT 许可与声音角色图鉴。"
+        }
+      };
+      const spaceTitle = document.getElementById("spacePanelTitle");
+      const spaceStatus = document.getElementById("spacePanelStatus");
+      const spaceMeta = document.getElementById("spaceMetaReadout");
+      const spaceDesc = document.getElementById("spacePanelDesc");
+      document.querySelectorAll(".space-tab-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const idx = Number(btn.dataset.story) || 0;
-          const m = storyMoments[idx] || storyMoments[0];
-          document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
-          storyBadge.textContent = m.badge;
-          storyTitle.textContent = m.title;
-          storySolfege.textContent = m.solfege;
-          storyCaption.textContent = m.caption;
-          m.notes.forEach((hz, i) => playTone(hz, 0.56, i * 0.16, 0.14, "triangle"));
+          const sp = spaceSpecs[btn.dataset.space] || spaceSpecs.showcase;
+          document.querySelectorAll(".space-tab-btn").forEach((b) => b.setAttribute("aria-selected", b === btn ? "true" : "false"));
+          spaceTitle.textContent = sp.title;
+          spaceStatus.textContent = sp.status;
+          spaceMeta.textContent = sp.meta;
+          spaceDesc.textContent = sp.desc;
+          playTone(392.00, 0.36, 0, 0.12, "sine");
+        });
+      });
+
+      const starterSeeds = {
+        sunny:     { notes: [261.63, 329.63, 392.00, 440.00, 392.00], type: "triangle", level: 0.78 },
+        moonlight: { notes: [220.00, 261.63, 311.13, 293.66, 261.63], type: "sine",     level: 0.62 },
+        hopping:   { notes: [261.63, 293.66, 369.99, 392.00, 329.63, 261.63], type: "triangle", level: 0.84 }
+      };
+      document.querySelectorAll(".seed-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const s = starterSeeds[btn.dataset.seed] || starterSeeds.sunny;
+          s.notes.forEach((hz, i) => playTone(hz, 0.50, i * 0.17, 0.14, s.type));
+          pulseSoundHills(s.level);
         });
       });
 

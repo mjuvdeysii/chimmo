@@ -3048,4 +3048,85 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette))
         XCTAssertNotNil(SettingsView(vm: vm, palette: dayPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound42FullChainThreeSpaceAndOpenMotionAlignment() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r42_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        // 1. 三域独立空间标签顺序与向后兼容别名校验
+        XCTAssertEqual(ChimmoTab.allCases, [.showcase, .create, .settings])
+        XCTAssertEqual(ChimmoTab.board, .showcase)
+        XCTAssertEqual(ChimmoTab.musicBox, .create)
+
+        // 2. CreationStarterSeed 三颗起音种子调式与独立命名前缀校验
+        XCTAssertEqual(CreationStarterSeed.allCases, [.sunnyMeadow, .moonlightCradle, .hoppingSteps])
+        XCTAssertEqual(CreationStarterSeed.sunnyMeadow.recommendedScaleMode, .brightMajor)
+        XCTAssertEqual(CreationStarterSeed.moonlightCradle.recommendedScaleMode, .wistfulMinor)
+        XCTAssertEqual(CreationStarterSeed.hoppingSteps.recommendedScaleMode, .cloudLydian)
+        XCTAssertEqual(Set(CreationStarterSeed.allCases.map(\.titlePrefix)).count, 3)
+
+        // 3. Two-Pole Affordance Contract：只读标签零边框零阴影，主按钮 >= 44pt 热区与暖墨描边
+        let readOnlySpec = StorybookAffordanceMetrics.styleSpec(for: .readOnlyLabel)
+        XCTAssertEqual(readOnlySpec.borderWidth, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(readOnlySpec.shadowOffsetY, 0.0, accuracy: 0.0001)
+        XCTAssertFalse(readOnlySpec.usesHardInkOutline)
+
+        let quietSpec = StorybookAffordanceMetrics.styleSpec(for: .quietContainer)
+        XCTAssertEqual(quietSpec.shadowOffsetY, 0.0, accuracy: 0.0001)
+        XCTAssertFalse(quietSpec.usesHardInkOutline)
+
+        let primarySpec = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary)
+        XCTAssertGreaterThanOrEqual(primarySpec.minHitDimension, 44.0)
+        XCTAssertTrue(primarySpec.usesHardInkOutline)
+
+        // 4. 分幕导航契约：nil/empty 均返回 nil，并在德沃夏克《念故乡》3 幕曲谱上验证首尾边界
+        let nilMomentsDoc = MelodyDocument(title: "无分幕草稿", guidedMoments: nil)
+        XCTAssertNil(StorybookGuidedMomentKinematics.chapterNavigation(for: nil, in: nilMomentsDoc))
+
+        let emptyMomentsDoc = MelodyDocument(title: "空分幕草稿", guidedMoments: [])
+        XCTAssertNil(StorybookGuidedMomentKinematics.chapterNavigation(for: nil, in: emptyMomentsDoc))
+
+        let goingHome = SpecimenLibrary.dvorakGoingHome
+        let moments = try XCTUnwrap(goingHome.guidedMoments)
+        XCTAssertEqual(moments.count, 3)
+
+        let navStart = try XCTUnwrap(StorybookGuidedMomentKinematics.chapterNavigation(for: moments[0], in: goingHome))
+        XCTAssertEqual(navStart.totalCount, 3)
+        XCTAssertEqual(navStart.currentIndex, 0)
+        XCTAssertFalse(navStart.canStepPrevious)
+        XCTAssertTrue(navStart.canStepNext)
+
+        let navMiddle = try XCTUnwrap(StorybookGuidedMomentKinematics.chapterNavigation(for: moments[1], in: goingHome))
+        XCTAssertEqual(navMiddle.totalCount, 3)
+        XCTAssertEqual(navMiddle.currentIndex, 1)
+        XCTAssertTrue(navMiddle.canStepPrevious)
+        XCTAssertTrue(navMiddle.canStepNext)
+
+        let navEnd = try XCTUnwrap(StorybookGuidedMomentKinematics.chapterNavigation(for: moments[2], in: goingHome))
+        XCTAssertEqual(navEnd.totalCount, 3)
+        XCTAssertEqual(navEnd.currentIndex, 2)
+        XCTAssertTrue(navEnd.canStepPrevious)
+        XCTAssertFalse(navEnd.canStepNext)
+
+        // 5. 三域状态切换隔离 + 日夜设置视图回归
+        XCTAssertEqual(StudioSpace.allCases, [.showcase, .create])
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.openSpecimen(goingHome, autoPlay: false)
+        XCTAssertEqual(vm.activeSpace, .showcase)
+        vm.stepGuidedMoment(delta: 1)
+        XCTAssertEqual(vm.activeGuidedMoment?.id, moments[1].id)
+        vm.stopPlayback()
+
+        vm.switchSpace(to: .create)
+        vm.plantCreationStarter(.hoppingSteps)
+        XCTAssertEqual(vm.document.scaleMode, .cloudLydian)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        vm.stopPlayback()
+
+        vm.switchSpace(to: .showcase)
+        XCTAssertEqual(vm.document.title, goingHome.title)
+        XCTAssertNotNil(SettingsView(vm: vm, palette: ChimmoPalette(isNight: true)))
+    }
 }
