@@ -2627,4 +2627,26 @@ public enum StorybookWreathAndSongbookKinematics {
     }
 }
 
+/// 绘本舞台时间轴驱动策略：在「减弱动态效果」开启时依然保留平静低频（15Hz）的线性播放/拖动进度推进，
+/// 同时禁止纯装饰性涟漪余晖与颤音微振触发无谓刷新，兼顾 Apple Design Awards 包容性与续航。
+public enum StorybookStageTimelinePolicy: Sendable {
+    public static func shouldRun(
+        reduceMotion: Bool,
+        isPlaying: Bool,
+        rippleWakeActive: Bool,
+        isDragging: Bool,
+        hasVibrato: Bool,
+        hasActiveLanes: Bool
+    ) -> Bool {
+        if reduceMotion {
+            return isPlaying || isDragging || hasActiveLanes
+        }
+        return isPlaying || rippleWakeActive || isDragging || hasVibrato || hasActiveLanes
+    }
+
+    public static func minimumInterval(reduceMotion: Bool) -> TimeInterval {
+        reduceMotion ? (1.0 / 15.0) : (1.0 / 60.0)
+    }
+}
+
 

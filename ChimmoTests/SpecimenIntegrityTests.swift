@@ -4201,4 +4201,111 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: day))
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: night))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound66ReduceMotionLinearPlaybackTimelinePolicy() throws {
+        XCTAssertEqual(StorybookStageTimelinePolicy.minimumInterval(reduceMotion: true), 1.0 / 15.0, accuracy: 1e-9)
+        XCTAssertEqual(StorybookStageTimelinePolicy.minimumInterval(reduceMotion: false), 1.0 / 60.0, accuracy: 1e-9)
+
+        XCTAssertTrue(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: true,
+            isPlaying: true,
+            rippleWakeActive: false,
+            isDragging: false,
+            hasVibrato: false,
+            hasActiveLanes: false
+        ))
+        XCTAssertTrue(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: true,
+            isPlaying: false,
+            rippleWakeActive: false,
+            isDragging: true,
+            hasVibrato: false,
+            hasActiveLanes: false
+        ))
+        XCTAssertTrue(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: true,
+            isPlaying: false,
+            rippleWakeActive: false,
+            isDragging: false,
+            hasVibrato: false,
+            hasActiveLanes: true
+        ))
+        XCTAssertFalse(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: true,
+            isPlaying: false,
+            rippleWakeActive: true,
+            isDragging: false,
+            hasVibrato: false,
+            hasActiveLanes: false
+        ))
+        XCTAssertFalse(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: true,
+            isPlaying: false,
+            rippleWakeActive: false,
+            isDragging: false,
+            hasVibrato: true,
+            hasActiveLanes: false
+        ))
+        XCTAssertFalse(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: true,
+            isPlaying: false,
+            rippleWakeActive: false,
+            isDragging: false,
+            hasVibrato: false,
+            hasActiveLanes: false
+        ))
+
+        XCTAssertTrue(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: false,
+            isPlaying: false,
+            rippleWakeActive: true,
+            isDragging: false,
+            hasVibrato: false,
+            hasActiveLanes: false
+        ))
+        XCTAssertTrue(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: false,
+            isPlaying: false,
+            rippleWakeActive: false,
+            isDragging: false,
+            hasVibrato: true,
+            hasActiveLanes: false
+        ))
+        XCTAssertFalse(StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: false,
+            isPlaying: false,
+            rippleWakeActive: false,
+            isDragging: false,
+            hasVibrato: false,
+            hasActiveLanes: false
+        ))
+
+        XCTAssertEqual(
+            StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.0, reduceMotion: true),
+            -Double.pi / 2.0,
+            accuracy: 1e-9
+        )
+        XCTAssertEqual(
+            StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.5, reduceMotion: true),
+            Double.pi / 2.0,
+            accuracy: 1e-9
+        )
+        XCTAssertEqual(
+            StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.5, reduceMotion: false),
+            -Double.pi / 2.0,
+            accuracy: 1e-9
+        )
+
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r66_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: day, onOpenAbout: {}))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: night, onOpenAbout: {}))
+    }
 }

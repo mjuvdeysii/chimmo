@@ -596,7 +596,14 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
     }
 
     private var shouldRunCanvasTimeline: Bool {
-        !reduceMotion && (vm.isPlaying || rippleWakeActive || isActivelyDraggingStage || vm.activeVibratoLane != nil || !vm.activeLaneIndices.isEmpty)
+        StorybookStageTimelinePolicy.shouldRun(
+            reduceMotion: reduceMotion,
+            isPlaying: vm.isPlaying,
+            rippleWakeActive: rippleWakeActive,
+            isDragging: isActivelyDraggingStage,
+            hasVibrato: vm.activeVibratoLane != nil,
+            hasActiveLanes: !vm.activeLaneIndices.isEmpty
+        )
     }
 
     var body: some View {
@@ -804,7 +811,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
     }
 
     private var stageInteractiveCanvas: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: !shouldRunCanvasTimeline)) { _ in
+        TimelineView(.animation(minimumInterval: StorybookStageTimelinePolicy.minimumInterval(reduceMotion: reduceMotion), paused: !shouldRunCanvasTimeline)) { _ in
             let mediaNow = CACurrentMediaTime()
             let _ = scrubTick
             Canvas { ctx, size in
@@ -934,9 +941,10 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         let currentTime = vm.clock.currentTime(at: mediaNow)
         let rotTurns = vm.clock.continuousRotationTurns(at: mediaNow)
         let discRot: Double = reduceMotion ? 0.0 : (currentTime != nil ? -(rotTurns * 2.0 * Double.pi) : 0.0)
-        let needleAngle: Double = (reduceMotion && currentTime != nil)
-            ? (-Double.pi / 2.0 + ((currentTime! / total) * 2.0 * Double.pi))
-            : (-Double.pi / 2.0)
+        let needleAngle: Double = StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(
+            forPlayheadFraction: (currentTime ?? 0.0) / total,
+            reduceMotion: reduceMotion && currentTime != nil
+        )
 
         // 1. 外环 4 幕彩色情绪光弧 + 珍珠锚点（无悬浮文字干扰）
         let spans = vm.chordSpans
@@ -2067,16 +2075,18 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         }
 
         if let c = comet {
-            let p0 = ConstellationGeometry.starPoint(laneIndex: c.activeLaneIndex, center: nm.center, radius: nm.ringRadius)
-            for tailIdx in 1...5 {
-                let backT = max(0.0, 1.0 - Double(tailIdx) * 0.14)
-                let tx = p0.x + (c.position.x - p0.x) * CGFloat(backT)
-                let ty = p0.y + (c.position.y - p0.y) * CGFloat(backT)
-                let tr = CGFloat(5.2 - Double(tailIdx) * 0.75)
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: tx - tr, y: ty - tr, width: tr * 2, height: tr * 2)),
-                    with: .color(palette.nightLampGold.opacity(max(0.15, 0.72 - Double(tailIdx) * 0.12)))
-                )
+            if !reduceMotion {
+                let p0 = ConstellationGeometry.starPoint(laneIndex: c.activeLaneIndex, center: nm.center, radius: nm.ringRadius)
+                for tailIdx in 1...5 {
+                    let backT = max(0.0, 1.0 - Double(tailIdx) * 0.14)
+                    let tx = p0.x + (c.position.x - p0.x) * CGFloat(backT)
+                    let ty = p0.y + (c.position.y - p0.y) * CGFloat(backT)
+                    let tr = CGFloat(5.2 - Double(tailIdx) * 0.75)
+                    ctx.fill(
+                        Path(ellipseIn: CGRect(x: tx - tr, y: ty - tr, width: tr * 2, height: tr * 2)),
+                        with: .color(palette.nightLampGold.opacity(max(0.15, 0.72 - Double(tailIdx) * 0.12)))
+                    )
+                }
             }
             let auraR: CGFloat = 13.0
             ctx.fill(

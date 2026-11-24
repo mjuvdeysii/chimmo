@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.73.0 - 2026-11-25
+- 减弱动态效果（Reduce Motion）平静 15Hz 线性播放进度策略闭环：在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增 `StorybookStageTimelinePolicy`（区分功能性播放/拖动/按音与纯装饰性涟漪/颤音刷新，并在 Reduce Motion 开启时将刷新频率柔和降至 `15 Hz`），并在 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 全面接入 `shouldRun` 与 `minimumInterval`，彻底修复此前开启「减弱动态效果」时 `TimelineView` 被整体暂停导致书签读取线与游标冻结的问题。
+- 舞台单源指针角与零拖尾颗粒纯化：在 `drawOrbitalDiscCanvas` 将书签阅读指针角委派至单源 `StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction:reduceMotion:)`；在 `drawResonanceNebulaCanvas` 为 5 颗流星微尘尾迹补齐 `!reduceMotion` 门控，仅保留清晰纯净的金色星光核心进度点。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound66ReduceMotionLinearPlaybackTimelinePolicy`，全覆盖 `StorybookStageTimelinePolicy.shouldRun` 与 `minimumInterval`、`StorybookWreathAndSongbookKinematics.wreathBookmarkAngle` 以及昼夜双态 `OrbitalStageView` 构建，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.72.0 - 2026-11-25
 - 选中态 VoiceOver 无障碍闭环与绘本明信片整卡摘要播报：为 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift) 明信片画境模式切换胶囊、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 主舞台模式切换胶囊与 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 播放速度胶囊补全统一的 `.accessibilityValue(active ? "已选中" : "")`；同时为 `VinylPostcardCanvasView` 明信片预览卡补充 `.accessibilityElement(children: .ignore)` 聚合语义摘要（播报曲名、昼夜纸色、画境与简谱状态），彻底消除读屏零散跳转与选中态静默差异。
 - 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound65VoiceOverSelectionAndPostcardSummaryParity`，校验三态画境标签与 `VinylPostcardShareSheet`、`OrbitalStageView`、`SoundPaletteBoxSheet` 昼夜双态构造，保持全局零 Emoji 与无模拟器编译全绿。
