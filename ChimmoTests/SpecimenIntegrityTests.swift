@@ -3667,4 +3667,29 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound54NightLampSoftVinylAndPitchBeacon() throws {
+        // 1. NightLampPhraseHelper.statusPillTitle 静止/悬浮边界检验
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: nil, pentatonicSafe: true), "五音夜灯")
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: nil, pentatonicSafe: false), "八音夜灯")
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: -1, pentatonicSafe: true), "五音夜灯")
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 99, pentatonicSafe: false), "八音夜灯")
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 0, pentatonicSafe: true), "1 · Do")
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 4, pentatonicSafe: true), "5 · Sol")
+        XCTAssertEqual(NightLampPhraseHelper.statusPillTitle(hoverLaneIndex: 7, pentatonicSafe: false), "1↑ · Do↑")
+
+        // 2. 夜灯与调音台耦合实例化校验
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r54_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+    }
 }

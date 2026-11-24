@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.61.0 - 2026-11-25
+- 闭眼夜灯触觉工坊软胶纯化与 `40pt` 热区闭环：在 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 中彻底废除关闭、撤销、播停、五/八音与「写入」按钮下方的 5 处生硬 `0x03050F` 偏移黑色砖块底影及过重粗框，统一升级为 `nightPalette = ChimmoPalette(isNight: true)` 柔和接触投影与细腻细框（保留 `#070B1A` Zero-Vision OLED 夜幕底色）；将已录夜灯音珠芯片热区扩展至 `>= 40pt`（显式 `.contentShape(Capsule())`）便于盲操点按回听。
+- 指尖即显音级唱名与延音微珠：在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) `NightLampPhraseHelper` 新增 `statusPillTitle(hoverLaneIndex:pentatonicSafe:)`，单指在夜灯音脊滑动时顶部状态胶囊轻柔显示当下音级唱名与 3 段延音微珠指示（松手即回归模式标签），并使写入空态文案与无障碍标签更清晰；同步将 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 五音拨杆开关色同步为 `palette.celadonAccent`。
+- 回归校验：新增 `testCreativeAlchemyRound54NightLampSoftVinylAndPitchBeacon`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.60.0 - 2026-11-25
 - 里程碑 60 · 轻哼电台音高聚光灯合唱反馈：在 `StorybookChoirMeterKinematics` 新增纯函数 `pitchFocusedBuddyIndex(normalizedPitch:isRecording:buddyCount:)`，将实时哼唱归一化音高直接映射至 `1-7` 领唱小偶，实时亮起主音色主题柔光圈、底座高亮胶囊与轻跃表情反馈（绝不新增解释文字，并 100% 受 `reduceMotion` 门控；同步为 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 录音麦环呼吸缩放补齐 `reduceMotion` 防眩晕门控）。
 - 内嵌微舞台语义色阶收口：在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `insetStageSurface` 语义色（日光 `#F7EFE2` / 夜灯 `#131B38`），彻底消除 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 与 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 中 5 处 `0x10193C` / `0xFFF7E2` 硬编码十六进制色值，使轻哼音准区、节奏条、调音音域柱与示波底窗在日夜模式下完全呼吸一体。

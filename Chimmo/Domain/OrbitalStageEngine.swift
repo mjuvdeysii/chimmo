@@ -941,6 +941,15 @@ public enum NightLampPhraseHelper {
         let ratio = normalizedDurationRatio(for: duration)
         return 46.0 + CGFloat(ratio) * 52.0
     }
+
+    /// 闭眼夜灯顶部状态胶囊文本：指尖触碰音脊时轻声显示当下音级与唱名，松手回归五音/八音标示。
+    public static func statusPillTitle(hoverLaneIndex: Int?, pentatonicSafe: Bool) -> String {
+        if let laneIdx = hoverLaneIndex, (0..<8).contains(laneIdx) {
+            let lane = XylophoneLane.lane(at: laneIdx)
+            return "\(lane.digitLabel) · \(lane.solfege)"
+        }
+        return pentatonicSafe ? "五音夜灯" : "八音夜灯"
+    }
 }
 
 /// 星环星辰命中偏心距力学映射：正中星心奏出饱满清亮共鸣，掠过星缘发出温柔轻声余韵。

@@ -30,6 +30,10 @@ public struct NightLampTactileSheet: View {
         self._localPentatonicSafe = State(initialValue: vm.pentatonicSafe)
     }
 
+    private var nightPalette: ChimmoPalette {
+        ChimmoPalette(isNight: true)
+    }
+
     public var body: some View {
         ZStack {
             Color(hex: 0x070B1A).ignoresSafeArea()
@@ -63,17 +67,22 @@ public struct NightLampTactileSheet: View {
             return .udo
         }()
 
+        let pillTitle = NightLampPhraseHelper.statusPillTitle(
+            hoverLaneIndex: currentHoverLane,
+            pentatonicSafe: localPentatonicSafe
+        )
+
         return HStack(spacing: 10) {
             ChimmoCraftBadge(
                 .nightLampHalo,
-                accent: Color(hex: 0xFFB547),
-                surface: Color(hex: 0x19213F),
+                accent: nightPalette.nightLampGold,
+                surface: nightPalette.cardSurface,
                 size: 38
             )
 
             LivingChimmoDuoBadgeView(
                 isNight: true,
-                accentColor: Color(hex: 0xFFB547),
+                accentColor: nightPalette.nightLampGold,
                 melodyActive: currentHoverLane != nil || auditioningIndex != nil,
                 cowAwake: vm.cradleEnabled
             )
@@ -82,24 +91,45 @@ public struct NightLampTactileSheet: View {
             HStack(spacing: 6) {
                 ChimmoCartoonKeyBuddyView(
                     member: activeMember,
-                    outlineColor: Color(hex: 0xFFB547),
+                    outlineColor: nightPalette.primaryInk.opacity(0.84),
                     isSinging: currentHoverLane != nil || auditioningIndex != nil,
                     isMinor: vm.document.scaleMode.isMinorFlavored
                 )
                 .frame(width: 22, height: 18)
 
-                Text(localPentatonicSafe ? "五音夜灯" : "八音夜灯")
-                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                Text(pillTitle)
+                    .font(.system(.caption, design: .rounded).weight(.heavy).monospacedDigit())
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
-                    .foregroundStyle(Color(hex: 0xF2E2C4))
+                    .foregroundStyle(nightPalette.primaryInk)
+
+                if currentHoverLane != nil {
+                    HStack(spacing: 3) {
+                        ForEach(1...3, id: \.self) { tier in
+                            Circle()
+                                .fill(tier <= sustainTier ? nightPalette.nightLampGold : nightPalette.divider)
+                                .frame(width: 4.5, height: 4.5)
+                        }
+                    }
+                    .transition(.opacity)
+                }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color(hex: 0x19213F))
+                Capsule()
+                    .fill(nightPalette.cardSurface)
+                    .overlay(
+                        Capsule()
+                            .strokeBorder(
+                                currentHoverLane != nil
+                                    ? nightPalette.nightLampGold.opacity(0.36)
+                                    : nightPalette.primaryInk.opacity(0.14),
+                                lineWidth: 1.0
+                            )
+                    )
             )
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: currentHoverLane)
 
             Spacer()
 
@@ -108,22 +138,19 @@ public struct NightLampTactileSheet: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(Color(hex: 0x03050F))
+                        .fill(nightPalette.shelfSurface)
                         .frame(width: 36, height: 36)
-                        .offset(y: 2.5)
-                    Circle()
-                        .fill(Color(hex: 0x212A4C))
-                        .frame(width: 36, height: 36)
-                        .overlay(Circle().strokeBorder(Color(hex: 0xFFB547).opacity(0.75), lineWidth: 1.8))
+                        .shadow(color: Color.black.opacity(0.38), radius: 5, y: 2.5)
+                        .overlay(Circle().strokeBorder(nightPalette.primaryInk.opacity(0.16), lineWidth: 1.0))
                     Image(systemName: "xmark")
                         .font(.subheadline.weight(.heavy))
-                        .foregroundStyle(Color(hex: 0xF2E2C4))
+                        .foregroundStyle(nightPalette.primaryInk)
                 }
                 .frame(width: 40, height: 40)
                 .contentShape(Circle())
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-            .accessibilityLabel("关闭")
+            .accessibilityLabel("关闭夜灯创作")
         }
     }
 
@@ -184,7 +211,7 @@ public struct NightLampTactileSheet: View {
                 .allowsHitTesting(false)
 
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .strokeBorder(Color(hex: 0xFFB547).opacity(0.68), lineWidth: 2.0)
+                    .strokeBorder(nightPalette.nightLampGold.opacity(0.28), lineWidth: 1.2)
                     .allowsHitTesting(false)
 
                 // 低刺激磁吸音脊线：夜晚柔和不刺眼，供余光、摸音与色盲图腾定位
@@ -237,7 +264,7 @@ public struct NightLampTactileSheet: View {
 
                         Circle()
                             .fill(hoverColor)
-                            .overlay(Circle().strokeBorder(Color(hex: 0x0A0F24), lineWidth: 2.2))
+                            .overlay(Circle().strokeBorder(nightPalette.paper, lineWidth: 2.0))
                             .frame(width: 24, height: 24)
 
                         if sustainTier >= 1 {
@@ -245,8 +272,8 @@ public struct NightLampTactileSheet: View {
                                 let ringDiameter: CGFloat = 46.0 + CGFloat(ringTier) * 26.0
                                 Circle()
                                     .strokeBorder(
-                                        Color(hex: 0xFFB547).opacity(ringTier == sustainTier ? 0.88 : 0.42),
-                                        lineWidth: ringTier == 3 ? 2.2 : 1.5
+                                        nightPalette.nightLampGold.opacity(ringTier == sustainTier ? 0.88 : 0.42),
+                                        lineWidth: ringTier == 3 ? 2.0 : 1.3
                                     )
                                     .frame(width: ringDiameter, height: ringDiameter)
                             }
@@ -258,15 +285,15 @@ public struct NightLampTactileSheet: View {
                 } else {
                     VStack(spacing: 10) {
                         Circle()
-                            .fill(Color(hex: 0xFFB547))
-                            .overlay(Circle().strokeBorder(Color(hex: 0x0A0F24), lineWidth: 1.5))
+                            .fill(nightPalette.nightLampGold)
+                            .overlay(Circle().strokeBorder(nightPalette.paper, lineWidth: 1.5))
                             .frame(width: 10, height: 10)
                         Capsule()
-                            .fill(Color(hex: 0xFFB547).opacity(0.55))
+                            .fill(nightPalette.nightLampGold.opacity(0.55))
                             .frame(width: 4, height: 52)
                         Circle()
-                            .fill(Color(hex: 0x53DFCF))
-                            .overlay(Circle().strokeBorder(Color(hex: 0x0A0F24), lineWidth: 1.5))
+                            .fill(nightPalette.celadonAccent)
+                            .overlay(Circle().strokeBorder(nightPalette.paper, lineWidth: 1.5))
                             .frame(width: 10, height: 10)
                     }
                     .allowsHitTesting(false)
@@ -364,15 +391,16 @@ public struct NightLampTactileSheet: View {
                     HStack(spacing: 8) {
                         ForEach(0..<3, id: \.self) { dot in
                             Circle()
-                                .fill(Color(hex: 0xFFB547).opacity(dot == 1 ? 0.55 : 0.30))
+                                .fill(nightPalette.nightLampGold.opacity(dot == 1 ? 0.55 : 0.30))
                                 .frame(width: 6, height: 6)
                         }
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(Color(hex: 0x19213F))
+                        Capsule()
+                            .fill(nightPalette.cardSurface)
+                            .overlay(Capsule().strokeBorder(nightPalette.divider, lineWidth: 1.0))
                     )
                 } else {
                     ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
@@ -380,11 +408,11 @@ public struct NightLampTactileSheet: View {
                         let lane = XylophoneLane.lane(at: laneIdx)
                         let isAuditioning = auditioningIndex == idx
                         let chipFill = isAuditioning
-                            ? Color(hex: 0xFFB84D).opacity(0.38)
+                            ? nightPalette.nightLampGold.opacity(0.38)
                             : lane.barColor(isNight: true).opacity(idx == capturedBeads.count - 1 ? 0.34 : 0.20)
                         let chipStroke = isAuditioning
-                            ? Color(hex: 0xFFB84D)
-                            : lane.barColor(isNight: true).opacity(0.65)
+                            ? nightPalette.nightLampGold
+                            : lane.barColor(isNight: true).opacity(0.52)
                         let chipWidth = NightLampPhraseHelper.chipVisualWidth(forDuration: bead.rawDuration)
                         let durRatio = NightLampPhraseHelper.normalizedDurationRatio(for: bead.rawDuration)
                         Button {
@@ -407,12 +435,14 @@ public struct NightLampTactileSheet: View {
                             .padding(.vertical, 5)
                             .background(Capsule().fill(chipFill))
                             .overlay(
-                                Capsule().strokeBorder(chipStroke, lineWidth: isAuditioning ? 1.8 : 1.0)
+                                Capsule().strokeBorder(chipStroke, lineWidth: isAuditioning ? 1.5 : 1.0)
                             )
-                            .foregroundStyle(Color(hex: 0xF4EBDD))
+                            .foregroundStyle(nightPalette.primaryInk)
                             .scaleEffect(isAuditioning && !reduceMotion ? 1.08 : 1.0)
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
                         .contextMenu {
                             Button(role: .destructive) {
                                 removeCapturedBead(at: idx)
@@ -428,9 +458,9 @@ public struct NightLampTactileSheet: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
         }
-        .frame(height: 44)
+        .frame(height: 46)
     }
 
     private var bottomControls: some View {
@@ -443,16 +473,23 @@ public struct NightLampTactileSheet: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(Color(hex: 0x03050F))
+                        .fill(nightPalette.cardSurface)
                         .frame(width: 44, height: 44)
-                        .offset(y: 2.5)
-                    Circle()
-                        .fill(Color(hex: 0x19213F))
-                        .frame(width: 44, height: 44)
-                        .overlay(Circle().strokeBorder(Color(hex: 0xFFB547).opacity(capturedBeads.isEmpty ? 0.28 : 0.72), lineWidth: 1.8))
+                        .shadow(color: Color.black.opacity(0.36), radius: 5, y: 2.5)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(
+                                    nightPalette.primaryInk.opacity(capturedBeads.isEmpty ? 0.10 : 0.22),
+                                    lineWidth: 1.0
+                                )
+                        )
                     Image(systemName: "arrow.uturn.backward")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x5B6482) : Color(hex: 0xF2E2C4))
+                        .foregroundStyle(
+                            capturedBeads.isEmpty
+                                ? nightPalette.secondaryInk.opacity(0.45)
+                                : nightPalette.primaryInk
+                        )
                 }
                 .contentShape(Circle())
             }
@@ -463,21 +500,27 @@ public struct NightLampTactileSheet: View {
             Button {
                 toggleAudition()
             } label: {
+                let isPlayActive = auditioningIndex != nil
                 ZStack {
                     Circle()
-                        .fill(Color(hex: 0x03050F))
+                        .fill(isPlayActive ? nightPalette.nightLampGold : nightPalette.cardSurface)
                         .frame(width: 44, height: 44)
-                        .offset(y: 2.5)
-                    Circle()
-                        .fill(auditioningIndex != nil ? Color(hex: 0xFFB547) : Color(hex: 0x19213F))
-                        .frame(width: 44, height: 44)
-                        .overlay(Circle().strokeBorder(Color(hex: 0xFFB547).opacity(capturedBeads.isEmpty ? 0.28 : 0.85), lineWidth: 1.8))
-                    Image(systemName: auditioningIndex != nil ? "stop.fill" : "play.fill")
+                        .shadow(color: Color.black.opacity(0.36), radius: 5, y: 2.5)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(
+                                    isPlayActive
+                                        ? nightPalette.nightLampGold
+                                        : nightPalette.primaryInk.opacity(capturedBeads.isEmpty ? 0.10 : 0.22),
+                                    lineWidth: 1.0
+                                )
+                        )
+                    Image(systemName: isPlayActive ? "stop.fill" : "play.fill")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(
                             capturedBeads.isEmpty
-                                ? Color(hex: 0x5B6482)
-                                : (auditioningIndex != nil ? Color(hex: 0x0E1430) : Color(hex: 0xFFB547))
+                                ? nightPalette.secondaryInk.opacity(0.45)
+                                : (isPlayActive ? nightPalette.paper : nightPalette.nightLampGold)
                         )
                 }
                 .contentShape(Circle())
@@ -490,10 +533,11 @@ public struct NightLampTactileSheet: View {
                 localPentatonicSafe.toggle()
                 AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
             } label: {
+                let modeColor = localPentatonicSafe ? nightPalette.celadonAccent : nightPalette.nightLampGold
                 HStack(spacing: 5) {
                     ChimmoCraftMark(
                         .pentatonicArc,
-                        color: localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xF2E2C4)
+                        color: localPentatonicSafe ? nightPalette.celadonAccent : nightPalette.primaryInk
                     )
                     .frame(width: 15, height: 15)
                     Text(localPentatonicSafe ? "五音" : "八音")
@@ -502,17 +546,15 @@ public struct NightLampTactileSheet: View {
                 .padding(.horizontal, 12)
                 .frame(height: 48)
                 .background(
-                    ZStack {
-                        Capsule()
-                            .fill(Color(hex: 0x03050F))
-                            .offset(y: 2.5)
-                        Capsule()
-                            .fill(localPentatonicSafe ? Color(hex: 0x162C46) : Color(hex: 0x19213F))
-                        Capsule()
-                            .strokeBorder(localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xFFB547).opacity(0.65), lineWidth: 1.8)
-                    }
+                    Capsule()
+                        .fill(nightPalette.cardSurface)
+                        .shadow(color: Color.black.opacity(0.36), radius: 5, y: 2.5)
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(modeColor.opacity(localPentatonicSafe ? 0.48 : 0.22), lineWidth: 1.1)
+                        )
                 )
-                .foregroundStyle(localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xF2E2C4))
+                .foregroundStyle(localPentatonicSafe ? nightPalette.celadonAccent : nightPalette.primaryInk)
                 .contentShape(Capsule())
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -526,31 +568,41 @@ public struct NightLampTactileSheet: View {
                 dismiss()
                 onCommitted()
             } label: {
+                let canCommit = !capturedBeads.isEmpty
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark")
                         .font(.subheadline.weight(.heavy))
-                    Text(capturedBeads.isEmpty ? "写入" : "写入 \(capturedBeads.count)")
+                    Text(canCommit ? "写入 \(capturedBeads.count)" : "写入")
                         .font(.system(.subheadline, design: .rounded).weight(.heavy).monospacedDigit())
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
-                    ZStack {
-                        Capsule()
-                            .fill(Color(hex: 0x03050F))
-                            .offset(y: 3)
-                        Capsule()
-                            .fill(capturedBeads.isEmpty ? Color(hex: 0x212A4C) : Color(hex: 0xFFB547))
-                        Capsule()
-                            .strokeBorder(Color(hex: 0xFFB547).opacity(capturedBeads.isEmpty ? 0.32 : 1.0), lineWidth: 2.0)
-                    }
+                    Capsule()
+                        .fill(canCommit ? nightPalette.nightLampGold : nightPalette.shelfSurface)
+                        .shadow(
+                            color: canCommit
+                                ? nightPalette.nightLampGold.opacity(0.28)
+                                : Color.black.opacity(0.24),
+                            radius: canCommit ? 7 : 4,
+                            y: 2.5
+                        )
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(
+                                    canCommit
+                                        ? Color.white.opacity(0.26)
+                                        : nightPalette.primaryInk.opacity(0.10),
+                                    lineWidth: 1.0
+                                )
+                        )
                 )
-                .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x0E1430))
+                .foregroundStyle(canCommit ? nightPalette.paper : nightPalette.secondaryInk.opacity(0.55))
                 .contentShape(Capsule())
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-            .accessibilityLabel("完成并试听")
+            .accessibilityLabel(capturedBeads.isEmpty ? "请先在夜灯画布滑选音符" : "写入并试听 \(capturedBeads.count) 个音符")
         }
     }
 

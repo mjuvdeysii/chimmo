@@ -382,7 +382,7 @@ public struct SoundPaletteBoxSheet: View {
                     shortLabel: "五音",
                     accessibilityTitle: "五音模式",
                     isOn: vm.pentatonicSafe,
-                    activeColor: Color(hex: 0x2F9E44)
+                    activeColor: palette.celadonAccent
                 ) {
                     vm.togglePentatonicSafe()
                     triggerAudition(.pitch)
