@@ -103,6 +103,17 @@ public struct OrbitalStageView: View {
                     heroStageContainer
                         .padding(.horizontal, 14)
 
+                    if !vm.followGlowActive && !vm.document.notes.isEmpty {
+                        StageHarmonyRibbonView(
+                            vm: vm,
+                            palette: palette,
+                            reduceMotion: reduceMotion
+                        ) {
+                            wakeRippleTimeline()
+                        }
+                        .padding(.horizontal, 14)
+                    }
+
                     if selectedBeatIndex != nil && !vm.isPlaying && !vm.followGlowActive {
                         compactSelectionPill
                             .padding(.horizontal, 14)
@@ -400,7 +411,7 @@ public struct OrbitalStageView: View {
             .shadow(color: stageShadowCol, radius: activeCurtainColor != nil ? 18 : 14, y: 5)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
         }
-        .frame(minHeight: 255, maxHeight: .infinity)
+        .frame(minHeight: 220, maxHeight: .infinity)
     }
 
     private var stageInteractiveCanvas: some View {
@@ -1244,13 +1255,23 @@ public struct OrbitalStageView: View {
             pxPerSecond: lay.pxPerSec
         )
 
-        // 1. 4 幕和声天光色带背景
+        // 1. 4 幕和声天光色带背景 + 顶部彩色天际帽条（对齐星盘外环与下方 4 幕色带）
         for span in vm.chordSpans {
             let x0 = FlowingRiverGeometry.screenX(onset: span.startTime, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
             let x1 = FlowingRiverGeometry.screenX(onset: span.endTime, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
             let rect = CGRect(x: x0, y: 0, width: max(0, x1 - x0), height: size.height)
             let isCurrent = span.id == vm.activeChordSpanID && currentTime != nil
-            ctx.fill(Path(rect), with: .color(span.chord.color(isNight: palette.isNight).opacity(isCurrent ? 0.12 : 0.045)))
+            let spanCol = span.chord.color(isNight: palette.isNight)
+            ctx.fill(Path(rect), with: .color(spanCol.opacity(isCurrent ? 0.12 : 0.045)))
+
+            let capW = max(0, x1 - x0 - 4)
+            if capW > 2 {
+                let capRect = CGRect(x: x0 + 2, y: 2, width: capW, height: 3.5)
+                ctx.fill(
+                    Path(roundedRect: capRect, cornerRadius: 1.75),
+                    with: .color(spanCol.opacity(isCurrent ? 0.92 : 0.45))
+                )
+            }
         }
 
         // 1.5 节拍律动对齐竖线（当开启微稳/整齐模式时随旋律滚动显现）
@@ -2996,10 +3017,10 @@ private struct MoodAndSoundSheet: View {
         }
     }
 
-    // 5. 「哞 · 伴奏」低音和声织体点阵区
+    // 5. 「哞 · 伴奏」和弦进行的声学条码与伴奏织体点阵区（消灭全站最后一枚原生 Toggle）
     private var mouAccompanimentSection: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 8) {
                 Button {
                     if !vm.cradleEnabled {
@@ -3018,16 +3039,14 @@ private struct MoodAndSoundSheet: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("小牛哞，试听低音伴奏")
 
-                Toggle(isOn: Binding(
-                    get: { vm.cradleEnabled },
-                    set: { on in vm.setChordPreset(on ? .autoMatch : .off) }
-                )) {
-                    Text("哞 · 伴奏")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.secondaryInk)
-                }
-                .tint(palette.bassRibbon)
+                Text("哞 · 伴奏")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(palette.secondaryInk)
+
+                Spacer()
             }
+
+            ChordPresetBarcodeStrip(vm: vm, palette: palette)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(AccompanimentTexture.allCases) { tex in
@@ -3158,6 +3177,171 @@ private struct AccompanimentDotPatternView: View {
             }
         }
         .accessibilityHidden(true)
+    }
+}
+
+/// 主舞台「哞 · 四幕彩色和声触控轨」：跨星盘/山河/星云三态一致的四幕和弦切分交互带。
+private struct StageHarmonyRibbonView: View {
+    @ObservedObject var vm: StudioViewModel
+    let palette: ChimmoPalette
+    let reduceMotion: Bool
+    let onWakeTimeline: () -> Void
+
+    var body: some View {
+        let skyCol = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let segments = HarmonyCurtainStripMapper.segments(
+            from: vm.chordSpans,
+            totalDuration: vm.document.totalDuration
+        )
+
+        HStack(spacing: 6) {
+            Button {
+                let nextPreset: ChordProgressionPreset = vm.cradleEnabled ? .off : .autoMatch
+                vm.setChordPreset(nextPreset)
+            } label: {
+                ZStack {
+                    Capsule()
+                        .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.22 : 0.14) : palette.cardSurface)
+                        .overlay(
+                            Capsule().strokeBorder(
+                                vm.cradleEnabled ? palette.bassRibbon.opacity(0.45) : palette.divider,
+                                lineWidth: 1.0
+                            )
+                        )
+                    ChimmoCowView(
+                        isNight: palette.isNight,
+                        accentColor: skyCol,
+                        isAwake: vm.cradleEnabled,
+                        isPlaying: vm.isPlaying
+                    )
+                    .frame(width: 24, height: 18)
+                }
+                .frame(width: 36, height: 24)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(vm.cradleEnabled ? "关闭小牛哞伴奏" : "开启小牛哞伴奏")
+            .accessibilityValue(vm.cradleEnabled ? "已开启" : "纯清唱")
+
+            if vm.cradleEnabled && !segments.isEmpty {
+                GeometryReader { geo in
+                    let spacingTotal = CGFloat(max(0, segments.count - 1)) * 5.0
+                    let usableW = max(12.0, geo.size.width - spacingTotal)
+                    HStack(spacing: 5) {
+                        ForEach(segments) { seg in
+                            let isActive = (vm.activeChordSpanID == seg.spanID) && (vm.isPlaying || vm.selectedBeadID != nil)
+                            let segCol = seg.chord.color(isNight: palette.isNight)
+                            let segW = max(4.0, usableW * CGFloat(seg.fractionWidth))
+
+                            Button {
+                                vm.cycleSpanChord(spanIndex: seg.spanID)
+                                onWakeTimeline()
+                            } label: {
+                                Text(seg.romanLabel)
+                                    .font(.system(size: 10.5, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(isActive ? .white : segCol)
+                                    .frame(width: segW, height: 24)
+                                    .background(
+                                        Capsule()
+                                            .fill(isActive ? segCol : segCol.opacity(palette.isNight ? 0.20 : 0.12))
+                                            .overlay(
+                                                Capsule().strokeBorder(
+                                                    segCol.opacity(isActive ? 0.95 : 0.36),
+                                                    lineWidth: isActive ? 1.4 : 0.9
+                                                )
+                                            )
+                                    )
+                                    .shadow(color: isActive ? segCol.opacity(0.32) : .clear, radius: 4, y: 1)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("第 \(seg.spanID + 1) 幕和弦 \(seg.romanLabel) \(seg.chord.moodTitle)")
+                            .accessibilityHint("轻点切换和弦进行")
+                        }
+                    }
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: vm.activeChordSpanID)
+                }
+                .frame(height: 24)
+            } else {
+                Button {
+                    vm.setChordPreset(.autoMatch)
+                } label: {
+                    HStack(spacing: 6) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            Capsule()
+                                .fill(palette.secondaryInk.opacity(0.20))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 3.5)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 24)
+                    .background(Capsule().fill(palette.cardSurface.opacity(0.75)))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("开启智能和弦伴奏")
+            }
+        }
+    }
+}
+
+/// 声音面板 5 档可视化和弦进行彩色条码卡（4 色小音块直观区分经典和弦走向）。
+private struct ChordPresetBarcodeStrip: View {
+    @ObservedObject var vm: StudioViewModel
+    let palette: ChimmoPalette
+
+    private let orderedPresets: [ChordProgressionPreset] = [
+        .off, .autoMatch, .classicPop, .summerFloat, .warmStory
+    ]
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(orderedPresets) { preset in
+                let selected = vm.chordPreset == preset
+                let tag = HarmonyCurtainStripMapper.shortPresetTag(for: preset)
+                let colors: [Color] = preset.sequence.map { $0.color(isNight: palette.isNight) }
+
+                Button {
+                    vm.setChordPreset(preset)
+                } label: {
+                    VStack(spacing: 4) {
+                        if colors.isEmpty {
+                            Image(systemName: "moon.zzz.fill")
+                                .font(.system(size: 10.5, weight: .bold))
+                                .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk.opacity(0.65))
+                                .frame(height: 8)
+                        } else {
+                            HStack(spacing: 2) {
+                                ForEach(Array(colors.enumerated()), id: \.offset) { _, col in
+                                    Capsule()
+                                        .fill(col.opacity(selected ? 0.96 : 0.62))
+                                        .frame(height: 4.5)
+                                }
+                            }
+                            .padding(.horizontal, 5)
+                            .frame(height: 8)
+                        }
+
+                        Text(tag)
+                            .font(.system(size: 10.5, weight: .bold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.22 : 0.13) : palette.cardSurface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(selected ? palette.bassRibbon : Color.clear, lineWidth: 1.5)
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(preset.label)
+                .accessibilityValue(selected ? "已选中" : "")
+            }
+        }
     }
 }
 

@@ -463,10 +463,18 @@ public struct AboutSheetView: View {
                                 )
                                 .frame(width: 18, height: 18)
 
-                                Text("分享当前作品 · 图片 / 音频 / MIDI")
+                                Text("分享当前作品")
                                     .font(.subheadline.weight(.bold))
 
                                 Spacer()
+
+                                HStack(spacing: 6) {
+                                    Image(systemName: "photo")
+                                    Image(systemName: "waveform")
+                                    Image(systemName: "pianokeys")
+                                }
+                                .font(.caption2.weight(.semibold))
+                                .opacity(0.85)
 
                                 Image(systemName: "chevron.right")
                                     .font(.caption.weight(.bold))

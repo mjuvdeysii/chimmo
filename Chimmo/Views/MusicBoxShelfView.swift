@@ -16,6 +16,7 @@ public struct MusicBoxShelfView: View {
     public let onWillPlayInline: () -> Void
     public let onRenameSavedEntry: (UUID, String) -> Void
     public let onDuplicateSavedEntry: (UUID) -> Void
+    public let onDeleteSavedEntry: ((UUID) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSegment: Int = 1 // 默认也可在我的唱片(0)与28首名曲(1)间秒切；有保存作品自动先看0
@@ -42,7 +43,8 @@ public struct MusicBoxShelfView: View {
         onStartNewTap: @escaping () -> Void,
         onWillPlayInline: @escaping () -> Void = {},
         onRenameSavedEntry: @escaping (UUID, String) -> Void = { _, _ in },
-        onDuplicateSavedEntry: @escaping (UUID) -> Void = { _ in }
+        onDuplicateSavedEntry: @escaping (UUID) -> Void = { _ in },
+        onDeleteSavedEntry: ((UUID) -> Void)? = nil
     ) {
         self.palette = palette
         self.synth = synth
@@ -57,6 +59,7 @@ public struct MusicBoxShelfView: View {
         self.onWillPlayInline = onWillPlayInline
         self.onRenameSavedEntry = onRenameSavedEntry
         self.onDuplicateSavedEntry = onDuplicateSavedEntry
+        self.onDeleteSavedEntry = onDeleteSavedEntry
         self._selectedSegment = State(initialValue: notebook.entries.isEmpty ? 1 : 0)
     }
 
@@ -283,14 +286,19 @@ public struct MusicBoxShelfView: View {
                 selectedMoodFilter = nil
                 AcousticHapticsEngine.shared.playScrubTick()
             } label: {
-                Text("重置筛选")
-                    .font(.caption.weight(.bold))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(Capsule().fill(palette.cardSurface))
-                    .foregroundStyle(palette.homeAnchor)
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.caption.weight(.bold))
+                    Text("重置")
+                        .font(.caption.weight(.bold))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Capsule().fill(palette.cardSurface))
+                .foregroundStyle(palette.homeAnchor)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("重置全部筛选")
         }
         .padding(.vertical, 36)
         .frame(maxWidth: .infinity)
@@ -402,7 +410,11 @@ public struct MusicBoxShelfView: View {
 
                     Button(role: .destructive) {
                         if isPlayingThis { stopInlinePlay() }
-                        notebook.delete(id: entry.id)
+                        if let onDeleteSavedEntry {
+                            onDeleteSavedEntry(entry.id)
+                        } else {
+                            notebook.delete(id: entry.id)
+                        }
                     } label: {
                         Image(systemName: "trash")
                             .font(.caption)
@@ -446,7 +458,11 @@ public struct MusicBoxShelfView: View {
             }
             Button(role: .destructive) {
                 if isPlayingThis { stopInlinePlay() }
-                notebook.delete(id: entry.id)
+                if let onDeleteSavedEntry {
+                    onDeleteSavedEntry(entry.id)
+                } else {
+                    notebook.delete(id: entry.id)
+                }
             } label: {
                 Label("删除", systemImage: "trash")
             }

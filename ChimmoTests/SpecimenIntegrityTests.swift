@@ -1658,4 +1658,72 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound24HarmonyStripChordPresetsAndTimingFix() throws {
+        // 1. 四幕和声触控轨几何映射与防呆（正常乐曲、空集、NaN/0 总时长、五档短标无 Emoji）
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        let spans = TheoryLensEngine.buildChordSpans(document: swan, preset: .autoMatch)
+        let segments = HarmonyCurtainStripMapper.segments(from: spans, totalDuration: swan.totalDuration)
+        XCTAssertEqual(segments.count, spans.count)
+        let totalFrac = segments.reduce(0.0) { $0 + $1.fractionWidth }
+        XCTAssertEqual(totalFrac, 1.0, accuracy: 1e-5)
+        XCTAssertTrue(segments.allSatisfy { $0.fractionWidth >= 0.10 && !$0.romanLabel.isEmpty })
+
+        XCTAssertTrue(HarmonyCurtainStripMapper.segments(from: [], totalDuration: 4.0).isEmpty)
+
+        let nanSegments = HarmonyCurtainStripMapper.segments(from: spans, totalDuration: .nan)
+        XCTAssertEqual(nanSegments.count, spans.count)
+        XCTAssertEqual(nanSegments.reduce(0.0) { $0 + $1.fractionWidth }, 1.0, accuracy: 1e-5)
+        XCTAssertTrue(nanSegments.allSatisfy { $0.fractionWidth.isFinite && $0.fractionWidth > 0 })
+
+        for preset in ChordProgressionPreset.allCases {
+            let tag = HarmonyCurtainStripMapper.shortPresetTag(for: preset)
+            XCTAssertFalse(tag.isEmpty)
+            for scalar in tag.unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji)
+            }
+        }
+
+        // 2. 删除曲库当前打开作品同步清理孤立 currentSavedEntryID + updateBeatTiming 停播与改写标记
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r24_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let isolatedStore = MelodyNotebookStore(directory: tempDir)
+        let vm = StudioViewModel(notebookStore: isolatedStore)
+        vm.openSpecimen(swan, autoPlay: true)
+        XCTAssertTrue(vm.isPlaying)
+        let firstID = try XCTUnwrap(vm.document.notes.first?.id)
+
+        vm.updateBeatTiming(beadID: firstID, newOnset: 0.36)
+        XCTAssertFalse(vm.isPlaying)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertTrue(vm.document.title.contains("我的改写"))
+        XCTAssertNil(vm.statusToast)
+
+        vm.updateBeatTiming(beadID: firstID, newOnset: .nan)
+        let clampedBeat = vm.document.notes.first(where: { $0.id == firstID })
+        XCTAssertTrue((clampedBeat?.rawOnset ?? 0).isFinite)
+        XCTAssertGreaterThanOrEqual(clampedBeat?.rawOnset ?? 0, 0.08)
+
+        vm.saveCurrentToNotebook()
+        let savedID = try XCTUnwrap(vm.currentSavedEntryID)
+        XCTAssertEqual(isolatedStore.entries.count, 1)
+        vm.deleteSavedEntry(id: savedID)
+        XCTAssertNil(vm.currentSavedEntryID)
+        XCTAssertTrue(isolatedStore.entries.isEmpty)
+
+        // 3. 五档和弦进行切换与清唱开关一致性（零 Toast）
+        for preset in [ChordProgressionPreset.classicPop, .summerFloat, .warmStory, .off, .autoMatch] {
+            vm.setChordPreset(preset)
+            XCTAssertEqual(vm.chordPreset, preset)
+            XCTAssertTrue(vm.chordOverrides.isEmpty)
+            XCTAssertEqual(vm.cradleEnabled, preset != .off)
+        }
+        vm.stopPlayback()
+        XCTAssertNil(vm.statusToast)
+    }
 }

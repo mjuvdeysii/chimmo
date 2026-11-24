@@ -69,6 +69,9 @@ public struct DreamCaptureSheet: View {
         .onDisappear {
             lastBrushLane = nil
             lastBrushTime = 0
+            if vm.isTappingRhythm {
+                vm.cancelRhythmTap()
+            }
         }
         .fullScreenCover(isPresented: $showNightLampTheater) {
             NightLampTactileSheet(vm: vm) {

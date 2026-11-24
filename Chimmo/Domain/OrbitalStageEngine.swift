@@ -1352,3 +1352,53 @@ public enum SeedPitchFaderMapper {
         return XylophoneLane.laneIndex(degree: newDeg, octaveOffset: safeOct)
     }
 }
+
+/// 主舞台「哞 · 4 幕和声彩色轨」与声音面板「5 档和弦条码」几何映射。
+public enum HarmonyCurtainStripMapper {
+    public struct CurtainSegment: Identifiable, Equatable, Sendable {
+        public let spanID: Int
+        public let chord: DiatonicChord
+        public let fractionWidth: Double
+        public let romanLabel: String
+
+        public var id: Int { spanID }
+
+        public init(spanID: Int, chord: DiatonicChord, fractionWidth: Double, romanLabel: String) {
+            self.spanID = spanID
+            self.chord = chord
+            self.fractionWidth = fractionWidth
+            self.romanLabel = romanLabel
+        }
+    }
+
+    /// 把不规则长度的 4 幕和弦区间归一化为严格和为 1.0 且不低于最小热区比例的分段（防 NaN 与零宽）。
+    public static func segments(from spans: [ChordSpan], totalDuration: Double) -> [CurtainSegment] {
+        guard !spans.isEmpty else { return [] }
+        let safeTotal = (totalDuration.isFinite && totalDuration > 0.05) ? totalDuration : 2.0
+        let rawWidths: [Double] = spans.map { span in
+            let d = span.endTime - span.startTime
+            let safeD = (d.isFinite && d > 0.01) ? d : (safeTotal / Double(spans.count))
+            return max(0.12, min(0.65, safeD / safeTotal))
+        }
+        let sum = max(0.001, rawWidths.reduce(0, +))
+        return zip(spans, rawWidths).map { span, w in
+            CurtainSegment(
+                spanID: span.id,
+                chord: span.chord,
+                fractionWidth: w / sum,
+                romanLabel: span.chord.roman
+            )
+        }
+    }
+
+    public static func shortPresetTag(for preset: ChordProgressionPreset) -> String {
+        switch preset {
+        case .autoMatch: return "智能"
+        case .classicPop: return "1564"
+        case .summerFloat: return "4536"
+        case .warmStory: return "1645"
+        case .off: return "休息"
+        }
+    }
+}
+

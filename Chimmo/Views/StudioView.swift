@@ -1174,12 +1174,23 @@ public final class StudioViewModel: ObservableObject {
 
     public func updateBeatTiming(beadID: UUID, newOnset: Double) {
         guard let idx = document.notes.firstIndex(where: { $0.id == beadID }) else { return }
-        document.notes[idx].rawOnset = max(0.08, newOnset)
+        stopPlayback()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 我的改写"
+        }
+        let clampedOnset = max(0.08, newOnset.isFinite ? newOnset : 0.08)
+        document.notes[idx].rawOnset = clampedOnset
         if document.notes[idx].quantizedOnset != nil {
-            document.notes[idx].quantizedOnset = max(0.08, newOnset)
+            document.notes[idx].quantizedOnset = clampedOnset
         }
         document.notes.sort { $0.rawOnset < $1.rawOnset }
         clock.updateTotalDuration(document.totalDuration)
+        if let updated = document.notes.first(where: { $0.id == beadID }) {
+            let displayT = updated.displayOnset(grooveStrength: document.grooveStrength)
+            updateContextMetrics(at: displayT)
+            updateHarmonyDescriptor(for: updated.degree, at: displayT)
+        }
     }
 
     public func insertBeatAfterSelected() {
@@ -1468,7 +1479,41 @@ public final class StudioViewModel: ObservableObject {
     public func setChordPreset(_ preset: ChordProgressionPreset) {
         chordPreset = preset
         chordOverrides.removeAll()
-        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+        previewArpeggioTask?.cancel()
+        if preset == .off {
+            AcousticHapticsEngine.shared.playScrubTick()
+            return
+        }
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.40)
+        guard !isPlaying else { return }
+        synth.ensureRunning()
+        let spans = chordSpans
+        let firstChord = spans.first?.chord ?? preset.sequence.first ?? .I
+        let mode = document.scaleMode
+        let rootMIDI = document.rootMIDI
+        let tex = accompanimentTexture
+        synth.playDiatonicChord(
+            rootMIDI: rootMIDI,
+            mode: mode,
+            chord: firstChord,
+            texture: tex,
+            spanDuration: 1.0,
+            intensity: 0.70
+        )
+        if let secondChord = spans.dropFirst().first?.chord ?? preset.sequence.dropFirst().first {
+            previewArpeggioTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 340_000_000)
+                guard let self, !Task.isCancelled, !self.isPlaying, self.chordPreset == preset else { return }
+                self.synth.playDiatonicChord(
+                    rootMIDI: rootMIDI,
+                    mode: mode,
+                    chord: secondChord,
+                    texture: tex,
+                    spanDuration: 1.1,
+                    intensity: 0.68
+                )
+            }
+        }
     }
 
     public func setAccompanimentTexture(_ texture: AccompanimentTexture) {
@@ -1672,6 +1717,14 @@ public final class StudioViewModel: ObservableObject {
         if notebook.duplicate(id: id) != nil {
             AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         }
+    }
+
+    public func deleteSavedEntry(id: UUID) {
+        notebook.delete(id: id)
+        if currentSavedEntryID == id {
+            currentSavedEntryID = nil
+        }
+        AcousticHapticsEngine.shared.playScrubTick()
     }
 
     // MARK: - Playback Sequencer (Zero 60Hz SwiftUI Invalidation)
@@ -2077,6 +2130,9 @@ public struct StudioView: View {
                     },
                     onDuplicateSavedEntry: { id in
                         vm.duplicateSavedEntry(id: id)
+                    },
+                    onDeleteSavedEntry: { id in
+                        vm.deleteSavedEntry(id: id)
                     }
                 )
             }
