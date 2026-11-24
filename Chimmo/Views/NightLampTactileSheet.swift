@@ -89,7 +89,9 @@ public struct NightLampTactileSheet: View {
                 .frame(width: 22, height: 18)
 
                 Text(localPentatonicSafe ? "五音夜灯" : "八音夜灯")
-                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                     .foregroundStyle(Color(hex: 0xF5ECDD))
             }
             .padding(.horizontal, 10)

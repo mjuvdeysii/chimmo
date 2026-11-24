@@ -5,6 +5,7 @@ import SwiftUI
 public struct AmbientPaperBackdrop: View {
     public let palette: ChimmoPalette
     public var accentTint: Color?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(palette: ChimmoPalette, accentTint: Color? = nil) {
         self.palette = palette
@@ -43,7 +44,7 @@ public struct AmbientPaperBackdrop: View {
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .animation(.easeInOut(duration: 0.35), value: palette.isNight)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: palette.isNight)
     }
 
     private func drawStorybookHillBand(

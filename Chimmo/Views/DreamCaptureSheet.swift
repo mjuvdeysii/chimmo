@@ -373,7 +373,7 @@ public struct DreamCaptureSheet: View {
 
                     if hasTaps {
                         Text("\(vm.liveTapTimestamps.count) 拍")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded).monospacedDigit())
+                            .font(.system(.caption2, design: .rounded).weight(.heavy).monospacedDigit())
                             .foregroundStyle(palette.homeAnchor)
                             .padding(.trailing, 16)
                             .padding(.bottom, 10)

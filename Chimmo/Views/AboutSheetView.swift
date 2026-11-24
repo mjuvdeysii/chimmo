@@ -93,7 +93,7 @@ public struct VinylPostcardShareSheet: View {
                                         AcousticHapticsEngine.shared.playScrubTick()
                                     } label: {
                                         Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
-                                            .font(.system(size: 12.5, weight: .bold))
+                                            .font(.footnote.weight(.bold))
                                             .frame(width: 38, height: 34)
                                             .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
                                             .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
@@ -132,7 +132,7 @@ public struct VinylPostcardShareSheet: View {
                                         selectedMode = mode
                                     } label: {
                                         Image(systemName: mode.iconName)
-                                            .font(.system(size: 12.5, weight: .bold))
+                                            .font(.footnote.weight(.bold))
                                             .frame(width: 36, height: 34)
                                             .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
                                             .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
@@ -166,7 +166,7 @@ public struct VinylPostcardShareSheet: View {
                                 AcousticHapticsEngine.shared.playScrubTick()
                             } label: {
                                 Image(systemName: "textformat.123")
-                                    .font(.system(size: 12.5, weight: .bold))
+                                    .font(.footnote.weight(.bold))
                                     .frame(
                                         width: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                         height: StorybookAffordanceMetrics.compactToolMinHitDimension
@@ -469,7 +469,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.51.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.52.0"
     }
 
     private var appBuild: String {

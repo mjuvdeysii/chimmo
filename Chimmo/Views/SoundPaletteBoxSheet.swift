@@ -118,7 +118,7 @@ public struct SoundPaletteBoxSheet: View {
                         AcousticHapticsEngine.shared.playScrubTick()
                     } label: {
                         Image(systemName: appearanceIcon(for: pref))
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.caption.weight(.bold))
                             .frame(width: 34, height: 34)
                             .background(
                                 Capsule().fill(active ? palette.homeAnchor : Color.clear)
@@ -509,9 +509,10 @@ public struct SoundPaletteBoxSheet: View {
                                 .padding(.horizontal, 6)
 
                             Text(mode.shortSkyLabel)
-                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .font(.system(.caption2, design: .rounded).weight(.heavy))
                                 .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
@@ -734,9 +735,11 @@ public struct SoundPaletteBoxSheet: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 10, weight: .bold))
+                                    .font(.caption2.weight(.bold))
                                 Text("试听")
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
                             }
                             .padding(.horizontal, 11)
                             .frame(minHeight: 32)
@@ -853,9 +856,11 @@ public struct SoundPaletteBoxSheet: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 10, weight: .bold))
+                                    .font(.caption2.weight(.bold))
                                 Text("试听")
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
                             }
                             .padding(.horizontal, 11)
                             .frame(minHeight: 32)
@@ -1139,7 +1144,7 @@ private struct ChordPresetBarcodeStrip: View {
                     VStack(spacing: 4) {
                         if colors.isEmpty {
                             Image(systemName: "moon.zzz.fill")
-                                .font(.system(size: 10.5, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk.opacity(0.65))
                                 .frame(height: 8)
                         } else {
@@ -1155,9 +1160,10 @@ private struct ChordPresetBarcodeStrip: View {
                         }
 
                         Text(tag)
-                            .font(.system(size: 10.5, weight: .heavy, design: .rounded).monospacedDigit())
+                            .font(.system(.caption2, design: .rounded).weight(.heavy).monospacedDigit())
                             .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)

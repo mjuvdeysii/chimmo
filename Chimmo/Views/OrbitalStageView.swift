@@ -455,6 +455,8 @@ public struct OrbitalStageView: View {
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
             .accessibilityLabel(vm.isPlaying ? "暂停播放" : "开始播放")
+            .accessibilityHint("播放或暂停当前欣赏乐段，支持空格键控制")
+            .storybookKeyboardShortcut(KeyboardShortcut(.space, modifiers: []), enabled: vm.activeSpace == .showcase)
 
             Button {
                 vm.toggleFollowGlow()

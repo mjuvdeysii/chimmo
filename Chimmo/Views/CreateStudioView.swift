@@ -269,13 +269,15 @@ public struct CreateStudioView: View {
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "folder.fill")
-                        .font(.system(size: 12.5, weight: .bold))
+                        .font(.footnote.weight(.bold))
                         .foregroundStyle(palette.homeAnchor)
                     Text("作品")
-                        .font(.system(size: 12.5, weight: .heavy, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.heavy))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                     if !vm.notebook.entries.isEmpty {
                         Text("\(vm.notebook.entries.count)")
-                            .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
+                            .font(.system(.caption2, design: .rounded).weight(.bold).monospacedDigit())
                             .foregroundStyle(palette.secondaryInk)
                     }
                 }
@@ -303,9 +305,10 @@ public struct CreateStudioView: View {
                     .minimumScaleFactor(0.75)
 
                 Text(draftStatusText)
-                    .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                    .font(.system(.caption2, design: .rounded).weight(.bold))
                     .foregroundStyle(draftStatusColor)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
@@ -319,6 +322,7 @@ public struct CreateStudioView: View {
                     ) {
                         vm.undo()
                     }
+                    .storybookKeyboardShortcut(KeyboardShortcut("z", modifiers: .command), enabled: vm.activeSpace == .create)
                 }
 
                 creationCircleButton(
@@ -332,6 +336,7 @@ public struct CreateStudioView: View {
                         vm.startBlankCanvas()
                     }
                 }
+                .storybookKeyboardShortcut(KeyboardShortcut("n", modifiers: .command), enabled: vm.activeSpace == .create)
 
                 Menu {
                     Button {
@@ -378,7 +383,7 @@ public struct CreateStudioView: View {
                                     )
                             )
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 13.5, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
                     }
                     .frame(width: 40, height: 40)
@@ -413,7 +418,7 @@ public struct CreateStudioView: View {
                             )
                     )
                 Image(systemName: systemName)
-                    .font(.system(size: 13.5, weight: .bold))
+                    .font(.footnote.weight(.bold))
                     .foregroundStyle(tint)
             }
             .frame(width: 40, height: 40)
@@ -499,9 +504,9 @@ public struct CreateStudioView: View {
                             vm.plantCreationStarter(seed)
                         } label: {
                             Label(seed.shortLabel, systemImage: seed.iconName)
-                                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                .font(.system(.caption, design: .rounded).weight(.heavy))
                                 .lineLimit(1)
-                                .minimumScaleFactor(0.8)
+                                .minimumScaleFactor(0.75)
                                 .padding(.horizontal, 10)
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 42)
@@ -562,7 +567,9 @@ public struct CreateStudioView: View {
                 vm.toggleFollowGlow()
             } label: {
                 Text("退出跟灯")
-                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                     .foregroundStyle(palette.primaryInk)
                     .padding(.horizontal, 12)
                     .frame(minHeight: 40)
@@ -800,13 +807,13 @@ public struct CreateStudioView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(accent)
                 Text(title)
-                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.heavy))
                     .foregroundStyle(palette.primaryInk)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 42)
@@ -858,14 +865,14 @@ public struct CreateStudioView: View {
             .opacity(isEmpty ? 0.45 : 1.0)
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
             .accessibilityLabel(vm.isPlaying ? "停止试听当前创作" : "试听当前创作")
+            .accessibilityHint("播放或停止试听当前创作，支持空格键控制")
+            .storybookKeyboardShortcut(KeyboardShortcut(.space, modifiers: []), enabled: vm.activeSpace == .create)
 
             Button {
                 vm.saveCurrentToNotebook()
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: needsSave ? "square.and.arrow.down.fill" : "checkmark.circle.fill")
-                        .font(.subheadline.weight(.bold))
-                        .symbolEffect(.bounce, value: vm.lastSavedPulse)
+                    saveStatusIcon(needsSave: needsSave)
                     Text(needsSave || isEmpty ? "保存作品" : "已保存")
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                 }
@@ -892,6 +899,8 @@ public struct CreateStudioView: View {
             .opacity(isEmpty ? 0.48 : 1.0)
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
             .accessibilityLabel(needsSave ? "保存作品到我的曲库" : "当前作品已保存")
+            .accessibilityHint("保存到我的曲库，支持 Command+S 快捷键")
+            .storybookKeyboardShortcut(KeyboardShortcut("s", modifiers: .command), enabled: vm.activeSpace == .create)
 
             Button {
                 onOpenSharePostcard()
@@ -922,5 +931,16 @@ public struct CreateStudioView: View {
         .background(
             StorybookQuietCardSurface(palette: palette, cornerRadius: 28)
         )
+    }
+
+    @ViewBuilder
+    private func saveStatusIcon(needsSave: Bool) -> some View {
+        let symbol = Image(systemName: needsSave ? "square.and.arrow.down.fill" : "checkmark.circle.fill")
+            .font(.subheadline.weight(.bold))
+        if reduceMotion {
+            symbol
+        } else {
+            symbol.symbolEffect(.bounce, value: vm.lastSavedPulse)
+        }
     }
 }

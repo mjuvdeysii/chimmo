@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.52.0 - 2026-11-24
+- Round 45 (100% Reduce Motion Compliance + Active-Space Hardware Keyboard Studio + Dynamic Type Scaling):
+  - Completed app-wide Reduce Motion gating by adding `@Environment(\.accessibilityReduceMotion)` to `AmbientPaperBackdrop` (night/day transition) and guarding `.symbolEffect(.bounce, value: vm.lastSavedPulse)` behind a `@ViewBuilder` `saveStatusIcon(needsSave:)` helper in `CreateStudioView`.
+  - Added `StorybookShortcutSpace`, `StorybookKeyboardShortcutSpec`, and `StorybookAffordanceMetrics.keyboardShortcuts(for:)` alongside `View.storybookKeyboardShortcut(_:enabled:)` in `ChimmoDesignLanguage.swift`, scoping hardware shortcuts strictly to active tabs (`Space` in Showcase; `Space`, `Cmd+S`, `Cmd+Z`, `Cmd+N` in Create) with VoiceOver keyboard hints.
+  - Upgraded fixed `.font(.system(size: ...))` UI labels and icons to semantic Dynamic Type text styles (`.footnote`, `.caption`, `.caption2` with `.lineLimit(1)` / `.minimumScaleFactor(0.75)`) across `CreateStudioView`, `AboutSheetView`, `DreamCaptureSheet`, `NightLampTactileSheet`, and `SoundPaletteBoxSheet`.
+  - Added `testCreativeAlchemyRound45ReduceMotionKeyboardAndDynamicTypeContract` in `ChimmoTests/SpecimenIntegrityTests.swift`.
+
 ## 0.51.0 - 2026-11-24
 - Round 44 (Complete 28-Specimen Interactive Storybook Coverage):
   - Populated curated `GuidedStoryMoment` chapter scripts across all 17 remaining classic and original specimens in `SpecimenLibrary` (`schubertSerenade`, `bachCelloSuite1Prelude`, `bachInventionDialogue`, `pachelbelCanonGround`, `mozartTwinkleVariation`, `debussyClairDeLune`, `debussyFlaxenHair`, `satieGymnopedieSeed`, `beethovenMoonlight1`, `beethovenEliseResolve`, `teaHousePentatonic`, `tinkiResolution`, `rainyChromaticWalk`, `midnightCoastCityPop`, `bittersweetDaylight`, `teardropSlashBass`, `stardustCounterpoint`), achieving 28/28 Showcase storybook chapter flip availability.

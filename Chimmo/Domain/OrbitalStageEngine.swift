@@ -2469,6 +2469,41 @@ public enum StorybookAffordanceMetrics {
     public static func sheetHeaderBudgetHeight(hasModeRail: Bool) -> CGFloat {
         hasModeRail ? 52.0 : 48.0
     }
+
+    public static func keyboardShortcuts(for space: StorybookShortcutSpace) -> [StorybookKeyboardShortcutSpec] {
+        switch space {
+        case .showcase:
+            return [
+                StorybookKeyboardShortcutSpec(keyLabel: "Space", actionTitle: "播放 / 暂停", space: .showcase)
+            ]
+        case .create:
+            return [
+                StorybookKeyboardShortcutSpec(keyLabel: "Space", actionTitle: "试听 / 停止", space: .create),
+                StorybookKeyboardShortcutSpec(keyLabel: "Cmd+S", actionTitle: "保存作品", space: .create),
+                StorybookKeyboardShortcutSpec(keyLabel: "Cmd+Z", actionTitle: "撤销上一步", space: .create),
+                StorybookKeyboardShortcutSpec(keyLabel: "Cmd+N", actionTitle: "新建空白作品", space: .create)
+            ]
+        }
+    }
+}
+
+/// 硬件键盘快捷键归属空间（Domain 层独立定义，不反向依赖 Views 层）。
+public enum StorybookShortcutSpace: String, Sendable, CaseIterable {
+    case showcase
+    case create
+}
+
+/// 硬件键盘快捷键规范描述（用于测试校验与商用级快捷键契约对齐）。
+public struct StorybookKeyboardShortcutSpec: Equatable, Sendable {
+    public let keyLabel: String
+    public let actionTitle: String
+    public let space: StorybookShortcutSpace
+
+    public init(keyLabel: String, actionTitle: String, space: StorybookShortcutSpace) {
+        self.keyLabel = keyLabel
+        self.actionTitle = actionTitle
+        self.space = space
+    }
 }
 
 /// 创作工坊单拍精修微调状态（100% 纯函数、防越界防 NaN、兼容五音防跑调开关）。

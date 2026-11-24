@@ -3262,4 +3262,50 @@ final class SpecimenIntegrityTests: XCTestCase {
             vm.stopPlayback()
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound45ReduceMotionKeyboardAndDynamicTypeContract() throws {
+        // 1. 硬件键盘快捷键契约：欣赏与创作双空间严格隔离且键位无冲突
+        let showcaseKeys = StorybookAffordanceMetrics.keyboardShortcuts(for: .showcase)
+        let createKeys = StorybookAffordanceMetrics.keyboardShortcuts(for: .create)
+        XCTAssertFalse(showcaseKeys.isEmpty)
+        XCTAssertFalse(createKeys.isEmpty)
+        XCTAssertEqual(Set(showcaseKeys.map(\.keyLabel)).count, showcaseKeys.count)
+        XCTAssertEqual(Set(createKeys.map(\.keyLabel)).count, createKeys.count)
+        XCTAssertEqual(showcaseKeys.map(\.keyLabel), ["Space"])
+        XCTAssertEqual(createKeys.map(\.keyLabel), ["Space", "Cmd+S", "Cmd+Z", "Cmd+N"])
+        XCTAssertTrue(showcaseKeys.allSatisfy { $0.space == .showcase && !$0.actionTitle.isEmpty })
+        XCTAssertTrue(createKeys.allSatisfy { $0.space == .create && !$0.actionTitle.isEmpty })
+
+        // 2. 空间切换与状态隔离契约
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r45_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertEqual(vm.activeSpace, .showcase)
+        XCTAssertFalse(vm.document.notes.isEmpty)
+
+        vm.switchSpace(to: .create)
+        XCTAssertEqual(vm.activeSpace, .create)
+        vm.plantCreationStarter(.sunnyMeadow)
+        XCTAssertFalse(vm.document.notes.isEmpty)
+
+        vm.switchSpace(to: .showcase)
+        XCTAssertEqual(vm.activeSpace, .showcase)
+        XCTAssertFalse(vm.document.notes.isEmpty)
+
+        // 3. 日夜模式与 Reduce Motion / Dynamic Type 核心视图构造回归
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotNil(AmbientPaperBackdrop(palette: dayPalette))
+        XCTAssertNotNil(AmbientPaperBackdrop(palette: nightPalette))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(AboutSheetView(palette: dayPalette, currentDocument: vm.document, cradleEnabled: true))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
+    }
 }

@@ -844,3 +844,15 @@ public struct StorybookCartoonSceneBackground: View {
         ctx.stroke(ridgePath, with: .color(outlineColor.opacity(0.52)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
     }
 }
+
+public extension View {
+    /// 仅在当前空间激活时挂载硬件键盘快捷键，避免 TabView 跨标签冲突
+    @ViewBuilder
+    func storybookKeyboardShortcut(_ shortcut: KeyboardShortcut, enabled: Bool) -> some View {
+        if enabled {
+            self.keyboardShortcut(shortcut)
+        } else {
+            self
+        }
+    }
+}
