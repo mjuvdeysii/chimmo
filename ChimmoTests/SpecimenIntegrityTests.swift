@@ -3467,4 +3467,24 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         )
     }
+
+    @MainActor
+    func testCreativeAlchemyRound49NightLampAndFullEcosystemSync() throws {
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertEqual(ChimmoTab.allCases, [.showcase, .create, .songbook, .settings])
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r49_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.plantCreationStarter(.sunnyMeadow)
+
+        let nightSheet = NightLampTactileSheet(vm: vm)
+        XCTAssertNotNil(nightSheet)
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
+    }
 }

@@ -6,29 +6,39 @@
   <title>开源许可 · 咩哞 (Chimmo)</title>
   <style>
     :root {
-      --bg: #F4EDE0;
-      --paper: #FFFDF7;
-      --shelf: #EFE4CF;
-      --butter: #FFE49E;
-      --mint: #D8F1E7;
-      --outline: #231B15;
-      --ink: #231B15;
-      --sub: #5E5245;
-      --accent: #0E766E;
-      --shadow-hard: rgba(35, 27, 21, 0.22);
+      --bg: #FBF7F0;
+      --paper: #FFFFFF;
+      --shelf: #F2EBE0;
+      --butter: #F8EBD0;
+      --mint: #E3F0ED;
+      --outline: #1C1D19;
+      --border: rgba(28, 29, 25, 0.11);
+      --border-strong: rgba(28, 29, 25, 0.16);
+      --ink: #1C1D19;
+      --sub: #5C564D;
+      --accent: #C4513A;
+      --prominent: #B8442E;
+      --celadon: #3D7A77;
+      --shadow-soft: 0 10px 28px rgba(122, 82, 48, 0.08);
+      --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10);
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0E142C;
-        --paper: #162048;
-        --shelf: #1D2856;
-        --butter: #2B2952;
-        --mint: #162C46;
-        --outline: #FFB94E;
-        --ink: #F5ECDD;
-        --sub: #B3BEDC;
-        --accent: #53DFCF;
-        --shadow-hard: rgba(4, 7, 20, 0.78);
+        --bg: #0E1430;
+        --paper: #19213F;
+        --shelf: #212A4C;
+        --butter: #272B4D;
+        --mint: #1B3049;
+        --outline: #FFB547;
+        --border: rgba(242, 226, 196, 0.12);
+        --border-strong: rgba(255, 181, 71, 0.28);
+        --ink: #F2E2C4;
+        --sub: #B8BED4;
+        --accent: #F08A6C;
+        --prominent: #C4513A;
+        --celadon: #7EC8C3;
+        --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.36);
+        --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
       }
     }
     * { box-sizing: border-box; }
@@ -43,10 +53,10 @@
     .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
     .hero-banner {
       background: var(--paper);
-      border: 2.5px solid var(--outline);
+      border: 1px solid var(--border);
       border-radius: 24px;
       padding: 18px 22px;
-      box-shadow: 0 5px 0 var(--shadow-hard);
+      box-shadow: var(--shadow-soft);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -61,19 +71,19 @@
       border-radius: 999px;
       background: var(--butter);
       color: var(--ink);
-      border: 2px solid var(--outline);
+      border: 1px solid var(--border);
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 800;
       margin-bottom: 6px;
     }
     h1 { margin: 0; font-size: 24px; font-weight: 900; }
     .meta { margin: 4px 0 0; color: var(--sub); font-size: 13px; font-weight: 700; }
     .card {
       background: var(--paper);
-      border: 2.2px solid var(--outline);
+      border: 1px solid var(--border);
       border-radius: 20px;
       padding: 18px 22px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
+      box-shadow: var(--shadow-soft);
     }
     h2 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
     p { margin: 0 0 12px; font-size: 15px; font-weight: 500; }
@@ -81,7 +91,7 @@
       margin: 0;
       padding: 14px;
       background: var(--shelf);
-      border: 2px solid var(--outline);
+      border: 1px solid var(--border);
       border-radius: 14px;
       white-space: pre-wrap;
       font-size: 13px;
@@ -95,24 +105,25 @@
       gap: 12px;
       flex-wrap: wrap;
       background: var(--shelf);
-      border: 2.2px solid var(--outline);
+      border: 1px solid var(--border);
       border-radius: 18px;
       padding: 12px 18px;
-      box-shadow: 0 3px 0 var(--shadow-hard);
+      box-shadow: var(--shadow-soft);
     }
     a.home-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 14px;
+      padding: 9px 16px;
+      min-height: 40px;
       border-radius: 999px;
-      background: var(--butter);
-      color: var(--ink);
-      border: 2px solid var(--outline);
-      box-shadow: 0 2px 0 var(--shadow-hard);
+      background: var(--prominent);
+      color: #FFFFFF;
+      border: 1px solid transparent;
+      box-shadow: var(--shadow-btn);
       text-decoration: none;
       font-size: 13px;
-      font-weight: 900;
+      font-weight: 800;
     }
     .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
     a { color: var(--accent); text-decoration: none; font-weight: 800; }

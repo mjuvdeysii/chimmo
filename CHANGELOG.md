@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.56.0 - 2026-11-24
+- 全生态《摸索台灯》同宇宙统一：通过 OpenMotion Design Studio 升级官网交互绘本（`v11`，同步至 `docs/index.html`）及三大法务页面（`docs/privacy.html`、`docs/terms.html`、`docs/licenses.html`）至「轻哼成曲，七声和鸣」四标签（聆听 / 创作 / 曲本 / 工坊）窑纸软胶语系；通过 OpenMotion Director 升级 12 秒声学短片至 `v16` 并完成音画技术与多帧检查。
+- 闭眼夜灯同源对齐：[NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 保留 `#070B1A` OLED 暗幕以呵护夜间盲操体验，将夜灯强调色、卡片底色与月白字色全面同步至 `ChimmoPalette(isNight: true)`（`0xFFB547` / `0x19213F` / `0xF2E2C4`）。
+- 回归校验：新增 `testCreativeAlchemyRound49NightLampAndFullEcosystemSync` 并保持全局零 Emoji 与零模拟器编译门禁全绿。
+
 ## 0.55.0 - 2026-11-24
 - 视觉同源收口：将调音百宝箱 SoundPaletteBoxSheet、灵光捕手 DreamCaptureSheet（轻哼电台 / 节奏画线 / 折纸工坊）、明信片导出卡片 VinylPostcardShareSheet、跟弹指示条与绘本主舞台伴奏色带全面接入 0.54.0「窑纸软胶工作室」设计语言，废除遗留厚卡通框与硬偏移砖块阴影。
 - 触控与对比度收敛：为 SoundPaletteBoxSheet 移调与速度调节胶囊补齐 44pt 级交互安全热区；统一主动作采用高对比釉红 prominentFill + 白字，避免暗夜下黄底白字或浅底灰字混淆；曲库绘本空态按钮与迷你封面同步接入软胶层级。

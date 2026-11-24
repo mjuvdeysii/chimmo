@@ -3,2061 +3,1200 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>咩哞 · Chimmo — 把脑海里的旋律唱出来、看得见</title>
+  <title>咩哞 · Chimmo — 轻哼成曲，七声和鸣</title>
   <style>
-    :root {
-      --bg: #F4EDE0;
-      --paper: #FFFDF7;
-      --card: #FFFDF7;
-      --shelf: #EFE4CF;
-      --butter: #FFE49E;
-      --mint: #D8F1E7;
-      --hill-back: #E6D7BC;
-      --hill-front: #D7E6D8;
-      --outline: #231B15;
-      --ink: #231B15;
-      --sub: #5E5245;
-      --accent: #0E766E;
-      --accent-soft: #D8F1E7;
-      --gold: #E59900;
-      --gold-soft: #FFE49E;
-      --terra: #F25563;
-      --blue: #228BE6;
-      --violet: #7950F2;
-      --shadow-hard: rgba(35, 27, 21, 0.22);
-    }
-    html[data-theme="night"] {
-      --bg: #0E142C;
-      --paper: #162048;
-      --card: #1D2856;
-      --shelf: #172149;
-      --butter: #2B2952;
-      --mint: #162C46;
-      --hill-back: #18234C;
-      --hill-front: #213063;
-      --outline: #FFB94E;
-      --ink: #F5ECDD;
-      --sub: #B3BEDC;
-      --accent: #53DFCF;
-      --accent-soft: #162C46;
-      --gold: #FFB94E;
-      --gold-soft: #2B2952;
-      --terra: #FF7B82;
-      --blue: #66B5FF;
-      --violet: #B39BFF;
-      --shadow-hard: rgba(4, 7, 20, 0.78);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 18px 14px 34px;
-      background-color: var(--bg);
-      color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
-      line-height: 1.5;
-      transition: background-color 0.25s ease, color 0.25s ease;
-    }
-    .wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      display: grid;
-      gap: 14px;
-    }
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .brand-mark {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 6px 12px 6px 8px;
-      border-radius: 999px;
-      background: var(--card);
-      border: 2.2px solid var(--outline);
-      box-shadow: 0 4px 0 var(--shadow-hard);
-    }
-    .brand-seal {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      background: var(--butter);
-      border: 2px solid var(--outline);
-      display: grid;
-      place-items: center;
-    }
-    .brand-title {
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: 0.04em;
-    }
-    .brand-ver {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--ink);
-      background: var(--butter);
-      padding: 2px 8px;
-      border-radius: 6px;
-    }
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .pill-btn {
-      appearance: none;
-      border: 2.2px solid var(--outline);
-      background: var(--card);
-      color: var(--ink);
-      border-radius: 999px;
-      padding: 7px 14px;
-      font-size: 12.5px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 3px 0 var(--shadow-hard);
-      transition: transform 0.14s ease, background-color 0.16s ease;
-    }
-    .pill-btn:hover { transform: translateY(-1px); }
-    .pill-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--shadow-hard); }
-    .pill-btn[aria-pressed="true"] {
-      background: var(--accent);
-      color: #FFFFFF;
-    }
-    html[data-theme="night"] .pill-btn[aria-pressed="true"] {
-      color: #0E142C;
-    }
-
-    /* Flat Cartoon Picture-Book Spread Hero */
-    .hero {
-      position: relative;
-      background: var(--paper);
-      border: 2.5px solid var(--outline);
-      border-radius: 26px;
-      padding: 18px 18px 16px;
-      display: grid;
-      gap: 14px;
-      overflow: hidden;
-      box-shadow: 0 5px 0 var(--shadow-hard);
-    }
-    .hero-scenery {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .hero-hills-svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    .hero-sun-badge {
-      position: absolute;
-      top: 14px;
-      right: 18px;
-      width: 66px;
-      height: 66px;
-      pointer-events: none;
-      z-index: 1;
-    }
-    .hero-head, .duo-stage, .choir-shelf {
-      position: relative;
-      z-index: 1;
-    }
-    .hero-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding-right: 76px;
-    }
-    .book-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 9px;
-      border-radius: 6px;
-      background: var(--butter);
-      color: var(--ink);
-      font-size: 11px;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-    h1 {
-      margin: 0;
-      font-size: clamp(25px, 4.1vw, 36px);
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-    }
-    .lead {
-      margin: 4px 0 0;
-      color: var(--sub);
-      font-size: 14px;
-      font-weight: 600;
-      max-width: 640px;
-    }
-    .duo-stage {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .mascot-card {
-      position: relative;
-      background: var(--card);
-      border: 2.2px solid var(--outline);
-      border-radius: 20px;
-      padding: 12px 12px 10px;
-      text-align: center;
-      cursor: pointer;
-      display: grid;
-      justify-items: center;
-      gap: 5px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-      transition: transform 0.16s ease;
-      user-select: none;
-    }
-    .mascot-card.mie-theme { background: var(--mint); }
-    .mascot-card.mou-theme { background: var(--butter); }
-    .mascot-card:hover { transform: translateY(-2px); }
-    .mascot-card.singing {
-      background: var(--paper);
-      box-shadow: 0 0 0 3px var(--accent), 0 4px 0 var(--shadow-hard);
-    }
-    .mascot-card.sleeping { opacity: 0.88; }
-    .mascot-svg {
-      width: 108px;
-      height: 86px;
-      overflow: visible;
-    }
-    .mascot-name {
-      font-size: 15.5px;
-      font-weight: 900;
-      margin: 0;
-    }
-    .mascot-role {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--sub);
-      margin: 0;
-    }
-    .wave-badge {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      background: var(--paper);
-      border: 1.8px solid var(--outline);
-      display: grid;
-      place-items: center;
-      color: var(--ink);
-    }
-    .mascot-card.singing .wave-badge {
-      background: var(--accent);
-      color: #FFFFFF;
-    }
-    .choir-shelf {
-      background: var(--shelf);
-      border: 2.2px solid var(--outline);
-      border-radius: 20px;
-      padding: 12px 12px 10px;
-      display: grid;
-      gap: 8px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-    }
-    .choir-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 5px 10px;
-      border-radius: 12px;
-      background: var(--paper);
-      border: 1.8px solid var(--outline);
-    }
-    .choir-title { font-size: 13px; font-weight: 900; margin: 0; }
-    .choir-hint { font-size: 11.5px; font-weight: 700; color: var(--sub); margin: 0; }
-    .shelf-stage { position: relative; padding-bottom: 2px; }
-    .meadow-strip {
-      position: absolute;
-      left: 4px;
-      right: 4px;
-      bottom: 42px;
-      height: 11px;
-      border-radius: 999px;
-      background: var(--hill-front);
-      border: 1.8px solid var(--outline);
-      z-index: 0;
-    }
-    .choir-grid {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 4px;
-      align-items: end;
-    }
-    .figure-btn {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      padding: 2px 2px 0;
-      cursor: pointer;
-      display: grid;
-      justify-items: center;
-      gap: 4px;
-      color: var(--ink);
-    }
-    .figure-svg {
-      width: 100%;
-      max-width: 74px;
-      height: 74px;
-      overflow: visible;
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .figure-btn:hover .figure-svg { transform: translateY(-3px); }
-    .figure-btn.singing .figure-svg { transform: translateY(-7px) scale(1.06); }
-    .figure-meta { display: grid; justify-items: center; gap: 2px; }
-    .figure-deg {
-      font-size: 10.5px;
-      font-weight: 900;
-      padding: 1px 7px;
-      border-radius: 6px;
-      color: #FFFFFF;
-    }
-    .figure-name { font-size: 11px; font-weight: 800; color: var(--ink); }
-
-    /* Flat Cartoon Choir Xylophone + Storybook Songbook Cover Bench */
-    .workshop-bench {
-      display: grid;
-      grid-template-columns: 1.28fr 1fr;
-      gap: 14px;
-      align-items: stretch;
-    }
-    .kiln-xylo-box, .vinyl-boutique-card {
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 22px;
-      padding: 13px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-    }
-    .kiln-xylo-box { display: grid; gap: 9px; }
-    .bench-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 12.5px;
-      font-weight: 900;
-      color: var(--ink);
-    }
-    .bench-sub {
-      font-size: 11.5px;
-      font-weight: 700;
-      color: var(--sub);
-    }
-    .xylo-keys {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 7px;
-      align-items: end;
-      padding: 10px 8px;
-      border-radius: 16px;
-      background: var(--hill-front);
-      border: 2px solid var(--outline);
-    }
-    .xylo-key {
-      appearance: none;
-      border: 2px solid #231B15;
-      border-radius: 12px;
-      color: #FFFFFF;
-      font-weight: 900;
-      font-size: 12.5px;
-      cursor: pointer;
-      display: grid;
-      justify-items: center;
-      align-content: space-between;
-      padding: 6px 4px;
-      box-shadow: 0 4px 0 #231B15;
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
-    }
-    .xylo-key:active, .xylo-key.struck {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 #231B15;
-    }
-    .key-buddy-chip {
-      width: 22px;
-      height: 16px;
-      border-radius: 999px;
-      background: #FFFDF7;
-      border: 1.6px solid #231B15;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-    .key-buddy-dot {
-      width: 3px;
-      height: 3px;
-      border-radius: 999px;
-      background: #231B15;
-    }
-    .vinyl-boutique-card {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      cursor: pointer;
-      background: var(--butter);
-      text-align: left;
-    }
-    .sleeve-wrap {
-      position: relative;
-      width: 92px;
-      height: 74px;
-      flex: 0 0 92px;
-    }
-    .peeking-page {
-      position: absolute;
-      left: 6px;
-      top: 4px;
-      width: 58px;
-      height: 64px;
-      border-radius: 9px;
-      background: #FFE49E;
-      border: 1.8px solid #231B15;
-      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-      display: grid;
-      align-content: center;
-      justify-items: end;
-      gap: 5px;
-      padding-right: 5px;
-    }
-    .peeking-page-line {
-      width: 14px;
-      height: 2px;
-      border-radius: 999px;
-      background: rgba(35, 27, 21, 0.30);
-    }
-    .vinyl-boutique-card.spinning .peeking-page { transform: translateX(10px); }
-    .sleeve-cover {
-      position: absolute;
-      left: 0;
-      top: 3px;
-      width: 60px;
-      height: 66px;
-      border-radius: 12px;
-      background: var(--paper);
-      border: 2px solid #231B15;
-      box-shadow: 2px 2px 0 rgba(35, 27, 21, 0.25);
-      display: grid;
-      place-items: center;
-      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-      transform-origin: bottom left;
-      overflow: hidden;
-    }
-    .vinyl-boutique-card.spinning .sleeve-cover { transform: rotate(-2deg); }
-    .bookmark-ribbon {
-      position: absolute;
-      left: 45px;
-      top: -1px;
-      width: 10px;
-      height: 17px;
-      border-radius: 2px 2px 4px 4px;
-      background: #0E766E;
-      border: 1.6px solid #231B15;
-      pointer-events: none;
-      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s;
-    }
-    .vinyl-boutique-card.spinning .bookmark-ribbon {
-      transform: translateY(4px);
-      background: #FFB94E;
-    }
-    .cover-play-stamp {
-      position: absolute;
-      left: 48px;
-      top: 46px;
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background: var(--paper);
-      border: 1.8px solid #231B15;
-      display: grid;
-      place-items: center;
-      pointer-events: none;
-    }
-    .vinyl-boutique-card.spinning .cover-play-stamp {
-      background: #FFB94E;
-    }
-
-    /* Flat Cartoon Postcard Press Bench (Round 34) */
-    .postcard-bench {
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 22px;
-      padding: 13px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 14px;
-      align-items: center;
-    }
-    .postcard-frame {
-      position: relative;
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 18px;
-      padding: 10px 10px 8px;
-      box-shadow: 3px 4px 0 var(--shadow-hard);
-      overflow: hidden;
-      display: grid;
-      gap: 6px;
-    }
-    .postcard-meta-plaque {
-      position: relative;
-      z-index: 1;
-      background: var(--card);
-      border: 1.8px solid var(--outline);
-      border-radius: 11px;
-      padding: 6px 8px;
-      box-shadow: 0 2px 0 var(--shadow-hard);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      font-weight: 800;
-    }
-    .choir-meter-row {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 4px;
-      align-items: end;
-    }
-    .mini-buddy-badge {
-      height: 18px;
-      border-radius: 999px;
-      border: 1.6px solid #231B15;
-      background: #FFFDF7;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.14s ease;
-    }
-    .mini-buddy-badge.cheering {
-      transform: translateY(-4px);
-    }
-    .mini-buddy-eye {
-      width: 2.6px;
-      height: 2.6px;
-      border-radius: 999px;
-      background: #231B15;
-    }
-
-    /* Flat Cartoon Sound Palette Card & Bouncing Sound-Hill Meter */
-    .soundbox-bench {
-      display: grid;
-      grid-template-columns: 1.38fr 1fr;
-      gap: 14px;
-      align-items: stretch;
-    }
-    .soundbox-card, .vu-meter-card {
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 22px;
-      padding: 13px;
-      display: grid;
-      gap: 9px;
-      align-content: space-between;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-    }
-    .osc-glass {
-      border-radius: 15px;
-      background: var(--shelf);
-      border: 2px solid var(--outline);
-      padding: 8px 10px 7px;
-      display: grid;
-      gap: 7px;
-    }
-    .triad-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-    }
-    .triad-pill {
-      appearance: none;
-      border: 2px solid var(--outline);
-      border-radius: 12px;
-      background: var(--card);
-      color: var(--ink);
-      font-size: 11.5px;
-      font-weight: 800;
-      padding: 6px 5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      box-shadow: 0 2px 0 var(--shadow-hard);
-      transition: transform 0.16s ease, background-color 0.16s ease;
-    }
-    .triad-pill.lit { background: var(--butter); }
-    .triad-pill.mood-happy { transform: translateY(-2px); }
-    .triad-pill.mood-soft { transform: translateY(1px); }
-    .triad-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      border: 1.4px solid #231B15;
-      flex: 0 0 10px;
-    }
-    .sb-controls-row { display: flex; flex-wrap: wrap; gap: 6px; }
-    .sb-chip {
-      appearance: none;
-      border: 1.8px solid var(--outline);
-      background: var(--shelf);
-      color: var(--ink);
-      border-radius: 999px;
-      padding: 5px 11px;
-      font-size: 11.5px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .sb-chip.active {
-      background: var(--accent);
-      color: #FFFFFF;
-    }
-    html[data-theme="night"] .sb-chip.active { color: #0E142C; }
-    .lever-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .lever-btn {
-      appearance: none;
-      border: 2px solid var(--outline);
-      border-radius: 13px;
-      background: var(--shelf);
-      color: var(--ink);
-      padding: 7px 10px;
-      font-size: 11.5px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      box-shadow: 0 2px 0 var(--shadow-hard);
-    }
-    .lever-track {
-      width: 34px;
-      height: 17px;
-      border-radius: 999px;
-      background: var(--paper);
-      border: 1.8px solid var(--outline);
-      position: relative;
-      flex: 0 0 34px;
-    }
-    .lever-knob {
-      position: absolute;
-      top: 1.5px;
-      left: 2px;
-      width: 10.5px;
-      height: 10.5px;
-      border-radius: 999px;
-      background: var(--sub);
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.16s ease;
-    }
-    .lever-btn[aria-pressed="true"] .lever-knob {
-      transform: translateX(16px);
-      background: var(--gold);
-    }
-
-    /* Flat Cartoon Rainbow Sound-Hills Stage */
-    .hill-meter-box {
-      border-radius: 15px;
-      background: var(--mint);
-      border: 2px solid var(--outline);
-      padding: 12px 12px 10px;
-      display: grid;
-      gap: 12px;
-    }
-    .hill-meter-sky {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .hill-mini-mie {
-      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .hill-meter-box.singing .hill-mini-mie {
-      transform: translateY(-5px) scale(1.08);
-    }
-    .sound-hills {
-      height: 98px;
-      display: grid;
-      grid-template-columns: repeat(9, minmax(0, 1fr));
-      gap: 5px;
-      align-items: end;
-    }
-    .sound-hill {
-      height: 36%;
-      border-radius: 999px 999px 6px 6px;
-      background: var(--paper);
-      border: 1.8px solid var(--outline);
-      transition: height 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.14s ease;
-    }
-    .sound-hill:nth-child(even) { height: 46%; background: var(--butter); }
-    .sound-hill.on { background: var(--accent); }
-    .sound-hill.on.warm { background: #F7882F; }
-    .sound-hill.on.hot { background: #F25563; }
-
-    /* Round 36: 1-3-5 Flat Cartoon AppIcon Triptych & Story Moment Showcase */
-    .icon-story-bench {
-      display: grid;
-      grid-template-columns: 1.06fr 1fr;
-      gap: 14px;
-      align-items: stretch;
-    }
-    .icon-triptych-card, .story-moments-card {
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 22px;
-      padding: 13px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-      display: grid;
-      gap: 10px;
-      align-content: start;
-    }
-    .icon-triptych-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .appicon-tile {
-      display: grid;
-      justify-items: center;
-      gap: 5px;
-      background: var(--shelf);
-      border: 1.8px solid var(--outline);
-      border-radius: 16px;
-      padding: 9px 6px 7px;
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--ink);
-    }
-    .appicon-squircle {
-      width: 68px;
-      height: 68px;
-      border-radius: 17px;
-      border: 2px solid var(--outline);
-      overflow: hidden;
-      box-shadow: 0 3px 0 var(--shadow-hard);
-    }
-    .story-whisper-box {
-      border-radius: 14px;
-      background: var(--mint);
-      border: 2px solid var(--outline);
-      padding: 10px 12px;
-      display: grid;
-      gap: 4px;
-    }
-    .story-whisper-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      font-weight: 900;
-    }
-    .story-whisper-text {
-      margin: 0;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--ink);
-      line-height: 1.48;
-    }
-
-
-    .spaces-bench {
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 22px;
-      padding: 14px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-      display: grid;
-      gap: 11px;
-    }
-    .space-tabs-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-    .space-tab-btn {
-      appearance: none;
-      border: 2px solid var(--outline);
-      border-radius: 14px;
-      background: var(--shelf);
-      color: var(--ink);
-      padding: 8px 10px;
-      font-size: 12.5px;
-      font-weight: 900;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      box-shadow: 0 3px 0 var(--shadow-hard);
-      transition: transform 0.14s ease, background-color 0.16s ease;
-    }
-    .space-tab-btn[aria-selected="true"] {
-      background: var(--accent);
-      color: #FFFFFF;
-    }
-    html[data-theme="night"] .space-tab-btn[aria-selected="true"] { color: #0E142C; }
-    .space-stage-card {
-      background: var(--shelf);
-      border: 1.6px solid rgba(35, 27, 21, 0.24);
-      border-radius: 16px;
-      padding: 12px 14px;
-      display: grid;
-      gap: 9px;
-    }
-    html[data-theme="night"] .space-stage-card { border-color: rgba(255, 185, 78, 0.30); }
-    .seed-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-    .seed-btn {
-      appearance: none;
-      border: 2px solid var(--outline);
-      border-radius: 999px;
-      background: var(--card);
-      color: var(--ink);
-      padding: 8px 10px;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-      box-shadow: 0 3px 0 var(--shadow-hard);
-      transition: transform 0.14s ease, background-color 0.14s ease;
-    }
-    .seed-btn.primary {
-      background: var(--accent);
-      color: #FFFFFF;
-    }
-    html[data-theme="night"] .seed-btn.primary { color: #0E142C; }
-    .seed-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--shadow-hard); }
-    .story-nav-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .story-nav-btns {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .circle-step-btn {
-      appearance: none;
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      border: 1.8px solid var(--outline);
-      background: var(--card);
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 900;
-      cursor: pointer;
-      box-shadow: 0 2px 0 var(--shadow-hard);
-      display: grid;
-      place-items: center;
-    }
-    .circle-step-btn:disabled { opacity: 0.42; cursor: default; }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .feature-card {
-      background: var(--paper);
-      border: 2.2px solid var(--outline);
-      border-radius: 20px;
-      padding: 15px;
-      box-shadow: 0 4px 0 var(--shadow-hard);
-      display: grid;
-      gap: 7px;
-      align-content: start;
-    }
-    .feature-chip {
-      width: 34px;
-      height: 34px;
-      border-radius: 11px;
-      background: var(--butter);
-      color: var(--ink);
-      border: 1.8px solid var(--outline);
-      display: grid;
-      place-items: center;
-    }
-    .feature-card h2 { margin: 2px 0 0; font-size: 15px; font-weight: 900; }
-    .feature-card p { margin: 0; font-size: 13px; font-weight: 600; color: var(--sub); }
-    .footer-card {
-      background: var(--shelf);
-      border: 2.2px solid var(--outline);
-      border-radius: 18px;
-      padding: 13px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      font-size: 12.5px;
-      font-weight: 700;
-      box-shadow: 0 3px 0 var(--shadow-hard);
-    }
-    .links { display: flex; gap: 14px; flex-wrap: wrap; }
-    a { color: var(--accent); text-decoration: none; font-weight: 800; }
-    a:hover { text-decoration: underline; }
-
-    @keyframes breatheSheep {
-      0%, 100% { transform: translateY(0px) scaleY(1); }
-      50% { transform: translateY(-2.4px) scaleY(1.022); }
-    }
-    @keyframes breatheCow {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-1.8px) scale(1.018); }
-    }
-    @keyframes blinkEyes {
-      0%, 94%, 100% { transform: scaleY(1); }
-      97% { transform: scaleY(0.12); }
-    }
-    @keyframes floatBreathArc {
-      0% { opacity: 0; transform: translateY(4px) scale(0.85); }
-      45% { opacity: 0.72; }
-      100% { opacity: 0; transform: translateY(-10px) scale(1.12); }
-    }
-    @keyframes bounceFigure {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-2px); }
-    }
-    .sheep-body-anim { transform-origin: 56px 78px; animation: breatheSheep 2.9s ease-in-out infinite; }
-    .cow-body-anim { transform-origin: 56px 78px; animation: breatheCow 3.8s ease-in-out infinite; }
-    .eye-blink { transform-box: fill-box; transform-origin: center; animation: blinkEyes 4.8s ease-in-out infinite; }
-    .eye-blink-delay { transform-box: fill-box; transform-origin: center; animation: blinkEyes 5.6s ease-in-out 1.8s infinite; }
-    .sleep-arc-1 { animation: floatBreathArc 3.2s ease-in-out infinite; }
-    .sleep-arc-2 { animation: floatBreathArc 3.2s ease-in-out 1.4s infinite; }
-    .fig-idle-even { animation: bounceFigure 2.8s ease-in-out infinite; }
-    .fig-idle-odd { animation: bounceFigure 3.3s ease-in-out 0.9s infinite; }
-
-    @media (prefers-reduced-motion: reduce) {
-      .sheep-body-anim, .cow-body-anim, .eye-blink, .eye-blink-delay,
-      .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd {
-        animation: none !important;
-      }
-      .sound-hill, .hill-mini-mie, .mini-buddy-badge, .lever-knob, .triad-pill {
-        transition: none !important;
-      }
-    }
-    @media (max-width: 740px) {
-      .hero-head { padding-right: 0; }
-      .hero-sun-badge { width: 48px; height: 48px; top: 10px; right: 10px; opacity: 0.85; }
-      .duo-stage, .workshop-bench, .postcard-bench, .soundbox-bench, .icon-story-bench, .cards-grid { grid-template-columns: 1fr; }
-      .choir-grid { gap: 2px; }
-      .figure-name { font-size: 10px; }
-      .lever-row { grid-template-columns: 1fr; }
-      .space-tabs-row, .seed-row { grid-template-columns: 1fr; }
-    }
-  </style>
+:root{ --bg: #FBF7F0; --paper: #FFFFFF; --card: #FFFFFF; --shelf: #F2EBE0; --butter: #F8EBD0; --mint: #E3F0ED; --hill-back: #EAE0CE; --hill-front: #D6E5DD; --outline: #1C1D19; --border: rgba(28, 29, 25, 0.11); --border-strong: rgba(28, 29, 25, 0.16); --ink: #1C1D19; --sub: #5C564D; --accent: #C4513A; --prominent: #B8442E; --celadon: #3D7A77; --accent-soft: #E3F0ED; --gold: #CF8420; --gold-soft: #F8EBD0; --terra: #C4513A; --blue: #3577A8; --violet: #6F54B8; --shadow-soft: 0 10px 28px rgba(122, 82, 48, 0.08); --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10); --shadow-prominent: 0 6px 16px rgba(184, 68, 46, 0.24); --shadow-hard: rgba(122, 82, 48, 0.14); }
+html[data-theme="night"]{ --bg: #0E1430; --paper: #19213F; --card: #19213F; --shelf: #212A4C; --butter: #272B4D; --mint: #1B3049; --hill-back: #151D40; --hill-front: #1B2650; --outline: #FFB547; --border: rgba(242, 226, 196, 0.12); --border-strong: rgba(255, 181, 71, 0.28); --ink: #F2E2C4; --sub: #B8BED4; --accent: #F08A6C; --prominent: #C4513A; --celadon: #7EC8C3; --accent-soft: #1B3049; --gold: #FFB547; --gold-soft: #272B4D; --terra: #F08A6C; --blue: #6EB4F2; --violet: #B39BFF; --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.36); --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28); --shadow-prominent: 0 6px 18px rgba(196, 81, 58, 0.34); --shadow-hard: rgba(0, 0, 0, 0.32); }
+*{ box-sizing: border-box; }
+body{ margin: 0; padding: 18px 14px 34px; background-color: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif; line-height: 1.5; transition: background-color 0.25s ease, color 0.25s ease; }
+.wrap{ max-width: 960px; margin: 0 auto; display: grid; gap: 14px; }
+.topbar{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.brand-mark{ display: flex; align-items: center; gap: 9px; padding: 6px 12px 6px 8px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-btn); }
+.brand-seal{ width: 30px; height: 30px; border-radius: 999px; background: var(--butter); border: 1px solid var(--border-strong); display: grid; place-items: center; }
+.brand-title{ font-size: 14px; font-weight: 900; letter-spacing: 0.04em; }
+.brand-ver{ font-size: 11px; font-weight: 800; color: var(--ink); background: var(--butter); padding: 2px 8px; border-radius: 6px; }
+.controls{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pill-btn{ appearance: none; border: 1px solid var(--border-strong); background: var(--card); color: var(--ink); border-radius: 999px; padding: 8px 15px; min-height: 40px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-btn); transition: transform 0.14s ease, background-color 0.16s ease, box-shadow 0.16s ease; }
+.pill-btn:hover{ transform: translateY(-1px); }
+.pill-btn:active{ transform: translateY(1.5px); box-shadow: 0 2px 6px rgba(122, 82, 48, 0.08); }
+.pill-btn[aria-pressed="true"]{ background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent); }
+/* Flat Cartoon Picture-Book Spread Hero */ .hero{ position: relative; background: var(--paper); border: 1px solid var(--border); border-radius: 26px; padding: 18px 18px 16px; display: grid; gap: 14px; overflow: hidden; box-shadow: var(--shadow-soft); }
+.hero-scenery{ position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.hero-hills-svg{ width: 100%; height: 100%; display: block; }
+.hero-sun-badge{ position: absolute; top: 14px; right: 18px; width: 66px; height: 66px; pointer-events: none; z-index: 1; }
+.hero-head, .duo-stage, .choir-shelf{ position: relative; z-index: 1; }
+.hero-head{ display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-right: 76px; }
+.book-tag{ display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 6px; background: var(--butter); color: var(--ink); font-size: 11px; font-weight: 800; margin-bottom: 6px; }
+h1{ margin: 0; font-size: clamp(25px, 4.1vw, 36px); line-height: 1.15; letter-spacing: -0.02em; }
+.lead{ margin: 4px 0 0; color: var(--sub); font-size: 14px; font-weight: 600; max-width: 640px; }
+.duo-stage{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mascot-card{ position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 12px 12px 10px; text-align: center; cursor: pointer; display: grid; justify-items: center; gap: 5px; box-shadow: var(--shadow-btn); transition: transform 0.16s ease, box-shadow 0.16s ease; user-select: none; }
+.mascot-card.mie-theme{ background: var(--mint); }
+.mascot-card.mou-theme{ background: var(--butter); }
+.mascot-card:hover{ transform: translateY(-2px); }
+.mascot-card.singing{ background: var(--paper); box-shadow: 0 0 0 2.5px var(--prominent), var(--shadow-soft); }
+.mascot-card.sleeping{ opacity: 0.88; }
+.mascot-svg{ width: 108px; height: 86px; overflow: visible; }
+.mascot-name{ font-size: 15.5px; font-weight: 900; margin: 0; }
+.mascot-role{ font-size: 12px; font-weight: 700; color: var(--sub); margin: 0; }
+.wave-badge{ position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 999px; background: var(--paper); border: 1px solid var(--border-strong); display: grid; place-items: center; color: var(--ink); }
+.mascot-card.singing .wave-badge{ background: var(--prominent); color: #FFFFFF; }
+.choir-shelf{ background: var(--shelf); border: 1px solid var(--border); border-radius: 20px; padding: 12px 12px 10px; display: grid; gap: 8px; box-shadow: var(--shadow-soft); }
+.choir-header{ display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 5px 10px; border-radius: 12px; background: var(--paper); border: 1px solid var(--border); }
+.choir-title{ font-size: 13px; font-weight: 900; margin: 0; }
+.choir-hint{ font-size: 11.5px; font-weight: 700; color: var(--sub); margin: 0; }
+.shelf-stage{ position: relative; padding-bottom: 2px; }
+.meadow-strip{ position: absolute; left: 4px; right: 4px; bottom: 42px; height: 11px; border-radius: 999px; background: var(--hill-front); border: 1px solid var(--border); z-index: 0; }
+.choir-grid{ position: relative; z-index: 1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; }
+.figure-btn{ appearance: none; border: 0; background: transparent; padding: 2px 2px 0; cursor: pointer; display: grid; justify-items: center; gap: 4px; color: var(--ink); }
+.figure-svg{ width: 100%; max-width: 74px; height: 74px; overflow: visible; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+.figure-btn:hover .figure-svg{ transform: translateY(-3px); }
+.figure-btn.singing .figure-svg{ transform: translateY(-7px) scale(1.06); }
+.figure-meta{ display: grid; justify-items: center; gap: 2px; }
+.figure-deg{ font-size: 10.5px; font-weight: 900; padding: 1px 7px; border-radius: 6px; color: #FFFFFF; }
+.figure-name{ font-size: 11px; font-weight: 800; color: var(--ink); }
+/* Flat Cartoon Choir Xylophone + Storybook Songbook Cover Bench */ .workshop-bench{ display: grid; grid-template-columns: 1.28fr 1fr; gap: 14px; align-items: stretch; }
+.kiln-xylo-box, .vinyl-boutique-card{ background: var(--paper); border: 1px solid var(--border); border-radius: 22px; padding: 14px; box-shadow: var(--shadow-soft); }
+.kiln-xylo-box{ display: grid; gap: 9px; }
+.bench-label{ display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 900; color: var(--ink); }
+.bench-sub{ font-size: 11.5px; font-weight: 700; color: var(--sub); }
+.xylo-keys{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; align-items: end; padding: 10px 8px; border-radius: 16px; background: var(--hill-front); border: 1px solid var(--border); }
+.xylo-key{ appearance: none; border: 1.5px solid rgba(28, 29, 25, 0.16); border-radius: 14px; color: #FFFFFF; font-weight: 900; font-size: 12.5px; cursor: pointer; display: grid; justify-items: center; align-content: space-between; padding: 6px 4px; box-shadow: 0 5px 12px rgba(28, 29, 25, 0.16); transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.xylo-key:active, .xylo-key.struck{ transform: translateY(2px); box-shadow: 0 2px 5px rgba(28, 29, 25, 0.14); }
+.key-buddy-chip{ width: 22px; height: 16px; border-radius: 999px; background: #FFFDF7; border: 1.6px solid #231B15; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.key-buddy-dot{ width: 3px; height: 3px; border-radius: 999px; background: #231B15; }
+.vinyl-boutique-card{ display: flex; align-items: center; gap: 13px; cursor: pointer; background: var(--butter); text-align: left; }
+.sleeve-wrap{ position: relative; width: 92px; height: 74px; flex: 0 0 92px; }
+.peeking-page{ position: absolute; left: 6px; top: 4px; width: 58px; height: 64px; border-radius: 9px; background: #FFE49E; border: 1.8px solid #231B15; transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); display: grid; align-content: center; justify-items: end; gap: 5px; padding-right: 5px; }
+.peeking-page-line{ width: 14px; height: 2px; border-radius: 999px; background: rgba(35, 27, 21, 0.30); }
+.vinyl-boutique-card.spinning .peeking-page{ transform: translateX(10px); }
+.sleeve-cover{ position: absolute; left: 0; top: 3px; width: 60px; height: 66px; border-radius: 12px; background: var(--paper); border: 2px solid #231B15; box-shadow: 2px 2px 0 rgba(35, 27, 21, 0.25); display: grid; place-items: center; transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: bottom left; overflow: hidden; }
+.vinyl-boutique-card.spinning .sleeve-cover{ transform: rotate(-2deg); }
+.bookmark-ribbon{ position: absolute; left: 45px; top: -1px; width: 10px; height: 17px; border-radius: 2px 2px 4px 4px; background: #0E766E; border: 1.6px solid #231B15; pointer-events: none; transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s; }
+.vinyl-boutique-card.spinning .bookmark-ribbon{ transform: translateY(4px); background: #FFB94E; }
+.cover-play-stamp{ position: absolute; left: 48px; top: 46px; width: 22px; height: 22px; border-radius: 999px; background: var(--paper); border: 1.8px solid #231B15; display: grid; place-items: center; pointer-events: none; }
+.vinyl-boutique-card.spinning .cover-play-stamp{ background: #FFB94E; }
+/* Flat Cartoon Postcard Press Bench (Round 34) */ .postcard-bench{ background: var(--paper); border: 1px solid var(--border); border-radius: 22px; padding: 14px; box-shadow: var(--shadow-soft); display: grid; grid-template-columns: 220px 1fr; gap: 14px; align-items: center; }
+.postcard-frame{ position: relative; background: var(--paper); border: 1px solid var(--border-strong); border-radius: 18px; padding: 10px 10px 8px; box-shadow: var(--shadow-btn); overflow: hidden; display: grid; gap: 6px; }
+.postcard-meta-plaque{ position: relative; z-index: 1; background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 6px 8px; box-shadow: none; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 800; }
+.choir-meter-row{ display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; }
+.mini-buddy-badge{ height: 18px; border-radius: 999px; border: 1.6px solid #231B15; background: #FFFDF7; display: flex; align-items: center; justify-content: center; gap: 3px; transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.14s ease; }
+.mini-buddy-badge.cheering{ transform: translateY(-4px); }
+.mini-buddy-eye{ width: 2.6px; height: 2.6px; border-radius: 999px; background: #231B15; }
+/* Flat Cartoon Sound Palette Card & Bouncing Sound-Hill Meter */ .soundbox-bench{ display: grid; grid-template-columns: 1.38fr 1fr; gap: 14px; align-items: stretch; }
+.soundbox-card, .vu-meter-card{ background: var(--paper); border: 1px solid var(--border); border-radius: 22px; padding: 14px; display: grid; gap: 9px; align-content: space-between; box-shadow: var(--shadow-soft); }
+.osc-glass{ border-radius: 15px; background: var(--shelf); border: 1px solid var(--border); padding: 8px 10px 7px; display: grid; gap: 7px; }
+.triad-row{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.triad-pill{ appearance: none; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--card); color: var(--ink); font-size: 11.5px; font-weight: 800; padding: 7px 6px; min-height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: var(--shadow-btn); transition: transform 0.16s ease, background-color 0.16s ease; }
+.triad-pill.lit{ background: var(--butter); }
+.triad-pill.mood-happy{ transform: translateY(-2px); }
+.triad-pill.mood-soft{ transform: translateY(1px); }
+.triad-dot{ width: 10px; height: 10px; border-radius: 999px; border: 1.4px solid #231B15; flex: 0 0 10px; }
+.sb-controls-row{ display: flex; flex-wrap: wrap; gap: 6px; }
+.sb-chip{ appearance: none; border: 1px solid var(--border-strong); background: var(--shelf); color: var(--ink); border-radius: 999px; padding: 6px 13px; min-height: 36px; font-size: 11.5px; font-weight: 800; cursor: pointer; transition: background-color 0.16s ease, color 0.16s ease; }
+.sb-chip.active{ background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent); }
+.lever-row{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.lever-btn{ appearance: none; border: 1px solid var(--border-strong); border-radius: 13px; background: var(--shelf); color: var(--ink); padding: 8px 12px; min-height: 40px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 6px; box-shadow: var(--shadow-btn); }
+.lever-track{ width: 34px; height: 17px; border-radius: 999px; background: var(--paper); border: 1px solid var(--border-strong); position: relative; flex: 0 0 34px; }
+.lever-knob{ position: absolute; top: 1.5px; left: 2px; width: 10.5px; height: 10.5px; border-radius: 999px; background: var(--sub); transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.16s ease; }
+.lever-btn[aria-pressed="true"] .lever-knob{ transform: translateX(16px); background: var(--gold); }
+/* Flat Cartoon Rainbow Sound-Hills Stage */ .hill-meter-box{ border-radius: 15px; background: var(--mint); border: 1px solid var(--border); padding: 12px 12px 10px; display: grid; gap: 12px; }
+.hill-meter-sky{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hill-mini-mie{ transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+.hill-meter-box.singing .hill-mini-mie{ transform: translateY(-5px) scale(1.08); }
+.sound-hills{ height: 98px; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; align-items: end; }
+.sound-hill{ height: 36%; border-radius: 999px 999px 6px 6px; background: var(--paper); border: 1px solid var(--border); transition: height 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.14s ease; }
+.sound-hill:nth-child(even){ height: 46%; background: var(--butter); }
+.sound-hill.on{ background: var(--accent); }
+.sound-hill.on.warm{ background: #F7882F; }
+.sound-hill.on.hot{ background: #F25563; }
+/* Round 36: 1-3-5 Flat Cartoon AppIcon Triptych & Story Moment Showcase */ .icon-story-bench{ display: grid; grid-template-columns: 1.06fr 1fr; gap: 14px; align-items: stretch; }
+.icon-triptych-card, .story-moments-card{ background: var(--paper); border: 1px solid var(--border); border-radius: 22px; padding: 14px; box-shadow: var(--shadow-soft); display: grid; gap: 10px; align-content: start; }
+.icon-triptych-row{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.appicon-tile{ display: grid; justify-items: center; gap: 5px; background: var(--shelf); border: 1px solid var(--border); border-radius: 16px; padding: 9px 6px 7px; font-size: 11px; font-weight: 800; color: var(--ink); }
+.appicon-squircle{ width: 68px; height: 68px; border-radius: 17px; border: 1px solid var(--border-strong); overflow: hidden; box-shadow: var(--shadow-btn); }
+.story-whisper-box{ border-radius: 14px; background: var(--mint); border: 1px solid var(--border); padding: 10px 12px; display: grid; gap: 4px; }
+.story-whisper-head{ display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 900; }
+.story-whisper-text{ margin: 0; font-size: 12px; font-weight: 600; color: var(--ink); line-height: 1.48; }
+.spaces-bench{ background: var(--paper); border: 1px solid var(--border); border-radius: 22px; padding: 14px; box-shadow: var(--shadow-soft); display: grid; gap: 11px; }
+.space-tabs-row{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.space-tab-btn{ appearance: none; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--shelf); color: var(--ink); padding: 9px 10px; min-height: 42px; font-size: 12.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: var(--shadow-btn); transition: transform 0.14s ease, background-color 0.16s ease, box-shadow 0.16s ease; }
+.space-tab-btn[aria-selected="true"]{ background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent); }
+.space-stage-card{ background: var(--shelf); border: 1px solid var(--border); border-radius: 16px; padding: 13px 15px; display: grid; gap: 10px; }
+.seed-row{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.seed-btn{ appearance: none; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--card); color: var(--ink); padding: 8px 12px; min-height: 40px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-btn); transition: transform 0.14s ease, background-color 0.14s ease; }
+.seed-btn.primary{ background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent); }
+.seed-btn:active{ transform: translateY(1.5px); box-shadow: 0 2px 6px rgba(122, 82, 48, 0.08); }
+.story-nav-row{ display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.story-nav-btns{ display: flex; align-items: center; gap: 6px; }
+.circle-step-btn{ appearance: none; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--card); color: var(--ink); font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-btn); display: grid; place-items: center; }
+.circle-step-btn:disabled{ opacity: 0.42; cursor: default; }
+.cards-grid{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.feature-card{ background: var(--paper); border: 1px solid var(--border); border-radius: 20px; padding: 15px; box-shadow: var(--shadow-soft); display: grid; gap: 7px; align-content: start; }
+.feature-chip{ width: 34px; height: 34px; border-radius: 11px; background: var(--butter); color: var(--prominent); border: 1px solid var(--border); display: grid; place-items: center; }
+.feature-card h2{ margin: 2px 0 0; font-size: 15px; font-weight: 900; }
+.feature-card p{ margin: 0; font-size: 13px; font-weight: 600; color: var(--sub); }
+.footer-card{ background: var(--shelf); border: 1px solid var(--border); border-radius: 18px; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; font-weight: 700; box-shadow: var(--shadow-soft); }
+.links{ display: flex; gap: 14px; flex-wrap: wrap; }
+a{ color: var(--accent); text-decoration: none; font-weight: 800; }
+a:hover{ text-decoration: underline; }
+@keyframes breatheSheep{ 0%, 100%{ transform: translateY(0px) scaleY(1); }
+50%{ transform: translateY(-2.4px) scaleY(1.022); }
+}
+@keyframes breatheCow{ 0%, 100%{ transform: translateY(0px) scale(1); }
+50%{ transform: translateY(-1.8px) scale(1.018); }
+}
+@keyframes blinkEyes{ 0%, 94%, 100%{ transform: scaleY(1); }
+97%{ transform: scaleY(0.12); }
+}
+@keyframes floatBreathArc{ 0%{ opacity: 0; transform: translateY(4px) scale(0.85); }
+45%{ opacity: 0.72; }
+100%{ opacity: 0; transform: translateY(-10px) scale(1.12); }
+}
+@keyframes bounceFigure{ 0%, 100%{ transform: translateY(0px); }
+50%{ transform: translateY(-2px); }
+}
+.sheep-body-anim{ transform-origin: 56px 78px; animation: breatheSheep 2.9s ease-in-out infinite; }
+.cow-body-anim{ transform-origin: 56px 78px; animation: breatheCow 3.8s ease-in-out infinite; }
+.eye-blink{ transform-box: fill-box; transform-origin: center; animation: blinkEyes 4.8s ease-in-out infinite; }
+.eye-blink-delay{ transform-box: fill-box; transform-origin: center; animation: blinkEyes 5.6s ease-in-out 1.8s infinite; }
+.sleep-arc-1{ animation: floatBreathArc 3.2s ease-in-out infinite; }
+.sleep-arc-2{ animation: floatBreathArc 3.2s ease-in-out 1.4s infinite; }
+.fig-idle-even{ animation: bounceFigure 2.8s ease-in-out infinite; }
+.fig-idle-odd{ animation: bounceFigure 3.3s ease-in-out 0.9s infinite; }
+@media (prefers-reduced-motion: reduce){ .sheep-body-anim, .cow-body-anim, .eye-blink, .eye-blink-delay, .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd{ animation: none !important; }
+.sound-hill, .hill-mini-mie, .mini-buddy-badge, .lever-knob, .triad-pill{ transition: none !important; }
+}
+@media (max-width: 740px){ .hero-head{ padding-right: 0; }
+.hero-sun-badge{ width: 48px; height: 48px; top: 10px; right: 10px; opacity: 0.85; }
+.duo-stage, .workshop-bench, .postcard-bench, .soundbox-bench, .icon-story-bench, .cards-grid{ grid-template-columns: 1fr; }
+.choir-grid{ gap: 2px; }
+.figure-name{ font-size: 10px; }
+.lever-row{ grid-template-columns: 1fr; }
+.space-tabs-row{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.seed-row{ grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header class="topbar">
-      <div class="brand-mark">
-        <div class="brand-seal" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="6.2" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.5"/>
-            <circle cx="17.8" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.5"/>
-            <rect x="7.8" y="6.2" width="8.4" height="12.2" rx="4.2" fill="#F25563" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="12" cy="14.2" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
-          </svg>
-        </div>
-        <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.49.0</span>
-      </div>
-
-      <div class="controls">
-        <button id="toggleMouBtn" class="pill-btn" type="button" aria-pressed="true">
-          <span>哞 · 伴奏唤醒</span>
-        </button>
-        <button id="toggleThemeBtn" class="pill-btn" type="button" aria-pressed="false">
-          <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="5" fill="currentColor"/>
-            <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-          <span id="themeLabel">切换夜灯</span>
-        </button>
-      </div>
-    </header>
-
-    <section class="hero">
-      <div class="hero-scenery" aria-hidden="true">
-        <svg class="hero-hills-svg" viewBox="0 0 960 440" preserveAspectRatio="none">
-          <path d="M0 320 Q210 265 440 315 T960 290 L960 440 L0 440 Z" fill="var(--hill-back)" opacity="0.62"/>
-          <path d="M0 365 Q300 325 610 362 T960 345 L960 440 L0 440 Z" fill="var(--hill-front)" opacity="0.72"/>
-        </svg>
-      </div>
-
-      <svg class="hero-sun-badge" viewBox="0 0 72 72" aria-hidden="true">
-        <g stroke="var(--outline)" stroke-width="2.2" stroke-linecap="round" opacity="0.88">
-          <line x1="36" y1="6" x2="36" y2="12"/>
-          <line x1="36" y1="60" x2="36" y2="66"/>
-          <line x1="6" y1="36" x2="12" y2="36"/>
-          <line x1="60" y1="36" x2="66" y2="36"/>
-          <line x1="15" y1="15" x2="20" y2="20"/>
-          <line x1="52" y1="52" x2="57" y2="57"/>
-          <line x1="57" y1="15" x2="52" y2="20"/>
-          <line x1="20" y1="52" x2="15" y2="57"/>
-        </g>
-        <circle cx="36" cy="36" r="18" fill="var(--butter)" stroke="var(--outline)" stroke-width="2.2"/>
-      </svg>
-
-      <div class="hero-head">
-        <div>
-          <span class="book-tag">CHIMMO KIDS' BOOK EDITION · 扁平插画交互绘本</span>
-          <h1>把脑海里的旋律唱出来、看得见</h1>
-          <p class="lead">零拟物、明快扁平水粉纸艺童书风格。轻触小羊咩、小牛哞、七小只合唱伙伴与彩色琴块，让每一句轻哼即刻变成能蹦能跳的卡通小剧场。</p>
-        </div>
-      </div>
-
-      <div class="duo-stage">
-        <button id="mieCard" class="mascot-card mie-theme" type="button" aria-label="小羊咩，点击试听高音主旋律">
-          <span class="wave-badge" aria-hidden="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-              <path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-            </svg>
-          </span>
-          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-            <ellipse cx="56" cy="83" rx="28" ry="4.5" fill="rgba(35,27,21,0.16)"/>
-            <g class="sheep-body-anim">
-              <g id="mieWaves" opacity="0">
-                <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
-                <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
-              <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
-              <g stroke="#231B15" stroke-width="3.6" fill="none">
-                <circle cx="43" cy="48" r="18"/>
-                <circle cx="69" cy="48" r="18"/>
-                <ellipse cx="56" cy="41" rx="23" ry="20"/>
-                <ellipse cx="56" cy="54" rx="26" ry="20"/>
-              </g>
-              <circle cx="43" cy="48" r="18" fill="#FFFDF7"/>
-              <circle cx="69" cy="48" r="18" fill="#FFFDF7"/>
-              <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFDF7"/>
-              <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFDF7"/>
-              <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4" stroke="#231B15" stroke-width="1.4"/>
-              <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
-              <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
-              <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
-              <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
-              <g id="mieOpenEyes" class="eye-blink">
-                <circle class="pupil" cx="48" cy="48" r="3.4" fill="#231B15"/>
-                <circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-                <circle class="pupil" cx="64" cy="48" r="3.4" fill="#231B15"/>
-                <circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-              </g>
-              <g id="mieSingEyes" opacity="0">
-                <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
-                <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
-              <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
-            </g>
-          </svg>
-          <p class="mascot-name">咩 · Mie（云朵小羊）</p>
-          <p class="mascot-role">高音主旋律 · 扁平草地角落领唱</p>
-        </button>
-
-        <button id="mouCard" class="mascot-card mou-theme" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
-          <span class="wave-badge" aria-hidden="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-              <path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-            </svg>
-          </span>
-          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-            <ellipse cx="56" cy="83" rx="31" ry="4.5" fill="rgba(35,27,21,0.16)"/>
-            <g class="cow-body-anim">
-              <g id="mouSleepArcs" opacity="0">
-                <path class="sleep-arc-1" d="M88 21 Q92 17 96 21" fill="none" stroke="var(--gold)" stroke-width="2.0" stroke-linecap="round"/>
-                <path class="sleep-arc-2" d="M95 14 Q99.5 9.5 104 14" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
-              <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
-              <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
-              <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
-              <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
-              <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD" stroke="#231B15" stroke-width="1.4"/>
-              <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-              <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-              <g id="mouOpenEyes" class="eye-blink-delay">
-                <circle class="pupil" cx="46" cy="44" r="3.4" fill="#231B15"/>
-                <circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-                <circle class="pupil" cx="66" cy="44" r="3.4" fill="#231B15"/>
-                <circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-              </g>
-              <g id="mouSleepEyes" opacity="0">
-                <path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.2" stroke-linecap="round"/>
-                <path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.2" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
-              <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
-            </g>
-          </svg>
-          <p class="mascot-name">哞 · Mou（可可小牛）</p>
-          <p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
-        </button>
-      </div>
-
-      <div class="choir-shelf">
-        <div class="choir-header">
-          <p class="choir-title">咩哞七小只合唱山坡（调内 1–7 音级）</p>
-          <p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
-        </div>
-        <div class="shelf-stage">
-          <div class="choir-grid" id="choirGrid"></div>
-          <div class="meadow-strip" aria-hidden="true"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="workshop-bench" aria-label="扁平卡通 IP 合唱琴键与绘本曲本封面体验">
-      <div class="kiln-xylo-box">
-        <div class="bench-label">
-          <span>IP 合唱五音彩块琴（小偶直接住进琴键）</span>
-          <span class="bench-sub">点按试音</span>
-        </div>
-        <div class="xylo-keys" id="xyloKeys">
-          <button class="xylo-key" type="button" data-hz="261.63" style="height:82px;background:#F25563">
-            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
-            <span>1 Do</span>
-          </button>
-          <button class="xylo-key" type="button" data-hz="293.66" style="height:76px;background:#F7882F">
-            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
-            <span>2 Re</span>
-          </button>
-          <button class="xylo-key" type="button" data-hz="329.63" style="height:70px;background:#E64980">
-            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
-            <span>3 Mi</span>
-          </button>
-          <button class="xylo-key" type="button" data-hz="392.00" style="height:64px;background:#228BE6">
-            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
-            <span>5 Sol</span>
-          </button>
-          <button class="xylo-key" type="button" data-hz="440.00" style="height:58px;background:#7950F2">
-            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
-            <span>6 La</span>
-          </button>
-        </div>
-      </div>
-
-      <button id="vinylBoutiqueCard" class="vinyl-boutique-card" type="button" aria-label="试听天鹅湖畔绘本曲本">
-        <div class="sleeve-wrap" aria-hidden="true">
-          <div class="peeking-page">
-            <span class="peeking-page-line"></span>
-            <span class="peeking-page-line" style="width:10px"></span>
-            <span class="peeking-page-line"></span>
-          </div>
-          <div class="bookmark-ribbon"></div>
-          <div class="sleeve-cover">
-            <svg width="56" height="62" viewBox="0 0 56 62" fill="none">
-              <rect x="2" y="6" width="4" height="50" rx="2" fill="#0E766E"/>
-              <rect x="11" y="5" width="9" height="3" rx="1.5" fill="#0E766E"/>
-              <rect x="22" y="5" width="9" height="3" rx="1.5" fill="#F59E0B"/>
-              <rect x="33" y="5" width="9" height="3" rx="1.5" fill="#257BD4"/>
-              <path d="M0 44 Q18 35 34 42 T56 39 L56 62 L0 62 Z" fill="var(--hill-front)"/>
-              <circle cx="29" cy="30" r="13" fill="#F25563" fill-opacity="0.22" stroke="#231B15" stroke-width="1.5"/>
-              <rect x="22.5" y="18" width="3.8" height="6.5" rx="1.9" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
-              <rect x="31.5" y="18" width="3.8" height="6.5" rx="1.9" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
-              <rect x="20.5" y="23.5" width="17" height="12.5" rx="6" fill="#F25563" stroke="#231B15" stroke-width="1.6"/>
-              <circle cx="26" cy="29" r="1.6" fill="#231B15"/>
-              <circle cx="32" cy="29" r="1.6" fill="#231B15"/>
-            </svg>
-          </div>
-          <div class="cover-play-stamp">
-            <svg width="9" height="10" viewBox="0 0 10 12" fill="#0E766E">
-              <polygon points="2,1 9,6 2,11"/>
-            </svg>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:15px;font-weight:900">天鹅湖畔 · 绘本曲本封面</div>
-          <div id="vinylStatusText" style="font-size:12px;font-weight:700;color:var(--sub);margin-top:3px">轻点翻开奶油乐谱书页，跟随书签一起跳音阶</div>
-        </div>
-      </button>
-    </section>
-
-    <section class="postcard-bench" aria-label="扁平卡通绘本音乐明信片交互印制台">
-      <div class="postcard-frame" id="postcardPreviewFrame">
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:900">
-          <span>咩哞 · 绘本明信片</span>
-          <span id="postcardModePill" style="padding:2px 7px;border-radius:6px;background:var(--mint)">绘本山坡</span>
-        </div>
-        <svg id="postcardArtSvg" width="100%" height="122" viewBox="0 0 200 122" aria-hidden="true"></svg>
-        <div class="postcard-meta-plaque">
-          <span>天鹅湖畔 · 离线 PNG</span>
-          <span style="color:var(--accent)">陶诺守护</span>
-        </div>
-      </div>
-
-      <div style="display:grid;gap:9px;align-content:center">
-        <div class="bench-label">
-          <span>绘本音乐明信片印制台（零渐变平涂卡纸）</span>
-          <span class="bench-sub" id="postcardStatusSub">1080×1360 离线高清导出</span>
-        </div>
-        <p class="bench-sub" style="margin:0;line-height:1.5">全宽绘本山坡乐谱舞台、极简音乐盒花环与八角星环三种无边画境，小羊咩、小牛哞与主角小偶陪你署名导出。</p>
-        <div class="sb-controls-row" id="postcardModeButtons" role="group" aria-label="明信片画境模式">
-          <button class="sb-chip active" type="button" data-pmode="river">绘本山坡</button>
-          <button class="sb-chip" type="button" data-pmode="disc">音乐盒花环</button>
-          <button class="sb-chip" type="button" data-pmode="nebula">八角星环</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="soundbox-bench" aria-label="童书声音调色卡与跳跃声波山坡表">
-      <div class="soundbox-card">
-        <div class="bench-label">
-          <span>童书声音调色盒（音色 × 调式 × 三音偶）</span>
-          <span class="bench-sub" id="soundStatusText">毛毡钢琴 · 暖阳大调</span>
-        </div>
-
-        <div class="osc-glass">
-          <svg width="100%" height="74" viewBox="0 0 420 74" aria-label="声音调色扁平示波曲线">
-            <line x1="12" y1="37" x2="408" y2="37" stroke="var(--outline)" stroke-opacity="0.24" stroke-width="1.5" stroke-dasharray="6 5"/>
-            <path id="soundOscWave" d="" fill="none" stroke="var(--accent)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div class="triad-row">
-            <button id="triad1Btn" class="triad-pill lit" type="button" data-deg="1">
-              <span class="triad-dot" style="background:#F25563"></span>
-              <span>1 陶诺 Do</span>
-            </button>
-            <button id="triad3Btn" class="triad-pill mood-happy" type="button" data-deg="3">
-              <span class="triad-dot" style="background:#E64980"></span>
-              <span>3 拍咯 Mi</span>
-            </button>
-            <button id="triad5Btn" class="triad-pill" type="button" data-deg="5">
-              <span class="triad-dot" style="background:#228BE6"></span>
-              <span>5 壳咯 Sol</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="sb-controls-row" id="voiceButtons" role="group" aria-label="主旋律音色选择">
-          <button class="sb-chip active" type="button" data-voice="piano">毛毡钢琴</button>
-          <button class="sb-chip" type="button" data-voice="harp">液态竖琴</button>
-          <button class="sb-chip" type="button" data-voice="cello">歌唱大提琴</button>
-          <button class="sb-chip" type="button" data-voice="celesta">晶透钢片琴</button>
-        </div>
-
-        <div class="sb-controls-row" id="moodButtons" role="group" aria-label="极光调式色彩">
-          <button class="sb-chip active" type="button" data-mood="major">暖阳大调</button>
-          <button class="sb-chip" type="button" data-mood="minor">微酸小调</button>
-          <button class="sb-chip" type="button" data-mood="pentatonic">东方五声</button>
-        </div>
-
-        <div class="lever-row">
-          <button id="leverPentaBtn" class="lever-btn" type="button" aria-pressed="true">
-            <span>五音安心开关</span>
-            <span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
-          </button>
-          <button id="leverBachBtn" class="lever-btn" type="button" aria-pressed="false">
-            <span>巴赫影子伴唱</span>
-            <span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
-          </button>
-        </div>
-      </div>
-
-      <div class="vu-meter-card">
-        <div class="bench-label">
-          <span>跳跃声波小山坡（全站联动）</span>
-          <span class="bench-sub" id="vuReadoutBadge">静候开唱</span>
-        </div>
-
-        <div id="hillMeterBox" class="hill-meter-box">
-          <div class="hill-meter-sky">
-            <span class="bench-sub">发声越响，七小只逐一点头助威</span>
-            <svg class="hill-mini-mie" width="34" height="28" viewBox="0 0 112 92" aria-hidden="true">
-              <circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
-              <circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
-              <ellipse cx="56" cy="50" rx="22" ry="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
-              <circle cx="48" cy="49" r="3.8" fill="#231B15"/>
-              <circle cx="64" cy="49" r="3.8" fill="#231B15"/>
-            </svg>
-          </div>
-
-          <div class="choir-meter-row" id="choirMeterBuddies" aria-hidden="true">
-            <span class="mini-buddy-badge" data-c="#F25563"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-            <span class="mini-buddy-badge" data-c="#F7882F"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-            <span class="mini-buddy-badge" data-c="#E64980"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-            <span class="mini-buddy-badge" data-c="#12B886"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-            <span class="mini-buddy-badge" data-c="#228BE6"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-            <span class="mini-buddy-badge" data-c="#7950F2"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-            <span class="mini-buddy-badge" data-c="#E59900"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
-          </div>
-
-          <div class="sound-hills" id="soundHills" aria-hidden="true">
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-            <span class="sound-hill"></span>
-          </div>
-        </div>
-
-        <button id="vuPingBtn" class="pill-btn" type="button" style="justify-content:center;background:var(--butter);color:#231B15">
-          <span>点按咩哞合奏 · 唤醒全部山坡</span>
-        </button>
-      </div>
-    </section>
-
-    <section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
-      <div class="icon-triptych-card">
-        <div class="bench-label">
-          <span>极简提纯 1-3-5 应用图标（v0.49.0 · 29pt 高辨识）</span>
-          <span class="bench-sub">单层草坡三态</span>
-        </div>
-        <div class="icon-triptych-row">
-          <div class="appicon-tile">
-            <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
-              <rect width="100" height="100" fill="#F5EFE2"/>
-              <path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#C2E4D2"/>
-              <g transform="translate(50 51) scale(1.13) translate(-50 -55)">
-                <circle cx="24" cy="60" r="14" fill="#E64980" stroke="#231B15" stroke-width="2.4"/>
-                <circle cx="24" cy="48" r="2.4" fill="#FFB94E" stroke="#231B15" stroke-width="1.3"/>
-                <circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#231B15" stroke-width="2.2"/>
-                <ellipse cx="75" cy="60" rx="12" ry="15" fill="#228BE6" stroke="#231B15" stroke-width="2.4"/>
-                <rect x="41" y="29" width="6" height="14" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2.2"/>
-                <circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.7"/>
-                <rect x="53" y="30" width="6" height="13" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2.2"/>
-                <circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.7"/>
-                <rect x="33" y="42" width="34" height="35" rx="16" fill="#F25563" stroke="#231B15" stroke-width="2.6"/>
-                <circle cx="44" cy="55" r="2.4" fill="#231B15"/>
-                <circle cx="56" cy="55" r="2.4" fill="#231B15"/>
-                <circle cx="47" cy="67" r="5.4" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
-                <circle cx="47" cy="67" r="2.6" fill="#FFB94E"/>
-              </g>
-            </svg>
-            <span>日光纸感</span>
-          </div>
-
-          <div class="appicon-tile">
-            <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
-              <rect width="100" height="100" fill="#11193A"/>
-              <path d="M82 11 C74 13 74 23 82 25 C78 22 78 14 82 11 Z" fill="#FFB94E"/>
-              <path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#1E2E63"/>
-              <g transform="translate(50 51) scale(1.13) translate(-50 -55)">
-                <circle cx="24" cy="60" r="14" fill="#F25A90" stroke="#070B1A" stroke-width="2.4"/>
-                <circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#070B1A" stroke-width="2.2"/>
-                <ellipse cx="75" cy="60" rx="12" ry="15" fill="#3899EE" stroke="#070B1A" stroke-width="2.4"/>
-                <rect x="41" y="29" width="6" height="14" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2.2"/>
-                <circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.7"/>
-                <rect x="53" y="30" width="6" height="13" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2.2"/>
-                <circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.7"/>
-                <rect x="33" y="42" width="34" height="35" rx="16" fill="#F55D6B" stroke="#070B1A" stroke-width="2.6"/>
-                <circle cx="44" cy="55" r="2.4" fill="#090C1C"/>
-                <circle cx="56" cy="55" r="2.4" fill="#090C1C"/>
-                <circle cx="47" cy="67" r="6" fill="#FFB94E" fill-opacity="0.32"/>
-                <circle cx="47" cy="67" r="5.4" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.8"/>
-                <circle cx="47" cy="67" r="2.6" fill="#FFB94E"/>
-              </g>
-            </svg>
-            <span>星夜守望</span>
-          </div>
-
-          <div class="appicon-tile">
-            <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
-              <rect width="100" height="100" fill="#0C0C0E"/>
-              <path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#2C2C33"/>
-              <g transform="translate(50 51) scale(1.13) translate(-50 -55)">
-                <circle cx="24" cy="60" r="14" fill="#8E8E98" stroke="#0C0C0E" stroke-width="2.4"/>
-                <circle cx="85" cy="54" r="8" fill="#64646E" stroke="#0C0C0E" stroke-width="2.2"/>
-                <ellipse cx="75" cy="60" rx="12" ry="15" fill="#AEAEB8" stroke="#0C0C0E" stroke-width="2.4"/>
-                <rect x="41" y="29" width="6" height="14" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.2"/>
-                <circle cx="44" cy="27" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.7"/>
-                <rect x="53" y="30" width="6" height="13" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.2"/>
-                <circle cx="56" cy="28" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.7"/>
-                <rect x="33" y="42" width="34" height="35" rx="16" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.6"/>
-                <circle cx="44" cy="55" r="2.4" fill="#0C0C0E"/>
-                <circle cx="56" cy="55" r="2.4" fill="#0C0C0E"/>
-                <circle cx="47" cy="67" r="5.4" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.8"/>
-                <circle cx="47" cy="67" r="2.6" fill="#3A3A42"/>
-              </g>
-            </svg>
-            <span>单色着染</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="story-moments-card">
-        <div class="bench-label">
-          <span>绘本分幕翻页 · 《天鹅》三幕</span>
-          <span class="bench-sub" id="storyProgressLabel">1/3 · 陶诺领唱</span>
-        </div>
-        <div class="sb-controls-row" id="storyMomentButtons" role="group" aria-label="天鹅故事分幕">
-          <button class="sb-chip active" type="button" data-story="0">1 · 天鹅入水</button>
-          <button class="sb-chip" type="button" data-story="1">2 · 扬颈远望</button>
-          <button class="sb-chip" type="button" data-story="2">3 · 湖面归宁</button>
-        </div>
-        <div class="story-whisper-box">
-          <div class="story-whisper-head">
-            <span id="storyWhisperTitle">第一幕 · 天鹅入水</span>
-            <span id="storyWhisperSolfege" style="color:var(--accent)">Do 1↑ → Ti 7 → Mi 3</span>
-          </div>
-          <p class="story-whisper-text" id="storyWhisperCaption">从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。</p>
-        </div>
-        <div class="story-nav-row">
-          <div class="story-nav-btns">
-            <button id="storyPrevBtn" class="circle-step-btn" type="button" aria-label="上一幕" disabled>&lt;</button>
-            <button id="storyNextBtn" class="circle-step-btn" type="button" aria-label="下一幕">&gt;</button>
-          </div>
-          <button id="storyAuditionBtn" class="pill-btn" type="button" style="background:var(--butter);color:#231B15;padding:5px 12px;font-size:12px">试听此段</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="spaces-bench" aria-label="欣赏、创作与商业设置三域隔离体验">
-      <div class="bench-label">
-        <span>v0.49.0 三域独立空间（欣赏不误改 · 创作有草稿 · 设置对标商用 HIG）</span>
-        <span class="bench-sub" id="spaceMetaReadout">独立快照零串台</span>
-      </div>
-      <div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
-        <button class="space-tab-btn" type="button" role="tab" aria-selected="true" data-space="showcase">1 · 欣赏引导</button>
-        <button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="create">2 · 创作工坊</button>
-        <button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="settings">3 · 商业设置</button>
-      </div>
-      <div class="space-stage-card" id="spaceStagePanel">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-          <strong id="spacePanelTitle" style="font-size:14px">欣赏域：切曲选择器 + 绘本分幕翻页 + 一键「去改编」</strong>
-          <span id="spacePanelStatus" style="font-size:11.5px;font-weight:800;color:var(--accent);background:var(--paper);padding:2px 8px;border-radius:6px">非破坏赏析模式</span>
-        </div>
-        <p id="spacePanelDesc" style="margin:0;font-size:12.5px;font-weight:600;color:var(--sub)">左上角是清晰的曲库切换器而非隐蔽改名，琴键随时跟弹伴奏；想二次创作时点按「去改编」复制副本进入独立创作工坊。</p>
-        <div class="seed-row" aria-label="创作起音灵感种子试听">
-          <button class="seed-btn primary" type="button" data-seed="sunny">晴空种子 · 明亮大调</button>
-          <button class="seed-btn" type="button" data-seed="moonlight">晚风种子 · 柔和抒情</button>
-          <button class="seed-btn" type="button" data-seed="hopping">漫步种子 · 梦幻悬浮</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="cards-grid">
-      <article class="feature-card">
-        <div class="feature-chip" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="5" width="7" height="14" rx="2" stroke="currentColor" stroke-width="2.2"/>
-            <rect x="13" y="5" width="7" height="14" rx="2" stroke="currentColor" stroke-width="2.2"/>
-          </svg>
-        </div>
-        <h2>严格隔离欣赏与自由创作空间</h2>
-        <p>「欣赏」专注名曲分幕翻页与跟灯跟弹；「创作」拥有独立草稿快照、三颗起音种子、四幕和声直调与醒目「试听 / 保存作品」底栏。</p>
-      </article>
-
-      <article class="feature-card">
-        <div class="feature-chip" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2>两极视觉契约与七小只灵动交互</h2>
-        <p>暖墨描边与硬偏移阴影专属于可点击按钮，只读标签彻底去胶囊去框；陶诺、拍咯与壳咯等七小只随音级、音准与调式同步呼吸。</p>
-      </article>
-
-      <article class="feature-card">
-        <div class="feature-chip" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2.2"/>
-            <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2>商业级原生设置与 28 首离线曲库</h2>
-        <p>遵循 iOS HIG 原生分组列表呈现偏好、隐私条款与开源致谢，100% 离线运行并支持明信片 PNG、WAV 与标准 MIDI 导出。</p>
-      </article>
-    </section>
-
-    <footer class="footer-card">
-      <span>100% 本机离线运行 · 无账号 · 无广告 · 不上传任何录音</span>
-      <div class="links">
-        <a href="privacy.html">隐私政策</a>
-        <a href="terms.html">使用条款</a>
-        <a href="licenses.html">开源许可</a>
-        <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
-        <a href="https://github.com/mjuvdeysii/chimmo/issues">问题反馈</a>
-      </div>
-    </footer>
-  </div>
-
-  <script>
-    (function () {
-      const members = [
-        { deg: 1, name: "陶诺", sol: "Do", role: "家", color: "#F25563", dark: "#8F1D28", tilt: 0, hz: 261.63, shape: "taono" },
-        { deg: 2, name: "豆叩", sol: "Re", role: "迈步", color: "#F7882F", dark: "#8A420A", tilt: 4, hz: 293.66, shape: "doko" },
-        { deg: 3, name: "拍咯", sol: "Mi", role: "晴雨", color: "#E64980", dark: "#861942", tilt: 0, hz: 329.63, shape: "plokko" },
-        { deg: 4, name: "呜嘟", sol: "Fa", role: "悬步", color: "#12B886", dark: "#085E45", tilt: -4.5, hz: 349.23, shape: "udo" },
-        { deg: 5, name: "壳咯", sol: "Sol", role: "远望", color: "#228BE6", dark: "#0F4C8A", tilt: 0, hz: 392.00, shape: "corllo" },
-        { deg: 6, name: "钵莫", sol: "La", role: "怀旧", color: "#7950F2", dark: "#3F2299", tilt: 0, hz: 440.00, shape: "bomo" },
-        { deg: 7, name: "叮尖", sol: "Ti", role: "踮脚", color: "#E59900", dark: "#7A4E00", tilt: -9, hz: 493.88, shape: "tinki" }
-      ];
-
-      let audioCtx = null;
-      let mouAwake = true;
-      let activeDegree = null;
-      let clearTimer = null;
-      let vinylTimer = null;
-      let hillTimer = null;
-
-      const hillBox = document.getElementById("hillMeterBox");
-      const hillBadge = document.getElementById("vuReadoutBadge");
-      const hills = Array.from(document.querySelectorAll("#soundHills .sound-hill"));
-      const miniBuddies = Array.from(document.querySelectorAll("#choirMeterBuddies .mini-buddy-badge"));
-
-      function pulseSoundHills(level) {
-        const lv = Math.max(0.15, Math.min(1.0, level || 0.6));
-        const litCount = Math.max(2, Math.min(9, Math.round(lv * 9)));
-        const cheeringCount = Math.max(1, Math.min(7, Math.ceil((litCount / 9) * 7)));
-        hillBox.classList.add("singing");
-        hills.forEach((el, idx) => {
-          const isOn = idx < litCount;
-          const arch = 34 + Math.sin(((idx + 1) / 10) * Math.PI) * (62 * lv);
-          el.style.height = `${isOn ? Math.round(arch) : (idx % 2 === 1 ? 46 : 36)}%`;
-          el.classList.toggle("on", isOn);
-          el.classList.toggle("warm", isOn && idx >= 4 && idx < 7);
-          el.classList.toggle("hot", isOn && idx >= 7);
-        });
-        miniBuddies.forEach((b, idx) => {
-          const cheer = idx < cheeringCount;
-          b.classList.toggle("cheering", cheer);
-          b.style.backgroundColor = cheer ? "#FFE49E" : "#FFFDF7";
-          b.style.borderColor = cheer ? b.dataset.c : "#231B15";
-        });
-        hillBadge.textContent = lv >= 0.74 ? "欢快高音齐唱" : "轻柔声波跃动";
-        clearTimeout(hillTimer);
-        hillTimer = setTimeout(() => {
-          hillBox.classList.remove("singing");
-          hills.forEach((el, idx) => {
-            el.style.height = `${idx % 2 === 1 ? 46 : 36}%`;
-            el.classList.remove("on", "warm", "hot");
-          });
-          miniBuddies.forEach((b) => {
-            b.classList.remove("cheering");
-            b.style.backgroundColor = "#FFFDF7";
-            b.style.borderColor = "#231B15";
-          });
-          hillBadge.textContent = "静候开唱";
-        }, 720);
-      }
-
-      function ensureAudio() {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return null;
-        if (!audioCtx) audioCtx = new AC();
-        if (audioCtx.state === "suspended") audioCtx.resume();
-        return audioCtx;
-      }
-
-      function playTone(freq, durationSec, delaySec, gainPeak, type) {
-        pulseSoundHills(Math.min(0.96, 0.44 + (gainPeak || 0.16) * 2.5));
-        const ctx = ensureAudio();
-        if (!ctx) return;
-        const t0 = ctx.currentTime + (delaySec || 0);
-        const osc = ctx.createOscillator();
-        const sub = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type || "triangle";
-        sub.type = "sine";
-        osc.frequency.setValueAtTime(freq, t0);
-        sub.frequency.setValueAtTime(freq * 2, t0);
-
-        const subGain = ctx.createGain();
-        subGain.gain.setValueAtTime(0.18, t0);
-        gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(gainPeak || 0.16, t0 + 0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (durationSec || 0.75));
-
-        osc.connect(gain);
-        sub.connect(subGain);
-        subGain.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t0);
-        sub.start(t0);
-        osc.stop(t0 + (durationSec || 0.75) + 0.04);
-        sub.stop(t0 + (durationSec || 0.75) + 0.04);
-      }
-
-      function buildFigureSVG(m, index) {
-        const animClass = index % 2 === 0 ? "fig-idle-even" : "fig-idle-odd";
-        let detail = "";
-        if (m.shape === "taono") {
-          detail = `
-            <rect x="20" y="13" width="6" height="14" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/>
-            <circle cx="23" cy="12" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/>
-            <g transform="rotate(-11 38 22)">
-              <rect x="34" y="14" width="6" height="13" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/>
-              <circle cx="37" cy="13" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/>
-            </g>
-            <rect x="14" y="25" width="32" height="31" rx="14" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-            <circle cx="27" cy="47" r="5.5" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
-            <circle cx="27" cy="47" r="2.8" fill="#FFB94E"/>
-          `;
-        } else if (m.shape === "doko") {
-          detail = `
-            <rect x="14" y="29" width="32" height="27" rx="13" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-            <rect x="23" y="26" width="14" height="3.2" rx="1.6" fill="${m.dark}"/>
-          `;
-        } else if (m.shape === "plokko") {
-          detail = `
-            <ellipse cx="30" cy="57" rx="12" ry="3.2" fill="${m.dark}"/>
-            <rect x="8" y="37" width="13" height="7" rx="3.5" transform="rotate(10 14 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/>
-            <rect x="39" y="37" width="13" height="7" rx="3.5" transform="rotate(-10 45 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="30" cy="42" r="15" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-            <circle cx="30" cy="28" r="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>
-          `;
-        } else if (m.shape === "udo") {
-          detail = `
-            <ellipse cx="30" cy="42" rx="14" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-            <circle cx="39" cy="34" r="2.2" fill="${m.dark}"/>
-            <circle cx="39" cy="40" r="1.7" fill="${m.dark}"/>
-          `;
-        } else if (m.shape === "corllo") {
-          detail = `
-            <circle cx="43" cy="34" r="9.5" fill="${m.dark}" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="43" cy="34" r="5.5" fill="#FFFDF7"/>
-            <circle cx="43" cy="34" r="2.8" fill="#FFE49E"/>
-            <ellipse cx="28" cy="42" rx="13" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-          `;
-        } else if (m.shape === "bomo") {
-          detail = `
-            <ellipse cx="30" cy="44" rx="16.5" ry="12.5" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-            <ellipse cx="30" cy="34" rx="9" ry="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>
-          `;
-        } else {
-          detail = `
-            <line x1="30" y1="18" x2="30" y2="25" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
-            <circle cx="30" cy="15" r="3.6" fill="#FFE49E" stroke="#231B15" stroke-width="1.4"/>
-            <rect x="19" y="25" width="22" height="31" rx="11" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
-          `;
-        }
-
-        const eyeY = m.shape === "bomo" ? 44 : (m.shape === "doko" ? 42 : 39);
-        return `
-          <svg class="figure-svg" viewBox="0 0 60 66" aria-hidden="true">
-            <ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(35,27,21,0.16)"/>
-            <g class="${animClass}" transform="rotate(${m.tilt} 30 58)">
-              <circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="${m.color}" stroke-width="2.2" opacity="0"/>
-              <ellipse cx="24" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
-              <ellipse cx="36" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
-              ${detail}
-              <g class="eyes-open">
-                <circle class="eye-pupil" cx="25.5" cy="${eyeY}" r="2.5" fill="#231B15"/>
-                <circle cx="24.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
-                <circle class="eye-pupil" cx="34.5" cy="${eyeY}" r="2.5" fill="#231B15"/>
-                <circle cx="33.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
-              </g>
-              <g class="eyes-sing" opacity="0">
-                <path d="M23 ${eyeY + 0.8} Q25.5 ${eyeY - 2.4} 28 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/>
-                <path d="M32 ${eyeY + 0.8} Q34.5 ${eyeY - 2.4} 37 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/>
-              </g>
-            </g>
-          </svg>
-        `;
-      }
-
-      const choirGrid = document.getElementById("choirGrid");
-      const choirStatus = document.getElementById("choirStatus");
-
-      members.forEach((m, idx) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "figure-btn";
-        btn.dataset.deg = String(m.deg);
-        btn.setAttribute("aria-label", `${m.deg} ${m.name} ${m.sol}，${m.role}`);
-        btn.innerHTML = `
-          ${buildFigureSVG(m, idx)}
-          <div class="figure-meta">
-            <span class="figure-deg" style="background:${m.color}">${m.deg}</span>
-            <span class="figure-name">${m.name}</span>
-          </div>
-        `;
-        btn.addEventListener("click", () => triggerMember(m));
-        choirGrid.appendChild(btn);
-      });
-
-      function updateGaze(targetDeg) {
-        const buttons = choirGrid.querySelectorAll(".figure-btn");
-        buttons.forEach((btn) => {
-          const deg = Number(btn.dataset.deg);
-          const isTarget = deg === targetDeg;
-          btn.classList.toggle("singing", isTarget);
-          const halo = btn.querySelector(".sing-halo");
-          const open = btn.querySelector(".eyes-open");
-          const sing = btn.querySelector(".eyes-sing");
-          if (halo) halo.setAttribute("opacity", isTarget ? "0.75" : "0");
-          if (open) open.setAttribute("opacity", isTarget ? "0" : "1");
-          if (sing) sing.setAttribute("opacity", isTarget ? "1" : "0");
-          const pupils = btn.querySelectorAll(".eye-pupil");
-          const dx = targetDeg == null ? 0 : Math.max(-1.8, Math.min(1.8, (targetDeg - deg) * 0.6));
-          const dy = targetDeg == null ? 0 : -0.7;
-          pupils.forEach((p) => {
-            p.setAttribute("transform", `translate(${dx}, ${dy})`);
-          });
-        });
-      }
-
-      function triggerMember(m) {
-        activeDegree = m.deg;
-        updateGaze(m.deg);
-        choirStatus.textContent = `${m.deg} ${m.sol} · ${m.name}（${m.role}）`;
-        playTone(m.hz, 0.9, 0, 0.16, "triangle");
-        clearTimeout(clearTimer);
-        clearTimer = setTimeout(() => {
-          if (activeDegree === m.deg) {
-            activeDegree = null;
-            updateGaze(null);
-          }
-        }, 720);
-      }
-
-      document.querySelectorAll("#xyloKeys .xylo-key").forEach((keyEl) => {
-        keyEl.addEventListener("click", () => {
-          const hz = Number(keyEl.dataset.hz) || 261.63;
-          playTone(hz, 0.85, 0, 0.16, "sine");
-          keyEl.classList.add("struck");
-          setTimeout(() => keyEl.classList.remove("struck"), 180);
-        });
-      });
-
-      const vinylCard = document.getElementById("vinylBoutiqueCard");
-      const vinylStatus = document.getElementById("vinylStatusText");
-      vinylCard.addEventListener("click", () => {
-        vinylCard.classList.toggle("spinning");
-        clearTimeout(vinylTimer);
-        if (vinylCard.classList.contains("spinning")) {
-          vinylStatus.textContent = "书页已翻开 · 正在演奏五音精选片段";
-          [261.63, 329.63, 392.00, 440.00, 392.00].forEach((hz, i) => {
-            playTone(hz, 0.6, i * 0.22, 0.14, "triangle");
-          });
-          vinylTimer = setTimeout(() => {
-            vinylCard.classList.remove("spinning");
-            vinylStatus.textContent = "轻点翻开奶油乐谱书页，跟随书签一起跳音阶";
-          }, 1500);
-        } else {
-          vinylStatus.textContent = "轻点翻开奶油乐谱书页，跟随书签一起跳音阶";
-        }
-      });
-
-      const voiceSpecs = {
-        piano:   { name: "毛毡钢琴", cycles: 4.0, ratio: 2.5, hw: 0.22, waveType: "triangle", color: "var(--accent)", hz: 329.63 },
-        harp:    { name: "液态竖琴", cycles: 5.0, ratio: 3.0, hw: 0.26, waveType: "sine",     color: "var(--blue)",   hz: 392.00 },
-        cello:   { name: "歌唱大提琴", cycles: 3.2, ratio: 2.0, hw: 0.30, waveType: "sawtooth", color: "var(--gold)",   hz: 261.63 },
-        celesta: { name: "晶透钢片琴", cycles: 6.2, ratio: 4.0, hw: 0.32, waveType: "sine",     color: "var(--violet)", hz: 523.25 }
-      };
-      const moodSpecs = {
-        major:      { name: "暖阳大调", thirdHz: 329.63, envScale: 1.00, plokkoClass: "mood-happy", plokkoLabel: "3 拍咯 Mi" },
-        minor:      { name: "微酸小调", thirdHz: 311.13, envScale: 0.84, plokkoClass: "mood-soft",  plokkoLabel: "3 拍咯 m3" },
-        pentatonic: { name: "东方五声", thirdHz: 329.63, envScale: 0.92, plokkoClass: "mood-happy", plokkoLabel: "3 拍咯 Mi" }
-      };
-      let currentVoice = "piano";
-      let currentMood = "major";
-      const oscWave = document.getElementById("soundOscWave");
-      const soundStatus = document.getElementById("soundStatusText");
-      const triad3Btn = document.getElementById("triad3Btn");
-
-      function renderOscilloscope() {
-        const v = voiceSpecs[currentVoice];
-        const m = moodSpecs[currentMood];
-        const pts = [];
-        const samples = 44;
-        for (let i = 0; i < samples; i++) {
-          const u = i / (samples - 1);
-          const x = (12 + u * 396).toFixed(1);
-          const env = Math.sin(u * Math.PI) * m.envScale;
-          const ang = u * Math.PI * 2 * v.cycles;
-          const val = (Math.sin(ang) + v.hw * Math.sin(ang * v.ratio + 0.45)) / (1 + v.hw);
-          const y = (37 - env * val * 25).toFixed(1);
-          pts.push((i === 0 ? "M" : "L") + x + " " + y);
-        }
-        oscWave.setAttribute("d", pts.join(" "));
-        oscWave.style.stroke = v.color;
-        soundStatus.textContent = `${v.name} · ${m.name}`;
-      }
-
-      document.querySelectorAll("#voiceButtons .sb-chip").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          currentVoice = btn.dataset.voice;
-          document.querySelectorAll("#voiceButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
-          renderOscilloscope();
-          const v = voiceSpecs[currentVoice];
-          playTone(v.hz, 0.72, 0, 0.14, v.waveType === "sawtooth" ? "triangle" : v.waveType);
-        });
-      });
-
-      document.querySelectorAll("#moodButtons .sb-chip").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          currentMood = btn.dataset.mood;
-          document.querySelectorAll("#moodButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
-          const m = moodSpecs[currentMood];
-          triad3Btn.classList.remove("mood-happy", "mood-soft");
-          triad3Btn.classList.add(m.plokkoClass);
-          triad3Btn.querySelectorAll("span")[1].textContent = m.plokkoLabel;
-          renderOscilloscope();
-          playTone(261.63, 0.55, 0, 0.12, "triangle");
-          playTone(m.thirdHz, 0.65, 0.08, 0.13, "triangle");
-          playTone(392.00, 0.72, 0.16, 0.12, "triangle");
-        });
-      });
-
-      [document.getElementById("triad1Btn"), triad3Btn, document.getElementById("triad5Btn")].forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const deg = Number(btn.dataset.deg);
-          document.querySelectorAll(".triad-pill").forEach((p) => p.classList.toggle("lit", p === btn));
-          const hz = deg === 1 ? 261.63 : (deg === 3 ? moodSpecs[currentMood].thirdHz : 392.00);
-          playTone(hz, 0.78, 0, 0.16, "triangle");
-        });
-      });
-
-      document.querySelectorAll("#leverPentaBtn, #leverBachBtn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const next = btn.getAttribute("aria-pressed") !== "true";
-          btn.setAttribute("aria-pressed", next ? "true" : "false");
-          playTone(next ? 523.25 : 392.00, 0.35, 0, 0.11, "sine");
-        });
-      });
-
-      document.getElementById("vuPingBtn").addEventListener("click", () => {
-        playTone(261.63, 0.52, 0, 0.18, "triangle");
-        playTone(329.63, 0.56, 0.09, 0.16, "triangle");
-        playTone(392.00, 0.70, 0.18, 0.20, "triangle");
-        pulseSoundHills(0.92);
-      });
-
-      renderOscilloscope();
-
-      const storyMoments = [
-        {
-          badge: "陶诺领唱",
-          title: "第一幕 · 天鹅入水",
-          solfege: "Do 1↑ → Ti 7 → Mi 3",
-          caption: "从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。",
-          notes: [523.25, 493.88, 329.63]
-        },
-        {
-          badge: "壳咯远望",
-          title: "第二幕 · 扬颈远望",
-          solfege: "Fa 4 → Sol 5 → La 6 → Do 1↑",
-          caption: "4→5→6 像羽翼蓄力，一路攀回高音 1↑，展现清晰上扬的线条弧度。",
-          notes: [349.23, 392.00, 440.00, 523.25]
-        },
-        {
-          badge: "陶诺归家",
-          title: "第三幕 · 湖面归宁",
-          solfege: "Fa 4 → Mi 3 → Re 2 → Do 1",
-          caption: "4→3→2→1 级进轻落回陶诺，整片湖水归于温柔的平静。",
-          notes: [349.23, 329.63, 293.66, 261.63]
-        }
-      ];
-      const storyBadge = document.getElementById("storyProgressLabel");
-      const storyTitle = document.getElementById("storyWhisperTitle");
-      const storySolfege = document.getElementById("storyWhisperSolfege");
-      const storyCaption = document.getElementById("storyWhisperCaption");
-      const storyPrevBtn = document.getElementById("storyPrevBtn");
-      const storyNextBtn = document.getElementById("storyNextBtn");
-      const storyAuditionBtn = document.getElementById("storyAuditionBtn");
-      let currentStoryIdx = 0;
-
-      function selectStoryChapter(idx, shouldPlay) {
-        currentStoryIdx = Math.max(0, Math.min(storyMoments.length - 1, idx));
-        const m = storyMoments[currentStoryIdx];
-        document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((b) => {
-          b.classList.toggle("active", Number(b.dataset.story) === currentStoryIdx);
-        });
-        storyBadge.textContent = `${currentStoryIdx + 1}/${storyMoments.length} · ${m.badge}`;
-        storyTitle.textContent = m.title;
-        storySolfege.textContent = m.solfege;
-        storyCaption.textContent = m.caption;
-        storyPrevBtn.disabled = currentStoryIdx <= 0;
-        storyNextBtn.disabled = currentStoryIdx >= storyMoments.length - 1;
-        if (shouldPlay) {
-          m.notes.forEach((hz, i) => playTone(hz, 0.56, i * 0.16, 0.14, "triangle"));
-        }
-      }
-
-      document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((btn) => {
-        btn.addEventListener("click", () => selectStoryChapter(Number(btn.dataset.story) || 0, true));
-      });
-      storyPrevBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx - 1, true));
-      storyNextBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx + 1, true));
-      storyAuditionBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx, true));
-
-      const spaceSpecs = {
-        showcase: {
-          title: "欣赏域：切曲选择器 + 绘本分幕翻页 + 一键「去改编」",
-          status: "非破坏赏析模式",
-          meta: "经典曲库只读保护",
-          desc: "左上角是清晰的曲库切换器而非隐蔽改名，琴键随时跟弹伴奏；想二次创作时点按「去改编」复制副本进入独立创作工坊。"
-        },
-        create: {
-          title: "创作域：起音灵感种子 + 四幕和声直调 + 「试听 / 保存作品」",
-          status: "实时草稿与时长计数",
-          meta: "切曲不覆盖未保存编曲",
-          desc: "支持哼唱捉珠、节奏画线、七小只点写、跟灯安全切换及四幕和弦实时改写，底部常驻「试听」与「保存作品」。"
-        },
-        settings: {
-          title: "商业级原生设置：Preferences · 隐私政策 · 开源鸣谢",
-          status: "iOS HIG insetGrouped",
-          meta: "零广告 · 纯本地离线",
-          desc: "外观、默认舞台、触感反馈与五音防跑调一目了然，结构化承载隐私条款、使用协议、SwiftF0 MIT 许可与声音角色图鉴。"
-        }
-      };
-      const spaceTitle = document.getElementById("spacePanelTitle");
-      const spaceStatus = document.getElementById("spacePanelStatus");
-      const spaceMeta = document.getElementById("spaceMetaReadout");
-      const spaceDesc = document.getElementById("spacePanelDesc");
-      document.querySelectorAll(".space-tab-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const sp = spaceSpecs[btn.dataset.space] || spaceSpecs.showcase;
-          document.querySelectorAll(".space-tab-btn").forEach((b) => b.setAttribute("aria-selected", b === btn ? "true" : "false"));
-          spaceTitle.textContent = sp.title;
-          spaceStatus.textContent = sp.status;
-          spaceMeta.textContent = sp.meta;
-          spaceDesc.textContent = sp.desc;
-          playTone(392.00, 0.36, 0, 0.12, "sine");
-        });
-      });
-
-      const starterSeeds = {
-        sunny:     { notes: [261.63, 329.63, 392.00, 440.00, 392.00], type: "triangle", level: 0.78 },
-        moonlight: { notes: [220.00, 261.63, 311.13, 293.66, 261.63], type: "sine",     level: 0.62 },
-        hopping:   { notes: [261.63, 293.66, 369.99, 392.00, 329.63, 261.63], type: "triangle", level: 0.84 }
-      };
-      document.querySelectorAll(".seed-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const s = starterSeeds[btn.dataset.seed] || starterSeeds.sunny;
-          s.notes.forEach((hz, i) => playTone(hz, 0.50, i * 0.17, 0.14, s.type));
-          pulseSoundHills(s.level);
-        });
-      });
-
-      const postcardSvg = document.getElementById("postcardArtSvg");
-      const postcardPill = document.getElementById("postcardModePill");
-
-      function renderPostcardArt(mode) {
-        const hillSvg = '<path d="M0 98 Q46 80 100 94 T200 88 L200 122 L0 122 Z" fill="var(--hill-back)"/><path d="M0 107 Q62 93 128 106 T200 99 L200 122 L0 122 Z" fill="var(--hill-front)"/>';
-        let art = '';
-        if (mode === "disc") {
-          postcardPill.textContent = "音乐盒花环";
-          art = '<circle cx="100" cy="58" r="40" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><circle cx="100" cy="58" r="28" fill="none" stroke="#228BE6" stroke-width="1.4" stroke-opacity="0.45"/><circle cx="100" cy="58" r="14" fill="var(--butter)" stroke="var(--outline)" stroke-width="1.6"/><line x1="100" y1="42" x2="100" y2="14" stroke="#FFB94E" stroke-width="2.2" stroke-linecap="round"/><polygon points="100,7 102.5,12 107.5,14 102.5,16 100,21 97.5,16 92.5,14 97.5,12" fill="#FFB94E" stroke="var(--outline)" stroke-width="1.2"/><path d="M78 46 Q100 32 120 48 T112 74" fill="none" stroke="#F25563" stroke-width="2.4" stroke-linecap="round"/><circle cx="78" cy="46" r="4.2" fill="#F25563" stroke="var(--outline)" stroke-width="1.2"/><circle cx="120" cy="48" r="4.2" fill="#E64980" stroke="var(--outline)" stroke-width="1.2"/><circle cx="112" cy="74" r="4.2" fill="#228BE6" stroke="var(--outline)" stroke-width="1.2"/>';
-        } else if (mode === "river") {
-          postcardPill.textContent = "绘本山坡";
-          art = '<rect x="14" y="14" width="172" height="84" rx="14" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><path d="M16 74 Q64 56 116 70 T184 64 L184 96 L16 96 Z" fill="var(--hill-back)" fill-opacity="0.65"/><line x1="26" y1="38" x2="174" y2="38" stroke="#228BE6" stroke-width="1.2" stroke-opacity="0.4"/><line x1="26" y1="68" x2="174" y2="68" stroke="#F25563" stroke-width="1.4" stroke-opacity="0.5"/><line x1="62" y1="22" x2="62" y2="92" stroke="#FFB94E" stroke-width="2.2" stroke-linecap="round"/><polygon points="62,16 64.2,20 68.5,22 64.2,24 62,28 59.8,24 55.5,22 59.8,20" fill="#FFB94E" stroke="var(--outline)" stroke-width="1.1"/><path d="M32 68 C62 68 70 38 102 38 C134 38 140 54 168 54" fill="none" stroke="#0E766E" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="68" r="4.5" fill="#F25563" stroke="var(--outline)" stroke-width="1.3"/><circle cx="102" cy="38" r="4.5" fill="#228BE6" stroke="var(--outline)" stroke-width="1.3"/><circle cx="168" cy="54" r="4.5" fill="#E64980" stroke="var(--outline)" stroke-width="1.3"/>';
-        } else {
-          postcardPill.textContent = "八角星环";
-          art = '<circle cx="100" cy="58" r="40" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><polygon points="100,28 126,58 100,88 74,58" fill="none" stroke="#7950F2" stroke-width="2.2" stroke-linejoin="round"/><circle cx="100" cy="58" r="11" fill="var(--butter)" stroke="var(--outline)" stroke-width="1.5"/><circle cx="100" cy="28" r="4.5" fill="#F25563" stroke="var(--outline)" stroke-width="1.2"/><circle cx="126" cy="58" r="4.5" fill="#228BE6" stroke="var(--outline)" stroke-width="1.2"/><circle cx="100" cy="88" r="4.5" fill="#12B886" stroke="var(--outline)" stroke-width="1.2"/><circle cx="74" cy="58" r="4.5" fill="#E64980" stroke="var(--outline)" stroke-width="1.2"/>';
-        }
-        postcardSvg.innerHTML = hillSvg + art;
-      }
-
-      document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
-          renderPostcardArt(btn.dataset.pmode);
-          const chord = btn.dataset.pmode === "disc" ? [261.63, 329.63] : (btn.dataset.pmode === "river" ? [329.63, 392.00] : [293.66, 440.00]);
-          playTone(chord[0], 0.45, 0, 0.13, "triangle");
-          playTone(chord[1], 0.58, 0.08, 0.14, "sine");
-        });
-      });
-      renderPostcardArt("river");
-
-      const mieCard = document.getElementById("mieCard");
-      const mouCard = document.getElementById("mouCard");
-      const mieWaves = document.getElementById("mieWaves");
-      const mieOpen = document.getElementById("mieOpenEyes");
-      const mieSing = document.getElementById("mieSingEyes");
-      const mouOpen = document.getElementById("mouOpenEyes");
-      const mouSleep = document.getElementById("mouSleepEyes");
-      const mouArcs = document.getElementById("mouSleepArcs");
-      const toggleMouBtn = document.getElementById("toggleMouBtn");
-      const mouRoleText = document.getElementById("mouRoleText");
-
-      mieCard.addEventListener("click", () => {
-        mieCard.classList.add("singing");
-        mieWaves.setAttribute("opacity", "1");
-        mieOpen.setAttribute("opacity", "0");
-        mieSing.setAttribute("opacity", "1");
-        playTone(392.0, 0.65, 0, 0.15, "triangle");
-        playTone(523.25, 0.95, 0.10, 0.17, "triangle");
-        setTimeout(() => {
-          mieCard.classList.remove("singing");
-          mieWaves.setAttribute("opacity", "0");
-          mieOpen.setAttribute("opacity", "1");
-          mieSing.setAttribute("opacity", "0");
-        }, 820);
-      });
-
-      function syncMouState() {
-        mouCard.classList.toggle("sleeping", !mouAwake);
-        mouOpen.setAttribute("opacity", mouAwake ? "1" : "0");
-        mouSleep.setAttribute("opacity", mouAwake ? "0" : "1");
-        mouArcs.setAttribute("opacity", mouAwake ? "0" : "1");
-        toggleMouBtn.setAttribute("aria-pressed", mouAwake ? "true" : "false");
-        toggleMouBtn.querySelector("span").textContent = mouAwake ? "哞 · 伴奏唤醒" : "哞 · 闭眼小憩";
-        mouRoleText.textContent = mouAwake ? "低音根音 · 睁眼四幕和声护航" : "当前纯清唱 · 闭眼安静小憩";
-      }
-
-      mouCard.addEventListener("click", () => {
-        if (!mouAwake) {
-          mouAwake = true;
-          syncMouState();
-        }
-        mouCard.classList.add("singing");
-        playTone(130.81, 1.05, 0, 0.18, "sine");
-        playTone(196.00, 0.95, 0.03, 0.09, "triangle");
-        playTone(329.63, 0.95, 0.06, 0.08, "triangle");
-        setTimeout(() => mouCard.classList.remove("singing"), 860);
-      });
-
-      toggleMouBtn.addEventListener("click", () => {
-        mouAwake = !mouAwake;
-        syncMouState();
-      });
-
-      const toggleThemeBtn = document.getElementById("toggleThemeBtn");
-      const themeLabel = document.getElementById("themeLabel");
-      const prefersNight = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      let isNight = prefersNight;
-
-      function applyTheme() {
-        document.documentElement.dataset.theme = isNight ? "night" : "day";
-        toggleThemeBtn.setAttribute("aria-pressed", isNight ? "true" : "false");
-        themeLabel.textContent = isNight ? "切换日光" : "切换夜灯";
-      }
-      applyTheme();
-      syncMouState();
-
-      toggleThemeBtn.addEventListener("click", () => {
-        isNight = !isNight;
-        applyTheme();
-      });
-    })();
-  </script>
+<div class="wrap">
+<header class="topbar">
+<div class="brand-mark">
+<div class="brand-seal" aria-hidden="true">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+<circle cx="6.2" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.5"/>
+<circle cx="17.8" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.5"/>
+<rect x="7.8" y="6.2" width="8.4" height="12.2" rx="4.2" fill="#F25563" stroke="#231B15" stroke-width="1.6"/>
+<circle cx="12" cy="14.2" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
+</svg>
+</div>
+<span class="brand-title">咩哞 · CHIMMO</span>
+<span class="brand-ver">v0.56.0</span>
+</div>
+<div class="controls">
+<button id="toggleMouBtn" class="pill-btn" type="button" aria-pressed="true">
+<span>哞 · 伴奏唤醒</span>
+</button>
+<button id="toggleThemeBtn" class="pill-btn" type="button" aria-pressed="false">
+<svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+<circle cx="12" cy="12" r="5" fill="currentColor"/>
+<path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
+<span id="themeLabel">切换夜灯</span>
+</button>
+</div>
+</header>
+<section class="hero">
+<div class="hero-scenery" aria-hidden="true">
+<svg class="hero-hills-svg" viewBox="0 0 960 440" preserveAspectRatio="none">
+<path d="M0 320 Q210 265 440 315 T960 290 L960 440 L0 440 Z" fill="var(--hill-back)" opacity="0.62"/>
+<path d="M0 365 Q300 325 610 362 T960 345 L960 440 L0 440 Z" fill="var(--hill-front)" opacity="0.72"/>
+</svg>
+</div>
+<svg class="hero-sun-badge" viewBox="0 0 72 72" aria-hidden="true">
+<g stroke="var(--outline)" stroke-width="2.2" stroke-linecap="round" opacity="0.88">
+<line x1="36" y1="6" x2="36" y2="12"/>
+<line x1="36" y1="60" x2="36" y2="66"/>
+<line x1="6" y1="36" x2="12" y2="36"/>
+<line x1="60" y1="36" x2="66" y2="36"/>
+<line x1="15" y1="15" x2="20" y2="20"/>
+<line x1="52" y1="52" x2="57" y2="57"/>
+<line x1="57" y1="15" x2="52" y2="20"/>
+<line x1="20" y1="52" x2="15" y2="57"/>
+</g>
+<circle cx="36" cy="36" r="18" fill="var(--butter)" stroke="var(--outline)" stroke-width="2.2"/>
+</svg>
+<div class="hero-head">
+<div>
+<span class="book-tag">CHIMMO ATELIER EDITION · 轻哼成曲，七声和鸣</span>
+<h1>轻哼成曲，七声和鸣</h1>
+<p class="lead">《摸索台灯》同宇宙声学衍生作品 —— 窑纸软胶暖调绘本工坊。轻触小羊咩、小牛哞、七小只合唱伙伴与彩色琴块，让每一句轻哼落成可看、可触、可分享的立体童书曲谱。</p>
+</div>
+</div>
+<div class="duo-stage">
+<button id="mieCard" class="mascot-card mie-theme" type="button" aria-label="小羊咩，点击试听高音主旋律">
+<span class="wave-badge" aria-hidden="true">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+<path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+<path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
+</span>
+<svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+<ellipse cx="56" cy="83" rx="28" ry="4.5" fill="rgba(35,27,21,0.16)"/>
+<g class="sheep-body-anim">
+<g id="mieWaves" opacity="0">
+<path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
+</g>
+<ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
+<ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
+<g stroke="#231B15" stroke-width="3.6" fill="none">
+<circle cx="43" cy="48" r="18"/>
+<circle cx="69" cy="48" r="18"/>
+<ellipse cx="56" cy="41" rx="23" ry="20"/>
+<ellipse cx="56" cy="54" rx="26" ry="20"/>
+</g>
+<circle cx="43" cy="48" r="18" fill="#FFFDF7"/>
+<circle cx="69" cy="48" r="18" fill="#FFFDF7"/>
+<ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFDF7"/>
+<ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFDF7"/>
+<ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4" stroke="#231B15" stroke-width="1.4"/>
+<path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
+<path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
+<circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
+<circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
+<g id="mieOpenEyes" class="eye-blink">
+<circle class="pupil" cx="48" cy="48" r="3.4" fill="#231B15"/>
+<circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+<circle class="pupil" cx="64" cy="48" r="3.4" fill="#231B15"/>
+<circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+</g>
+<g id="mieSingEyes" opacity="0">
+<path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
+</g>
+<ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
+<ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
+</g>
+</svg>
+<p class="mascot-name">咩 · Mie（云朵小羊）</p>
+<p class="mascot-role">高音主旋律 · 扁平草地角落领唱</p>
+</button>
+<button id="mouCard" class="mascot-card mou-theme" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
+<span class="wave-badge" aria-hidden="true">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+<path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+<path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
+</span>
+<svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+<ellipse cx="56" cy="83" rx="31" ry="4.5" fill="rgba(35,27,21,0.16)"/>
+<g class="cow-body-anim">
+<g id="mouSleepArcs" opacity="0">
+<path class="sleep-arc-1" d="M88 21 Q92 17 96 21" fill="none" stroke="var(--gold)" stroke-width="2.0" stroke-linecap="round"/>
+<path class="sleep-arc-2" d="M95 14 Q99.5 9.5 104 14" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
+</g>
+<ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
+<ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
+<rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
+<path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
+<path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
+<ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD" stroke="#231B15" stroke-width="1.4"/>
+<ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+<ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+<g id="mouOpenEyes" class="eye-blink-delay">
+<circle class="pupil" cx="46" cy="44" r="3.4" fill="#231B15"/>
+<circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+<circle class="pupil" cx="66" cy="44" r="3.4" fill="#231B15"/>
+<circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+</g>
+<g id="mouSleepEyes" opacity="0">
+<path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.2" stroke-linecap="round"/>
+</g>
+<ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
+<ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
+</g>
+</svg>
+<p class="mascot-name">哞 · Mou（可可小牛）</p>
+<p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
+</button>
+</div>
+<div class="choir-shelf">
+<div class="choir-header">
+<p class="choir-title">咩哞七小只合唱山坡（调内 1–7 音级）</p>
+<p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
+</div>
+<div class="shelf-stage">
+<div class="choir-grid" id="choirGrid"></div>
+<div class="meadow-strip" aria-hidden="true"></div>
+</div>
+</div>
+</section>
+<section class="workshop-bench" aria-label="扁平卡通 IP 合唱琴键与绘本曲本封面体验">
+<div class="kiln-xylo-box">
+<div class="bench-label">
+<span>IP 合唱五音彩块琴（小偶直接住进琴键）</span>
+<span class="bench-sub">点按试音</span>
+</div>
+<div class="xylo-keys" id="xyloKeys">
+<button class="xylo-key" type="button" data-hz="261.63" style="height:82px;background:#F25563">
+<span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+<span>1 Do</span>
+</button>
+<button class="xylo-key" type="button" data-hz="293.66" style="height:76px;background:#F7882F">
+<span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+<span>2 Re</span>
+</button>
+<button class="xylo-key" type="button" data-hz="329.63" style="height:70px;background:#E64980">
+<span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+<span>3 Mi</span>
+</button>
+<button class="xylo-key" type="button" data-hz="392.00" style="height:64px;background:#228BE6">
+<span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+<span>5 Sol</span>
+</button>
+<button class="xylo-key" type="button" data-hz="440.00" style="height:58px;background:#7950F2">
+<span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+<span>6 La</span>
+</button>
+</div>
+</div>
+<button id="vinylBoutiqueCard" class="vinyl-boutique-card" type="button" aria-label="试听天鹅湖畔绘本曲本">
+<div class="sleeve-wrap" aria-hidden="true">
+<div class="peeking-page">
+<span class="peeking-page-line"></span>
+<span class="peeking-page-line" style="width:10px"></span>
+<span class="peeking-page-line"></span>
+</div>
+<div class="bookmark-ribbon"></div>
+<div class="sleeve-cover">
+<svg width="56" height="62" viewBox="0 0 56 62" fill="none">
+<rect x="2" y="6" width="4" height="50" rx="2" fill="#0E766E"/>
+<rect x="11" y="5" width="9" height="3" rx="1.5" fill="#0E766E"/>
+<rect x="22" y="5" width="9" height="3" rx="1.5" fill="#F59E0B"/>
+<rect x="33" y="5" width="9" height="3" rx="1.5" fill="#257BD4"/>
+<path d="M0 44 Q18 35 34 42 T56 39 L56 62 L0 62 Z" fill="var(--hill-front)"/>
+<circle cx="29" cy="30" r="13" fill="#F25563" fill-opacity="0.22" stroke="#231B15" stroke-width="1.5"/>
+<rect x="22.5" y="18" width="3.8" height="6.5" rx="1.9" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
+<rect x="31.5" y="18" width="3.8" height="6.5" rx="1.9" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
+<rect x="20.5" y="23.5" width="17" height="12.5" rx="6" fill="#F25563" stroke="#231B15" stroke-width="1.6"/>
+<circle cx="26" cy="29" r="1.6" fill="#231B15"/>
+<circle cx="32" cy="29" r="1.6" fill="#231B15"/>
+</svg>
+</div>
+<div class="cover-play-stamp">
+<svg width="9" height="10" viewBox="0 0 10 12" fill="#0E766E">
+<polygon points="2,1 9,6 2,11"/>
+</svg>
+</div>
+</div>
+<div>
+<div style="font-size:15px;font-weight:900">天鹅湖畔 · 绘本曲本封面</div>
+<div id="vinylStatusText" style="font-size:12px;font-weight:700;color:var(--sub);margin-top:3px">轻点翻开奶油乐谱书页，跟随书签一起跳音阶</div>
+</div>
+</button>
+</section>
+<section class="postcard-bench" aria-label="扁平卡通绘本音乐明信片交互印制台">
+<div class="postcard-frame" id="postcardPreviewFrame">
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:900">
+<span>咩哞 · 绘本明信片</span>
+<span id="postcardModePill" style="padding:2px 7px;border-radius:6px;background:var(--mint)">绘本山坡</span>
+</div>
+<svg id="postcardArtSvg" width="100%" height="122" viewBox="0 0 200 122" aria-hidden="true"></svg>
+<div class="postcard-meta-plaque">
+<span>天鹅湖畔 · 离线 PNG</span>
+<span style="color:var(--accent)">陶诺守护</span>
+</div>
+</div>
+<div style="display:grid;gap:9px;align-content:center">
+<div class="bench-label">
+<span>绘本音乐明信片印制台（零渐变平涂卡纸）</span>
+<span class="bench-sub" id="postcardStatusSub">1080×1360 离线高清导出</span>
+</div>
+<p class="bench-sub" style="margin:0;line-height:1.5">全宽绘本山坡乐谱舞台、极简音乐盒花环与八角星环三种无边画境，小羊咩、小牛哞与主角小偶陪你署名导出。</p>
+<div class="sb-controls-row" id="postcardModeButtons" role="group" aria-label="明信片画境模式">
+<button class="sb-chip active" type="button" data-pmode="river">绘本山坡</button>
+<button class="sb-chip" type="button" data-pmode="disc">音乐盒花环</button>
+<button class="sb-chip" type="button" data-pmode="nebula">八角星环</button>
+</div>
+</div>
+</section>
+<section class="soundbox-bench" aria-label="童书声音调色卡与跳跃声波山坡表">
+<div class="soundbox-card">
+<div class="bench-label">
+<span>童书声音调色盒（音色 × 调式 × 三音偶）</span>
+<span class="bench-sub" id="soundStatusText">毛毡钢琴 · 暖阳大调</span>
+</div>
+<div class="osc-glass">
+<svg width="100%" height="74" viewBox="0 0 420 74" aria-label="声音调色扁平示波曲线">
+<line x1="12" y1="37" x2="408" y2="37" stroke="var(--outline)" stroke-opacity="0.24" stroke-width="1.5" stroke-dasharray="6 5"/>
+<path id="soundOscWave" d="" fill="none" stroke="var(--accent)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<div class="triad-row">
+<button id="triad1Btn" class="triad-pill lit" type="button" data-deg="1">
+<span class="triad-dot" style="background:#F25563"></span>
+<span>1 陶诺 Do</span>
+</button>
+<button id="triad3Btn" class="triad-pill mood-happy" type="button" data-deg="3">
+<span class="triad-dot" style="background:#E64980"></span>
+<span>3 拍咯 Mi</span>
+</button>
+<button id="triad5Btn" class="triad-pill" type="button" data-deg="5">
+<span class="triad-dot" style="background:#228BE6"></span>
+<span>5 壳咯 Sol</span>
+</button>
+</div>
+</div>
+<div class="sb-controls-row" id="voiceButtons" role="group" aria-label="主旋律音色选择">
+<button class="sb-chip active" type="button" data-voice="piano">毛毡钢琴</button>
+<button class="sb-chip" type="button" data-voice="harp">液态竖琴</button>
+<button class="sb-chip" type="button" data-voice="cello">歌唱大提琴</button>
+<button class="sb-chip" type="button" data-voice="celesta">晶透钢片琴</button>
+</div>
+<div class="sb-controls-row" id="moodButtons" role="group" aria-label="极光调式色彩">
+<button class="sb-chip active" type="button" data-mood="major">暖阳大调</button>
+<button class="sb-chip" type="button" data-mood="minor">微酸小调</button>
+<button class="sb-chip" type="button" data-mood="pentatonic">东方五声</button>
+</div>
+<div class="lever-row">
+<button id="leverPentaBtn" class="lever-btn" type="button" aria-pressed="true">
+<span>五音安心开关</span>
+<span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
+</button>
+<button id="leverBachBtn" class="lever-btn" type="button" aria-pressed="false">
+<span>巴赫影子伴唱</span>
+<span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
+</button>
+</div>
+</div>
+<div class="vu-meter-card">
+<div class="bench-label">
+<span>跳跃声波小山坡（全站联动）</span>
+<span class="bench-sub" id="vuReadoutBadge">静候开唱</span>
+</div>
+<div id="hillMeterBox" class="hill-meter-box">
+<div class="hill-meter-sky">
+<span class="bench-sub">发声越响，七小只逐一点头助威</span>
+<svg class="hill-mini-mie" width="34" height="28" viewBox="0 0 112 92" aria-hidden="true">
+<circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
+<circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
+<ellipse cx="56" cy="50" rx="22" ry="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
+<circle cx="48" cy="49" r="3.8" fill="#231B15"/>
+<circle cx="64" cy="49" r="3.8" fill="#231B15"/>
+</svg>
+</div>
+<div class="choir-meter-row" id="choirMeterBuddies" aria-hidden="true">
+<span class="mini-buddy-badge" data-c="#F25563"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+<span class="mini-buddy-badge" data-c="#F7882F"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+<span class="mini-buddy-badge" data-c="#E64980"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+<span class="mini-buddy-badge" data-c="#12B886"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+<span class="mini-buddy-badge" data-c="#228BE6"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+<span class="mini-buddy-badge" data-c="#7950F2"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+<span class="mini-buddy-badge" data-c="#E59900"><span class="mini-buddy-eye"></span><span class="mini-buddy-eye"></span></span>
+</div>
+<div class="sound-hills" id="soundHills" aria-hidden="true">
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+<span class="sound-hill"></span>
+</div>
+</div>
+<button id="vuPingBtn" class="pill-btn" type="button" style="justify-content:center;background:var(--prominent);color:#FFFFFF;border-color:transparent">
+<span>点按咩哞合奏 · 唤醒全部山坡</span>
+</button>
+</div>
+</section>
+<section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
+<div class="icon-triptych-card">
+<div class="bench-label">
+<span>极简提纯 1-3-5 应用图标（v0.56.0 · 29pt 高辨识）</span>
+<span class="bench-sub">单层草坡三态</span>
+</div>
+<div class="icon-triptych-row">
+<div class="appicon-tile">
+<svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
+<rect width="100" height="100" fill="#F5EFE2"/>
+<path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#C2E4D2"/>
+<g transform="translate(50 51) scale(1.13) translate(-50 -55)">
+<circle cx="24" cy="60" r="14" fill="#E64980" stroke="#231B15" stroke-width="2.4"/>
+<circle cx="24" cy="48" r="2.4" fill="#FFB94E" stroke="#231B15" stroke-width="1.3"/>
+<circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#231B15" stroke-width="2.2"/>
+<ellipse cx="75" cy="60" rx="12" ry="15" fill="#228BE6" stroke="#231B15" stroke-width="2.4"/>
+<rect x="41" y="29" width="6" height="14" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2.2"/>
+<circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.7"/>
+<rect x="53" y="30" width="6" height="13" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2.2"/>
+<circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.7"/>
+<rect x="33" y="42" width="34" height="35" rx="16" fill="#F25563" stroke="#231B15" stroke-width="2.6"/>
+<circle cx="44" cy="55" r="2.4" fill="#231B15"/>
+<circle cx="56" cy="55" r="2.4" fill="#231B15"/>
+<circle cx="47" cy="67" r="5.4" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
+<circle cx="47" cy="67" r="2.6" fill="#FFB94E"/>
+</g>
+</svg>
+<span>日光纸感</span>
+</div>
+<div class="appicon-tile">
+<svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
+<rect width="100" height="100" fill="#11193A"/>
+<path d="M82 11 C74 13 74 23 82 25 C78 22 78 14 82 11 Z" fill="#FFB94E"/>
+<path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#1E2E63"/>
+<g transform="translate(50 51) scale(1.13) translate(-50 -55)">
+<circle cx="24" cy="60" r="14" fill="#F25A90" stroke="#070B1A" stroke-width="2.4"/>
+<circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#070B1A" stroke-width="2.2"/>
+<ellipse cx="75" cy="60" rx="12" ry="15" fill="#3899EE" stroke="#070B1A" stroke-width="2.4"/>
+<rect x="41" y="29" width="6" height="14" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2.2"/>
+<circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.7"/>
+<rect x="53" y="30" width="6" height="13" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2.2"/>
+<circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.7"/>
+<rect x="33" y="42" width="34" height="35" rx="16" fill="#F55D6B" stroke="#070B1A" stroke-width="2.6"/>
+<circle cx="44" cy="55" r="2.4" fill="#090C1C"/>
+<circle cx="56" cy="55" r="2.4" fill="#090C1C"/>
+<circle cx="47" cy="67" r="6" fill="#FFB94E" fill-opacity="0.32"/>
+<circle cx="47" cy="67" r="5.4" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.8"/>
+<circle cx="47" cy="67" r="2.6" fill="#FFB94E"/>
+</g>
+</svg>
+<span>星夜守望</span>
+</div>
+<div class="appicon-tile">
+<svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
+<rect width="100" height="100" fill="#0C0C0E"/>
+<path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#2C2C33"/>
+<g transform="translate(50 51) scale(1.13) translate(-50 -55)">
+<circle cx="24" cy="60" r="14" fill="#8E8E98" stroke="#0C0C0E" stroke-width="2.4"/>
+<circle cx="85" cy="54" r="8" fill="#64646E" stroke="#0C0C0E" stroke-width="2.2"/>
+<ellipse cx="75" cy="60" rx="12" ry="15" fill="#AEAEB8" stroke="#0C0C0E" stroke-width="2.4"/>
+<rect x="41" y="29" width="6" height="14" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.2"/>
+<circle cx="44" cy="27" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.7"/>
+<rect x="53" y="30" width="6" height="13" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.2"/>
+<circle cx="56" cy="28" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.7"/>
+<rect x="33" y="42" width="34" height="35" rx="16" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.6"/>
+<circle cx="44" cy="55" r="2.4" fill="#0C0C0E"/>
+<circle cx="56" cy="55" r="2.4" fill="#0C0C0E"/>
+<circle cx="47" cy="67" r="5.4" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.8"/>
+<circle cx="47" cy="67" r="2.6" fill="#3A3A42"/>
+</g>
+</svg>
+<span>单色着染</span>
+</div>
+</div>
+</div>
+<div class="story-moments-card">
+<div class="bench-label">
+<span>绘本分幕翻页 · 《天鹅》三幕</span>
+<span class="bench-sub" id="storyProgressLabel">1/3 · 陶诺领唱</span>
+</div>
+<div class="sb-controls-row" id="storyMomentButtons" role="group" aria-label="天鹅故事分幕">
+<button class="sb-chip active" type="button" data-story="0">1 · 天鹅入水</button>
+<button class="sb-chip" type="button" data-story="1">2 · 扬颈远望</button>
+<button class="sb-chip" type="button" data-story="2">3 · 湖面归宁</button>
+</div>
+<div class="story-whisper-box">
+<div class="story-whisper-head">
+<span id="storyWhisperTitle">第一幕 · 天鹅入水</span>
+<span id="storyWhisperSolfege" style="color:var(--accent)">Do 1↑ → Ti 7 → Mi 3</span>
+</div>
+<p class="story-whisper-text" id="storyWhisperCaption">从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。</p>
+</div>
+<div class="story-nav-row">
+<div class="story-nav-btns">
+<button id="storyPrevBtn" class="circle-step-btn" type="button" aria-label="上一幕" disabled>&lt;</button>
+<button id="storyNextBtn" class="circle-step-btn" type="button" aria-label="下一幕">&gt;</button>
+</div>
+<button id="storyAuditionBtn" class="pill-btn" type="button" style="background:var(--prominent);color:#FFFFFF;border-color:transparent;padding:6px 14px;font-size:12px">试听此段</button>
+</div>
+</div>
+</section>
+<section class="spaces-bench" aria-label="聆听、创作、曲本与工坊四标签纯血空间">
+<div class="bench-label">
+<span>v0.56.0 四标签纯血叙事空间（聆听 · 创作 · 曲本 · 工坊）</span>
+<span class="bench-sub" id="spaceMetaReadout">独立快照零串台</span>
+</div>
+<div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
+<button class="space-tab-btn" type="button" role="tab" aria-selected="true" data-space="showcase">1 · 聆听</button>
+<button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="create">2 · 创作</button>
+<button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="songbook">3 · 曲本</button>
+<button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="settings">4 · 工坊</button>
+</div>
+<div class="space-stage-card" id="spaceStagePanel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+<strong id="spacePanelTitle" style="font-size:14px">聆听域：全宽绘本舞台 + 分幕翻页 + 随时和声跟弹</strong>
+<span id="spacePanelStatus" style="font-size:11.5px;font-weight:800;color:var(--prominent);background:var(--paper);padding:3px 9px;border-radius:6px">非破坏赏析引导</span>
+</div>
+<p id="spacePanelDesc" style="margin:0;font-size:12.5px;font-weight:600;color:var(--sub)">放大绘本主角舞台聚焦观演与故事分幕翻页，七小只琴键随时伴奏互动，点按「去改编」即可复制副本送入创作工坊。</p>
+<div class="seed-row" aria-label="创作起音灵感种子试听">
+<button class="seed-btn primary" type="button" data-seed="sunny">晴空种子 · 明亮大调</button>
+<button class="seed-btn" type="button" data-seed="moonlight">晚风种子 · 柔和抒情</button>
+<button class="seed-btn" type="button" data-seed="hopping">漫步种子 · 梦幻悬浮</button>
+</div>
+</div>
+</section>
+<section class="cards-grid">
+<article class="feature-card">
+<div class="feature-chip" aria-hidden="true">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+<rect x="4" y="5" width="7" height="14" rx="2" stroke="currentColor" stroke-width="2.2"/>
+<rect x="13" y="5" width="7" height="14" rx="2" stroke="currentColor" stroke-width="2.2"/>
+</svg>
+</div>
+<h2>四标签纯血叙事空间</h2>
+<p>严格区分「聆听」「创作」「曲本」「工坊」四域职责，欣赏不误改原曲，创作拥有独立草稿与曲本归档流。</p>
+</article>
+<article class="feature-card">
+<div class="feature-chip" aria-hidden="true">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+<path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
+</div>
+<h2>窑纸软胶质感与七小只声学交互</h2>
+<p>日光暖棉纸与夜灯深靛蓝同源衍生，全站弹窗统一软胶细边与 44pt 安全触控热区，七小只随调式音准灵动呼吸。</p>
+</article>
+<article class="feature-card">
+<div class="feature-chip" aria-hidden="true">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+<rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2.2"/>
+<path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
+</div>
+<h2>100% 本机离线与全格式导出</h2>
+<p>端侧 SwiftF0 离线音高捕捉与实时和声伴奏零联网、零广告，支持高清绘本明信片 PNG、WAV 与标准 MIDI 导出。</p>
+</article>
+</section>
+<footer class="footer-card">
+<span>100% 本机离线运行 · 无账号 · 无广告 · 不上传任何录音</span>
+<div class="links">
+<a href="privacy.html">隐私政策</a>
+<a href="terms.html">使用条款</a>
+<a href="licenses.html">开源许可</a>
+<a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
+<a href="https://github.com/mjuvdeysii/chimmo/issues">问题反馈</a>
+</div>
+</footer>
+</div>
+<script>
+(function () {
+const members = [
+{ deg: 1, name: "陶诺", sol: "Do", role: "家", color: "#F25563", dark: "#8F1D28", tilt: 0, hz: 261.63, shape: "taono" },
+{ deg: 2, name: "豆叩", sol: "Re", role: "迈步", color: "#F7882F", dark: "#8A420A", tilt: 4, hz: 293.66, shape: "doko" },
+{ deg: 3, name: "拍咯", sol: "Mi", role: "晴雨", color: "#E64980", dark: "#861942", tilt: 0, hz: 329.63, shape: "plokko" },
+{ deg: 4, name: "呜嘟", sol: "Fa", role: "悬步", color: "#12B886", dark: "#085E45", tilt: -4.5, hz: 349.23, shape: "udo" },
+{ deg: 5, name: "壳咯", sol: "Sol", role: "远望", color: "#228BE6", dark: "#0F4C8A", tilt: 0, hz: 392.00, shape: "corllo" },
+{ deg: 6, name: "钵莫", sol: "La", role: "怀旧", color: "#7950F2", dark: "#3F2299", tilt: 0, hz: 440.00, shape: "bomo" },
+{ deg: 7, name: "叮尖", sol: "Ti", role: "踮脚", color: "#E59900", dark: "#7A4E00", tilt: -9, hz: 493.88, shape: "tinki" }
+];
+let audioCtx = null;
+let mouAwake = true;
+let activeDegree = null;
+let clearTimer = null;
+let vinylTimer = null;
+let hillTimer = null;
+const hillBox = document.getElementById("hillMeterBox");
+const hillBadge = document.getElementById("vuReadoutBadge");
+const hills = Array.from(document.querySelectorAll("#soundHills .sound-hill"));
+const miniBuddies = Array.from(document.querySelectorAll("#choirMeterBuddies .mini-buddy-badge"));
+function pulseSoundHills(level) {
+const lv = Math.max(0.15, Math.min(1.0, level || 0.6));
+const litCount = Math.max(2, Math.min(9, Math.round(lv * 9)));
+const cheeringCount = Math.max(1, Math.min(7, Math.ceil((litCount / 9) * 7)));
+hillBox.classList.add("singing");
+hills.forEach((el, idx) => {
+const isOn = idx < litCount;
+const arch = 34 + Math.sin(((idx + 1) / 10) * Math.PI) * (62 * lv);
+el.style.height = `${isOn ? Math.round(arch) : (idx % 2 === 1 ? 46 : 36)}%`;
+el.classList.toggle("on", isOn);
+el.classList.toggle("warm", isOn && idx >= 4 && idx < 7);
+el.classList.toggle("hot", isOn && idx >= 7);
+});
+miniBuddies.forEach((b, idx) => {
+const cheer = idx < cheeringCount;
+b.classList.toggle("cheering", cheer);
+b.style.backgroundColor = cheer ? "var(--butter)" : "var(--paper)";
+b.style.borderColor = cheer ? b.dataset.c : "var(--border-strong)";
+});
+hillBadge.textContent = lv >= 0.74 ? "欢快高音齐唱" : "轻柔声波跃动";
+clearTimeout(hillTimer);
+hillTimer = setTimeout(() => {
+hillBox.classList.remove("singing");
+hills.forEach((el, idx) => {
+el.style.height = `${idx % 2 === 1 ? 46 : 36}%`;
+el.classList.remove("on", "warm", "hot");
+});
+miniBuddies.forEach((b) => {
+b.classList.remove("cheering");
+b.style.backgroundColor = "var(--paper)";
+b.style.borderColor = "var(--border-strong)";
+});
+hillBadge.textContent = "静候开唱";
+}, 720);
+}
+function ensureAudio() {
+const AC = window.AudioContext || window.webkitAudioContext;
+if (!AC) return null;
+if (!audioCtx) audioCtx = new AC();
+if (audioCtx.state === "suspended") audioCtx.resume();
+return audioCtx;
+}
+function playTone(freq, durationSec, delaySec, gainPeak, type) {
+pulseSoundHills(Math.min(0.96, 0.44 + (gainPeak || 0.16) * 2.5));
+const ctx = ensureAudio();
+if (!ctx) return;
+const t0 = ctx.currentTime + (delaySec || 0);
+const osc = ctx.createOscillator();
+const sub = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = type || "triangle";
+sub.type = "sine";
+osc.frequency.setValueAtTime(freq, t0);
+sub.frequency.setValueAtTime(freq * 2, t0);
+const subGain = ctx.createGain();
+subGain.gain.setValueAtTime(0.18, t0);
+gain.gain.setValueAtTime(0.0001, t0);
+gain.gain.exponentialRampToValueAtTime(gainPeak || 0.16, t0 + 0.025);
+gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (durationSec || 0.75));
+osc.connect(gain);
+sub.connect(subGain);
+subGain.connect(gain);
+gain.connect(ctx.destination);
+osc.start(t0);
+sub.start(t0);
+osc.stop(t0 + (durationSec || 0.75) + 0.04);
+sub.stop(t0 + (durationSec || 0.75) + 0.04);
+}
+function buildFigureSVG(m, index) {
+const animClass = index % 2 === 0 ? "fig-idle-even" : "fig-idle-odd";
+let detail = "";
+if (m.shape === "taono") {
+detail = `
+<rect x="20" y="13" width="6" height="14" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/>
+<circle cx="23" cy="12" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/>
+<g transform="rotate(-11 38 22)">
+<rect x="34" y="14" width="6" height="13" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/>
+<circle cx="37" cy="13" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/>
+</g>
+<rect x="14" y="25" width="32" height="31" rx="14" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+<circle cx="27" cy="47" r="5.5" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
+<circle cx="27" cy="47" r="2.8" fill="#FFB94E"/>
+`;
+} else if (m.shape === "doko") {
+detail = `
+<rect x="14" y="29" width="32" height="27" rx="13" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+<rect x="23" y="26" width="14" height="3.2" rx="1.6" fill="${m.dark}"/>
+`;
+} else if (m.shape === "plokko") {
+detail = `
+<ellipse cx="30" cy="57" rx="12" ry="3.2" fill="${m.dark}"/>
+<rect x="8" y="37" width="13" height="7" rx="3.5" transform="rotate(10 14 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/>
+<rect x="39" y="37" width="13" height="7" rx="3.5" transform="rotate(-10 45 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/>
+<circle cx="30" cy="42" r="15" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+<circle cx="30" cy="28" r="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>
+`;
+} else if (m.shape === "udo") {
+detail = `
+<ellipse cx="30" cy="42" rx="14" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+<circle cx="39" cy="34" r="2.2" fill="${m.dark}"/>
+<circle cx="39" cy="40" r="1.7" fill="${m.dark}"/>
+`;
+} else if (m.shape === "corllo") {
+detail = `
+<circle cx="43" cy="34" r="9.5" fill="${m.dark}" stroke="#231B15" stroke-width="1.6"/>
+<circle cx="43" cy="34" r="5.5" fill="#FFFDF7"/>
+<circle cx="43" cy="34" r="2.8" fill="#FFE49E"/>
+<ellipse cx="28" cy="42" rx="13" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+`;
+} else if (m.shape === "bomo") {
+detail = `
+<ellipse cx="30" cy="44" rx="16.5" ry="12.5" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+<ellipse cx="30" cy="34" rx="9" ry="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>
+`;
+} else {
+detail = `
+<line x1="30" y1="18" x2="30" y2="25" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="30" cy="15" r="3.6" fill="#FFE49E" stroke="#231B15" stroke-width="1.4"/>
+<rect x="19" y="25" width="22" height="31" rx="11" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+`;
+}
+const eyeY = m.shape === "bomo" ? 44 : (m.shape === "doko" ? 42 : 39);
+return `
+<svg class="figure-svg" viewBox="0 0 60 66" aria-hidden="true">
+<ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(35,27,21,0.16)"/>
+<g class="${animClass}" transform="rotate(${m.tilt} 30 58)">
+<circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="${m.color}" stroke-width="2.2" opacity="0"/>
+<ellipse cx="24" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
+<ellipse cx="36" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
+${detail}
+<g class="eyes-open">
+<circle class="eye-pupil" cx="25.5" cy="${eyeY}" r="2.5" fill="#231B15"/>
+<circle cx="24.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
+<circle class="eye-pupil" cx="34.5" cy="${eyeY}" r="2.5" fill="#231B15"/>
+<circle cx="33.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
+</g>
+<g class="eyes-sing" opacity="0">
+<path d="M23 ${eyeY + 0.8} Q25.5 ${eyeY - 2.4} 28 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/>
+<path d="M32 ${eyeY + 0.8} Q34.5 ${eyeY - 2.4} 37 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/>
+</g>
+</g>
+</svg>
+`;
+}
+const choirGrid = document.getElementById("choirGrid");
+const choirStatus = document.getElementById("choirStatus");
+members.forEach((m, idx) => {
+const btn = document.createElement("button");
+btn.type = "button";
+btn.className = "figure-btn";
+btn.dataset.deg = String(m.deg);
+btn.setAttribute("aria-label", `${m.deg} ${m.name} ${m.sol}，${m.role}`);
+btn.innerHTML = `
+${buildFigureSVG(m, idx)}
+<div class="figure-meta">
+<span class="figure-deg" style="background:${m.color}">${m.deg}</span>
+<span class="figure-name">${m.name}</span>
+</div>
+`;
+btn.addEventListener("click", () => triggerMember(m));
+choirGrid.appendChild(btn);
+});
+function updateGaze(targetDeg) {
+const buttons = choirGrid.querySelectorAll(".figure-btn");
+buttons.forEach((btn) => {
+const deg = Number(btn.dataset.deg);
+const isTarget = deg === targetDeg;
+btn.classList.toggle("singing", isTarget);
+const halo = btn.querySelector(".sing-halo");
+const open = btn.querySelector(".eyes-open");
+const sing = btn.querySelector(".eyes-sing");
+if (halo) halo.setAttribute("opacity", isTarget ? "0.75" : "0");
+if (open) open.setAttribute("opacity", isTarget ? "0" : "1");
+if (sing) sing.setAttribute("opacity", isTarget ? "1" : "0");
+const pupils = btn.querySelectorAll(".eye-pupil");
+const dx = targetDeg == null ? 0 : Math.max(-1.8, Math.min(1.8, (targetDeg - deg) * 0.6));
+const dy = targetDeg == null ? 0 : -0.7;
+pupils.forEach((p) => {
+p.setAttribute("transform", `translate(${dx}, ${dy})`);
+});
+});
+}
+function triggerMember(m) {
+activeDegree = m.deg;
+updateGaze(m.deg);
+choirStatus.textContent = `${m.deg} ${m.sol} · ${m.name}（${m.role}）`;
+playTone(m.hz, 0.9, 0, 0.16, "triangle");
+clearTimeout(clearTimer);
+clearTimer = setTimeout(() => {
+if (activeDegree === m.deg) {
+activeDegree = null;
+updateGaze(null);
+}
+}, 720);
+}
+document.querySelectorAll("#xyloKeys .xylo-key").forEach((keyEl) => {
+keyEl.addEventListener("click", () => {
+const hz = Number(keyEl.dataset.hz) || 261.63;
+playTone(hz, 0.85, 0, 0.16, "sine");
+keyEl.classList.add("struck");
+setTimeout(() => keyEl.classList.remove("struck"), 180);
+});
+});
+const vinylCard = document.getElementById("vinylBoutiqueCard");
+const vinylStatus = document.getElementById("vinylStatusText");
+vinylCard.addEventListener("click", () => {
+vinylCard.classList.toggle("spinning");
+clearTimeout(vinylTimer);
+if (vinylCard.classList.contains("spinning")) {
+vinylStatus.textContent = "书页已翻开 · 正在演奏五音精选片段";
+[261.63, 329.63, 392.00, 440.00, 392.00].forEach((hz, i) => {
+playTone(hz, 0.6, i * 0.22, 0.14, "triangle");
+});
+vinylTimer = setTimeout(() => {
+vinylCard.classList.remove("spinning");
+vinylStatus.textContent = "轻点翻开奶油乐谱书页，跟随书签一起跳音阶";
+}, 1500);
+} else {
+vinylStatus.textContent = "轻点翻开奶油乐谱书页，跟随书签一起跳音阶";
+}
+});
+const voiceSpecs = {
+piano:   { name: "毛毡钢琴", cycles: 4.0, ratio: 2.5, hw: 0.22, waveType: "triangle", color: "var(--accent)", hz: 329.63 },
+harp:    { name: "液态竖琴", cycles: 5.0, ratio: 3.0, hw: 0.26, waveType: "sine",     color: "var(--blue)",   hz: 392.00 },
+cello:   { name: "歌唱大提琴", cycles: 3.2, ratio: 2.0, hw: 0.30, waveType: "sawtooth", color: "var(--gold)",   hz: 261.63 },
+celesta: { name: "晶透钢片琴", cycles: 6.2, ratio: 4.0, hw: 0.32, waveType: "sine",     color: "var(--violet)", hz: 523.25 }
+};
+const moodSpecs = {
+major:      { name: "暖阳大调", thirdHz: 329.63, envScale: 1.00, plokkoClass: "mood-happy", plokkoLabel: "3 拍咯 Mi" },
+minor:      { name: "微酸小调", thirdHz: 311.13, envScale: 0.84, plokkoClass: "mood-soft",  plokkoLabel: "3 拍咯 m3" },
+pentatonic: { name: "东方五声", thirdHz: 329.63, envScale: 0.92, plokkoClass: "mood-happy", plokkoLabel: "3 拍咯 Mi" }
+};
+let currentVoice = "piano";
+let currentMood = "major";
+const oscWave = document.getElementById("soundOscWave");
+const soundStatus = document.getElementById("soundStatusText");
+const triad3Btn = document.getElementById("triad3Btn");
+function renderOscilloscope() {
+const v = voiceSpecs[currentVoice];
+const m = moodSpecs[currentMood];
+const pts = [];
+const samples = 44;
+for (let i = 0; i < samples; i++) {
+const u = i / (samples - 1);
+const x = (12 + u * 396).toFixed(1);
+const env = Math.sin(u * Math.PI) * m.envScale;
+const ang = u * Math.PI * 2 * v.cycles;
+const val = (Math.sin(ang) + v.hw * Math.sin(ang * v.ratio + 0.45)) / (1 + v.hw);
+const y = (37 - env * val * 25).toFixed(1);
+pts.push((i === 0 ? "M" : "L") + x + " " + y);
+}
+oscWave.setAttribute("d", pts.join(" "));
+oscWave.style.stroke = v.color;
+soundStatus.textContent = `${v.name} · ${m.name}`;
+}
+document.querySelectorAll("#voiceButtons .sb-chip").forEach((btn) => {
+btn.addEventListener("click", () => {
+currentVoice = btn.dataset.voice;
+document.querySelectorAll("#voiceButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+renderOscilloscope();
+const v = voiceSpecs[currentVoice];
+playTone(v.hz, 0.72, 0, 0.14, v.waveType === "sawtooth" ? "triangle" : v.waveType);
+});
+});
+document.querySelectorAll("#moodButtons .sb-chip").forEach((btn) => {
+btn.addEventListener("click", () => {
+currentMood = btn.dataset.mood;
+document.querySelectorAll("#moodButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+const m = moodSpecs[currentMood];
+triad3Btn.classList.remove("mood-happy", "mood-soft");
+triad3Btn.classList.add(m.plokkoClass);
+triad3Btn.querySelectorAll("span")[1].textContent = m.plokkoLabel;
+renderOscilloscope();
+playTone(261.63, 0.55, 0, 0.12, "triangle");
+playTone(m.thirdHz, 0.65, 0.08, 0.13, "triangle");
+playTone(392.00, 0.72, 0.16, 0.12, "triangle");
+});
+});
+[document.getElementById("triad1Btn"), triad3Btn, document.getElementById("triad5Btn")].forEach((btn) => {
+btn.addEventListener("click", () => {
+const deg = Number(btn.dataset.deg);
+document.querySelectorAll(".triad-pill").forEach((p) => p.classList.toggle("lit", p === btn));
+const hz = deg === 1 ? 261.63 : (deg === 3 ? moodSpecs[currentMood].thirdHz : 392.00);
+playTone(hz, 0.78, 0, 0.16, "triangle");
+});
+});
+document.querySelectorAll("#leverPentaBtn, #leverBachBtn").forEach((btn) => {
+btn.addEventListener("click", () => {
+const next = btn.getAttribute("aria-pressed") !== "true";
+btn.setAttribute("aria-pressed", next ? "true" : "false");
+playTone(next ? 523.25 : 392.00, 0.35, 0, 0.11, "sine");
+});
+});
+document.getElementById("vuPingBtn").addEventListener("click", () => {
+playTone(261.63, 0.52, 0, 0.18, "triangle");
+playTone(329.63, 0.56, 0.09, 0.16, "triangle");
+playTone(392.00, 0.70, 0.18, 0.20, "triangle");
+pulseSoundHills(0.92);
+});
+renderOscilloscope();
+const storyMoments = [
+{
+badge: "陶诺领唱",
+title: "第一幕 · 天鹅入水",
+solfege: "Do 1↑ → Ti 7 → Mi 3",
+caption: "从高音 1↑ 滑落半音到 7，再优雅下行到 3，左手水波轻轻托住水面。",
+notes: [523.25, 493.88, 329.63]
+},
+{
+badge: "壳咯远望",
+title: "第二幕 · 扬颈远望",
+solfege: "Fa 4 → Sol 5 → La 6 → Do 1↑",
+caption: "4→5→6 像羽翼蓄力，一路攀回高音 1↑，展现清晰上扬的线条弧度。",
+notes: [349.23, 392.00, 440.00, 523.25]
+},
+{
+badge: "陶诺归家",
+title: "第三幕 · 湖面归宁",
+solfege: "Fa 4 → Mi 3 → Re 2 → Do 1",
+caption: "4→3→2→1 级进轻落回陶诺，整片湖水归于温柔的平静。",
+notes: [349.23, 329.63, 293.66, 261.63]
+}
+];
+const storyBadge = document.getElementById("storyProgressLabel");
+const storyTitle = document.getElementById("storyWhisperTitle");
+const storySolfege = document.getElementById("storyWhisperSolfege");
+const storyCaption = document.getElementById("storyWhisperCaption");
+const storyPrevBtn = document.getElementById("storyPrevBtn");
+const storyNextBtn = document.getElementById("storyNextBtn");
+const storyAuditionBtn = document.getElementById("storyAuditionBtn");
+let currentStoryIdx = 0;
+function selectStoryChapter(idx, shouldPlay) {
+currentStoryIdx = Math.max(0, Math.min(storyMoments.length - 1, idx));
+const m = storyMoments[currentStoryIdx];
+document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((b) => {
+b.classList.toggle("active", Number(b.dataset.story) === currentStoryIdx);
+});
+storyBadge.textContent = `${currentStoryIdx + 1}/${storyMoments.length} · ${m.badge}`;
+storyTitle.textContent = m.title;
+storySolfege.textContent = m.solfege;
+storyCaption.textContent = m.caption;
+storyPrevBtn.disabled = currentStoryIdx <= 0;
+storyNextBtn.disabled = currentStoryIdx >= storyMoments.length - 1;
+if (shouldPlay) {
+m.notes.forEach((hz, i) => playTone(hz, 0.56, i * 0.16, 0.14, "triangle"));
+}
+}
+document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((btn) => {
+btn.addEventListener("click", () => selectStoryChapter(Number(btn.dataset.story) || 0, true));
+});
+storyPrevBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx - 1, true));
+storyNextBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx + 1, true));
+storyAuditionBtn.addEventListener("click", () => selectStoryChapter(currentStoryIdx, true));
+const spaceSpecs = {
+showcase: {
+title: "聆听域：全宽绘本舞台 + 分幕翻页 + 随时和声跟弹",
+status: "非破坏赏析引导",
+meta: "独立快照零串台",
+desc: "放大绘本主角舞台聚焦观演与故事分幕翻页，七小只琴键随时伴奏互动，点按「去改编」即可复制副本送入创作工坊。"
+},
+create: {
+title: "创作域：三粒起音灵感 + 灵光捕手（轻哼/节奏/折纸）+ 跟灯保存",
+status: "实时草稿与时长计数",
+meta: "零串台独立快照",
+desc: "聚焦轻哼捉珠、节奏画线与折纸变奏三大捕手，辅以声部/和声调控与底部醒目「试听 / 保存」操作栏。"
+},
+songbook: {
+title: "曲本域：一等公民离线曲库 + 流式筛选标签 + 绘本封面试听",
+status: "零横向滚动自适应折行",
+meta: "28 首内置精选 + 我的作品",
+desc: "升格为一等公民导航页签，以折行标签筛选情绪、拍号与来源，支持即时翻页试听、转入跟灯或送往工坊二次创作。"
+},
+settings: {
+title: "工坊域：轻哼成曲哲学横幅 + 日光/夜灯/自动三联画布 + 隐私许可",
+status: "窑纸软胶极简设定",
+meta: "零广告 · 100% 本机离线",
+desc: "集成双主角交互试音卡片、外观三态实时预览、五音安心/巴赫影子声学开关与结构化离线隐私开源声明。"
+}
+};
+const spaceTitle = document.getElementById("spacePanelTitle");
+const spaceStatus = document.getElementById("spacePanelStatus");
+const spaceMeta = document.getElementById("spaceMetaReadout");
+const spaceDesc = document.getElementById("spacePanelDesc");
+document.querySelectorAll(".space-tab-btn").forEach((btn) => {
+btn.addEventListener("click", () => {
+const sp = spaceSpecs[btn.dataset.space] || spaceSpecs.showcase;
+document.querySelectorAll(".space-tab-btn").forEach((b) => b.setAttribute("aria-selected", b === btn ? "true" : "false"));
+spaceTitle.textContent = sp.title;
+spaceStatus.textContent = sp.status;
+spaceMeta.textContent = sp.meta;
+spaceDesc.textContent = sp.desc;
+playTone(392.00, 0.36, 0, 0.12, "sine");
+});
+});
+const starterSeeds = {
+sunny:     { notes: [261.63, 329.63, 392.00, 440.00, 392.00], type: "triangle", level: 0.78 },
+moonlight: { notes: [220.00, 261.63, 311.13, 293.66, 261.63], type: "sine",     level: 0.62 },
+hopping:   { notes: [261.63, 293.66, 369.99, 392.00, 329.63, 261.63], type: "triangle", level: 0.84 }
+};
+document.querySelectorAll(".seed-btn").forEach((btn) => {
+btn.addEventListener("click", () => {
+const s = starterSeeds[btn.dataset.seed] || starterSeeds.sunny;
+s.notes.forEach((hz, i) => playTone(hz, 0.50, i * 0.17, 0.14, s.type));
+pulseSoundHills(s.level);
+});
+});
+const postcardSvg = document.getElementById("postcardArtSvg");
+const postcardPill = document.getElementById("postcardModePill");
+function renderPostcardArt(mode) {
+const hillSvg = '<path d="M0 98 Q46 80 100 94 T200 88 L200 122 L0 122 Z" fill="var(--hill-back)"/><path d="M0 107 Q62 93 128 106 T200 99 L200 122 L0 122 Z" fill="var(--hill-front)"/>';
+let art = '';
+if (mode === "disc") {
+postcardPill.textContent = "音乐盒花环";
+art = '<circle cx="100" cy="58" r="40" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><circle cx="100" cy="58" r="28" fill="none" stroke="#228BE6" stroke-width="1.4" stroke-opacity="0.45"/><circle cx="100" cy="58" r="14" fill="var(--butter)" stroke="var(--outline)" stroke-width="1.6"/><line x1="100" y1="42" x2="100" y2="14" stroke="#FFB94E" stroke-width="2.2" stroke-linecap="round"/><polygon points="100,7 102.5,12 107.5,14 102.5,16 100,21 97.5,16 92.5,14 97.5,12" fill="#FFB94E" stroke="var(--outline)" stroke-width="1.2"/><path d="M78 46 Q100 32 120 48 T112 74" fill="none" stroke="#F25563" stroke-width="2.4" stroke-linecap="round"/><circle cx="78" cy="46" r="4.2" fill="#F25563" stroke="var(--outline)" stroke-width="1.2"/><circle cx="120" cy="48" r="4.2" fill="#E64980" stroke="var(--outline)" stroke-width="1.2"/><circle cx="112" cy="74" r="4.2" fill="#228BE6" stroke="var(--outline)" stroke-width="1.2"/>';
+} else if (mode === "river") {
+postcardPill.textContent = "绘本山坡";
+art = '<rect x="14" y="14" width="172" height="84" rx="14" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><path d="M16 74 Q64 56 116 70 T184 64 L184 96 L16 96 Z" fill="var(--hill-back)" fill-opacity="0.65"/><line x1="26" y1="38" x2="174" y2="38" stroke="#228BE6" stroke-width="1.2" stroke-opacity="0.4"/><line x1="26" y1="68" x2="174" y2="68" stroke="#F25563" stroke-width="1.4" stroke-opacity="0.5"/><line x1="62" y1="22" x2="62" y2="92" stroke="#FFB94E" stroke-width="2.2" stroke-linecap="round"/><polygon points="62,16 64.2,20 68.5,22 64.2,24 62,28 59.8,24 55.5,22 59.8,20" fill="#FFB94E" stroke="var(--outline)" stroke-width="1.1"/><path d="M32 68 C62 68 70 38 102 38 C134 38 140 54 168 54" fill="none" stroke="#0E766E" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="68" r="4.5" fill="#F25563" stroke="var(--outline)" stroke-width="1.3"/><circle cx="102" cy="38" r="4.5" fill="#228BE6" stroke="var(--outline)" stroke-width="1.3"/><circle cx="168" cy="54" r="4.5" fill="#E64980" stroke="var(--outline)" stroke-width="1.3"/>';
+} else {
+postcardPill.textContent = "八角星环";
+art = '<circle cx="100" cy="58" r="40" fill="var(--card)" stroke="var(--outline)" stroke-width="2.2"/><polygon points="100,28 126,58 100,88 74,58" fill="none" stroke="#7950F2" stroke-width="2.2" stroke-linejoin="round"/><circle cx="100" cy="58" r="11" fill="var(--butter)" stroke="var(--outline)" stroke-width="1.5"/><circle cx="100" cy="28" r="4.5" fill="#F25563" stroke="var(--outline)" stroke-width="1.2"/><circle cx="126" cy="58" r="4.5" fill="#228BE6" stroke="var(--outline)" stroke-width="1.2"/><circle cx="100" cy="88" r="4.5" fill="#12B886" stroke="var(--outline)" stroke-width="1.2"/><circle cx="74" cy="58" r="4.5" fill="#E64980" stroke="var(--outline)" stroke-width="1.2"/>';
+}
+postcardSvg.innerHTML = hillSvg + art;
+}
+document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((btn) => {
+btn.addEventListener("click", () => {
+document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+renderPostcardArt(btn.dataset.pmode);
+const chord = btn.dataset.pmode === "disc" ? [261.63, 329.63] : (btn.dataset.pmode === "river" ? [329.63, 392.00] : [293.66, 440.00]);
+playTone(chord[0], 0.45, 0, 0.13, "triangle");
+playTone(chord[1], 0.58, 0.08, 0.14, "sine");
+});
+});
+renderPostcardArt("river");
+const mieCard = document.getElementById("mieCard");
+const mouCard = document.getElementById("mouCard");
+const mieWaves = document.getElementById("mieWaves");
+const mieOpen = document.getElementById("mieOpenEyes");
+const mieSing = document.getElementById("mieSingEyes");
+const mouOpen = document.getElementById("mouOpenEyes");
+const mouSleep = document.getElementById("mouSleepEyes");
+const mouArcs = document.getElementById("mouSleepArcs");
+const toggleMouBtn = document.getElementById("toggleMouBtn");
+const mouRoleText = document.getElementById("mouRoleText");
+mieCard.addEventListener("click", () => {
+mieCard.classList.add("singing");
+mieWaves.setAttribute("opacity", "1");
+mieOpen.setAttribute("opacity", "0");
+mieSing.setAttribute("opacity", "1");
+playTone(392.0, 0.65, 0, 0.15, "triangle");
+playTone(523.25, 0.95, 0.10, 0.17, "triangle");
+setTimeout(() => {
+mieCard.classList.remove("singing");
+mieWaves.setAttribute("opacity", "0");
+mieOpen.setAttribute("opacity", "1");
+mieSing.setAttribute("opacity", "0");
+}, 820);
+});
+function syncMouState() {
+mouCard.classList.toggle("sleeping", !mouAwake);
+mouOpen.setAttribute("opacity", mouAwake ? "1" : "0");
+mouSleep.setAttribute("opacity", mouAwake ? "0" : "1");
+mouArcs.setAttribute("opacity", mouAwake ? "0" : "1");
+toggleMouBtn.setAttribute("aria-pressed", mouAwake ? "true" : "false");
+toggleMouBtn.querySelector("span").textContent = mouAwake ? "哞 · 伴奏唤醒" : "哞 · 闭眼小憩";
+mouRoleText.textContent = mouAwake ? "低音根音 · 睁眼四幕和声护航" : "当前纯清唱 · 闭眼安静小憩";
+}
+mouCard.addEventListener("click", () => {
+if (!mouAwake) {
+mouAwake = true;
+syncMouState();
+}
+mouCard.classList.add("singing");
+playTone(130.81, 1.05, 0, 0.18, "sine");
+playTone(196.00, 0.95, 0.03, 0.09, "triangle");
+playTone(329.63, 0.95, 0.06, 0.08, "triangle");
+setTimeout(() => mouCard.classList.remove("singing"), 860);
+});
+toggleMouBtn.addEventListener("click", () => {
+mouAwake = !mouAwake;
+syncMouState();
+});
+const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+const themeLabel = document.getElementById("themeLabel");
+const prefersNight = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+let isNight = prefersNight;
+function applyTheme() {
+document.documentElement.dataset.theme = isNight ? "night" : "day";
+toggleThemeBtn.setAttribute("aria-pressed", isNight ? "true" : "false");
+themeLabel.textContent = isNight ? "切换日光" : "切换夜灯";
+}
+applyTheme();
+syncMouState();
+toggleThemeBtn.addEventListener("click", () => {
+isNight = !isNight;
+applyTheme();
+});
+})();
+</script>
 </body>
 </html>
