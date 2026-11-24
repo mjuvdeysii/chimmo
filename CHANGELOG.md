@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.55.0 - 2026-11-24
+- 视觉同源收口：将调音百宝箱 SoundPaletteBoxSheet、灵光捕手 DreamCaptureSheet（轻哼电台 / 节奏画线 / 折纸工坊）、明信片导出卡片 VinylPostcardShareSheet、跟弹指示条与绘本主舞台伴奏色带全面接入 0.54.0「窑纸软胶工作室」设计语言，废除遗留厚卡通框与硬偏移砖块阴影。
+- 触控与对比度收敛：为 SoundPaletteBoxSheet 移调与速度调节胶囊补齐 44pt 级交互安全热区；统一主动作采用高对比釉红 prominentFill + 白字，避免暗夜下黄底白字或浅底灰字混淆；曲库绘本空态按钮与迷你封面同步接入软胶层级。
+- 回归校验：新增 `testCreativeAlchemyRound48ModalSheetsAtelierCohesion` 校验全量次级弹窗与跟弹视图昼夜状态构建，保持全局零 Emoji 与零本地模拟器直连校验。
+
 ## 0.54.0 - 2026-11-24
 - Round 47 (Mossling Spin-Off Architecture & Soft-Vinyl Atelier Refactor — Theme: "Hum a spark. Hear seven voices answer."):
   - Harmonized `ChimmoTheme.swift` and `AmbientPaperBackdrop.swift` with sibling app Moss & Otto (`#FBF7F0` cotton paper / `#0E1430` night indigo / `#19213F` night cards / `#FFB547` lamp amber + Reduce Transparency per-space top washes), anchored by Chimmo's own Kiln Terracotta (`#C4513A` / `prominentFill #B8442E`) and Celadon (`#3D7A77` / `#7EC8C3`) signature accents.

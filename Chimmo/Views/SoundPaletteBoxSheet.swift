@@ -121,13 +121,9 @@ public struct SoundPaletteBoxSheet: View {
                             .font(.caption.weight(.bold))
                             .frame(width: 34, height: 34)
                             .background(
-                                Capsule().fill(active ? palette.homeAnchor : Color.clear)
+                                Capsule().fill(active ? palette.prominentFill : Color.clear)
                             )
-                            .foregroundStyle(
-                                active
-                                    ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                    : palette.secondaryInk
-                            )
+                            .foregroundStyle(active ? Color.white : palette.secondaryInk)
                             .frame(
                                 minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                 minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
@@ -142,15 +138,17 @@ public struct SoundPaletteBoxSheet: View {
             .fixedSize()
             .padding(3)
             .background(
-                ZStack {
-                    Capsule()
-                        .fill(palette.cartoonShadow)
-                        .offset(y: 1.8)
-                    Capsule()
-                        .fill(palette.cardSurface)
-                    Capsule()
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.5)
-                }
+                Capsule()
+                    .fill(palette.cardSurface)
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                        radius: 3.5,
+                        y: 1.5
+                    )
+                    .overlay(
+                        Capsule()
+                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                    )
             )
             .contentShape(Capsule())
 
@@ -352,11 +350,11 @@ public struct SoundPaletteBoxSheet: View {
                 .padding(.bottom, 4)
             }
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
                     .fill(skyBg)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.35 : 0.25), lineWidth: 1.2)
+                        RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
+                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
                     )
             )
         }
@@ -424,7 +422,7 @@ public struct SoundPaletteBoxSheet: View {
                         .fill(palette.isNight ? Color(hex: 0x0E142C) : palette.storybookButter.opacity(0.48))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.85), lineWidth: 1.5)
+                                .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.22 : 0.14), lineWidth: 1.0)
                         )
                         .frame(width: 14, height: 28)
 
@@ -432,7 +430,7 @@ public struct SoundPaletteBoxSheet: View {
                         .fill(isOn ? activeColor : palette.cardSurface)
                         .overlay(
                             RoundedRectangle(cornerRadius: 4.5, style: .continuous)
-                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.4)
+                                .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.28 : 0.22), lineWidth: 1.0)
                         )
                         .frame(width: 11, height: 13)
                         .offset(y: CGFloat(6.0 - lever.travelFraction * 12.0))
@@ -547,7 +545,7 @@ public struct SoundPaletteBoxSheet: View {
 
             VStack(spacing: 6) {
                 HStack(spacing: 6) {
-                    ChimmoCraftMark(.tempoDial, color: palette.cartoonOutline)
+                    ChimmoCraftMark(.tempoDial, color: palette.secondaryInk)
                         .frame(width: 15, height: 15)
                         .frame(width: 22)
                         .accessibilityHidden(true)
@@ -564,28 +562,26 @@ public struct SoundPaletteBoxSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                                 .background(
-                                    ZStack {
-                                        Capsule()
-                                            .fill(palette.cartoonShadow)
-                                            .offset(y: 1.5)
-                                        Capsule()
-                                            .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                            .overlay(
-                                                Capsule().strokeBorder(
-                                                    palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
-                                                    lineWidth: active ? 1.8 : 1.5
-                                                )
+                                    Capsule()
+                                        .fill(active ? palette.prominentFill : palette.cardSurface)
+                                        .shadow(
+                                            color: active
+                                                ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
+                                                : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                            radius: 3.5,
+                                            y: 1.5
+                                        )
+                                        .overlay(
+                                            Capsule().strokeBorder(
+                                                active ? Color.white.opacity(0.30) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                                lineWidth: 0.9
                                             )
-                                    }
+                                        )
                                 )
-                                .foregroundStyle(
-                                    active
-                                        ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                        : palette.primaryInk
-                                )
+                                .foregroundStyle(active ? Color.white : palette.primaryInk)
                                 .contentShape(Capsule())
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("播放速度 \(label)")
                     }
                 }
@@ -597,7 +593,7 @@ public struct SoundPaletteBoxSheet: View {
                 HStack(spacing: 6) {
                     Image(systemName: "metronome")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.cartoonOutline)
+                        .foregroundStyle(palette.secondaryInk)
                         .frame(width: 22)
                         .accessibilityHidden(true)
 
@@ -609,30 +605,32 @@ public struct SoundPaletteBoxSheet: View {
                         } label: {
                             GrooveDotPatternView(
                                 tier: tier,
-                                color: active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.primaryInk
+                                color: active ? Color.white : palette.primaryInk
                             )
                             .frame(height: 16)
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: 34)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.5)
-                                    Capsule()
-                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                        .overlay(
-                                            Capsule().strokeBorder(
-                                                palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
-                                                lineWidth: active ? 1.8 : 1.5
-                                            )
+                                Capsule()
+                                    .fill(active ? palette.prominentFill : palette.cardSurface)
+                                    .shadow(
+                                        color: active
+                                            ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
+                                            : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                        radius: 3.5,
+                                        y: 1.5
+                                    )
+                                    .overlay(
+                                        Capsule().strokeBorder(
+                                            active ? Color.white.opacity(0.30) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                            lineWidth: 0.9
                                         )
-                                }
+                                    )
                             )
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                             .contentShape(Rectangle())
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("节奏\(label)")
                         .accessibilityValue(active ? "已选中" : "")
                     }
@@ -645,7 +643,7 @@ public struct SoundPaletteBoxSheet: View {
                 HStack(spacing: 6) {
                     Image(systemName: "tuningfork")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.cartoonOutline)
+                        .foregroundStyle(palette.secondaryInk)
                         .frame(width: 22)
                         .accessibilityHidden(true)
 
@@ -661,38 +659,33 @@ public struct SoundPaletteBoxSheet: View {
                                 Text(RootTranspositionHelper.compactLabel(forRootMIDI: targetMIDI))
                                     .font(.caption2.weight(.heavy).monospacedDigit())
                                 Capsule()
-                                    .fill(
-                                        active
-                                            ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                            : palette.homeAnchor.opacity(0.65)
-                                    )
+                                    .fill(active ? Color.white : palette.homeAnchor.opacity(0.65))
                                     .frame(width: barWidth, height: 2.8)
                             }
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: 34)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.5)
-                                    Capsule()
-                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                        .overlay(
-                                            Capsule().strokeBorder(
-                                                palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
-                                                lineWidth: active ? 1.8 : 1.5
-                                            )
+                                Capsule()
+                                    .fill(active ? palette.prominentFill : palette.cardSurface)
+                                    .shadow(
+                                        color: active
+                                            ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
+                                            : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                        radius: 3.5,
+                                        y: 1.5
+                                    )
+                                    .overlay(
+                                        Capsule().strokeBorder(
+                                            active ? Color.white.opacity(0.30) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                            lineWidth: 0.9
                                         )
-                                }
+                                    )
                             )
-                            .foregroundStyle(
-                                active
-                                    ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                    : palette.primaryInk
-                            )
-                            .contentShape(Capsule())
+                            .foregroundStyle(active ? Color.white : palette.primaryInk)
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("音区\(RootTranspositionHelper.accessibilityLabel(forRootMIDI: targetMIDI))")
                         .accessibilityValue(active ? "已选中" : "")
                     }
@@ -749,14 +742,12 @@ public struct SoundPaletteBoxSheet: View {
                             .padding(.horizontal, 11)
                             .frame(minHeight: 32)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.storybookButter)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
-                                }
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.nightLampGold,
+                                    isActive: true,
+                                    cornerRadius: 16
+                                )
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
@@ -769,7 +760,7 @@ public struct SoundPaletteBoxSheet: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(MelodyVoice.allCases) { v in
                             let active = vm.melodyVoice == v
-                            let fgColor = active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.primaryInk
+                            let fgColor = active ? Color.white : palette.primaryInk
                             let waveColor = active ? fgColor : palette.homeAnchor
                             Button {
                                 vm.setMelodyVoice(v)
@@ -792,20 +783,22 @@ public struct SoundPaletteBoxSheet: View {
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 10)
                                 .background(
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                            .fill(palette.cartoonShadow)
-                                            .offset(x: 0, y: 2)
-                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                            .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                                    .strokeBorder(
-                                                        active ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.75),
-                                                        lineWidth: active ? 2.0 : 1.5
-                                                    )
-                                            )
-                                    }
+                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                        .fill(active ? palette.prominentFill : palette.cardSurface)
+                                        .shadow(
+                                            color: active
+                                                ? palette.prominentFill.opacity(palette.isNight ? 0.30 : 0.22)
+                                                : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                            radius: 4,
+                                            y: 2
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                                .strokeBorder(
+                                                    active ? Color.white.opacity(0.32) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                                    lineWidth: 1.0
+                                                )
+                                        )
                                 )
                                 .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                             }
@@ -871,14 +864,12 @@ public struct SoundPaletteBoxSheet: View {
                             .padding(.horizontal, 11)
                             .frame(minHeight: 32)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.storybookMint)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
-                                }
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.celadonAccent,
+                                    isActive: true,
+                                    cornerRadius: 16
+                                )
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
@@ -921,20 +912,22 @@ public struct SoundPaletteBoxSheet: View {
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 10)
                                 .background(
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                            .fill(palette.cartoonShadow)
-                                            .offset(x: 0, y: 2)
-                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                            .fill(active ? palette.bassRibbon : palette.cardSurface)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                                    .strokeBorder(
-                                                        active ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.75),
-                                                        lineWidth: active ? 2.0 : 1.5
-                                                    )
-                                            )
-                                    }
+                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                        .fill(active ? palette.bassRibbon : palette.cardSurface)
+                                        .shadow(
+                                            color: active
+                                                ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.22)
+                                                : (palette.isNight ? Color.black.opacity(0.20) : Color(hex: 0x7A5230).opacity(0.08)),
+                                            radius: 4,
+                                            y: 2
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                                .strokeBorder(
+                                                    active ? Color.white.opacity(0.32) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                                    lineWidth: 1.0
+                                                )
+                                        )
                                 )
                                 .opacity(vm.cradleEnabled ? 1.0 : 0.65)
                                 .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
@@ -1175,20 +1168,22 @@ private struct ChordPresetBarcodeStrip: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(palette.cartoonShadow)
-                                .offset(y: 1.5)
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .strokeBorder(
-                                            selected ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.55),
-                                            lineWidth: selected ? 1.8 : 1.4
-                                        )
-                                )
-                        }
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface)
+                            .shadow(
+                                color: selected
+                                    ? palette.bassRibbon.opacity(palette.isNight ? 0.24 : 0.16)
+                                    : (palette.isNight ? Color.black.opacity(0.18) : Color(hex: 0x7A5230).opacity(0.07)),
+                                radius: 3,
+                                y: 1.5
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(
+                                        selected ? palette.bassRibbon.opacity(0.75) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                        lineWidth: selected ? 1.3 : 0.9
+                                    )
+                            )
                     )
                     .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }

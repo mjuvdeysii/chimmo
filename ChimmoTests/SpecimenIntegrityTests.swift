@@ -3416,4 +3416,55 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(CharacterSoundTestView(palette: dayPalette))
         XCTAssertNotNil(CharacterSoundTestView(palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound48ModalSheetsAtelierCohesion() throws {
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotEqual(dayPalette.prominentFill, nightPalette.prominentFill)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r48_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.plantCreationStarter(.sunnyMeadow)
+        vm.setChordPreset(.autoMatch)
+        vm.toggleFollowGlow()
+        XCTAssertNotNil(vm.document.id)
+
+        // 1. 调音百宝箱 SoundPaletteBoxSheet 昼夜渲染实例化
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+
+        // 2. 灵光捕手 DreamCaptureSheet 三大分镜（0 节奏画线 / 1 轻哼电台 / 2 折纸工坊）
+        for tabIndex in [0, 1, 2] {
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette, initialTab: tabIndex))
+            XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette, initialTab: tabIndex))
+        }
+
+        // 3. 明信片分享页与跟弹主舞台组件同源实例化
+        let postcardRequest = VinylPostcardRequest(document: vm.document)
+        XCTAssertNotNil(VinylPostcardShareSheet(palette: dayPalette, request: postcardRequest))
+        XCTAssertNotNil(VinylPostcardShareSheet(palette: nightPalette, request: postcardRequest))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: nightPalette,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                navigationTitleText: "曲本",
+                showsDismissButton: false,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+    }
 }

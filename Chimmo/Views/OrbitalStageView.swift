@@ -2810,17 +2810,12 @@ internal struct StageHarmonyRibbonView: View {
                 vm.setChordPreset(nextPreset)
             } label: {
                 ZStack {
-                    Capsule()
-                        .fill(palette.cartoonShadow)
-                        .offset(y: 1.8)
-                    Capsule()
-                        .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.18) : palette.cardSurface)
-                        .overlay(
-                            Capsule().strokeBorder(
-                                vm.cradleEnabled ? palette.bassRibbon : palette.cartoonOutline.opacity(0.65),
-                                lineWidth: vm.cradleEnabled ? 1.8 : 1.5
-                            )
-                        )
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: palette.bassRibbon,
+                        isActive: vm.cradleEnabled,
+                        cornerRadius: 17
+                    )
                     ChimmoCowView(
                         isNight: palette.isNight,
                         accentColor: skyCol,
@@ -2856,17 +2851,19 @@ internal struct StageHarmonyRibbonView: View {
                             } label: {
                                 ZStack {
                                     Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
                                         .fill(isActive ? segCol : palette.cardSurface)
+                                        .shadow(
+                                            color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                                            radius: 3,
+                                            y: 1.5
+                                        )
                                         .overlay(
                                             Capsule().fill(isActive ? Color.clear : segCol.opacity(palette.isNight ? 0.18 : 0.10))
                                         )
                                         .overlay(
                                             Capsule().strokeBorder(
-                                                isActive ? palette.cartoonOutline.opacity(0.85) : segCol.opacity(0.75),
-                                                lineWidth: isActive ? 1.8 : 1.5
+                                                isActive ? Color.white.opacity(0.35) : segCol.opacity(0.45),
+                                                lineWidth: 1.1
                                             )
                                         )
                                     HStack(spacing: 3) {
@@ -2916,14 +2913,12 @@ internal struct StageHarmonyRibbonView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 34)
                     .background(
-                        ZStack {
-                            Capsule()
-                                .fill(palette.cartoonShadow)
-                                .offset(y: 1.8)
-                            Capsule()
-                                .fill(palette.cardSurface)
-                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.55), lineWidth: 1.5))
-                        }
+                        ChimmoKilnPillButtonSurface(
+                            palette: palette,
+                            accent: palette.bassRibbon,
+                            isActive: false,
+                            cornerRadius: 17
+                        )
                     )
                     .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                     .contentShape(Rectangle())
@@ -2939,7 +2934,7 @@ internal struct StageHarmonyRibbonView: View {
                 .fill(palette.shelfSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.22 : 0.16), lineWidth: 1.0)
+                        .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
                 )
         )
     }

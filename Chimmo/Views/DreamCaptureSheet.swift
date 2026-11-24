@@ -118,11 +118,11 @@ public struct DreamCaptureSheet: View {
             }
             .padding(4)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
                     .fill(palette.shelfSurface)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.22 : 0.16), lineWidth: 1.0)
+                        RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
+                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
                     )
             )
             .frame(height: 44)
@@ -291,7 +291,7 @@ public struct DreamCaptureSheet: View {
                 if !reduceMotion {
                     drumShockwaveScale = 0.85
                     drumShockwaveOpacity = 0.55
-                    withAnimation(.easeOut(duration: 0.38)) {
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.38)) {
                         drumShockwaveScale = 1.42
                         drumShockwaveOpacity = 0.0
                     }
@@ -312,7 +312,7 @@ public struct DreamCaptureSheet: View {
                                 .frame(width: 56, height: 56)
                                 .scaleEffect(drumShockwaveScale)
                             Circle()
-                                .strokeBorder(palette.cartoonOutline.opacity(0.80), lineWidth: 1.8)
+                                .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.18 : 0.12), lineWidth: 1.1)
                                 .frame(width: 54, height: 54)
                             Circle()
                                 .strokeBorder(palette.homeAnchor.opacity(0.45), lineWidth: 1.2)
@@ -330,7 +330,7 @@ public struct DreamCaptureSheet: View {
                                 .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                        .strokeBorder(palette.cartoonOutline.opacity(0.45), lineWidth: 1.2)
+                                        .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
                                 )
 
                             if barMetrics.isEmpty {
@@ -393,13 +393,16 @@ public struct DreamCaptureSheet: View {
                             } label: {
                                 ZStack {
                                     Circle()
-                                        .fill(palette.cartoonShadow)
-                                        .frame(width: 32, height: 32)
-                                        .offset(y: 1.5)
-                                    Circle()
                                         .fill(palette.cardSurface)
                                         .frame(width: 32, height: 32)
-                                        .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                        .shadow(
+                                            color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                            radius: 3,
+                                            y: 1.5
+                                        )
+                                        .overlay(
+                                            Circle().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                                        )
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.caption.weight(.bold))
                                         .foregroundStyle(palette.homeAnchor)
@@ -418,13 +421,16 @@ public struct DreamCaptureSheet: View {
                         } label: {
                             ZStack {
                                 Circle()
-                                    .fill(palette.cartoonShadow)
-                                    .frame(width: 32, height: 32)
-                                    .offset(y: 1.5)
-                                Circle()
                                     .fill(palette.cardSurface)
                                     .frame(width: 32, height: 32)
-                                    .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.78), lineWidth: 1.5))
+                                    .shadow(
+                                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                        radius: 3,
+                                        y: 1.5
+                                    )
+                                    .overlay(
+                                        Circle().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                                    )
                                 Image(systemName: "arrow.counterclockwise")
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(palette.secondaryInk)
@@ -455,11 +461,16 @@ public struct DreamCaptureSheet: View {
 
         return GeometryReader { geo in
             ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
                     .fill(palette.cardSurface)
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                        radius: 6,
+                        y: 3
+                    )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.6)
+                        RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
+                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
                     )
 
                 // 绘本山坡剪影托底 + 五声/八度校准标尺线（消除空白，强化风景感）
@@ -621,13 +632,16 @@ public struct DreamCaptureSheet: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(palette.cartoonShadow)
-                                .frame(width: 32, height: 32)
-                                .offset(y: 1.5)
-                            Circle()
                                 .fill(palette.cardSurface)
                                 .frame(width: 32, height: 32)
-                                .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
+                                .shadow(
+                                    color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                    radius: 3,
+                                    y: 1.5
+                                )
+                                .overlay(
+                                    Circle().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                                )
                             Image(systemName: "arrow.counterclockwise")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(palette.secondaryInk)
@@ -749,8 +763,8 @@ public struct DreamCaptureSheet: View {
 
                     Circle()
                         .strokeBorder(
-                            (isRec ? palette.melodyTerracotta : palette.cartoonOutline).opacity(0.75),
-                            lineWidth: 2.0
+                            (isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(0.45),
+                            lineWidth: 1.6
                         )
                         .frame(width: 88, height: 88)
 
@@ -762,18 +776,19 @@ public struct DreamCaptureSheet: View {
                             vm.startHumCapture()
                         }
                     } label: {
+                        let micFill = isRec ? palette.melodyTerracotta : palette.prominentFill
                         ZStack {
                             Circle()
-                                .fill(palette.cartoonShadow)
+                                .fill(micFill)
                                 .frame(width: 76, height: 76)
-                                .offset(x: 0, y: 3.5)
-
-                            Circle()
-                                .fill(isRec ? palette.melodyTerracotta : palette.homeAnchor)
-                                .frame(width: 76, height: 76)
+                                .shadow(
+                                    color: micFill.opacity(palette.isNight ? 0.34 : 0.28),
+                                    radius: 7,
+                                    y: 3.5
+                                )
                                 .overlay(
                                     Circle()
-                                        .strokeBorder(palette.cartoonOutline, lineWidth: 2.2)
+                                        .strokeBorder(Color.white.opacity(0.35), lineWidth: 1.2)
                                 )
 
                             Image(systemName: isRec ? "stop.fill" : "mic.fill")
@@ -850,7 +865,7 @@ public struct DreamCaptureSheet: View {
                 .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.80), lineWidth: 1.6)
+                        .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
                 )
 
             if isRec && trace.count >= 2 {
@@ -1085,13 +1100,16 @@ public struct DreamCaptureSheet: View {
                             } label: {
                                 ZStack {
                                     Circle()
-                                        .fill(palette.cartoonShadow)
-                                        .frame(width: 40, height: 40)
-                                        .offset(y: 1.8)
-                                    Circle()
                                         .fill(palette.cardSurface)
                                         .frame(width: 40, height: 40)
-                                        .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
+                                        .shadow(
+                                            color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.09),
+                                            radius: 3.5,
+                                            y: 1.5
+                                        )
+                                        .overlay(
+                                            Circle().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                                        )
                                     Image(systemName: "arrow.counterclockwise")
                                         .font(.caption.weight(.bold))
                                         .foregroundStyle(palette.secondaryInk)
@@ -1110,20 +1128,21 @@ public struct DreamCaptureSheet: View {
                             Label("变奏", systemImage: "wand.and.stars")
                                 .font(.system(.subheadline, design: .rounded).weight(.heavy))
                                 .frame(maxWidth: .infinity)
-                                .frame(minHeight: 42)
+                                .frame(minHeight: 44)
                                 .background(
                                     ZStack {
                                         Capsule()
-                                            .fill(palette.cartoonShadow)
-                                            .offset(x: 0, y: 2.5)
-                                        Capsule()
-                                            .fill(palette.homeAnchor)
-                                            .overlay(
-                                                Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                                            .fill(palette.prominentFill)
+                                            .shadow(
+                                                color: palette.prominentFill.opacity(palette.isNight ? 0.32 : 0.24),
+                                                radius: 5,
+                                                y: 2.5
                                             )
+                                        Capsule()
+                                            .strokeBorder(Color.white.opacity(0.32), lineWidth: 1.0)
                                     }
                                 )
-                                .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                .foregroundStyle(Color.white)
                                 .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
@@ -1225,8 +1244,8 @@ private struct StorybookChoirLevelStageView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                                     .strokeBorder(
-                                        palette.cartoonOutline.opacity(bar.isLit ? 0.90 : 0.45),
-                                        lineWidth: bar.isLit ? 1.5 : 1.1
+                                        palette.primaryInk.opacity(bar.isLit ? 0.35 : 0.12),
+                                        lineWidth: bar.isLit ? 1.2 : 0.9
                                     )
                             )
                             .frame(maxWidth: .infinity)
@@ -1239,8 +1258,8 @@ private struct StorybookChoirLevelStageView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
 
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.85), lineWidth: 1.8)
+            RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
+                .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
         }
         .frame(height: 88)
         .accessibilityHidden(true)
@@ -1408,13 +1427,13 @@ private struct SeedPitchFaderColumn: View {
 
                 ZStack {
                     Capsule()
-                        .fill(palette.cartoonOutline.opacity(0.45))
-                        .frame(width: 28, height: 1.8)
+                        .fill(palette.primaryInk.opacity(0.24))
+                        .frame(width: 28, height: 1.6)
                         .position(x: centerX, y: 8 + trackH * 0.5)
 
                     Capsule()
                         .fill(palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2))
-                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.4))
+                        .overlay(Capsule().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.16 : 0.10), lineWidth: 1.0))
                         .frame(width: 12, height: trackH)
                         .position(x: centerX, y: 8 + trackH * 0.5)
 
@@ -1426,7 +1445,7 @@ private struct SeedPitchFaderColumn: View {
                     VStack(spacing: 0) {
                         ForEach(0..<7, id: \.self) { step in
                             Circle()
-                                .fill(step == 3 ? palette.nightLampGold : palette.cartoonOutline.opacity(0.42))
+                                .fill(step == 3 ? palette.nightLampGold : palette.primaryInk.opacity(0.24))
                                 .frame(width: step == 3 ? 4.0 : 2.2, height: step == 3 ? 4.0 : 2.2)
                             if step < 6 { Spacer(minLength: 0) }
                         }
@@ -1435,21 +1454,20 @@ private struct SeedPitchFaderColumn: View {
                     .position(x: centerX - 15, y: 8 + trackH * 0.5)
 
                     Circle()
-                        .fill(palette.cartoonShadow)
-                        .frame(width: 23, height: 23)
-                        .offset(x: 0, y: 2)
-                        .position(x: centerX, y: thumbY)
-
-                    Circle()
                         .fill(laneCol)
                         .frame(width: 23, height: 23)
+                        .shadow(
+                            color: palette.isNight ? Color.black.opacity(0.28) : Color(hex: 0x7A5230).opacity(0.16),
+                            radius: 3,
+                            y: 1.5
+                        )
                         .overlay(
                             PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
                                 .frame(width: 9.5, height: 9.5)
                                 .foregroundStyle(.white)
                         )
                         .overlay(
-                            Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                            Circle().strokeBorder(Color.white.opacity(0.75), lineWidth: 1.2)
                         )
                         .position(x: centerX, y: thumbY)
                 }

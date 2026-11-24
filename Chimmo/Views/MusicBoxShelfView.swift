@@ -559,27 +559,10 @@ public struct MusicBoxShelfView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "plus")
-                            .font(.subheadline.weight(.heavy))
                         Text("写下第一首曲子")
-                            .font(.subheadline.weight(.heavy))
                     }
-                    .padding(.horizontal, 20)
-                    .frame(minHeight: 42)
-                    .background(
-                        ZStack {
-                            Capsule()
-                                .fill(palette.cartoonShadow)
-                                .offset(y: 3.0)
-                            Capsule()
-                                .fill(palette.homeAnchor)
-                            Capsule()
-                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.9)
-                        }
-                    )
-                    .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
-                    .contentShape(Capsule())
                 }
-                .buttonStyle(StorybookTactileButtonStyle(sinkY: 2.0))
+                .buttonStyle(.chimmoVinyl(palette: palette, prominent: true))
                 .accessibilityLabel("去写一段")
             }
             .padding(.horizontal, 18)
@@ -1227,12 +1210,8 @@ private struct StorybookSongbookCoverThumb: View {
                     value: isPlaying
                 )
 
-                // 3. 扁平卡通精装绘本封面（硬朗偏移投影 + 缝线书脊 + 4 幕色带 + 草坡 + 主角小偶）
+                // 3. 软胶绘本精装封面（柔和投影 + 缝线书脊 + 4 幕色带 + 草坡 + 主角小偶）
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 11, style: .continuous)
-                        .fill(palette.cartoonShadow)
-                        .offset(x: 2, y: placement.shadowOffsetY)
-
                     ZStack(alignment: .bottom) {
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
                             .fill(palette.cardSurface)
@@ -1262,11 +1241,17 @@ private struct StorybookSongbookCoverThumb: View {
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                     }
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.30) : Color(hex: 0x7A5230).opacity(0.14),
+                        radius: 3.5,
+                        x: 1,
+                        y: placement.shadowOffsetY * 0.75
+                    )
                     .overlay(
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
                             .strokeBorder(
-                                isPlaying ? modeColor : ink.opacity(palette.isNight ? 0.72 : 0.88),
-                                lineWidth: isPlaying ? 2.1 : 1.7
+                                isPlaying ? modeColor : palette.divider,
+                                lineWidth: isPlaying ? 1.8 : 1.0
                             )
                     )
 

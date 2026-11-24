@@ -545,14 +545,12 @@ public struct CreateStudioView: View {
                     .padding(.horizontal, 12)
                     .frame(minHeight: 40)
                     .background(
-                        ZStack {
-                            Capsule()
-                                .fill(palette.cartoonShadow)
-                                .offset(y: 2)
-                            Capsule()
-                                .fill(palette.nightLampGold)
-                                .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.6))
-                        }
+                        ChimmoKilnPillButtonSurface(
+                            palette: palette,
+                            accent: palette.nightLampGold,
+                            isActive: true,
+                            cornerRadius: 20
+                        )
                     )
                     .contentShape(Capsule())
             }
@@ -561,9 +559,7 @@ public struct CreateStudioView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(
-            StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
-        )
+        .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.inner)
     }
 
     // MARK: - 3. Compact Two-Row Selected Beat Editor (Pitch Step + Duration + >= 40pt Hit Targets)

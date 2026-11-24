@@ -95,8 +95,8 @@ public struct VinylPostcardShareSheet: View {
                                         Image(systemName: nightFlag ? "moon.stars.fill" : "sun.max.fill")
                                             .font(.footnote.weight(.bold))
                                             .frame(width: 38, height: 34)
-                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                            .background(Capsule().fill(active ? palette.prominentFill : Color.clear))
+                                            .foregroundStyle(active ? Color.white : palette.secondaryInk)
                                             .frame(
                                                 minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                                 minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
@@ -110,15 +110,17 @@ public struct VinylPostcardShareSheet: View {
                             }
                             .padding(3)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.5)
-                                    Capsule()
-                                        .fill(palette.cardSurface)
-                                    Capsule()
-                                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.60 : 0.78), lineWidth: 1.4)
-                                }
+                                Capsule()
+                                    .fill(palette.cardSurface)
+                                    .shadow(
+                                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                                        radius: 3.5,
+                                        y: 1.5
+                                    )
+                                    .overlay(
+                                        Capsule()
+                                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                                    )
                             )
                             .contentShape(Capsule())
                             .fixedSize()
@@ -134,8 +136,8 @@ public struct VinylPostcardShareSheet: View {
                                         Image(systemName: mode.iconName)
                                             .font(.footnote.weight(.bold))
                                             .frame(width: 36, height: 34)
-                                            .background(Capsule().fill(active ? palette.homeAnchor : Color.clear))
-                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.secondaryInk)
+                                            .background(Capsule().fill(active ? palette.prominentFill : Color.clear))
+                                            .foregroundStyle(active ? Color.white : palette.secondaryInk)
                                             .frame(
                                                 minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                                 minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
@@ -148,15 +150,17 @@ public struct VinylPostcardShareSheet: View {
                             }
                             .padding(3)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.5)
-                                    Capsule()
-                                        .fill(palette.cardSurface)
-                                    Capsule()
-                                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.60 : 0.78), lineWidth: 1.4)
-                                }
+                                Capsule()
+                                    .fill(palette.cardSurface)
+                                    .shadow(
+                                        color: palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08),
+                                        radius: 3.5,
+                                        y: 1.5
+                                    )
+                                    .overlay(
+                                        Capsule()
+                                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
+                                    )
                             )
                             .contentShape(Capsule())
                             .fixedSize()
@@ -186,34 +190,29 @@ public struct VinylPostcardShareSheet: View {
                             .accessibilityLabel("在明信片显示简谱音符")
                             .accessibilityValue(showJianpuStrip ? "已开启" : "已关闭")
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 16)
 
-                        // 等比缩放呈现 540x680 扁平卡通绘本明信片预览（硬朗无模糊位移阴影 + 暖墨描边）
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(palette.cartoonShadow)
-                                .frame(width: 270, height: 340)
-                                .offset(x: 4, y: 5)
-
-                            VinylPostcardCanvasView(snapshot: snapshot)
-                                .scaleEffect(0.5)
-                                .frame(width: 270, height: 340)
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
-                                )
-                        }
+                        // 等比缩放呈现 540x680 绘本明信片预览（柔和接触阴影 + 精致外沿）
+                        VinylPostcardCanvasView(snapshot: snapshot)
+                            .scaleEffect(0.5)
+                            .frame(width: 270, height: 340)
+                            .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
+                            .shadow(
+                                color: palette.isNight ? Color.black.opacity(0.32) : Color(hex: 0x7A5230).opacity(0.16),
+                                radius: 12,
+                                y: 6
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous)
+                                    .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 1.0)
+                            )
 
                         HStack(spacing: 10) {
                             if let pngURL = exportedPNGURL {
                                 ShareLink(item: pngURL) {
                                     VStack(spacing: 5) {
-                                        ChimmoCraftMark(
-                                            .vinylSeal,
-                                            color: palette.isNight ? Color(hex: 0x0E142C) : .white
-                                        )
-                                        .frame(width: 18, height: 18)
+                                        ChimmoCraftMark(.vinylSeal, color: .white)
+                                            .frame(width: 18, height: 18)
                                         Text("PNG")
                                             .font(.caption.weight(.heavy).monospaced())
                                     }
@@ -222,18 +221,20 @@ public struct VinylPostcardShareSheet: View {
                                     .background(
                                         ZStack {
                                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.cartoonShadow)
-                                                .offset(y: 3)
+                                                .fill(palette.prominentFill)
+                                                .shadow(
+                                                    color: palette.prominentFill.opacity(palette.isNight ? 0.32 : 0.24),
+                                                    radius: 5,
+                                                    y: 2.5
+                                                )
                                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.homeAnchor)
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
+                                                .strokeBorder(Color.white.opacity(palette.isNight ? 0.16 : 0.34), lineWidth: 1.0)
                                         }
                                     )
-                                    .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                    .foregroundStyle(Color.white)
                                     .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
-                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                                 .accessibilityLabel("分享图片 PNG")
                             } else {
                                 ProgressView()
@@ -253,20 +254,17 @@ public struct VinylPostcardShareSheet: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                                     .background(
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.cartoonShadow)
-                                                .offset(y: 3)
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.storybookButter)
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
-                                        }
+                                        ChimmoKilnPillButtonSurface(
+                                            palette: palette,
+                                            accent: palette.nightLampGold,
+                                            isActive: true,
+                                            cornerRadius: 16
+                                        )
                                     )
                                     .foregroundStyle(palette.primaryInk)
                                     .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
-                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                                 .accessibilityLabel("分享立体声音频 WAV")
                             } else if isRenderingWAV {
                                 VStack(spacing: 5) {
@@ -303,20 +301,17 @@ public struct VinylPostcardShareSheet: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                                     .background(
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.cartoonShadow)
-                                                .offset(y: 3)
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.storybookMint)
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.8)
-                                        }
+                                        ChimmoKilnPillButtonSurface(
+                                            palette: palette,
+                                            accent: palette.celadonAccent,
+                                            isActive: true,
+                                            cornerRadius: 16
+                                        )
                                     )
                                     .foregroundStyle(palette.primaryInk)
                                     .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
-                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                                 .accessibilityLabel("导出 MIDI")
                             } else {
                                 ProgressView()
@@ -325,12 +320,12 @@ public struct VinylPostcardShareSheet: View {
                                     .background(StorybookQuietCardSurface(palette: palette, cornerRadius: 16))
                             }
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 16)
 
                         HStack(spacing: 8) {
                             ChimmoCartoonKeyBuddyView(
                                 member: snapshot.heroMember,
-                                outlineColor: palette.cartoonOutline,
+                                outlineColor: palette.primaryInk.opacity(palette.isNight ? 0.65 : 0.72),
                                 isSinging: true,
                                 isMinor: request.document.scaleMode.isMinorFlavored
                             )
@@ -469,7 +464,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.54.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.55.0"
     }
 
     private var appBuild: String {
