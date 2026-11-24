@@ -43,9 +43,9 @@ public struct OrbitalStageView: View {
                     accentTint: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
                 )
 
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     showcaseCrownHeader
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
 
                     StageCanvasPanel(
                         vm: vm,
@@ -61,36 +61,10 @@ public struct OrbitalStageView: View {
                             showSongPicker = true
                         } label: {
                             Label("挑选一首名曲", systemImage: "books.vertical.fill")
-                                .font(.subheadline.weight(.heavy))
-                                .padding(.horizontal, 18)
-                                .frame(minHeight: 44)
-                                .background(
-                                    ZStack {
-                                        Capsule()
-                                            .fill(palette.cartoonShadow)
-                                            .offset(y: 2.5)
-                                        Capsule()
-                                            .fill(palette.homeAnchor)
-                                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
-                                    }
-                                )
-                                .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                .contentShape(Capsule())
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                        .buttonStyle(.chimmoVinyl(palette: palette, tint: palette.prominentFill, prominent: true))
                     })
-                    .padding(.horizontal, 12)
-
-                    if !vm.followGlowActive && !vm.document.notes.isEmpty {
-                        StageHarmonyRibbonView(
-                            vm: vm,
-                            palette: palette,
-                            reduceMotion: reduceMotion
-                        ) {
-                            wakeSignal &+= 1
-                        }
-                        .padding(.horizontal, 12)
-                    }
+                    .padding(.horizontal, 16)
 
                     if !vm.followGlowActive,
                        let chip = StorybookGuidedMomentKinematics.chipModel(
@@ -98,7 +72,7 @@ public struct OrbitalStageView: View {
                         document: vm.document
                        ) {
                         showcaseGuideBar(chip: chip)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 16)
                     }
 
                     StageChoirKeyboardBar(
@@ -112,10 +86,10 @@ public struct OrbitalStageView: View {
                             vm.auditionShowcaseLane(lane, touchIntensity: vel, touchBrightness: bright)
                         }
                     )
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 16)
 
                     showcaseBottomDock
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
                         .padding(.bottom, 6)
                 }
                 .padding(.top, 4)
@@ -368,31 +342,27 @@ public struct OrbitalStageView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                     }
-                    .padding(.horizontal, 11)
+                    .padding(.horizontal, 12)
                     .frame(minHeight: 40)
                     .background(
-                        ZStack {
-                            Capsule()
-                                .fill(palette.cartoonShadow)
-                                .offset(y: 2)
-                            Capsule()
-                                .fill(palette.storybookButter)
-                                .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
-                        }
+                        ChimmoKilnPillButtonSurface(
+                            palette: palette,
+                            accent: palette.nightLampGold,
+                            isActive: true,
+                            cornerRadius: 20
+                        )
                     )
                     .foregroundStyle(palette.primaryInk)
                     .contentShape(Capsule())
                 }
-                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
                 .accessibilityLabel("从头试听 \(chip.badge)")
             }
             .fixedSize()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .background(
-            StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
-        )
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
     }
 
     private func guideChapterStepButton(
@@ -404,16 +374,17 @@ public struct OrbitalStageView: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(palette.cartoonShadow)
-                    .frame(width: 32, height: 32)
-                    .offset(y: 1.5)
-                Circle()
                     .fill(palette.cardSurface)
                     .frame(width: 32, height: 32)
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                        radius: 2.5,
+                        y: 1.5
+                    )
                     .overlay(
                         Circle().strokeBorder(
-                            palette.cartoonOutline.opacity(palette.isNight ? 0.56 : 0.78),
-                            lineWidth: 1.5
+                            palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                            lineWidth: 0.9
                         )
                     )
                 Image(systemName: systemName)
@@ -446,21 +417,19 @@ public struct OrbitalStageView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    ZStack {
-                        Capsule()
-                            .fill(palette.cartoonShadow)
-                            .offset(y: 2.5)
-                        Capsule()
-                            .fill(vm.isPlaying ? palette.storybookMint : palette.cardSurface)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.86), lineWidth: 1.8))
-                    }
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: palette.celadonAccent,
+                        isActive: vm.isPlaying,
+                        cornerRadius: 23
+                    )
                 )
                 .foregroundStyle(palette.primaryInk)
                 .contentShape(Capsule())
             }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(vm.isPlaying ? "暂停播放" : "开始播放")
             .accessibilityHint("播放或暂停当前欣赏乐段，支持空格键控制")
             .storybookKeyboardShortcut(KeyboardShortcut(.space, modifiers: []), enabled: vm.activeSpace == .showcase)
@@ -468,36 +437,37 @@ public struct OrbitalStageView: View {
             Button {
                 vm.toggleFollowGlow()
             } label: {
+                let isFollow = vm.followGlowActive
+                let followFill = isFollow ? palette.nightLampGold : palette.prominentFill
                 HStack(spacing: 6) {
-                    Image(systemName: vm.followGlowActive ? "xmark" : "sparkles")
+                    Image(systemName: isFollow ? "xmark" : "sparkles")
                         .font(.subheadline.weight(.bold))
                     Text(
-                        vm.followGlowActive
+                        isFollow
                             ? "\(min(vm.followGlowIndex + 1, max(1, vm.document.notes.count)))/\(max(1, vm.document.notes.count))"
                             : "跟灯弹"
                     )
                     .font(.system(.subheadline, design: .rounded).weight(.heavy).monospacedDigit())
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    ZStack {
-                        Capsule()
-                            .fill(palette.cartoonShadow)
-                            .offset(y: 2.5)
-                        Capsule()
-                            .fill(vm.followGlowActive ? palette.nightLampGold : palette.homeAnchor)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 2.0))
-                    }
+                    Capsule()
+                        .fill(followFill)
+                        .shadow(
+                            color: followFill.opacity(palette.isNight ? 0.34 : 0.24),
+                            radius: 5,
+                            y: 2.5
+                        )
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(Color.white.opacity(palette.isNight ? 0.16 : 0.35), lineWidth: 1.0)
+                        )
                 )
-                .foregroundStyle(
-                    vm.followGlowActive || palette.isNight
-                        ? Color(hex: 0x0E142C)
-                        : .white
-                )
+                .foregroundStyle(isFollow && !palette.isNight ? palette.primaryInk : (isFollow ? Color(hex: 0x0E142C) : .white))
                 .contentShape(Capsule())
             }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(vm.followGlowActive ? "退出跟灯弹" : "开启跟灯弹")
 
             Button {
@@ -514,28 +484,24 @@ public struct OrbitalStageView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    ZStack {
-                        Capsule()
-                            .fill(palette.cartoonShadow)
-                            .offset(y: 2.5)
-                        Capsule()
-                            .fill(palette.cardSurface)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.86), lineWidth: 1.8))
-                    }
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: palette.homeAnchor,
+                        isActive: false,
+                        cornerRadius: 23
+                    )
                 )
                 .foregroundStyle(palette.primaryInk)
                 .contentShape(Capsule())
             }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("复制这首曲子到创作区改编")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
-        .background(
-            StorybookQuietCardSurface(palette: palette, cornerRadius: 28)
-        )
+        .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.stage)
     }
 }
 
@@ -695,17 +661,22 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 .padding(10)
             }
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: ChimmoRadius.stage, style: .continuous)
                     .fill(boardBg)
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.28) : Color(hex: 0x7A5230).opacity(0.09),
+                        radius: 8,
+                        y: 4
+                    )
             )
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.stage, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: ChimmoRadius.stage, style: .continuous)
                     .strokeBorder(
-                        (activeCurtainColor ?? palette.cartoonOutline).opacity(
-                            activeCurtainColor != nil ? 0.65 : (palette.isNight ? 0.24 : 0.18)
+                        (activeCurtainColor ?? palette.primaryInk).opacity(
+                            activeCurtainColor != nil ? 0.55 : (palette.isNight ? 0.12 : 0.08)
                         ),
-                        lineWidth: activeCurtainColor != nil ? 1.8 : 1.2
+                        lineWidth: activeCurtainColor != nil ? 1.6 : 1.0
                     )
             )
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
@@ -781,13 +752,9 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                     .padding(.horizontal, active ? 10 : 9)
                     .frame(minWidth: active ? 62 : 38, minHeight: 36)
                     .background(
-                        Capsule().fill(active ? palette.homeAnchor : Color.clear)
+                        Capsule().fill(active ? palette.prominentFill : Color.clear)
                     )
-                    .foregroundStyle(
-                        active
-                            ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                            : palette.secondaryInk
-                    )
+                    .foregroundStyle(active ? Color.white : palette.secondaryInk)
                     .frame(
                         minWidth: active ? 62 : StorybookAffordanceMetrics.compactToolMinHitDimension,
                         minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
@@ -801,15 +768,20 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         .fixedSize()
         .padding(3)
         .background(
-            ZStack {
-                Capsule()
-                    .fill(palette.cartoonShadow)
-                    .offset(y: 2)
-                Capsule()
-                    .fill(palette.cardSurface)
-                Capsule()
-                    .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.5)
-            }
+            Capsule()
+                .fill(palette.cardSurface)
+                .shadow(
+                    color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                    radius: 4,
+                    y: 2
+                )
+                .overlay(
+                    Capsule()
+                        .strokeBorder(
+                            palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                            lineWidth: 0.9
+                        )
+                )
         )
         .contentShape(Capsule())
     }
@@ -891,15 +863,20 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             .padding(.horizontal, 10)
             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
             .background(
-                ZStack {
-                    Capsule()
-                        .fill(palette.cartoonShadow)
-                        .offset(y: 2)
-                    Capsule()
-                        .fill(palette.cardSurface)
-                    Capsule()
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.5)
-                }
+                Capsule()
+                    .fill(palette.cardSurface)
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                        radius: 4,
+                        y: 2
+                    )
+                    .overlay(
+                        Capsule()
+                            .strokeBorder(
+                                palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                lineWidth: 0.9
+                            )
+                    )
             )
             .contentShape(Capsule())
         }
@@ -2645,14 +2622,14 @@ internal struct StageChoirKeyboardBar: View {
                         let baseH = CGFloat(66 - lane.index * 2)
                         let barH = isMuted ? max(38, baseH - 6) : baseH
                         let col = lane.barColor(isNight: palette.isNight)
-                        let keyBorder = (isFollowTarget || hint != nil)
+                        let keyBorder: Color = (isFollowTarget || hint != nil)
                             ? palette.nightLampGold
-                            : (palette.isNight ? Color(hex: 0x0A0F24) : palette.cartoonOutline)
+                            : (isSympathetic ? Color.white.opacity(0.82) : Color.white.opacity(palette.isNight ? 0.14 : 0.45))
 
                         VStack(spacing: 2) {
                             ChimmoCartoonKeyBuddyView(
                                 member: lane.member,
-                                outlineColor: palette.isNight ? Color(hex: 0x0A0F24) : palette.cartoonOutline,
+                                outlineColor: palette.isNight ? Color(hex: 0x0A0F24) : palette.primaryInk.opacity(0.72),
                                 isSinging: buddyPose.showSingingSmile,
                                 isMinor: isMinor
                             )
@@ -2675,31 +2652,42 @@ internal struct StageChoirKeyboardBar: View {
                         .background(
                             ZStack {
                                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                    .fill(palette.cartoonShadow)
-                                    .offset(x: 0, y: isPlayingThis ? 1.0 : 3.0)
-
-                                RoundedRectangle(cornerRadius: 11, style: .continuous)
                                     .fill(col)
+                                    .shadow(
+                                        color: palette.isNight
+                                            ? Color.black.opacity(isPlayingThis ? 0.16 : 0.30)
+                                            : col.opacity(isPlayingThis ? 0.14 : 0.28),
+                                        radius: isPlayingThis ? 1.5 : 3.5,
+                                        y: isPlayingThis ? 0.8 : 2.5
+                                    )
+                                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.white.opacity(palette.isNight ? 0.08 : 0.22), .clear],
+                                            startPoint: .top,
+                                            endPoint: .center
+                                        )
+                                    )
                             }
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .strokeBorder(
                                     keyBorder,
-                                    lineWidth: (isFollowTarget || hint != nil) ? 2.4 : (isSympathetic ? 2.0 : 1.7)
+                                    lineWidth: (isFollowTarget || hint != nil) ? 2.2 : (isSympathetic ? 1.6 : 1.0)
                                 )
                         )
                         .overlay(alignment: .top) {
                             if isFollowTarget || hint != nil {
                                 Circle()
                                     .fill(palette.nightLampGold)
-                                    .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.0))
-                                    .frame(width: 7.0, height: 7.0)
+                                    .overlay(Circle().strokeBorder(Color.white.opacity(0.85), lineWidth: 1.0))
+                                    .frame(width: 7.5, height: 7.5)
                                     .offset(y: -4.5)
                             } else if isSympathetic {
                                 Circle()
                                     .fill(Color.white)
-                                    .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.0))
+                                    .overlay(Circle().strokeBorder(col.opacity(0.65), lineWidth: 1.0))
                                     .frame(width: 5.5, height: 5.5)
                                     .offset(y: -3.5)
                             }

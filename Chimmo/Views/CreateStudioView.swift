@@ -79,9 +79,9 @@ public struct CreateStudioView: View {
                     accentTint: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
                 )
 
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     creationTopBar
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
 
                     StageCanvasPanel(
                         vm: vm,
@@ -99,15 +99,15 @@ public struct CreateStudioView: View {
                             emptyCreationCanvasOverlay
                         }
                     )
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 16)
 
                     if vm.followGlowActive {
                         creationFollowGlowBar
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 16)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                     } else if let idx = selectedBeatIndex, !vm.isPlaying {
                         compactCreationBeatBar(idx: idx)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 16)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                     } else if !vm.document.notes.isEmpty {
                         StageHarmonyRibbonView(
@@ -117,11 +117,11 @@ public struct CreateStudioView: View {
                         ) {
                             wakeSignal &+= 1
                         }
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
                     }
 
                     creationToolsBar
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
 
                     VStack(spacing: 4) {
                         Text(createKeyboardPromptText)
@@ -147,10 +147,10 @@ public struct CreateStudioView: View {
                             }
                         )
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 16)
 
                     creationBottomConsole
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
                         .padding(.bottom, 6)
                 }
                 .padding(.top, 4)
@@ -260,57 +260,29 @@ public struct CreateStudioView: View {
     // MARK: - 1. Creation Top Bar
 
     private var creationTopBar: some View {
-        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-
-        return HStack(spacing: 8) {
-            Button {
-                vm.stopPlayback()
-                showWorksDrawer = true
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "folder.fill")
-                        .font(.footnote.weight(.bold))
-                        .foregroundStyle(palette.homeAnchor)
-                    Text("作品")
-                        .font(.system(.footnote, design: .rounded).weight(.heavy))
+        return HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    ChimmoResonanceBead(
+                        size: 9,
+                        isNight: palette.isNight,
+                        tint: palette.celadonAccent
+                    )
+                    Text(vm.document.title)
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
-                    if !vm.notebook.entries.isEmpty {
-                        Text("\(vm.notebook.entries.count)")
-                            .font(.system(.caption2, design: .rounded).weight(.bold).monospacedDigit())
-                            .foregroundStyle(palette.secondaryInk)
-                    }
                 }
-                .padding(.horizontal, 12)
-                .frame(minHeight: 40)
-                .background(
-                    ChimmoKilnPillButtonSurface(
-                        palette: palette,
-                        accent: palette.homeAnchor,
-                        isActive: false,
-                        cornerRadius: 20
-                    )
-                )
-                .foregroundStyle(palette.primaryInk)
-                .contentShape(Capsule())
-            }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-            .accessibilityLabel("打开我的作品箱，共 \(vm.notebook.entries.count) 首")
-
-            VStack(spacing: 1) {
-                Text(vm.document.title)
-                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
 
                 Text(draftStatusText)
-                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                    .font(.system(.caption2, design: .rounded).weight(.semibold))
                     .foregroundStyle(draftStatusColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
+                    .padding(.leading, 15)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
 
             HStack(spacing: 6) {
@@ -339,6 +311,12 @@ public struct CreateStudioView: View {
                 .storybookKeyboardShortcut(KeyboardShortcut("n", modifiers: .command), enabled: vm.activeSpace == .create)
 
                 Menu {
+                    Button {
+                        showWorksDrawer = true
+                    } label: {
+                        Label("打开作品集 (\(vm.notebook.entries.count))", systemImage: "books.vertical")
+                    }
+
                     Button {
                         renameDraft = vm.document.title
                         showRenameAlert = true
@@ -369,17 +347,18 @@ public struct CreateStudioView: View {
                 } label: {
                     ZStack {
                         Circle()
-                            .fill(palette.cartoonShadow)
-                            .frame(width: 36, height: 36)
-                            .offset(y: 2)
-                        Circle()
                             .fill(palette.cardSurface)
                             .frame(width: 36, height: 36)
+                            .shadow(
+                                color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                                radius: 3,
+                                y: 1.5
+                            )
                             .overlay(
                                 Circle()
                                     .strokeBorder(
-                                        skyColor.opacity(palette.isNight ? 0.65 : 0.72),
-                                        lineWidth: 1.6
+                                        palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                        lineWidth: 0.9
                                     )
                             )
                         Image(systemName: "ellipsis")
@@ -404,17 +383,18 @@ public struct CreateStudioView: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(palette.cartoonShadow)
-                    .frame(width: 36, height: 36)
-                    .offset(y: 2)
-                Circle()
                     .fill(palette.cardSurface)
                     .frame(width: 36, height: 36)
+                    .shadow(
+                        color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                        radius: 3,
+                        y: 1.5
+                    )
                     .overlay(
                         Circle()
                             .strokeBorder(
-                                palette.cartoonOutline.opacity(palette.isNight ? 0.56 : 0.80),
-                                lineWidth: 1.6
+                                palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                lineWidth: 0.9
                             )
                     )
                 Image(systemName: systemName)
@@ -424,7 +404,7 @@ public struct CreateStudioView: View {
             .frame(width: 40, height: 40)
             .contentShape(Circle())
         }
-        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
         .accessibilityLabel(accessibilityLabel)
     }
 
@@ -493,13 +473,17 @@ public struct CreateStudioView: View {
             VStack(spacing: 10) {
                 Spacer()
 
-                Text("点按画布、琴键，或选一颗灵感种子")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(palette.primaryInk)
+                Button {
+                    dreamInitialTab = 1
+                    showDreamSheet = true
+                } label: {
+                    Label("轻哼一段旋律", systemImage: "mic.fill")
+                }
+                .buttonStyle(.chimmoVinyl(palette: palette, tint: palette.prominentFill, prominent: true))
+                .accessibilityHint("打开轻哼捕捉面板，把脑海里的旋律变成音珠")
 
                 HStack(spacing: 8) {
                     ForEach(CreationStarterSeed.allCases) { seed in
-                        let isPrimary = seed == .sunnyMeadow
                         Button {
                             vm.plantCreationStarter(seed)
                         } label: {
@@ -509,40 +493,27 @@ public struct CreateStudioView: View {
                                 .minimumScaleFactor(0.75)
                                 .padding(.horizontal, 10)
                                 .frame(maxWidth: .infinity)
-                                .frame(minHeight: 42)
+                                .frame(minHeight: 40)
                                 .background(
-                                    Group {
-                                        if isPrimary {
-                                            ZStack {
-                                                Capsule()
-                                                    .fill(palette.cartoonShadow)
-                                                    .offset(y: 2.5)
-                                                Capsule()
-                                                    .fill(palette.homeAnchor)
-                                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
-                                            }
-                                        } else {
-                                            ChimmoKilnPillButtonSurface(
-                                                palette: palette,
-                                                accent: seed.recommendedScaleMode.skyAuroraColor(isNight: palette.isNight),
-                                                isActive: false,
-                                                cornerRadius: 21
-                                            )
-                                        }
-                                    }
+                                    ChimmoKilnPillButtonSurface(
+                                        palette: palette,
+                                        accent: seed.recommendedScaleMode.skyAuroraColor(isNight: palette.isNight),
+                                        isActive: false,
+                                        cornerRadius: 20
+                                    )
                                 )
-                                .foregroundStyle(
-                                    isPrimary
-                                        ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                        : palette.primaryInk
-                                )
+                                .foregroundStyle(palette.primaryInk)
                                 .contentShape(Capsule())
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.3))
                         .accessibilityLabel("使用\(seed.shortLabel)起音灵感")
                     }
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 14)
+
+                Text("或直接轻点画布与下方七小只写音")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(palette.secondaryInk)
             }
             .padding(.bottom, 14)
         }
@@ -779,20 +750,16 @@ public struct CreateStudioView: View {
     // MARK: - 4. Creation Quick Tools Strip
 
     private var creationToolsBar: some View {
-        HStack(spacing: 6) {
-            creationToolChip(title: "哼唱", icon: "mic.fill", accent: palette.homeAnchor) {
+        HStack(spacing: 8) {
+            creationToolChip(title: "轻哼捕音", icon: "mic.fill", accent: palette.homeAnchor) {
                 dreamInitialTab = 1
                 showDreamSheet = true
             }
-            creationToolChip(title: "节奏画线", icon: "scribble.variable", accent: palette.nightLampGold) {
+            creationToolChip(title: "节奏灵感", icon: "waveform.path", accent: palette.nightLampGold) {
                 dreamInitialTab = 0
                 showDreamSheet = true
             }
-            creationToolChip(title: "变奏夜灯", icon: "sparkles", accent: palette.harmonyWash) {
-                dreamInitialTab = 2
-                showDreamSheet = true
-            }
-            creationToolChip(title: "调音色", icon: "slider.horizontal.3", accent: palette.bassRibbon) {
+            creationToolChip(title: "音色和声", icon: "slider.horizontal.3", accent: palette.celadonAccent) {
                 showSoundSheet = true
             }
         }
@@ -847,23 +814,21 @@ public struct CreateStudioView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    ZStack {
-                        Capsule()
-                            .fill(palette.cartoonShadow)
-                            .offset(y: 2.5)
-                        Capsule()
-                            .fill(vm.isPlaying ? palette.storybookButter : palette.cardSurface)
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.86), lineWidth: 1.8))
-                    }
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: vm.isPlaying ? palette.nightLampGold : palette.celadonAccent,
+                        isActive: vm.isPlaying,
+                        cornerRadius: 23
+                    )
                 )
                 .foregroundStyle(palette.primaryInk)
                 .contentShape(Capsule())
             }
             .disabled(isEmpty)
             .opacity(isEmpty ? 0.45 : 1.0)
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(vm.isPlaying ? "停止试听当前创作" : "试听当前创作")
             .accessibilityHint("播放或停止试听当前创作，支持空格键控制")
             .storybookKeyboardShortcut(KeyboardShortcut(.space, modifiers: []), enabled: vm.activeSpace == .create)
@@ -871,33 +836,42 @@ public struct CreateStudioView: View {
             Button {
                 vm.saveCurrentToNotebook()
             } label: {
+                let saveFill: Color = needsSave
+                    ? palette.prominentFill
+                    : (isEmpty ? palette.shelfSurface : palette.storybookMint)
                 HStack(spacing: 6) {
                     saveStatusIcon(needsSave: needsSave)
                     Text(needsSave || isEmpty ? "保存作品" : "已保存")
                         .font(.system(.subheadline, design: .rounded).weight(.heavy))
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
                     ZStack {
                         Capsule()
-                            .fill(palette.cartoonShadow)
-                            .offset(y: 2.5)
+                            .fill(saveFill)
+                            .shadow(
+                                color: needsSave
+                                    ? palette.prominentFill.opacity(palette.isNight ? 0.34 : 0.24)
+                                    : (palette.isNight ? Color.black.opacity(0.18) : Color(hex: 0x7A5230).opacity(0.08)),
+                                radius: needsSave ? 5 : 3,
+                                y: 2
+                            )
                         Capsule()
-                            .fill(needsSave ? palette.homeAnchor : (isEmpty ? palette.shelfSurface : palette.storybookMint))
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 2.0))
+                            .strokeBorder(
+                                needsSave
+                                    ? Color.white.opacity(palette.isNight ? 0.16 : 0.35)
+                                    : palette.primaryInk.opacity(palette.isNight ? 0.12 : 0.08),
+                                lineWidth: 1.0
+                            )
                     }
                 )
-                .foregroundStyle(
-                    needsSave
-                        ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                        : palette.primaryInk
-                )
+                .foregroundStyle(needsSave ? Color.white : palette.primaryInk)
                 .contentShape(Capsule())
             }
             .disabled(isEmpty)
             .opacity(isEmpty ? 0.48 : 1.0)
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(needsSave ? "保存作品到我的曲库" : "当前作品已保存")
             .accessibilityHint("保存到我的曲库，支持 Command+S 快捷键")
             .storybookKeyboardShortcut(KeyboardShortcut("s", modifiers: .command), enabled: vm.activeSpace == .create)
@@ -907,30 +881,35 @@ public struct CreateStudioView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(palette.cartoonShadow)
-                        .frame(width: 44, height: 44)
-                        .offset(y: 2.5)
-                    Circle()
                         .fill(palette.cardSurface)
                         .frame(width: 44, height: 44)
-                        .overlay(Circle().strokeBorder(palette.cartoonOutline.opacity(0.84), lineWidth: 1.8))
+                        .shadow(
+                            color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                            radius: 3.5,
+                            y: 2
+                        )
+                        .overlay(
+                            Circle()
+                                .strokeBorder(
+                                    palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                    lineWidth: 0.9
+                                )
+                        )
                     Image(systemName: "square.and.arrow.up")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                 }
-                .frame(width: 48, height: 48)
+                .frame(width: 46, height: 46)
                 .contentShape(Circle())
             }
             .disabled(isEmpty)
             .opacity(isEmpty ? 0.45 : 1.0)
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel("分享导出当前创作作品")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
-        .background(
-            StorybookQuietCardSurface(palette: palette, cornerRadius: 28)
-        )
+        .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.stage)
     }
 
     @ViewBuilder

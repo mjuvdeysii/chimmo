@@ -2901,7 +2901,7 @@ final class SpecimenIntegrityTests: XCTestCase {
         let dayPalette = ChimmoPalette(isNight: false)
         let nightPalette = ChimmoPalette(isNight: true)
         XCTAssertEqual(ChimmoTab.board, ChimmoTab.showcase)
-        XCTAssertEqual(ChimmoTab.musicBox, ChimmoTab.create)
+        XCTAssertEqual(ChimmoTab.musicBox, ChimmoTab.songbook)
         XCTAssertNotNil(CreateStudioView(vm: vm, palette: dayPalette))
         XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
         XCTAssertNotNil(SettingsView(vm: vm, palette: dayPalette))
@@ -3056,9 +3056,9 @@ final class SpecimenIntegrityTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: tempDir) }
 
         // 1. 三域独立空间标签顺序与向后兼容别名校验
-        XCTAssertEqual(ChimmoTab.allCases, [.showcase, .create, .settings])
+        XCTAssertEqual(ChimmoTab.allCases, [.showcase, .create, .songbook, .settings])
         XCTAssertEqual(ChimmoTab.board, .showcase)
-        XCTAssertEqual(ChimmoTab.musicBox, .create)
+        XCTAssertEqual(ChimmoTab.musicBox, .songbook)
 
         // 2. CreationStarterSeed 三颗起音种子调式与独立命名前缀校验
         XCTAssertEqual(CreationStarterSeed.allCases, [.sunnyMeadow, .moonlightCradle, .hoppingSteps])
@@ -3361,5 +3361,59 @@ final class SpecimenIntegrityTests: XCTestCase {
         )
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
         XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+    }
+
+    @MainActor
+    func testCreativeAlchemyRound47MosslingSpinOffFourTabAtelierArchitecture() throws {
+        // 1. 摸索台灯同源四标签纯血叙事架构（聆听 · 创作 · 曲本 · 工坊）
+        XCTAssertEqual(ChimmoTab.allCases, [.showcase, .create, .songbook, .settings])
+        XCTAssertEqual(ChimmoTab.board, .showcase)
+        XCTAssertEqual(ChimmoTab.musicBox, .songbook)
+        XCTAssertEqual(AppearancePreference.allCases.map(\.label), ["自动", "日光", "夜灯"])
+
+        // 2. 嵌套圆角体系由外向内严格递减
+        XCTAssertGreaterThan(ChimmoRadius.stage, ChimmoRadius.card)
+        XCTAssertGreaterThan(ChimmoRadius.card, ChimmoRadius.inner)
+        XCTAssertGreaterThan(ChimmoRadius.inner, ChimmoRadius.tile)
+        XCTAssertGreaterThan(ChimmoRadius.tile, ChimmoRadius.chip)
+
+        // 3. 日夜色板衍生统一性与对比边界
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotEqual(dayPalette.paper, nightPalette.paper)
+        XCTAssertNotEqual(dayPalette.cardSurface, nightPalette.cardSurface)
+        XCTAssertNotEqual(dayPalette.prominentFill, dayPalette.paper)
+        XCTAssertNotEqual(dayPalette.celadonAccent, nightPalette.celadonAccent)
+
+        // 4. 新版工坊组件与四标签全视图日夜回归实例化
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r47_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(ChimmoFlowRow(spacing: 7, lineSpacing: 7))
+        XCTAssertNotNil(ChimmoResonanceBead(size: 10, isNight: false))
+        XCTAssertNotNil(ChimmoResonanceBead(size: 10, isNight: true))
+        XCTAssertNotNil(ChimmoSectionTitle(title: "声学与舞台设定", detail: "日夜同辉", isNight: false))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: dayPalette,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                navigationTitleText: "曲本",
+                showsDismissButton: false,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+        XCTAssertNotNil(SettingsView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(CharacterSoundTestView(palette: dayPalette))
+        XCTAssertNotNil(CharacterSoundTestView(palette: nightPalette))
     }
 }

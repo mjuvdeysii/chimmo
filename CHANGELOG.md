@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.54.0 - 2026-11-24
+- Round 47 (Mossling Spin-Off Architecture & Soft-Vinyl Atelier Refactor — Theme: "Hum a spark. Hear seven voices answer."):
+  - Harmonized `ChimmoTheme.swift` and `AmbientPaperBackdrop.swift` with sibling app Moss & Otto (`#FBF7F0` cotton paper / `#0E1430` night indigo / `#19213F` night cards / `#FFB547` lamp amber + Reduce Transparency per-space top washes), anchored by Chimmo's own Kiln Terracotta (`#C4513A` / `prominentFill #B8442E`) and Celadon (`#3D7A77` / `#7EC8C3`) signature accents.
+  - Added Mossling-harmonized atelier design primitives in `ChimmoDesignLanguage.swift`: `ChimmoRadius`, `ChimmoResonanceBead`, `ChimmoSectionTitle`, `ChimmoFlowRow`, `ChimmoAtelierCardModifier`, and `ChimmoVinylButtonStyle`, while softening existing surfaces away from heavy dark cartoon borders.
+  - Upgraded root navigation (`StudioView.swift`) to a 4-Tab narrative architecture (`聆听 · 创作 · 曲本 · 工坊`, promoting `MusicBoxShelfView` to `.songbook` Tab 2 with snapshot-safe `switchSpace` handoffs and app-wide `.fontDesign(.rounded)`).
+  - De-noised `OrbitalStageView` (removed redundant harmony ribbon from Tab 0 to give the musical stage prominence; soft-vinyl dock & choir keys) and `CreateStudioView` (clean header without redundant drawer pill, 3-pill tool strip, prominent hum launchpad).
+  - Upgraded `MusicBoxShelfView` filter ribbon to zero-horizontal-scroll `ChimmoFlowRow` wrapping and `.large` tab navigation bar.
+  - Redesigned `SettingsView` (`工坊`) and `CharacterSoundTestView` to a calm editorial atelier layout with brand identity badges, philosophy banner, interactive visual Daylight/NightLamp/Auto swatch previews, grouped studio preferences, and transparent legal/offline cards.
+  - Updated `docs/METHODOLOGY.md` to v2.0 and added `testCreativeAlchemyRound47MosslingSpinOffFourTabAtelierArchitecture` in `ChimmoTests/SpecimenIntegrityTests.swift`.
+
 ## 0.53.0 - 2026-11-24
 - Round 46 (100% App-Wide Dynamic Type UI Completion & Final >= 40pt Button Hit-Target Closure):
   - Added `StorybookAffordanceMetrics.compactPillMinimumScaleFactor` (`0.75`) in `OrbitalStageEngine.swift`.

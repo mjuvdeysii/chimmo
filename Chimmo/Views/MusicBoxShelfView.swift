@@ -141,27 +141,27 @@ public struct MusicBoxShelfView: View {
             ZStack {
                 AmbientPaperBackdrop(
                     palette: palette,
-                    accentTint: selectedMoodFilter?.skyAuroraColor(isNight: palette.isNight)
+                    accentTint: selectedMoodFilter?.skyAuroraColor(isNight: palette.isNight) ?? palette.nightLampGold
                 )
 
-                VStack(spacing: 6) {
+                VStack(spacing: 10) {
                     boutiqueCompactTopBar
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
                         .padding(.top, 4)
 
                     if isSearchExpanded || !searchText.isEmpty {
                         boutiqueInlineSearchBar
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 16)
                             .transition(.opacity)
                     }
 
                     if selectedSegment == 1 || !notebook.entries.isEmpty {
                         boutiqueCompactFilterRibbon
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 16)
                     }
 
                     ScrollView {
-                        VStack(spacing: 10) {
+                        VStack(spacing: 12) {
                             if selectedSegment == 0 {
                                 mySavedDiscsSection
                             } else {
@@ -172,9 +172,9 @@ public struct MusicBoxShelfView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
                         .padding(.top, 2)
-                        .padding(.bottom, 18)
+                        .padding(.bottom, 24)
                     }
                 }
             }
@@ -256,11 +256,11 @@ public struct MusicBoxShelfView: View {
             }
             .padding(4)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
                     .fill(palette.shelfSurface)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.22 : 0.16), lineWidth: 1.0)
+                        RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
+                            .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08), lineWidth: 0.9)
                     )
             )
             .frame(height: 44)
@@ -278,21 +278,22 @@ public struct MusicBoxShelfView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(palette.cartoonShadow)
+                        .fill(searchActive ? palette.prominentFill : palette.cardSurface)
                         .frame(width: 36, height: 36)
-                        .offset(y: 2)
-                    Circle()
-                        .fill(searchActive ? palette.homeAnchor : palette.cardSurface)
-                        .frame(width: 36, height: 36)
+                        .shadow(
+                            color: palette.isNight ? Color.black.opacity(0.24) : Color(hex: 0x7A5230).opacity(0.09),
+                            radius: 3,
+                            y: 1.5
+                        )
                         .overlay(
                             Circle().strokeBorder(
-                                searchActive ? palette.homeAnchor : palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82),
-                                lineWidth: searchActive ? 1.9 : 1.6
+                                searchActive ? palette.prominentFill : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                lineWidth: 0.9
                             )
                         )
                     Image(systemName: searchActive ? "xmark" : "magnifyingglass")
                         .font(.footnote.weight(.bold))
-                        .foregroundStyle(searchActive ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.primaryInk)
+                        .foregroundStyle(searchActive ? Color.white : palette.primaryInk)
                 }
                 .frame(width: 40, height: 40)
                 .contentShape(Circle())
@@ -387,98 +388,23 @@ public struct MusicBoxShelfView: View {
     }
 
     private var boutiqueCompactFilterRibbon: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 7) {
-                if selectedSegment == 1 {
-                    ForEach(LibraryCategoryBadgeMapper.badges()) { badge in
-                        let active = selectedCategory == badge.rawCategory
-                        Button {
-                            selectedCategory = badge.rawCategory
-                            if badge.rawCategory != "全部",
-                               let mood = selectedMoodFilter,
-                               !SpecimenLibrary.all.contains(where: { $0.specimenCategory == badge.rawCategory && $0.scaleMode == mood }) {
-                                selectedMoodFilter = nil
-                            }
-                            AcousticHapticsEngine.shared.playScrubTick()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: badge.iconName)
-                                    .font(.caption2.weight(.bold))
-                                Text(badge.shortLabel)
-                                    .font(.system(.caption2, design: .rounded).weight(.heavy))
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
-                            }
-                            .padding(.horizontal, 10)
-                            .frame(height: 34)
-                            .background(
-                                ChimmoKilnPillButtonSurface(
-                                    palette: palette,
-                                    accent: palette.homeAnchor,
-                                    isActive: active,
-                                    cornerRadius: 14
-                                )
-                            )
-                            .foregroundStyle(active ? palette.primaryInk : palette.secondaryInk)
-                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                        .accessibilityLabel("分类 \(badge.rawCategory)")
-                        .accessibilityValue(active ? "已选中" : "")
-                    }
-
-                    Rectangle()
-                        .fill(palette.divider)
-                        .frame(width: 1.0, height: 18)
-                        .padding(.horizontal, 2)
-                }
-
-                ForEach(ScaleMode.allCases) { mode in
-                    let isSel = selectedMoodFilter == mode
-                    let aurora = mode.skyAuroraColor(isNight: palette.isNight)
+        ChimmoFlowRow(spacing: 7, lineSpacing: 7) {
+            if selectedSegment == 1 {
+                ForEach(LibraryCategoryBadgeMapper.badges()) { badge in
+                    let active = selectedCategory == badge.rawCategory
                     Button {
-                        toggleMoodFilter(mode)
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(palette.cartoonShadow)
-                                .frame(width: 32, height: 32)
-                                .offset(y: isSel ? 1.2 : 1.8)
-
-                            Circle()
-                                .fill(isSel ? aurora : palette.cardSurface)
-                                .frame(width: 32, height: 32)
-                                .overlay(
-                                    Circle().strokeBorder(
-                                        palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.85),
-                                        lineWidth: isSel ? 2.0 : 1.5
-                                    )
-                                )
-
-                            Image(systemName: mode.iconName)
-                                .font(.footnote.weight(.bold))
-                                .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : aurora)
+                        selectedCategory = badge.rawCategory
+                        if badge.rawCategory != "全部",
+                           let mood = selectedMoodFilter,
+                           !SpecimenLibrary.all.contains(where: { $0.specimenCategory == badge.rawCategory && $0.scaleMode == mood }) {
+                            selectedMoodFilter = nil
                         }
-                        .frame(
-                            width: StorybookAffordanceMetrics.compactToolMinHitDimension,
-                            height: StorybookAffordanceMetrics.compactToolMinHitDimension
-                        )
-                        .contentShape(Circle())
-                    }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("筛选\(mode.label)风格")
-                    .accessibilityValue(isSel ? "已选中" : "")
-                }
-
-                if hasActiveFilter {
-                    Button {
-                        resetAllFilters()
+                        AcousticHapticsEngine.shared.playScrubTick()
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: "arrow.counterclockwise")
+                            Image(systemName: badge.iconName)
                                 .font(.caption2.weight(.bold))
-                            Text("重置")
+                            Text(badge.shortLabel)
                                 .font(.system(.caption2, design: .rounded).weight(.heavy))
                                 .lineLimit(1)
                                 .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
@@ -488,23 +414,91 @@ public struct MusicBoxShelfView: View {
                         .background(
                             ChimmoKilnPillButtonSurface(
                                 palette: palette,
-                                accent: palette.nightLampGold,
-                                isActive: true,
+                                accent: palette.homeAnchor,
+                                isActive: active,
                                 cornerRadius: 14
                             )
                         )
-                        .foregroundStyle(palette.primaryInk)
+                        .foregroundStyle(active ? palette.primaryInk : palette.secondaryInk)
                         .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("重置全部筛选")
+                    .accessibilityLabel("分类 \(badge.rawCategory)")
+                    .accessibilityValue(active ? "已选中" : "")
                 }
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 2)
+
+            ForEach(ScaleMode.allCases) { mode in
+                let isSel = selectedMoodFilter == mode
+                let aurora = mode.skyAuroraColor(isNight: palette.isNight)
+                Button {
+                    toggleMoodFilter(mode)
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(isSel ? aurora : palette.cardSurface)
+                            .frame(width: 32, height: 32)
+                            .shadow(
+                                color: isSel
+                                    ? aurora.opacity(0.28)
+                                    : (palette.isNight ? Color.black.opacity(0.22) : Color(hex: 0x7A5230).opacity(0.08)),
+                                radius: 3,
+                                y: 1.5
+                            )
+                            .overlay(
+                                Circle().strokeBorder(
+                                    isSel ? aurora : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                    lineWidth: isSel ? 1.4 : 0.9
+                                )
+                            )
+
+                        Image(systemName: mode.iconName)
+                            .font(.footnote.weight(.bold))
+                            .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : aurora)
+                    }
+                    .frame(
+                        width: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                        height: StorybookAffordanceMetrics.compactToolMinHitDimension
+                    )
+                    .contentShape(Circle())
+                }
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityLabel("筛选\(mode.label)风格")
+                .accessibilityValue(isSel ? "已选中" : "")
+            }
+
+            if hasActiveFilter {
+                Button {
+                    resetAllFilters()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.caption2.weight(.bold))
+                        Text("重置")
+                            .font(.system(.caption2, design: .rounded).weight(.heavy))
+                            .lineLimit(1)
+                            .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
+                    }
+                    .padding(.horizontal, 10)
+                    .frame(height: 34)
+                    .background(
+                        ChimmoKilnPillButtonSurface(
+                            palette: palette,
+                            accent: palette.nightLampGold,
+                            isActive: true,
+                            cornerRadius: 14
+                        )
+                    )
+                    .foregroundStyle(palette.primaryInk)
+                    .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityLabel("重置全部筛选")
+            }
         }
-        .frame(height: 40)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - 1. My Saved Vinyl Sleeves Section
@@ -750,14 +744,12 @@ public struct MusicBoxShelfView: View {
                         .padding(.horizontal, 13)
                         .frame(height: 34)
                         .background(
-                            ZStack {
-                                Capsule()
-                                    .fill(palette.cartoonShadow)
-                                    .offset(y: 1.8)
-                                Capsule()
-                                    .fill(palette.storybookMint)
-                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.82), lineWidth: 1.5))
-                            }
+                            ChimmoKilnPillButtonSurface(
+                                palette: palette,
+                                accent: palette.celadonAccent,
+                                isActive: true,
+                                cornerRadius: 17
+                            )
                         )
                         .foregroundStyle(palette.primaryInk)
                         .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
@@ -804,14 +796,14 @@ public struct MusicBoxShelfView: View {
                             .foregroundStyle(palette.primaryInk)
                             .frame(width: 38, height: 34)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.cardSurface)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.72), lineWidth: 1.5))
-                                }
+                                Circle()
+                                    .fill(palette.cardSurface)
+                                    .overlay(
+                                        Circle().strokeBorder(
+                                            palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.08),
+                                            lineWidth: 0.9
+                                        )
+                                    )
                             )
                             .contentShape(Capsule())
                             .frame(
@@ -1024,7 +1016,7 @@ public struct MusicBoxShelfView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "play.fill")
                                     .font(.caption2.weight(.bold))
-                                Text("欣赏")
+                                Text("聆听")
                                     .font(.system(.caption2, design: .rounded).weight(.heavy))
                                     .lineLimit(1)
                                     .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
@@ -1032,21 +1024,19 @@ public struct MusicBoxShelfView: View {
                             .padding(.horizontal, 11)
                             .frame(height: 34)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.storybookMint)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.82), lineWidth: 1.5))
-                                }
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.celadonAccent,
+                                    isActive: true,
+                                    cornerRadius: 17
+                                )
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                        .accessibilityLabel("在欣赏区播放 \(spec.title)")
+                        .accessibilityLabel("在聆听区播放 \(spec.title)")
 
                         Button {
                             stopInlinePlay()
@@ -1063,14 +1053,12 @@ public struct MusicBoxShelfView: View {
                             .padding(.horizontal, 11)
                             .frame(height: 34)
                             .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.storybookButter)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.82), lineWidth: 1.5))
-                                }
+                                ChimmoKilnPillButtonSurface(
+                                    palette: palette,
+                                    accent: palette.nightLampGold,
+                                    isActive: true,
+                                    cornerRadius: 17
+                                )
                             )
                             .foregroundStyle(palette.primaryInk)
                             .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
@@ -1095,14 +1083,12 @@ public struct MusicBoxShelfView: View {
                                 .padding(.horizontal, 11)
                                 .frame(height: 34)
                                 .background(
-                                    ZStack {
-                                        Capsule()
-                                            .fill(palette.cartoonShadow)
-                                            .offset(y: 1.8)
-                                        Capsule()
-                                            .fill(palette.cardSurface)
-                                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
-                                    }
+                                    ChimmoKilnPillButtonSurface(
+                                        palette: palette,
+                                        accent: palette.homeAnchor,
+                                        isActive: false,
+                                        cornerRadius: 17
+                                    )
                                 )
                                 .foregroundStyle(palette.primaryInk)
                                 .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
@@ -1122,14 +1108,12 @@ public struct MusicBoxShelfView: View {
                                 .frame(width: 13, height: 13)
                                 .frame(width: 36, height: 34)
                                 .background(
-                                    ZStack {
-                                        Capsule()
-                                            .fill(palette.cartoonShadow)
-                                            .offset(y: 1.8)
-                                        Capsule()
-                                            .fill(palette.cardSurface)
-                                            .overlay(Capsule().strokeBorder(modeColor, lineWidth: 1.5))
-                                    }
+                                    ChimmoKilnPillButtonSurface(
+                                        palette: palette,
+                                        accent: modeColor,
+                                        isActive: false,
+                                        cornerRadius: 17
+                                    )
                                 )
                                 .frame(
                                     minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
@@ -1432,8 +1416,8 @@ private struct ShelfNavigationChromeModifier: ViewModifier {
     func body(content: Content) -> some View {
         if title != nil || showsDismissButton {
             content
-                .navigationTitle(title ?? "曲库")
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationTitle(title ?? "曲本")
+                .navigationBarTitleDisplayMode(showsDismissButton ? .inline : .large)
                 .toolbar {
                     if showsDismissButton {
                         ToolbarItem(placement: .cancellationAction) {

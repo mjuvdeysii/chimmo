@@ -11,12 +11,13 @@ public enum StudioSpace: String, CaseIterable, Identifiable, Sendable {
 }
 
 public enum ChimmoTab: Int, Hashable, CaseIterable, Sendable {
-    case showcase = 0
-    case create = 1
-    case settings = 2
+    case showcase = 0   // 聆听
+    case create = 1     // 创作
+    case songbook = 2   // 曲本
+    case settings = 3   // 工坊
 
     public static let board: ChimmoTab = .showcase
-    public static let musicBox: ChimmoTab = .create
+    public static let musicBox: ChimmoTab = .songbook
 }
 
 public struct StageRippleEvent: Sendable {
@@ -2574,7 +2575,7 @@ public struct StudioView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("欣赏", systemImage: "music.note.house.fill", value: ChimmoTab.showcase) {
+            Tab(value: ChimmoTab.showcase) {
                 OrbitalStageView(
                     vm: vm,
                     palette: palette,
@@ -2592,9 +2593,11 @@ public struct StudioView: View {
                         presentPostcardAfterSheetDismiss(makePostcardRequest(for: entry))
                     }
                 )
+            } label: {
+                Label("聆听", systemImage: selectedTab == .showcase ? "music.note.house.fill" : "music.note.house")
             }
 
-            Tab("创作", systemImage: "wand.and.stars", value: ChimmoTab.create) {
+            Tab(value: ChimmoTab.create) {
                 CreateStudioView(
                     vm: vm,
                     palette: palette,
@@ -2602,6 +2605,7 @@ public struct StudioView: View {
                         postcardTarget = makePostcardRequest()
                     },
                     onOpenShowcaseSpecimen: { spec, followGlow in
+                        vm.switchSpace(to: .showcase)
                         if followGlow {
                             vm.openSpecimenForFollowGlow(spec)
                         } else {
@@ -2613,9 +2617,75 @@ public struct StudioView: View {
                         presentPostcardAfterSheetDismiss(makePostcardRequest(for: entry))
                     }
                 )
+            } label: {
+                Label("创作", systemImage: "wand.and.stars")
             }
 
-            Tab("设置", systemImage: "gearshape.fill", value: ChimmoTab.settings) {
+            Tab(value: ChimmoTab.songbook) {
+                MusicBoxShelfView(
+                    palette: palette,
+                    synth: vm.synth,
+                    notebook: vm.notebook,
+                    currentDocumentID: vm.document.id,
+                    navigationTitleText: "曲本",
+                    showsDismissButton: false,
+                    onLoadSavedToBoard: { entry in
+                        vm.switchSpace(to: .create)
+                        vm.openSavedEntryInCreate(entry, autoPlay: false)
+                        selectedTab = .create
+                    },
+                    onPlayAlongSpecimen: { spec in
+                        vm.switchSpace(to: .showcase)
+                        vm.openSpecimenForFollowGlow(spec)
+                        selectedTab = .showcase
+                    },
+                    onEditSpecimenOnBoard: { spec in
+                        vm.switchSpace(to: .showcase)
+                        vm.openSpecimen(spec, autoPlay: true)
+                        selectedTab = .showcase
+                    },
+                    onBorrowAtmosphere: { spec in
+                        if vm.activeSpace == .create {
+                            vm.borrowHarmonyAtmosphere(from: spec)
+                            selectedTab = .create
+                        } else {
+                            vm.switchSpace(to: .showcase)
+                            vm.borrowHarmonyAtmosphere(from: spec)
+                            selectedTab = .showcase
+                        }
+                    },
+                    onShareSavedEntry: { entry in
+                        postcardTarget = makePostcardRequest(for: entry)
+                    },
+                    onForkSpecimenToCreate: { spec in
+                        vm.switchSpace(to: .showcase)
+                        vm.openSpecimen(spec, autoPlay: false)
+                        vm.forkCurrentShowcaseIntoCreate()
+                        selectedTab = .create
+                    },
+                    onStartNewTap: {
+                        vm.switchSpace(to: .create)
+                        vm.requestOpenDreamSheet = true
+                        selectedTab = .create
+                    },
+                    onWillPlayInline: {
+                        vm.stopPlayback()
+                    },
+                    onRenameSavedEntry: { id, newTitle in
+                        vm.renameSavedEntry(id: id, newTitle: newTitle)
+                    },
+                    onDuplicateSavedEntry: { id in
+                        vm.duplicateSavedEntry(id: id)
+                    },
+                    onDeleteSavedEntry: { id in
+                        vm.deleteSavedEntry(id: id)
+                    }
+                )
+            } label: {
+                Label("曲本", systemImage: selectedTab == .songbook ? "books.vertical.fill" : "books.vertical")
+            }
+
+            Tab(value: ChimmoTab.settings) {
                 SettingsView(
                     vm: vm,
                     palette: palette,
@@ -2623,9 +2693,12 @@ public struct StudioView: View {
                         postcardTarget = makePostcardRequest()
                     }
                 )
+            } label: {
+                Label("工坊", systemImage: selectedTab == .settings ? "square.grid.2x2.fill" : "square.grid.2x2")
             }
         }
         .tint(palette.homeAnchor)
+        .fontDesign(.rounded)
         .modifier(OptionalAppearanceModifier(preference: vm.appearance))
         .onChange(of: selectedTab) { _, nextTab in
             switch nextTab {
@@ -2633,7 +2706,7 @@ public struct StudioView: View {
                 vm.switchSpace(to: .showcase)
             case .create:
                 vm.switchSpace(to: .create)
-            case .settings:
+            case .songbook, .settings:
                 vm.stopPlayback()
             }
         }

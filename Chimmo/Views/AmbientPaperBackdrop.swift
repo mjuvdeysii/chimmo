@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// 极简降噪扁平卡通童书底纸（零拟物、零杂乱散点与被遮挡碎云）：
-/// 仅保留纯净暖棉纸/深夜蓝画布与底部极克制的无描边双层起伏绘本山坡，将全部视觉重心让位给前景主角舞台。
+/// 「摸索台灯」同宇宙声学画纸背景（纯棉纸/深靛夜纸 + 柔和分区采光光洗 / 暖灯琥珀微光 + 静谧低山坡）：
+/// 支持系统「减弱透明度」与「减弱动态效果」，并将全部视觉重心让位给前景主角卡片与七声小偶。
 public struct AmbientPaperBackdrop: View {
     public let palette: ChimmoPalette
     public var accentTint: Color?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public init(palette: ChimmoPalette, accentTint: Color? = nil) {
         self.palette = palette
@@ -13,9 +14,49 @@ public struct AmbientPaperBackdrop: View {
     }
 
     public var body: some View {
-        let _ = accentTint
+        let glowTint = accentTint ?? palette.homeAnchor
         ZStack {
             palette.paper
+
+            if !reduceTransparency {
+                if palette.isNight {
+                    RadialGradient(
+                        colors: [
+                            palette.nightLampGold.opacity(0.24),
+                            palette.nightLampGold.opacity(0.07),
+                            Color.clear
+                        ],
+                        center: UnitPoint(x: 0.88, y: 0.04),
+                        startRadius: 0,
+                        endRadius: 460
+                    )
+                    RadialGradient(
+                        colors: [
+                            glowTint.opacity(0.11),
+                            Color.clear
+                        ],
+                        center: UnitPoint(x: 0.08, y: 0.88),
+                        startRadius: 0,
+                        endRadius: 340
+                    )
+                } else {
+                    LinearGradient(
+                        stops: [
+                            .init(color: glowTint.opacity(0.13), location: 0.0),
+                            .init(color: glowTint.opacity(0.04), location: 0.28),
+                            .init(color: .clear, location: 0.56)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    RadialGradient(
+                        colors: [glowTint.opacity(0.10), Color.clear],
+                        center: UnitPoint(x: 0.90, y: 0.02),
+                        startRadius: 0,
+                        endRadius: 340
+                    )
+                }
+            }
 
             Canvas { ctx, size in
                 let w = max(1, size.width)
@@ -25,19 +66,19 @@ public struct AmbientPaperBackdrop: View {
                     ctx: &ctx,
                     width: w,
                     height: h,
-                    baseTopRatio: 0.80,
-                    amplitude: 0.09,
+                    baseTopRatio: 0.82,
+                    amplitude: 0.08,
                     phaseShift: 0.4,
-                    fill: palette.storybookHillBack.opacity(palette.isNight ? 0.50 : 0.55)
+                    fill: palette.storybookHillBack.opacity(palette.isNight ? 0.36 : 0.40)
                 )
                 drawStorybookHillBand(
                     ctx: &ctx,
                     width: w,
                     height: h,
-                    baseTopRatio: 0.88,
-                    amplitude: 0.08,
+                    baseTopRatio: 0.89,
+                    amplitude: 0.07,
                     phaseShift: 2.1,
-                    fill: palette.storybookHillFront.opacity(palette.isNight ? 0.65 : 0.72)
+                    fill: palette.storybookHillFront.opacity(palette.isNight ? 0.46 : 0.52)
                 )
             }
         }
