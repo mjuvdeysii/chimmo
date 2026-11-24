@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.46.0 - 2026-11-24
+- Upgraded OpenMotion Design Studio website to v9 and synced `docs/index.html` (`v0.46.0`): replaced vinyl sleeve and tonearm metaphors with the open storybook songbook cover, bookmark ribbon, minimalist music-box wreath, default full-width hill stage, and refined 29pt-safe 1-3-5 trio AppIcon triptych.
+- Upgraded OpenMotion Director short film (`ea36d037-a0fb-479e-bdd1-3d1ccf653b14`) to v14 with `0` lint errors/warnings: replaced the vinyl ending with a borderless rolling meadow hill, 12-o'clock golden star bookmark wreath, and clean three-beat 12s export verified visually and acoustically.
+- Added Round 39 (`v0.46.0`) full-chain storybook identity consistency tests in `ChimmoTests/SpecimenIntegrityTests.swift`, bumped `MARKETING_VERSION` to `0.46.0`, and passed static gates and no-simulator `xcodebuild build-for-testing` with `0` errors and `0` warnings.
+
 ## 0.45.0 - 2026-11-24
 - **告别黑胶隐喻 × 全宽绘本山坡默认主舞台 × 29pt 提纯 1-3-5 AppIcon（Pure Storybook Identity Edition v0.45.0）**：
   - **修复 CI NaN 境界校验漏洞（`TheoryLensEngine`）**：修复 `GuidedStoryMoment.init` 中 `min(1, .nan)` 返回 `1.0` 的 Swift 浮点数边界问题（改用 `timeFraction.isFinite ? max(0.0, min(1.0, timeFraction)) : 0.0`），确保 `testCreativeAlchemyRound36AppIconCanonsAndStorybookGuidedMoments` 全绿通过；

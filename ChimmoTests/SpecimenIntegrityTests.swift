@@ -2769,4 +2769,67 @@ final class SpecimenIntegrityTests: XCTestCase {
         }
         XCTAssertNotNil(ChimmoCraftMark(.vinylSeal, color: ChimmoPalette(isNight: false).nightLampGold))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound39FullChainStorybookIdentityConsistency() {
+        // 1. 主舞台默认山坡态与三态绘本排布契约
+        let vm = StudioViewModel()
+        XCTAssertEqual(vm.visualMode, .flowingRiver)
+        XCTAssertEqual(StageVisualMode.displayOrder, [.flowingRiver, .orbitalDisc, .resonanceNebula])
+        XCTAssertEqual(StageVisualMode.displayOrder.map(\.storybookLabel), ["山坡", "花环", "星环"])
+        XCTAssertEqual(StageVisualMode.displayOrder.map(\.iconName), ["mountain.2.fill", "rays", "sparkles"])
+
+        // 2. 1-3-5 核心三音家族与 4/7 张力家族定位和官网 / 短片一致
+        XCTAssertEqual(ChimmoMember.allCases.filter(\.isTriadPillar), [.taono, .plokko, .corllo])
+        XCTAssertEqual(ChimmoMember.allCases.filter(\.isTensionDegree), [.udo, .tinki])
+
+        // 3. 两极交互视觉契约与减弱动态效果一致性
+        let interactiveSpec = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary, isPressed: false, reduceMotion: false)
+        let pressedSpec = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary, isPressed: true, reduceMotion: false)
+        let reducedPressedSpec = StorybookAffordanceMetrics.styleSpec(for: .interactivePrimary, isPressed: true, reduceMotion: true)
+        let quietSpec = StorybookAffordanceMetrics.styleSpec(for: .quietContainer, isPressed: false, reduceMotion: false)
+        let readOnlySpec = StorybookAffordanceMetrics.styleSpec(for: .readOnlyLabel, isPressed: false, reduceMotion: false)
+
+        XCTAssertTrue(interactiveSpec.usesHardInkOutline)
+        XCTAssertGreaterThan(interactiveSpec.shadowOffsetY, pressedSpec.shadowOffsetY)
+        XCTAssertEqual(pressedSpec.pressSinkOffsetY, 2.0)
+        XCTAssertEqual(reducedPressedSpec.pressSinkOffsetY, 0.0)
+        XCTAssertEqual(interactiveSpec.minHitDimension, 44.0)
+        XCTAssertEqual(quietSpec.shadowOffsetY, 0.0)
+        XCTAssertFalse(quietSpec.usesHardInkOutline)
+        XCTAssertEqual(readOnlySpec.borderWidth, 0.0)
+        XCTAssertEqual(readOnlySpec.shadowOffsetY, 0.0)
+
+        // 4. 绘本曲谱封面、连续山坡轮廓与 12 点钟书签星花环运动学
+        let idleBook = StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: false, reduceMotion: false)
+        let activeBook = StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: true, reduceMotion: false)
+        let reducedBook = StorybookWreathAndSongbookKinematics.bookCoverState(isPlaying: true, reduceMotion: true)
+        XCTAssertGreaterThan(activeBook.pagePeekOffsetX, idleBook.pagePeekOffsetX)
+        XCTAssertLessThan(activeBook.coverTiltDegrees, 0.0)
+        XCTAssertEqual(reducedBook.coverTiltDegrees, 0.0)
+
+        let hillPoints = StorybookWreathAndSongbookKinematics.hillCrestPoints(
+            from: [0.0, 0.25, 0.5, 0.75, 1.0, .nan],
+            sampleCount: 16
+        )
+        XCTAssertEqual(hillPoints.count, 16)
+        XCTAssertTrue(hillPoints.allSatisfy { $0.xFraction.isFinite && $0.yFraction >= 0.08 && $0.yFraction <= 0.92 })
+
+        XCTAssertEqual(
+            StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.5, reduceMotion: false),
+            -Double.pi / 2.0,
+            accuracy: 0.0001
+        )
+        XCTAssertEqual(
+            StorybookWreathAndSongbookKinematics.wreathBookmarkAngle(forPlayheadFraction: 0.5, reduceMotion: true),
+            Double.pi / 2.0,
+            accuracy: 0.0001
+        )
+
+        // 5. 日夜双色与三态明信片导出链路回归守护
+        for mode in StageVisualMode.displayOrder {
+            XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: false, visualMode: mode, includeJianpuStrip: true))
+            XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: true, visualMode: mode, includeJianpuStrip: true))
+        }
+    }
 }
