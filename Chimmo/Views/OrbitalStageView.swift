@@ -1,32 +1,473 @@
 import QuartzCore
 import SwiftUI
 
-/// 咩哞 v0.10 旗舰三态声画主舞台：
-/// - 模式 A「星盘」：音乐盒式旋转同心声盘，盘面随旋律顺滑旋转，外环悬浮四幕情绪中文锚词，支持巴赫影子月亮对位、单指手摇搓盘、拖珠改音、外环换和声；
-/// - 模式 B「山河」：28% 处固定金光束，整片旋律山河与湖面倒影平滑向左流淌，永远停留在视线中心；
-/// - 模式 C「星云」：8 颗星辰环绕中央利萨如谐振星核，金色彗星沿旋律星座划过，单指点按或滑过星辰即兴共鸣；
-/// - 零乐理三重无障碍编码：颜色 + 轨道高低 + 8 种纯几何矢量图腾（圆点/圆方/三角/棱镜/五星/水滴/星芒/双环），辅以 CoreHaptics 掌心音乐触觉与 VoiceOver 语义读音。
+/// 咩哞「欣赏」互动赏析与跟灯引导主舞台（纯赏析 · 防误改名曲 · 明确区分欣赏与创作空间）：
+/// - 顶栏左上为醒目「切换曲目」选择器（彻底告别误导性左上重命名）；
+/// - 舞台仅呈现静谧绘本边框（零阴影错觉）+ 右上山坡/花环/星环视图切换；
+/// - 下方配安静分幕导览条（「试听此段」明确按钮化）、可自由伴奏七小只彩键、以及「播放 / 跟灯弹 / 去改编」三键控制台。
 public struct OrbitalStageView: View {
     @ObservedObject public var vm: StudioViewModel
     public let palette: ChimmoPalette
     public let onOpenAbout: () -> Void
     public let onOpenSharePostcard: () -> Void
+    public let onForkToCreate: (() -> Void)?
+    public let onShareSavedEntry: ((SavedMelodyEntry) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var showDreamSheet: Bool = false
+    @State private var showSongPicker: Bool = false
     @State private var showMoodSheet: Bool = false
-    @State private var showRenameAlert: Bool = false
-    @State private var renameDraft: String = ""
+    @State private var wakeSignal: Int = 0
+
+    public init(
+        vm: StudioViewModel,
+        palette: ChimmoPalette,
+        onOpenAbout: @escaping () -> Void,
+        onOpenSharePostcard: @escaping () -> Void = {},
+        onForkToCreate: (() -> Void)? = nil,
+        onShareSavedEntry: ((SavedMelodyEntry) -> Void)? = nil
+    ) {
+        self.vm = vm
+        self.palette = palette
+        self.onOpenAbout = onOpenAbout
+        self.onOpenSharePostcard = onOpenSharePostcard
+        self.onForkToCreate = onForkToCreate
+        self.onShareSavedEntry = onShareSavedEntry
+    }
+
+    public var body: some View {
+        NavigationStack {
+            ZStack {
+                AmbientPaperBackdrop(
+                    palette: palette,
+                    accentTint: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+                )
+
+                VStack(spacing: 8) {
+                    showcaseCrownHeader
+                        .padding(.horizontal, 12)
+
+                    StageCanvasPanel(
+                        vm: vm,
+                        palette: palette,
+                        allowsEditing: false,
+                        reduceMotion: reduceMotion,
+                        wakeSignal: wakeSignal,
+                        onOpenSoundSheet: {
+                            showMoodSheet = true
+                        },
+                        emptyOverlay: {
+                        Button {
+                            showSongPicker = true
+                        } label: {
+                            Label("挑选一首名曲", systemImage: "books.vertical.fill")
+                                .font(.subheadline.weight(.heavy))
+                                .padding(.horizontal, 18)
+                                .frame(minHeight: 44)
+                                .background(
+                                    ZStack {
+                                        Capsule()
+                                            .fill(palette.cartoonShadow)
+                                            .offset(y: 2.5)
+                                        Capsule()
+                                            .fill(palette.homeAnchor)
+                                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
+                                    }
+                                )
+                                .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                    })
+                    .padding(.horizontal, 12)
+
+                    if !vm.followGlowActive && !vm.document.notes.isEmpty {
+                        StageHarmonyRibbonView(
+                            vm: vm,
+                            palette: palette,
+                            reduceMotion: reduceMotion
+                        ) {
+                            wakeSignal &+= 1
+                        }
+                        .padding(.horizontal, 12)
+                    }
+
+                    if !vm.followGlowActive,
+                       let chip = StorybookGuidedMomentKinematics.chipModel(
+                        moment: vm.activeGuidedMoment,
+                        document: vm.document
+                       ) {
+                        showcaseGuideBar(chip: chip)
+                            .padding(.horizontal, 12)
+                    }
+
+                    StageChoirKeyboardBar(
+                        vm: vm,
+                        palette: palette,
+                        reduceMotion: reduceMotion,
+                        onWakeTimeline: {
+                            wakeSignal &+= 1
+                        },
+                        onKeyStrike: { lane, vel, bright in
+                            vm.auditionShowcaseLane(lane, touchIntensity: vel, touchBrightness: bright)
+                        }
+                    )
+                    .padding(.horizontal, 12)
+
+                    showcaseBottomDock
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 6)
+                }
+                .padding(.top, 4)
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showSongPicker) {
+                MusicBoxShelfView(
+                    palette: palette,
+                    synth: vm.synth,
+                    notebook: vm.notebook,
+                    currentDocumentID: vm.document.id,
+                    initialSegment: 1,
+                    navigationTitleText: "选择曲目",
+                    showsDismissButton: true,
+                    onLoadSavedToBoard: { entry in
+                        showSongPicker = false
+                        vm.openSavedEntry(entry, autoPlay: true)
+                    },
+                    onPlayAlongSpecimen: { spec in
+                        showSongPicker = false
+                        vm.openSpecimenForFollowGlow(spec)
+                    },
+                    onEditSpecimenOnBoard: { spec in
+                        showSongPicker = false
+                        vm.openSpecimen(spec, autoPlay: true)
+                    },
+                    onBorrowAtmosphere: { spec in
+                        showSongPicker = false
+                        vm.borrowHarmonyAtmosphere(from: spec)
+                    },
+                    onShareSavedEntry: { entry in
+                        showSongPicker = false
+                        if let onShareSavedEntry {
+                            onShareSavedEntry(entry)
+                        } else {
+                            onOpenSharePostcard()
+                        }
+                    },
+                    onForkSpecimenToCreate: { spec in
+                        showSongPicker = false
+                        vm.openSpecimen(spec, autoPlay: false)
+                        if let onFork = onForkToCreate {
+                            onFork()
+                        } else {
+                            vm.forkCurrentShowcaseIntoCreate()
+                        }
+                    },
+                    onStartNewTap: {
+                        showSongPicker = false
+                        if let onFork = onForkToCreate {
+                            onFork()
+                        } else {
+                            vm.triggerNewCreationFromShelf()
+                        }
+                    },
+                    onWillPlayInline: {
+                        vm.stopPlayback()
+                    },
+                    onRenameSavedEntry: { id, newTitle in
+                        vm.renameSavedEntry(id: id, newTitle: newTitle)
+                    },
+                    onDuplicateSavedEntry: { id in
+                        vm.duplicateSavedEntry(id: id)
+                    },
+                    onDeleteSavedEntry: { id in
+                        vm.deleteSavedEntry(id: id)
+                    }
+                )
+            }
+            .sheet(isPresented: $showMoodSheet) {
+                SoundPaletteBoxSheet(vm: vm, palette: palette)
+            }
+        }
+    }
+
+    // MARK: - 1. Showcase Crown Header (Top-Left Song Picker + Tune + Share)
+
+    private var showcaseCrownHeader: some View {
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+
+        return HStack(spacing: 8) {
+            Button {
+                vm.stopPlayback()
+                showSongPicker = true
+            } label: {
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(skyColor)
+                        .frame(width: 9, height: 9)
+
+                    Text(vm.document.title)
+                        .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(palette.secondaryInk)
+                }
+                .padding(.horizontal, 13)
+                .frame(minHeight: 42)
+                .background(
+                    ChimmoKilnPillButtonSurface(
+                        palette: palette,
+                        accent: skyColor,
+                        isActive: false,
+                        cornerRadius: 21
+                    )
+                )
+                .contentShape(Capsule())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+            .accessibilityLabel("切换曲目，当前《\(vm.document.title)》")
+            .accessibilityHint("轻点打开曲库挑选经典乐曲")
+
+            Spacer(minLength: 4)
+
+            HStack(spacing: 6) {
+                Button {
+                    showMoodSheet = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 12.5, weight: .bold))
+                        Text("调音")
+                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    }
+                    .padding(.horizontal, 11)
+                    .frame(minHeight: 40)
+                    .background(
+                        ChimmoKilnPillButtonSurface(
+                            palette: palette,
+                            accent: skyColor,
+                            isActive: false,
+                            cornerRadius: 20
+                        )
+                    )
+                    .foregroundStyle(palette.primaryInk)
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityLabel("打开声音调色盒")
+
+                Button {
+                    onOpenSharePostcard()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 12.5, weight: .bold))
+                        Text("分享")
+                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    }
+                    .padding(.horizontal, 11)
+                    .frame(minHeight: 40)
+                    .background(
+                        ChimmoKilnPillButtonSurface(
+                            palette: palette,
+                            accent: palette.homeAnchor,
+                            isActive: false,
+                            cornerRadius: 20
+                        )
+                    )
+                    .foregroundStyle(palette.primaryInk)
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                .accessibilityLabel("分享当前作品图片、音频或 MIDI")
+            }
+            .fixedSize()
+        }
+    }
+
+    // MARK: - 2. Quiet Storybook Guide Bar (Clear Separation Between Card Info & Audition Action)
+
+    private func showcaseGuideBar(chip: StorybookGuidedMomentKinematics.MomentChipModel) -> some View {
+        HStack(spacing: 10) {
+            ChimmoCartoonKeyBuddyView(
+                member: chip.spotlightMember,
+                outlineColor: palette.cartoonOutline,
+                isSinging: vm.isPlaying,
+                isMinor: vm.document.scaleMode.isMinorFlavored
+            )
+            .frame(width: 24, height: 20)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(chip.badge)
+                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .foregroundStyle(palette.primaryInk)
+                    .lineLimit(1)
+
+                Text(chip.caption)
+                    .font(.caption2)
+                    .foregroundStyle(palette.secondaryInk)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: true)
+                vm.endScrubbing()
+                wakeSignal &+= 1
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 10, weight: .bold))
+                    Text("试听此段")
+                        .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                }
+                .padding(.horizontal, 12)
+                .frame(minHeight: 36)
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(palette.cartoonShadow)
+                            .offset(y: 2)
+                        Capsule()
+                            .fill(palette.storybookButter)
+                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                    }
+                )
+                .foregroundStyle(palette.primaryInk)
+                .contentShape(Capsule())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+            .accessibilityLabel("跳转试听 \(chip.badge)")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            StorybookQuietCardSurface(palette: palette, cornerRadius: 16)
+        )
+    }
+
+    // MARK: - 3. Showcase 3-Control Dock (Play / Follow-Glow / Fork to Create)
+
+    private var showcaseBottomDock: some View {
+        HStack(spacing: 8) {
+            Button {
+                vm.togglePlayback()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.subheadline.weight(.bold))
+                    Text(vm.isPlaying ? "暂停" : "播放")
+                        .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(palette.cartoonShadow)
+                            .offset(y: 2.5)
+                        Capsule()
+                            .fill(vm.isPlaying ? palette.storybookMint : palette.cardSurface)
+                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.86), lineWidth: 1.8))
+                    }
+                )
+                .foregroundStyle(palette.primaryInk)
+                .contentShape(Capsule())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .accessibilityLabel(vm.isPlaying ? "暂停播放" : "开始播放")
+
+            Button {
+                vm.toggleFollowGlow()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: vm.followGlowActive ? "xmark" : "sparkles")
+                        .font(.subheadline.weight(.bold))
+                    Text(
+                        vm.followGlowActive
+                            ? "\(min(vm.followGlowIndex + 1, max(1, vm.document.notes.count)))/\(max(1, vm.document.notes.count))"
+                            : "跟灯弹"
+                    )
+                    .font(.system(.subheadline, design: .rounded).weight(.heavy).monospacedDigit())
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(palette.cartoonShadow)
+                            .offset(y: 2.5)
+                        Capsule()
+                            .fill(vm.followGlowActive ? palette.nightLampGold : palette.homeAnchor)
+                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 2.0))
+                    }
+                )
+                .foregroundStyle(
+                    vm.followGlowActive || palette.isNight
+                        ? Color(hex: 0x0E142C)
+                        : .white
+                )
+                .contentShape(Capsule())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .accessibilityLabel(vm.followGlowActive ? "退出跟灯弹" : "开启跟灯弹")
+
+            Button {
+                if let onFork = onForkToCreate {
+                    onFork()
+                } else {
+                    vm.forkCurrentShowcaseIntoCreate()
+                }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "wand.and.stars")
+                        .font(.caption.weight(.bold))
+                    Text("去改编")
+                        .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(palette.cartoonShadow)
+                            .offset(y: 2.5)
+                        Capsule()
+                            .fill(palette.cardSurface)
+                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.86), lineWidth: 1.8))
+                    }
+                )
+                .foregroundStyle(palette.primaryInk)
+                .contentShape(Capsule())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+            .accessibilityLabel("复制这首曲子到创作区改编")
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 7)
+        .background(
+            StorybookQuietCardSurface(palette: palette, cornerRadius: 28)
+        )
+    }
+}
+
+/// 共享三态绘本声画舞台面板（支持 Showcase 只读赏析与 Create 自由编写两种严格隔离模式）。
+internal struct StageCanvasPanel<EmptyOverlay: View>: View {
+    @ObservedObject var vm: StudioViewModel
+    let palette: ChimmoPalette
+    let allowsEditing: Bool
+    let reduceMotion: Bool
+    let wakeSignal: Int
+    let onOpenSoundSheet: () -> Void
+    let onUserDidEdit: () -> Void
+    @ViewBuilder let emptyOverlay: () -> EmptyOverlay
+
     @State private var rippleWakeActive: Bool = false
     @State private var rippleWakeTask: Task<Void, Never>? = nil
-    @State private var duoGreetingPulse: Bool = false
-    @State private var duoGreetingTask: Task<Void, Never>? = nil
-    @State private var stageMiePulse: Bool = false
-    @State private var stageMieTask: Task<Void, Never>? = nil
-    @State private var showStoryWhisper: Bool = false
-
-    // 手势交互态（仅局部瞬态，绝不触发重排版死循环）
     @State private var discInteractionMode: DiscDragMode = .none
     @State private var draggingBeadID: UUID? = nil
     @State private var dragStartPoint: CGPoint = .zero
@@ -39,9 +480,6 @@ public struct OrbitalStageView: View {
 
     @State private var manualRiverScrollX: CGFloat = 0
     @State private var riverStartScrollX: CGFloat = 0
-    @State private var struckRibbonLane: Int? = nil
-    @State private var ribbonDragAnchorY: CGFloat? = nil
-    @State private var ribbonMercuryLevel: Double = 0.0
     @State private var struckNebulaLane: Int? = nil
     @State private var nebulaHoldCenter: CGPoint = .zero
     @State private var isActivelyDraggingStage: Bool = false
@@ -58,20 +496,28 @@ public struct OrbitalStageView: View {
         case centerHub
     }
 
-    public init(
+    init(
         vm: StudioViewModel,
         palette: ChimmoPalette,
-        onOpenAbout: @escaping () -> Void,
-        onOpenSharePostcard: @escaping () -> Void = {}
+        allowsEditing: Bool,
+        reduceMotion: Bool,
+        wakeSignal: Int = 0,
+        onOpenSoundSheet: @escaping () -> Void = {},
+        onUserDidEdit: @escaping () -> Void = {},
+        @ViewBuilder emptyOverlay: @escaping () -> EmptyOverlay = { EmptyView() }
     ) {
         self.vm = vm
         self.palette = palette
-        self.onOpenAbout = onOpenAbout
-        self.onOpenSharePostcard = onOpenSharePostcard
+        self.allowsEditing = allowsEditing
+        self.reduceMotion = reduceMotion
+        self.wakeSignal = wakeSignal
+        self.onOpenSoundSheet = onOpenSoundSheet
+        self.onUserDidEdit = onUserDidEdit
+        self.emptyOverlay = emptyOverlay
     }
 
     private var selectedBeatIndex: Int? {
-        guard let id = vm.selectedBeadID else { return nil }
+        guard allowsEditing, let id = vm.selectedBeadID else { return nil }
         return vm.document.notes.firstIndex { $0.id == id }
     }
 
@@ -83,7 +529,7 @@ public struct OrbitalStageView: View {
     }
 
     private var smartHintByLane: [Int: SmartPitchHint] {
-        guard vm.smartHintActive else { return [:] }
+        guard allowsEditing && vm.smartHintActive else { return [:] }
         return Dictionary(uniqueKeysWithValues: vm.smartHints.map { ($0.laneIndex, $0) })
     }
 
@@ -91,119 +537,129 @@ public struct OrbitalStageView: View {
         !reduceMotion && (vm.isPlaying || rippleWakeActive || isActivelyDraggingStage || vm.activeVibratoLane != nil || !vm.activeLaneIndices.isEmpty)
     }
 
-    public var body: some View {
-        NavigationStack {
+    var body: some View {
+        let boardBg = palette.isNight ? Color(hex: 0x101733) : Color(hex: 0xFFFDF7)
+        let activeCurtainColor: Color? = (vm.cradleEnabled && (vm.isPlaying || (allowsEditing && vm.selectedBeadID != nil)))
+            ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
+            : nil
+
+        return GeometryReader { geo in
+            let innerSize = geo.size
             ZStack {
-                AmbientPaperBackdrop(
-                    palette: palette,
-                    accentTint: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-                )
+                stageInteractiveCanvas
+                    .modifier(StagePlaybackNavigationActions(vm: vm))
+                    .modifier(StageBeatEditActions(vm: vm, isEnabled: allowsEditing))
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { val in
+                                if !isActivelyDraggingStage {
+                                    isActivelyDraggingStage = true
+                                }
+                                switch vm.visualMode {
+                                case .orbitalDisc:
+                                    handleOrbitalDragChanged(val, in: innerSize)
+                                case .flowingRiver:
+                                    handleRiverDragChanged(val, in: innerSize)
+                                case .resonanceNebula:
+                                    handleNebulaDragChanged(val, in: innerSize)
+                                }
+                            }
+                            .onEnded { val in
+                                isActivelyDraggingStage = false
+                                switch vm.visualMode {
+                                case .orbitalDisc:
+                                    handleOrbitalDragEnded(val, in: innerSize)
+                                case .flowingRiver:
+                                    handleRiverDragEnded(val, in: innerSize)
+                                case .resonanceNebula:
+                                    handleNebulaDragEnded(val, in: innerSize)
+                                }
+                            }
+                    )
 
+                if vm.document.notes.isEmpty {
+                    emptyOverlay()
+                }
+
+                // 顶部左：声学状态按钮 + 右：三态视窗切换仪（零阴影画布静谧相框）
                 VStack(spacing: 6) {
-                    kilnCrownHeader
-                        .padding(.horizontal, 10)
-
-                    heroStageContainer
-                        .padding(.horizontal, 10)
-
-                    if !vm.followGlowActive && !vm.document.notes.isEmpty {
-                        StageHarmonyRibbonView(
-                            vm: vm,
-                            palette: palette,
-                            reduceMotion: reduceMotion
-                        ) {
-                            wakeRippleTimeline()
+                    HStack(alignment: .top, spacing: 6) {
+                        if vm.shadowCounterpointEnabled
+                            || abs(vm.playbackRate - 1.0) > 0.01
+                            || vm.document.rootMIDI != 60
+                            || vm.document.grooveStrength > 0.08 {
+                            activeFeaturesOverlay
                         }
-                        .padding(.horizontal, 10)
+                        Spacer(minLength: 4)
+                        modeReliefPillSwitcher
                     }
-
-                    if selectedBeatIndex != nil && !vm.isPlaying && !vm.followGlowActive {
-                        compactSelectionPill
-                            .padding(.horizontal, 10)
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    if let errorMsg = vm.statusToast {
+                        Text(errorMsg)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(palette.melodyTerracotta)
+                            )
+                            .transition(.opacity)
                     }
-
-                    rainbowKeyRibbon
-                        .padding(.horizontal, 10)
-
-                    bottomGlassDock
-                        .padding(.horizontal, 10)
-                        .padding(.bottom, 4)
+                    Spacer()
                 }
-                .padding(.top, 2)
+                .padding(10)
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .alert("作品名称", isPresented: $showRenameAlert) {
-                TextField("", text: $renameDraft)
-                Button("确定") {
-                    vm.renameCurrentSong(renameDraft)
-                }
-                Button("取消", role: .cancel) {}
-            }
-            .sheet(isPresented: $showDreamSheet) {
-                DreamCaptureSheet(vm: vm, palette: palette)
-            }
-            .sheet(isPresented: $showMoodSheet) {
-                SoundPaletteBoxSheet(vm: vm, palette: palette)
-            }
-            .onChange(of: vm.latestDegree) { _, _ in
-                wakeRippleTimeline()
-            }
-            .onChange(of: vm.followGlowIndex) { _, _ in
-                wakeRippleTimeline()
-            }
-            .onChange(of: vm.document.id) { _, _ in
-                manualRiverScrollX = 0
-                showStoryWhisper = false
-                coastTask?.cancel()
-                coastTask = nil
-                rippleWakeTask?.cancel()
-                rippleWakeTask = nil
-                vm.endStarVibrato()
-                wakeRippleTimeline()
-            }
-            .onChange(of: vm.visualMode) { _, _ in
-                struckNebulaLane = nil
-                struckRibbonLane = nil
-                ribbonDragAnchorY = nil
-                ribbonMercuryLevel = 0.0
-                vm.endStarVibrato()
-            }
-            .onChange(of: vm.followGlowActive) { _, _ in
-                struckRibbonLane = nil
-                ribbonDragAnchorY = nil
-                ribbonMercuryLevel = 0.0
-                vm.endStarVibrato()
-            }
-            .onDisappear {
-                struckNebulaLane = nil
-                struckRibbonLane = nil
-                ribbonDragAnchorY = nil
-                ribbonMercuryLevel = 0.0
-                vm.endStarVibrato()
-                duoGreetingTask?.cancel()
-                duoGreetingTask = nil
-                stageMieTask?.cancel()
-                stageMieTask = nil
-                rippleWakeTask?.cancel()
-                rippleWakeTask = nil
-                coastTask?.cancel()
-                coastTask = nil
-                rippleWakeActive = false
-                showStoryWhisper = false
-            }
-            .onAppear {
-                if vm.requestOpenDreamSheet {
-                    showDreamSheet = true
-                    vm.requestOpenDreamSheet = false
-                }
-            }
-            .onChange(of: vm.requestOpenDreamSheet) { _, shouldOpen in
-                if shouldOpen {
-                    showDreamSheet = true
-                    vm.requestOpenDreamSheet = false
-                }
-            }
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(boardBg)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(
+                        (activeCurtainColor ?? palette.cartoonOutline).opacity(
+                            activeCurtainColor != nil ? 0.65 : (palette.isNight ? 0.24 : 0.18)
+                        ),
+                        lineWidth: activeCurtainColor != nil ? 1.8 : 1.2
+                    )
+            )
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
+        }
+        .frame(minHeight: 220, maxHeight: .infinity)
+        .onChange(of: wakeSignal) { _, _ in
+            wakeRippleTimeline()
+        }
+        .onChange(of: vm.latestDegree) { _, _ in
+            wakeRippleTimeline()
+        }
+        .onChange(of: vm.followGlowIndex) { _, _ in
+            wakeRippleTimeline()
+        }
+        .onChange(of: vm.document.id) { _, _ in
+            manualRiverScrollX = 0
+            coastTask?.cancel()
+            coastTask = nil
+            rippleWakeTask?.cancel()
+            rippleWakeTask = nil
+            vm.endStarVibrato()
+            wakeRippleTimeline()
+        }
+        .onChange(of: vm.visualMode) { _, _ in
+            struckNebulaLane = nil
+            vm.endStarVibrato()
+        }
+        .onChange(of: vm.followGlowActive) { _, _ in
+            vm.endStarVibrato()
+        }
+        .onDisappear {
+            struckNebulaLane = nil
+            vm.endStarVibrato()
+            rippleWakeTask?.cancel()
+            rippleWakeTask = nil
+            coastTask?.cancel()
+            coastTask = nil
+            rippleWakeActive = false
         }
     }
 
@@ -217,393 +673,6 @@ public struct OrbitalStageView: View {
                 rippleWakeActive = false
             }
         }
-    }
-
-    // MARK: - 1. Custom Kiln Ceramic & Brushed Brass Crown Header
-
-    private var kilnCrownHeader: some View {
-        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let crownGaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
-
-        return HStack(spacing: 8) {
-            // 一体化「双子窑陶铭牌胶囊」：左区双子问候 + 细竖线 + 右区曲名重命名（含铅笔提示）
-            HStack(spacing: 8) {
-                Button {
-                    vm.auditionDuoGreeting()
-                    duoGreetingPulse = true
-                    duoGreetingTask?.cancel()
-                    duoGreetingTask = Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 520_000_000)
-                        if !Task.isCancelled {
-                            duoGreetingPulse = false
-                        }
-                    }
-                } label: {
-                    LivingChimmoDuoBadgeView(
-                        isNight: palette.isNight,
-                        accentColor: skyColor,
-                        melodyActive: !vm.activeLaneIndices.isEmpty || duoGreetingPulse,
-                        cowAwake: vm.cradleEnabled,
-                        gazeBias: crownGaze
-                    )
-                    .frame(width: 44, height: 28)
-                    .frame(minWidth: 44, minHeight: 36)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                .accessibilityLabel("咩哞双子问候")
-                .accessibilityHint("轻点试听小羊与小牛和音")
-
-                Rectangle()
-                    .fill(palette.cartoonOutline.opacity(palette.isNight ? 0.35 : 0.30))
-                    .frame(width: 1.2, height: 18)
-                    .accessibilityHidden(true)
-
-                Button {
-                    renameDraft = vm.document.title
-                    showRenameAlert = true
-                } label: {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(skyColor)
-                            .frame(width: 9.0, height: 9.0)
-
-                        Text(vm.document.title)
-                            .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                            .foregroundStyle(palette.primaryInk)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.78)
-
-                        Image(systemName: "pencil")
-                            .font(.system(size: 10.5, weight: .bold))
-                            .foregroundStyle(palette.secondaryInk)
-                    }
-                    .frame(minHeight: 36)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                .accessibilityLabel("作品名称 \(vm.document.title)")
-                .accessibilityHint("轻点重命名当前旋律")
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 3)
-            .background(
-                ChimmoKilnPillButtonSurface(
-                    palette: palette,
-                    accent: skyColor,
-                    isActive: false,
-                    cornerRadius: 20
-                )
-            )
-
-            Spacer(minLength: 4)
-
-            HStack(spacing: 6) {
-                if vm.canUndo {
-                    hardwareCrownKey(
-                        systemName: "arrow.uturn.backward",
-                        tint: palette.primaryInk,
-                        isHighlighted: false,
-                        accessibilityLabel: "撤销上一步"
-                    ) {
-                        vm.undo()
-                    }
-                }
-
-                hardwareCrownKey(
-                    systemName: vm.currentSavedEntryID != nil ? "bookmark.fill" : "bookmark",
-                    tint: vm.currentSavedEntryID != nil ? palette.homeAnchor : palette.primaryInk,
-                    isHighlighted: vm.currentSavedEntryID != nil,
-                    bounceValue: vm.lastSavedPulse,
-                    accessibilityLabel: "保存到我的曲库"
-                ) {
-                    vm.saveCurrentToNotebook()
-                }
-
-                hardwareCrownKey(
-                    systemName: "square.and.arrow.up",
-                    tint: palette.primaryInk,
-                    isHighlighted: false,
-                    accessibilityLabel: "分享作品图片、音频与 MIDI"
-                ) {
-                    onOpenSharePostcard()
-                }
-
-                hardwareCrownKey(
-                    systemName: "info.circle",
-                    tint: palette.primaryInk,
-                    isHighlighted: false,
-                    accessibilityLabel: "关于与隐私承诺"
-                ) {
-                    onOpenAbout()
-                }
-            }
-            .fixedSize()
-        }
-        .padding(.vertical, 2)
-    }
-
-    private func hardwareCrownKey(
-        systemName: String,
-        tint: Color,
-        isHighlighted: Bool,
-        bounceValue: Int? = nil,
-        accessibilityLabel: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        let icon = Image(systemName: systemName)
-            .font(.system(size: 13.5, weight: .bold))
-            .foregroundStyle(tint)
-
-        return Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(palette.cartoonShadow)
-                    .frame(width: 36, height: 36)
-                    .offset(x: 0, y: 2)
-
-                Circle()
-                    .fill(isHighlighted ? tint.opacity(palette.isNight ? 0.30 : 0.18) : palette.cardSurface)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(
-                                isHighlighted ? tint : palette.cartoonOutline.opacity(palette.isNight ? 0.56 : 0.80),
-                                lineWidth: isHighlighted ? 2.0 : 1.6
-                            )
-                    )
-
-                if let bounceValue {
-                    icon.symbolEffect(.bounce, value: bounceValue)
-                } else {
-                    icon
-                }
-            }
-            .frame(width: 40, height: 40)
-            .contentShape(Circle())
-        }
-        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-        .accessibilityLabel(accessibilityLabel)
-    }
-
-    // MARK: - 2. Hero Stage Container (Single Clean Storybook Frame + Anti-Pass-Through Mode Pill + Duo Corner Perches)
-
-    private var heroStageContainer: some View {
-        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let boardBg = palette.isNight ? Color(hex: 0x101733) : Color(hex: 0xFFFDF7)
-        let activeCurtainColor: Color? = (vm.cradleEnabled && (vm.isPlaying || vm.selectedBeadID != nil))
-            ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
-            : nil
-
-        return GeometryReader { geo in
-            let innerSize = geo.size
-            ZStack {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(palette.cartoonShadow)
-                    .offset(y: 3)
-
-                ZStack {
-                    stageInteractiveCanvas
-                        .modifier(StagePlaybackNavigationActions(vm: vm))
-                        .modifier(StageBeatEditActions(vm: vm))
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { val in
-                                    if !isActivelyDraggingStage {
-                                        isActivelyDraggingStage = true
-                                    }
-                                    switch vm.visualMode {
-                                    case .orbitalDisc:
-                                        handleOrbitalDragChanged(val, in: innerSize)
-                                    case .flowingRiver:
-                                        handleRiverDragChanged(val, in: innerSize)
-                                    case .resonanceNebula:
-                                        handleNebulaDragChanged(val, in: innerSize)
-                                    }
-                                }
-                                .onEnded { val in
-                                    isActivelyDraggingStage = false
-                                    switch vm.visualMode {
-                                    case .orbitalDisc:
-                                        handleOrbitalDragEnded(val, in: innerSize)
-                                    case .flowingRiver:
-                                        handleRiverDragEnded(val, in: innerSize)
-                                    case .resonanceNebula:
-                                        handleNebulaDragEnded(val, in: innerSize)
-                                    }
-                                }
-                        )
-
-                    if vm.document.notes.isEmpty {
-                        // 空画布童书立体折页舞台：草原山坡 + 咩哞家族齐声迎接，消灭大片空白
-                        VStack(spacing: 0) {
-                            Spacer()
-                            ZStack(alignment: .bottom) {
-                                Canvas { ctx, size in
-                                    let profile = StorybookIllustrationLayout.rollingHillProfile(
-                                        sampleCount: 14,
-                                        amplitude: 0.18,
-                                        phaseShift: 1.2
-                                    )
-                                    guard !profile.isEmpty else { return }
-                                    var ridge = Path()
-                                    for (idx, pt) in profile.enumerated() {
-                                        let p = CGPoint(
-                                            x: CGFloat(pt.xFraction) * size.width,
-                                            y: size.height * 0.28 + CGFloat(pt.yFraction - 0.5) * size.height * 0.35
-                                        )
-                                        if idx == 0 { ridge.move(to: p) } else { ridge.addLine(to: p) }
-                                    }
-                                    var hill = ridge
-                                    hill.addLine(to: CGPoint(x: size.width, y: size.height))
-                                    hill.addLine(to: CGPoint(x: 0, y: size.height))
-                                    hill.closeSubpath()
-                                    ctx.fill(hill, with: .color(palette.storybookHillFront))
-                                    ctx.stroke(
-                                        ridge,
-                                        with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.32 : 0.28)),
-                                        style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round)
-                                    )
-                                }
-                                .frame(height: 112)
-
-                                HStack(alignment: .bottom, spacing: 10) {
-                                    ChimmoFigureView(
-                                        member: .taono,
-                                        isNight: palette.isNight,
-                                        isMinor: vm.document.scaleMode.isMinorFlavored,
-                                        isSinging: false
-                                    )
-                                    .scaleEffect(0.84)
-
-                                    LivingChimmoDuoBadgeView(
-                                        isNight: palette.isNight,
-                                        accentColor: skyColor,
-                                        melodyActive: false,
-                                        cowAwake: vm.cradleEnabled
-                                    )
-                                    .frame(width: 88, height: 58)
-
-                                    ChimmoFigureView(
-                                        member: .plokko,
-                                        isNight: palette.isNight,
-                                        isMinor: vm.document.scaleMode.isMinorFlavored,
-                                        isSinging: false
-                                    )
-                                    .scaleEffect(0.84)
-
-                                    ChimmoFigureView(
-                                        member: .corllo,
-                                        isNight: palette.isNight,
-                                        isMinor: vm.document.scaleMode.isMinorFlavored,
-                                        isSinging: false
-                                    )
-                                    .scaleEffect(0.84)
-                                }
-                                .padding(.bottom, 58)
-                            }
-                        }
-                        .allowsHitTesting(false)
-
-                        VStack {
-                            Spacer()
-                            HStack(spacing: 10) {
-                                Button {
-                                    vm.plantDuoStarterMotif()
-                                } label: {
-                                    Label("咩哞起音", systemImage: "sparkles")
-                                        .font(.caption.weight(.heavy))
-                                        .padding(.horizontal, 14)
-                                        .frame(minHeight: 40)
-                                        .background(
-                                            ZStack {
-                                                Capsule()
-                                                    .fill(palette.cartoonShadow)
-                                                    .offset(x: 0, y: 2.5)
-                                                Capsule()
-                                                    .fill(palette.homeAnchor)
-                                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
-                                            }
-                                        )
-                                        .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                        .contentShape(Capsule())
-                                }
-                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 2.0))
-                                .accessibilityLabel("生成咩哞示范短句")
-
-                                Button {
-                                    showDreamSheet = true
-                                } label: {
-                                    Label("写旋律", systemImage: "wand.and.stars")
-                                        .font(.caption.weight(.heavy))
-                                        .padding(.horizontal, 14)
-                                        .frame(minHeight: 40)
-                                        .background(
-                                            ChimmoKilnPillButtonSurface(
-                                                palette: palette,
-                                                accent: palette.nightLampGold,
-                                                isActive: false,
-                                                cornerRadius: 20
-                                            )
-                                        )
-                                        .foregroundStyle(palette.primaryInk)
-                                        .contentShape(Capsule())
-                                }
-                                .buttonStyle(StorybookTactileButtonStyle(sinkY: 2.0))
-                                .accessibilityLabel("打开写旋律面板")
-                            }
-                            .padding(.bottom, 12)
-                        }
-                    } else if !vm.followGlowActive {
-                        stageDuoCornerPerches(skyColor: skyColor)
-                    }
-
-                    // 顶部左：声学状态按钮 + 右：三态视窗切换仪（防手势穿透 >= 36-42pt 热区） + 异常报错条
-                    VStack(spacing: 6) {
-                        HStack(alignment: .top, spacing: 6) {
-                            if vm.shadowCounterpointEnabled
-                                || abs(vm.playbackRate - 1.0) > 0.01
-                                || vm.document.rootMIDI != 60
-                                || vm.document.grooveStrength > 0.08 {
-                                activeFeaturesOverlay
-                            }
-                            Spacer(minLength: 4)
-                            modeReliefPillSwitcher
-                        }
-                        if let errorMsg = vm.statusToast {
-                            Text(errorMsg)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(palette.melodyTerracotta)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
-                                )
-                                .transition(.opacity)
-                        }
-                        Spacer()
-                    }
-                    .padding(10)
-                }
-                .background(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(boardBg)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .strokeBorder(
-                            (activeCurtainColor ?? palette.cartoonOutline).opacity(activeCurtainColor != nil ? 0.82 : (palette.isNight ? 0.60 : 0.78)),
-                            lineWidth: activeCurtainColor != nil ? 2.2 : 1.8
-                        )
-                )
-            }
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
-        }
-        .frame(minHeight: 220, maxHeight: .infinity)
     }
 
     private var modeReliefPillSwitcher: some View {
@@ -656,260 +725,6 @@ public struct OrbitalStageView: View {
         .contentShape(Capsule())
     }
 
-    private func stageDuoCornerPerches(skyColor: Color) -> some View {
-        let tilt = Double((vm.latestDegree ?? 4) - 4) / 3.5
-        let gaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
-        let mieActive = !vm.activeLaneIndices.isEmpty || stageMiePulse
-        let mieState = StageHardwareCaliperKinematics.cornerPerchState(
-            isAwake: true,
-            isActive: mieActive,
-            reduceMotion: reduceMotion
-        )
-        let mouActive = vm.isPlaying && vm.cradleEnabled
-        let mouState = StageHardwareCaliperKinematics.cornerPerchState(
-            isAwake: vm.cradleEnabled,
-            isActive: mouActive,
-            reduceMotion: reduceMotion
-        )
-
-        let storyChip = (vm.selectedBeadID == nil)
-            ? StorybookGuidedMomentKinematics.chipModel(moment: vm.activeGuidedMoment, document: vm.document)
-            : nil
-
-        return VStack(spacing: 6) {
-            Spacer()
-
-            if showStoryWhisper, let chip = storyChip {
-                HStack(spacing: 8) {
-                    Text(chip.caption)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(palette.primaryInk)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Button {
-                        vm.scrubToTime(chip.targetOnsetSeconds, triggerNotes: true)
-                        vm.endScrubbing()
-                        wakeRippleTimeline()
-                        showStoryWhisper = false
-                    } label: {
-                        Text("试听此段")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .padding(.horizontal, 10)
-                            .frame(minHeight: 34)
-                            .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 2)
-                                    Capsule()
-                                        .fill(palette.storybookButter)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
-                                }
-                            )
-                            .foregroundStyle(palette.primaryInk)
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("跳转试听 \(chip.badge)")
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .fill(palette.cardSurface)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                .strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.4)
-                        )
-                )
-                .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                .padding(.horizontal, 12)
-                .transition(.opacity)
-            }
-
-            HStack(alignment: .bottom, spacing: 6) {
-                cornerPerchTile(
-                    accent: skyColor,
-                    meadowFill: palette.storybookMint,
-                    state: mieState,
-                    accessibilityLabel: "小羊咩舞台守护",
-                    accessibilityHint: "轻点试听主旋律高音"
-                ) {
-                    vm.auditionDuoCharacter(.mie)
-                    stageMiePulse = true
-                    stageMieTask?.cancel()
-                    stageMieTask = Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 450_000_000)
-                        if !Task.isCancelled {
-                            stageMiePulse = false
-                        }
-                    }
-                } avatar: {
-                    TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
-                        let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
-                        ChimmoSheepView(
-                            isNight: palette.isNight,
-                            accentColor: skyColor,
-                            isSinging: mieActive,
-                            tiltProgress: tilt,
-                            phaseTime: phaseTime,
-                            gazeBias: gaze
-                        )
-                        .frame(width: 30, height: 24)
-                    }
-                }
-
-                Spacer(minLength: 4)
-
-                if let chip = storyChip {
-                    storybookStoryChipButton(chip: chip)
-                }
-
-                Spacer(minLength: 4)
-
-                cornerPerchTile(
-                    accent: vm.cradleEnabled ? palette.bassRibbon : palette.nightLampGold,
-                    meadowFill: palette.storybookButter,
-                    state: mouState,
-                    accessibilityLabel: "小牛哞舞台守护",
-                    accessibilityHint: vm.cradleEnabled ? "轻点试听低音和声" : "轻点唤醒低音和声伴奏"
-                ) {
-                    if !vm.cradleEnabled {
-                        vm.setChordPreset(.autoMatch)
-                    }
-                    vm.auditionDuoCharacter(.mou)
-                } avatar: {
-                    TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
-                        let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
-                        ChimmoCowView(
-                            isNight: palette.isNight,
-                            accentColor: skyColor,
-                            isAwake: vm.cradleEnabled,
-                            isPlaying: mouActive,
-                            phaseTime: phaseTime,
-                            gazeBias: -0.25
-                        )
-                        .frame(width: 30, height: 24)
-                    }
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-        }
-    }
-
-    private func cornerPerchTile<Avatar: View>(
-        accent: Color,
-        meadowFill: Color,
-        state: StageHardwareCaliperKinematics.CornerPerchState,
-        accessibilityLabel: String,
-        accessibilityHint: String,
-        action: @escaping () -> Void,
-        @ViewBuilder avatar: () -> Avatar
-    ) -> some View {
-        Button(action: action) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(palette.cartoonShadow)
-                    .offset(x: 0, y: 2.5)
-
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(palette.cardSurface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .fill(accent.opacity((palette.isNight ? 0.16 : 0.10) * state.glowOpacity))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .strokeBorder(
-                                state.glowOpacity > 0.7 ? accent : palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.88),
-                                lineWidth: state.glowOpacity > 0.7 ? 2.2 : 1.7
-                            )
-                    )
-
-                VStack(spacing: 0) {
-                    Spacer(minLength: 2)
-
-                    avatar()
-                        .offset(y: state.liftPoints)
-
-                    Capsule()
-                        .fill(meadowFill)
-                        .frame(width: 38, height: 5.0)
-                        .padding(.top, 2)
-                        .padding(.bottom, 4)
-                }
-            }
-            .frame(width: 54, height: 44)
-            .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-        }
-        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityHint(accessibilityHint)
-    }
-
-    private func storybookStoryChipButton(
-        chip: StorybookGuidedMomentKinematics.MomentChipModel
-    ) -> some View {
-        let memberAccent = palette.isNight ? chip.spotlightMember.nightGlowColor : chip.spotlightMember.bodyColor
-        return Button {
-            if reduceMotion {
-                showStoryWhisper.toggle()
-            } else {
-                withAnimation(.easeInOut(duration: 0.18)) {
-                    showStoryWhisper.toggle()
-                }
-            }
-            vm.auditionChimmoMember(chip.spotlightMember)
-        } label: {
-            HStack(spacing: 5) {
-                ChimmoCartoonKeyBuddyView(
-                    member: chip.spotlightMember,
-                    outlineColor: palette.cartoonOutline,
-                    isSinging: vm.isPlaying,
-                    isMinor: vm.document.scaleMode.isMinorFlavored
-                )
-                .frame(width: 17, height: 17)
-                .padding(2)
-                .background(
-                    Circle()
-                        .fill(memberAccent.opacity(palette.isNight ? 0.34 : 0.24))
-                )
-
-                Text(chip.badge)
-                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
-                    .foregroundStyle(palette.primaryInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-
-                Image(systemName: showStoryWhisper ? "chevron.down" : "book.pages.fill")
-                    .font(.system(size: 9.5, weight: .bold))
-                    .foregroundStyle(palette.secondaryInk)
-            }
-            .padding(.horizontal, 11)
-            .frame(minHeight: 36)
-            .background(
-                ZStack {
-                    Capsule()
-                        .fill(palette.cartoonShadow)
-                        .offset(x: 0, y: 2)
-                    Capsule()
-                        .fill(showStoryWhisper ? palette.cardSurface : palette.storybookButter)
-                        .overlay(
-                            Capsule()
-                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.80 : 0.90), lineWidth: 1.6)
-                        )
-                }
-            )
-            .contentShape(Capsule())
-        }
-        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-        .accessibilityLabel("绘本分幕：\(chip.badge)")
-        .accessibilityValue(chip.caption)
-        .accessibilityHint("轻点展开或收起编曲手账")
-    }
-
     private var stageInteractiveCanvas: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: !shouldRunCanvasTimeline)) { _ in
             let mediaNow = CACurrentMediaTime()
@@ -928,6 +743,7 @@ public struct OrbitalStageView: View {
         .accessibilityElement()
         .accessibilityLabel(vm.stageAccessibilitySummary)
         .accessibilityAdjustableAction { direction in
+            guard allowsEditing else { return }
             switch direction {
             case .increment:
                 if selectedBeatIndex == nil, let first = vm.document.notes.first {
@@ -949,7 +765,7 @@ public struct OrbitalStageView: View {
 
     private var activeFeaturesOverlay: some View {
         Button {
-            showMoodSheet = true
+            onOpenSoundSheet()
         } label: {
             HStack(spacing: 6) {
                 if vm.shadowCounterpointEnabled {
@@ -1229,8 +1045,9 @@ public struct OrbitalStageView: View {
             }
         }
 
-        // 5.4 选中音符的径向调音滑轨（无字提示沿半径拖移可切换音高）
-        if !vm.isPlaying,
+        // 5.4 选中音符的径向调音滑轨（仅创作编辑模式显示，避免赏析经典时误导）
+        if allowsEditing,
+           !vm.isPlaying,
            !vm.followGlowActive,
            let selID = vm.selectedBeadID,
            let selEntry = jewelData.first(where: { $0.bead.id == selID }) {
@@ -1277,7 +1094,7 @@ public struct OrbitalStageView: View {
             let dur = item.bead.displayDuration(grooveStrength: vm.document.grooveStrength)
             let onset = item.bead.displayOnset(grooveStrength: vm.document.grooveStrength)
 
-            let isSelected = vm.selectedBeadID == item.bead.id
+            let isSelected = allowsEditing && vm.selectedBeadID == item.bead.id
             let isFollowCur = vm.followGlowActive && vm.followGlowIndex == item.idx
             let isFollowPassed = vm.followGlowActive && item.idx < vm.followGlowIndex
             let isSingingNow: Bool = {
@@ -1838,14 +1655,14 @@ public struct OrbitalStageView: View {
             let col = lane.barColor(isNight: palette.isNight)
             let onset = item.bead.displayOnset(grooveStrength: vm.document.grooveStrength)
             let dur = item.bead.displayDuration(grooveStrength: vm.document.grooveStrength)
-            let isSelected = vm.selectedBeadID == item.bead.id
+            let isSelected = allowsEditing && vm.selectedBeadID == item.bead.id
             let isFollowCur = vm.followGlowActive && vm.followGlowIndex == item.idx
             let isSingingNow: Bool = {
                 guard let ct = currentTime else { return false }
                 return ct >= onset - 0.04 && ct <= onset + max(0.18, dur * 0.9)
             }()
 
-            if isSelected && !vm.isPlaying && !vm.followGlowActive {
+            if allowsEditing && !vm.isPlaying && !vm.followGlowActive && vm.selectedBeadID == item.bead.id {
                 var rail = Path()
                 rail.move(to: CGPoint(x: item.pt.x, y: lay.padV + 0.5 * lay.rowH))
                 rail.addLine(to: CGPoint(x: item.pt.x, y: lay.padV + 7.5 * lay.rowH))
@@ -2306,8 +2123,8 @@ public struct OrbitalStageView: View {
             let dy = val.startLocation.y - m.center.y
             let dist = hypot(dx, dy)
 
-            // 1) 命中已有音珠？
-            if !vm.followGlowActive {
+            // 1) 命中已有音珠？（仅创作模式允许选中和拖拽音珠）
+            if allowsEditing && !vm.followGlowActive {
                 for bead in vm.document.notes {
                     let onset = bead.displayOnset(grooveStrength: vm.document.grooveStrength)
                     let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
@@ -2433,6 +2250,7 @@ public struct OrbitalStageView: View {
             draggingBeadID = nil
             dragDidPushUndo = false
             lastBeadTimeGridBucket = nil
+            onUserDidEdit()
             if let curIdx = vm.document.notes.firstIndex(where: { $0.id == beadID }) {
                 vm.playContextEcho(upToIndex: curIdx)
             }
@@ -2441,16 +2259,19 @@ public struct OrbitalStageView: View {
             if moveDist <= 8 {
                 if vm.followGlowActive, let targetLane = targetFollowLaneIndex {
                     vm.strikeXylophoneLane(XylophoneLane.lane(at: targetLane))
-                } else {
+                } else if allowsEditing {
                     let dist = hypot(val.location.x - m.center.x, val.location.y - m.center.y)
                     if dist >= m.innerRadius * 0.80 && dist <= m.platterRadius * 0.95 {
                         let laneIdx = OrbitalGeometry.laneIndex(forRadius: dist, innerRadius: m.innerRadius, outerRadius: m.outerRadius, pentatonicSafe: vm.pentatonicSafe)
                         let lane = XylophoneLane.lane(at: laneIdx)
                         let onset = OrbitalGeometry.onset(forScreenPoint: val.location, center: m.center, discRotation: discRot, totalDuration: total)
                         vm.placeNoteOnCanvas(degree: lane.degree, octaveOffset: lane.octaveOffset, atTime: onset)
+                        onUserDidEdit()
                     } else {
                         vm.selectedBeadID = nil
                     }
+                } else {
+                    vm.togglePlayback()
                 }
             } else {
                 let releaseVelocity = lastScrubVelocity
@@ -2506,7 +2327,7 @@ public struct OrbitalStageView: View {
             dragDidPushUndo = false
             riverStartScrollX = scrollX
 
-            if !vm.followGlowActive {
+            if allowsEditing && !vm.followGlowActive {
                 for bead in vm.document.notes {
                     let onset = bead.displayOnset(grooveStrength: vm.document.grooveStrength)
                     let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
@@ -2575,6 +2396,7 @@ public struct OrbitalStageView: View {
             draggingBeadID = nil
             dragDidPushUndo = false
             lastBeadTimeGridBucket = nil
+            onUserDidEdit()
             if let idx = vm.document.notes.firstIndex(where: { $0.id == beadID }) {
                 vm.playContextEcho(upToIndex: idx)
             }
@@ -2583,12 +2405,15 @@ public struct OrbitalStageView: View {
             if moveDist <= 8 {
                 if vm.followGlowActive, let targetLane = targetFollowLaneIndex {
                     vm.strikeXylophoneLane(XylophoneLane.lane(at: targetLane))
-                } else {
+                } else if allowsEditing {
                     let rowFromTop = max(0, min(7, Int(floor((val.location.y - lay.padV) / max(1, lay.rowH)))))
                     let snapped = XylophoneLane.nearestAllowedIndex(7 - rowFromTop, pentatonicSafe: vm.pentatonicSafe)
                     let lane = XylophoneLane.lane(at: snapped)
                     let targetOnset = FlowingRiverGeometry.onset(fromScreenX: val.location.x, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
                     vm.placeNoteOnCanvas(degree: lane.degree, octaveOffset: lane.octaveOffset, atTime: targetOnset)
+                    onUserDidEdit()
+                } else {
+                    vm.togglePlayback()
                 }
             } else {
                 vm.endScrubbing()
@@ -2628,9 +2453,10 @@ public struct OrbitalStageView: View {
                 let distPt = hypot(val.location.x - hitPt.x, val.location.y - hitPt.y)
                 let dyn = StarHitDynamicsMapper.hitDynamics(distancePt: distPt, hitRadius: 36.0)
                 wakeRippleTimeline()
-                if vm.document.notes.isEmpty && !vm.followGlowActive {
+                if allowsEditing && vm.document.notes.isEmpty && !vm.followGlowActive {
                     let lane = XylophoneLane.lane(at: laneIdx)
                     vm.placeNoteOnCanvas(degree: lane.degree, octaveOffset: lane.octaveOffset, atTime: 0.16)
+                    onUserDidEdit()
                 } else {
                     vm.strikeXylophoneLane(
                         XylophoneLane.lane(at: laneIdx),
@@ -2661,270 +2487,40 @@ public struct OrbitalStageView: View {
         vm.endStarVibrato()
         discInteractionMode = .none
     }
+}
 
-    // MARK: - 3. Tactile Brass Beat Caliper Inspector
+/// 共享绘本七小只彩虹互动琴键带（赏析区用于即兴伴奏或跟灯弹，创作区用于点击写入与换音，完全消除无障碍与手势复用代码）。
+internal struct StageChoirKeyboardBar: View {
+    @ObservedObject var vm: StudioViewModel
+    let palette: ChimmoPalette
+    let reduceMotion: Bool
+    var showsSmartHints: Bool = false
+    let onWakeTimeline: () -> Void
+    let onKeyStrike: (XylophoneLane, Double, Double) -> Void
 
-    private var compactSelectionPill: some View {
-        let idx = selectedBeatIndex ?? 0
-        let total = vm.document.notes.count
-        let selectedBead = vm.document.notes.indices.contains(idx) ? vm.document.notes[idx] : nil
-        let selectedLane = selectedBead.map { XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: $0.degree, octaveOffset: $0.octaveOffset)) }
-        let caliper = StageHardwareCaliperKinematics.caliperReading(
-            rawDuration: selectedBead?.rawDuration ?? 0.5,
-            beatIndex: idx,
-            totalCount: total,
-            tickCount: 8
-        )
-        let accentCol = selectedLane?.barColor(isNight: palette.isNight) ?? palette.homeAnchor
+    @State private var struckRibbonLane: Int? = nil
+    @State private var ribbonDragAnchorY: CGFloat? = nil
+    @State private var ribbonMercuryLevel: Double = 0.0
 
-        return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
-
-            VStack(spacing: 7) {
-                HStack(spacing: 6) {
-                    if let lane = selectedLane {
-                        HStack(spacing: 4) {
-                            PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
-                                .frame(width: 10, height: 10)
-                            Text(lane.digitLabel)
-                                .font(.caption2.weight(.heavy).monospacedDigit())
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4.5)
-                        .background(Capsule().fill(accentCol.opacity(0.90)))
-                        .foregroundStyle(.white)
-                        .accessibilityHidden(true)
-
-                        VStack(spacing: 3) {
-                            HStack(spacing: 2.5) {
-                                ForEach(0..<caliper.tickCount, id: \.self) { tickIdx in
-                                    let isLit = tickIdx < caliper.highlightedTickCount
-                                    let isEdge = tickIdx == caliper.highlightedTickCount - 1
-                                    Capsule()
-                                        .fill(isLit ? accentCol : palette.brassHairline.opacity(0.28))
-                                        .frame(width: 2.5, height: isEdge ? 11 : 7)
-                                }
-                            }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3.5)
-                            .background(
-                                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                    .fill(palette.cardSurface.opacity(0.75))
-                            )
-
-                            ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(palette.brassHairline.opacity(0.28))
-                                    .frame(width: 34, height: 2)
-                                Circle()
-                                    .fill(palette.nightLampGold)
-                                    .frame(width: 4.5, height: 4.5)
-                                    .offset(x: CGFloat(caliper.positionFraction) * 29.5)
-                            }
-                        }
-                        .accessibilityHidden(true)
-                    }
-
-                    Button {
-                        vm.stepSelectedBeat(delta: -1)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.caption.weight(.bold))
-                            .frame(width: 36, height: 34)
-                            .background(
-                                ChimmoKilnPillButtonSurface(
-                                    palette: palette,
-                                    accent: palette.homeAnchor,
-                                    isActive: false,
-                                    cornerRadius: 13
-                                )
-                            )
-                            .foregroundStyle(idx > 0 ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
-                            .contentShape(Capsule())
-                    }
-                    .disabled(idx <= 0)
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("上一拍")
-
-                    Text("\(idx + 1)/\(total)")
-                        .font(.caption2.weight(.bold).monospacedDigit())
-                        .foregroundStyle(palette.secondaryInk)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(palette.shelfSurface)
-                        )
-                        .frame(minWidth: 34)
-
-                    Button {
-                        vm.stepSelectedBeat(delta: 1)
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.bold))
-                            .frame(width: 36, height: 34)
-                            .background(
-                                ChimmoKilnPillButtonSurface(
-                                    palette: palette,
-                                    accent: palette.homeAnchor,
-                                    isActive: false,
-                                    cornerRadius: 13
-                                )
-                            )
-                            .foregroundStyle(idx + 1 < total ? palette.homeAnchor : palette.secondaryInk.opacity(0.35))
-                            .contentShape(Capsule())
-                    }
-                    .disabled(idx + 1 >= total)
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("下一拍")
-
-                    Spacer(minLength: 4)
-
-                    Button {
-                        vm.toggleSmartPitchHints()
-                    } label: {
-                        Image(systemName: "lightbulb.fill")
-                            .font(.caption.weight(.bold))
-                            .frame(width: 36, height: 34)
-                            .background(
-                                ChimmoKilnPillButtonSurface(
-                                    palette: palette,
-                                    accent: palette.nightLampGold,
-                                    isActive: vm.smartHintActive,
-                                    cornerRadius: 13
-                                )
-                            )
-                            .foregroundStyle(vm.smartHintActive ? palette.nightLampGold : palette.nightLampGold.opacity(0.85))
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("推荐音高")
-
-                    Button {
-                        vm.selectedBeadID = nil
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.caption2.weight(.bold))
-                            .frame(width: 34, height: 34)
-                            .background(
-                                ChimmoKilnPillButtonSurface(
-                                    palette: palette,
-                                    accent: palette.brassHairline,
-                                    isActive: false,
-                                    cornerRadius: 13
-                                )
-                            )
-                            .foregroundStyle(palette.secondaryInk)
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("取消选中当前音符")
-                }
-
-                HStack(spacing: 6) {
-                    caliperActionKey(
-                        systemName: "minus.circle",
-                        foreground: palette.primaryInk,
-                        accent: palette.brassHairline,
-                        isHighlighted: false,
-                        accessibilityLabel: "缩短音符"
-                    ) {
-                        vm.adjustSelectedBeadDuration(delta: -0.18)
-                    }
-
-                    caliperActionKey(
-                        systemName: "plus.circle",
-                        foreground: palette.primaryInk,
-                        accent: palette.brassHairline,
-                        isHighlighted: false,
-                        accessibilityLabel: "延长音符"
-                    ) {
-                        vm.adjustSelectedBeadDuration(delta: 0.22)
-                    }
-
-                    caliperActionKey(
-                        systemName: "arrow.left.to.line",
-                        foreground: palette.primaryInk,
-                        accent: palette.brassHairline,
-                        isHighlighted: false,
-                        accessibilityLabel: "提前一格"
-                    ) {
-                        vm.nudgeSelectedBeadTiming(delta: -0.10)
-                    }
-
-                    caliperActionKey(
-                        systemName: "arrow.right.to.line",
-                        foreground: palette.primaryInk,
-                        accent: palette.brassHairline,
-                        isHighlighted: false,
-                        accessibilityLabel: "延后一格"
-                    ) {
-                        vm.nudgeSelectedBeadTiming(delta: 0.10)
-                    }
-
-                    caliperActionKey(
-                        systemName: "plus.square.on.square",
-                        foreground: palette.bassRibbon,
-                        accent: palette.bassRibbon,
-                        isHighlighted: true,
-                        accessibilityLabel: "插入一拍"
-                    ) {
-                        vm.insertBeatAfterSelected()
-                    }
-
-                    caliperActionKey(
-                        systemName: "trash",
-                        foreground: palette.melodyTerracotta,
-                        accent: palette.melodyTerracotta,
-                        isHighlighted: true,
-                        accessibilityLabel: "删除当前音符"
-                    ) {
-                        vm.deleteSelectedBead()
-                    }
-                }
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 8)
-        }
+    private var targetFollowLaneIndex: Int? {
+        guard vm.followGlowActive,
+              vm.followGlowIndex < vm.document.notes.count else { return nil }
+        let b = vm.document.notes[vm.followGlowIndex]
+        return XylophoneLane.laneIndex(degree: b.degree, octaveOffset: b.octaveOffset)
     }
 
-    private func caliperActionKey(
-        systemName: String,
-        foreground: Color,
-        accent: Color,
-        isHighlighted: Bool,
-        accessibilityLabel: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .font(.caption.weight(.bold))
-                .frame(maxWidth: .infinity)
-                .frame(height: 34)
-                .background(
-                    ChimmoKilnPillButtonSurface(
-                        palette: palette,
-                        accent: accent,
-                        isActive: isHighlighted,
-                        cornerRadius: 14
-                    )
-                )
-                .foregroundStyle(foreground)
-                .contentShape(Capsule())
-        }
-        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-        .accessibilityLabel(accessibilityLabel)
+    private var smartHintByLane: [Int: SmartPitchHint] {
+        guard showsSmartHints && vm.smartHintActive else { return [:] }
+        return Dictionary(uniqueKeysWithValues: vm.smartHints.map { ($0.laneIndex, $0) })
     }
 
-    // MARK: - 4. Flat Cartoon Kids' Book Pop-Up Choir Xylophone (Glissando + Colorblind Glyphs + IP Buddies)
-
-    private var rainbowKeyRibbon: some View {
+    var body: some View {
         let hints = smartHintByLane
         let chordDegrees = vm.activeChordToneDegrees
         let isMinor = vm.document.scaleMode.isMinorFlavored
 
         return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
+            StorybookQuietCardSurface(palette: palette, cornerRadius: 18)
 
             // 绘本草地彩带基底（代替金属导轨）
             VStack {
@@ -3046,7 +2642,8 @@ public struct OrbitalStageView: View {
                         .accessibilityValue(isFollowTarget ? "当前亮灯" : (isChordResonant ? "和谐音" : ""))
                         .accessibilityAddTraits(.isButton)
                         .accessibilityAction {
-                            vm.strikeXylophoneLane(lane)
+                            onWakeTimeline()
+                            onKeyStrike(lane, 0.60, 0.96)
                         }
                     }
                 }
@@ -3070,9 +2667,9 @@ public struct OrbitalStageView: View {
                                 struckRibbonLane = idx
                                 let normY = Double(max(0, min(1, val.location.y / h)))
                                 let dyn = ExpressiveTouchMapper.dynamics(normalizedY: normY)
-                                wakeRippleTimeline()
-                                vm.strikeXylophoneLane(lane, touchIntensity: dyn.velocity, touchBrightness: dyn.brightness)
-                            } else if !vm.followGlowActive && vm.selectedBeadID == nil,
+                                onWakeTimeline()
+                                onKeyStrike(lane, dyn.velocity, dyn.brightness)
+                            } else if !vm.followGlowActive && !showsSmartHints && vm.selectedBeadID == nil,
                                       let anchorY = ribbonDragAnchorY {
                                 let lane = XylophoneLane.lane(at: idx)
                                 if vm.pentatonicSafe && !lane.isPentatonicSafe {
@@ -3084,7 +2681,7 @@ public struct OrbitalStageView: View {
                                 )
                                 ribbonMercuryLevel = expr.mercuryFraction
                                 if expr.isVibratoActive {
-                                    wakeRippleTimeline()
+                                    onWakeTimeline()
                                     vm.beginOrUpdateStarVibrato(
                                         laneIndex: idx,
                                         dx: expr.vibratoDX,
@@ -3108,200 +2705,16 @@ public struct OrbitalStageView: View {
             .padding(.vertical, 7)
         }
         .frame(height: 86)
-    }
-
-    // MARK: - 5. Flat Cartoon Kids' Book Transport Console
-
-    private var bottomGlassDock: some View {
-        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let dotCount = StageTransportRingMapper.pentatonicIndicatorCount(isSafe: vm.pentatonicSafe)
-
-        return HStack(spacing: 10) {
-            // 1. 左：扁平卡通节拍播放轮 (52×52pt)
-            Button {
-                vm.togglePlayback()
-            } label: {
-                TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: !vm.isPlaying || reduceMotion)) { _ in
-                    let progress = vm.isPlaying
-                        ? StageTransportRingMapper.loopProgress(
-                            currentTime: vm.clock.currentTime(at: CACurrentMediaTime()),
-                            totalDuration: vm.document.totalDuration
-                        )
-                        : 0.0
-                    ZStack {
-                        Circle()
-                            .stroke(palette.cartoonOutline.opacity(0.24), lineWidth: 2.2)
-
-                        if vm.isPlaying && progress > 0.005 {
-                            Circle()
-                                .trim(from: 0, to: CGFloat(progress))
-                                .stroke(
-                                    palette.nightLampGold,
-                                    style: StrokeStyle(lineWidth: 3.0, lineCap: .round)
-                                )
-                                .rotationEffect(.degrees(-90))
-                        }
-
-                        Circle()
-                            .fill(palette.cartoonShadow)
-                            .frame(width: 42, height: 42)
-                            .offset(x: 0, y: 2)
-
-                        Circle()
-                            .fill(vm.isPlaying ? palette.homeAnchor : palette.cardSurface)
-                            .overlay(
-                                Circle().strokeBorder(
-                                    palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.88),
-                                    lineWidth: 1.8
-                                )
-                            )
-                            .frame(width: 42, height: 42)
-
-                        Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(
-                                vm.isPlaying
-                                    ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
-                                    : palette.homeAnchor
-                            )
-                    }
-                    .frame(width: 52, height: 52)
-                    .contentShape(Circle())
-                }
-            }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
-            .accessibilityLabel(vm.isPlaying ? "暂停旋转播放" : "开始旋转播放")
-
-            // 2. 中：主创作扁平贴纸大按键 (height: 50)
-            Button {
-                if vm.capturePipeline.isRecording {
-                    vm.finishRelativeContourHum()
-                } else if vm.followGlowActive {
-                    vm.toggleFollowGlow()
-                } else {
-                    showDreamSheet = true
-                }
-            } label: {
-                let topFill = vm.capturePipeline.isRecording
-                    ? palette.melodyTerracotta
-                    : (vm.followGlowActive ? palette.nightLampGold : palette.homeAnchor)
-
-                ZStack {
-                    Capsule()
-                        .fill(palette.cartoonShadow)
-                        .offset(x: 0, y: 3)
-
-                    Capsule()
-                        .fill(topFill)
-                        .overlay(
-                            Capsule().strokeBorder(
-                                palette.cartoonOutline.opacity(palette.isNight ? 0.78 : 0.90),
-                                lineWidth: 2.0
-                            )
-                        )
-
-                    Group {
-                        if vm.capturePipeline.isRecording {
-                            HStack(spacing: 8) {
-                                ChimmoCraftMark(.humWave, color: .white)
-                                    .frame(width: 18, height: 18)
-                                Text("停止")
-                                    .font(.subheadline.weight(.heavy))
-                                Image(systemName: "stop.fill")
-                                    .font(.caption.weight(.bold))
-                            }
-                        } else if vm.followGlowActive {
-                            let cur = min(vm.followGlowIndex + 1, max(1, vm.document.notes.count))
-                            let total = max(1, vm.document.notes.count)
-                            HStack(spacing: 7) {
-                                Image(systemName: "sparkles")
-                                    .font(.subheadline.weight(.bold))
-                                Text("\(cur)/\(total)")
-                                    .font(.subheadline.weight(.bold).monospacedDigit())
-                                Image(systemName: "xmark")
-                                    .font(.caption.weight(.bold))
-                            }
-                        } else {
-                            HStack(spacing: 7) {
-                                Image(systemName: "wand.and.stars")
-                                    .font(.subheadline.weight(.bold))
-                                Text("写旋律")
-                                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .contentShape(Capsule())
-                .foregroundStyle(
-                    vm.capturePipeline.isRecording
-                        ? .white
-                        : ((vm.followGlowActive || palette.isNight) ? Color(hex: 0x0E142C) : .white)
-                )
-            }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
-            .accessibilityLabel(
-                vm.capturePipeline.isRecording
-                    ? "停止哼唱"
-                    : (vm.followGlowActive ? "退出跟灯弹" : "创作旋律")
-            )
-
-            // 3. 右：声音与五音守护表盘 (52×52pt)
-            Button {
-                showMoodSheet = true
-            } label: {
-                ZStack {
-                    ForEach(0..<dotCount, id: \.self) { idx in
-                        let angleDeg = -90.0 + (Double(idx) / Double(dotCount)) * 360.0
-                        let rad = angleDeg * Double.pi / 180.0
-                        let r: CGFloat = 23.0
-                        Circle()
-                            .fill(
-                                vm.pentatonicSafe
-                                    ? Color(hex: 0x2F9E44)
-                                    : palette.secondaryInk.opacity(0.45)
-                            )
-                            .frame(width: vm.pentatonicSafe ? 4.4 : 3.2, height: vm.pentatonicSafe ? 4.4 : 3.2)
-                            .offset(x: cos(rad) * r, y: sin(rad) * r)
-                    }
-
-                    Circle()
-                        .fill(palette.cartoonShadow)
-                        .frame(width: 40, height: 40)
-                        .offset(x: 0, y: 2)
-
-                    Circle()
-                        .fill(palette.cardSurface)
-                        .overlay(
-                            Circle().strokeBorder(
-                                (vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.cartoonOutline).opacity(palette.isNight ? 0.72 : 0.86),
-                                lineWidth: 1.8
-                            )
-                        )
-                        .frame(width: 40, height: 40)
-
-                    Image(systemName: vm.document.scaleMode.iconName)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(skyColor)
-                }
-                .frame(width: 52, height: 52)
-                .contentShape(Circle())
-            }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
-            .accessibilityLabel("五音模式与声音设置")
+        .onChange(of: vm.document.id) { _, _ in
+            struckRibbonLane = nil
+            ribbonDragAnchorY = nil
+            ribbonMercuryLevel = 0.0
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 7)
-        .background(
-            StorybookQuietCardSurface(palette: palette, cornerRadius: 28)
-        )
     }
 }
 
 /// 主舞台「哞 · 四幕彩色和声触控轨」：扁平卡通童书平涂和弦交互带。
-private struct StageHarmonyRibbonView: View {
+internal struct StageHarmonyRibbonView: View {
     @ObservedObject var vm: StudioViewModel
     let palette: ChimmoPalette
     let reduceMotion: Bool
@@ -3446,7 +2859,7 @@ private struct StageHarmonyRibbonView: View {
     }
 }
 
-private struct StagePlaybackNavigationActions: ViewModifier {
+internal struct StagePlaybackNavigationActions: ViewModifier {
     @ObservedObject var vm: StudioViewModel
 
     func body(content: Content) -> some View {
@@ -3463,17 +2876,12 @@ private struct StagePlaybackNavigationActions: ViewModifier {
             .accessibilityAction(named: "跳到上一句") {
                 vm.stepPhrase(delta: -1)
             }
-            .accessibilityAction(named: "升高一音") {
-                vm.shiftSelectedBeadPitch(delta: 1)
-            }
-            .accessibilityAction(named: "降低一音") {
-                vm.shiftSelectedBeadPitch(delta: -1)
-            }
     }
 }
 
-private struct StageBeatEditActions: ViewModifier {
+internal struct StageBeatEditActions: ViewModifier {
     @ObservedObject var vm: StudioViewModel
+    let isEnabled: Bool
 
     private func ensureSelectedBeat() {
         if vm.selectedBeadID == nil {
@@ -3481,29 +2889,40 @@ private struct StageBeatEditActions: ViewModifier {
         }
     }
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
-            .accessibilityAction(named: "延长当前拍") {
-                ensureSelectedBeat()
-                vm.adjustSelectedBeadDuration(delta: 0.22)
-            }
-            .accessibilityAction(named: "缩短当前拍") {
-                ensureSelectedBeat()
-                vm.adjustSelectedBeadDuration(delta: -0.18)
-            }
-            .accessibilityAction(named: "提前微调") {
-                ensureSelectedBeat()
-                vm.nudgeSelectedBeadTiming(delta: -0.10)
-            }
-            .accessibilityAction(named: "延后微调") {
-                ensureSelectedBeat()
-                vm.nudgeSelectedBeadTiming(delta: 0.10)
-            }
-            .accessibilityAction(named: "插入一拍") {
-                vm.insertBeatAfterSelected()
-            }
-            .accessibilityAction(named: "删除当前拍") {
-                vm.deleteSelectedBead()
-            }
+        if isEnabled {
+            content
+                .accessibilityAction(named: "升高一音") {
+                    vm.shiftSelectedBeadPitch(delta: 1)
+                }
+                .accessibilityAction(named: "降低一音") {
+                    vm.shiftSelectedBeadPitch(delta: -1)
+                }
+                .accessibilityAction(named: "延长当前拍") {
+                    ensureSelectedBeat()
+                    vm.adjustSelectedBeadDuration(delta: 0.22)
+                }
+                .accessibilityAction(named: "缩短当前拍") {
+                    ensureSelectedBeat()
+                    vm.adjustSelectedBeadDuration(delta: -0.18)
+                }
+                .accessibilityAction(named: "提前微调") {
+                    ensureSelectedBeat()
+                    vm.nudgeSelectedBeadTiming(delta: -0.10)
+                }
+                .accessibilityAction(named: "延后微调") {
+                    ensureSelectedBeat()
+                    vm.nudgeSelectedBeadTiming(delta: 0.10)
+                }
+                .accessibilityAction(named: "插入一拍") {
+                    vm.insertBeatAfterSelected()
+                }
+                .accessibilityAction(named: "删除当前拍") {
+                    vm.deleteSelectedBead()
+                }
+        } else {
+            content
+        }
     }
 }

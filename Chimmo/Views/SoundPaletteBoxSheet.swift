@@ -699,28 +699,33 @@ public struct SoundPaletteBoxSheet: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            ChimmoSheepView(
+                                isNight: palette.isNight,
+                                accentColor: skyColor,
+                                isSinging: auditionVoice != nil || vm.isPlaying,
+                                phaseTime: reduceMotion ? 0.0 : now
+                            )
+                            .frame(width: 24, height: 20)
+
+                            Text("主旋律音色 · \(vm.melodyVoice.label)")
+                                .font(.system(.caption, design: .rounded).weight(.heavy))
+                                .foregroundStyle(palette.primaryInk)
+                        }
+
+                        Spacer()
+
                         Button {
                             vm.auditionDuoCharacter(.mie)
                             triggerAudition(.voice, voice: vm.melodyVoice)
                         } label: {
-                            HStack(spacing: 6) {
-                                ChimmoSheepView(
-                                    isNight: palette.isNight,
-                                    accentColor: skyColor,
-                                    isSinging: auditionVoice != nil || vm.isPlaying,
-                                    phaseTime: reduceMotion ? 0.0 : now
-                                )
-                                .frame(width: 24, height: 20)
-
-                                Text("咩 · 音色")
-                                    .font(.system(.caption, design: .rounded).weight(.heavy))
-                                    .foregroundStyle(palette.primaryInk)
-
+                            HStack(spacing: 4) {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 9.5, weight: .bold))
-                                    .foregroundStyle(palette.secondaryInk)
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("试听")
+                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
                             }
-                            .padding(.horizontal, 10)
+                            .padding(.horizontal, 11)
                             .frame(minHeight: 32)
                             .background(
                                 ZStack {
@@ -732,16 +737,11 @@ public struct SoundPaletteBoxSheet: View {
                                         .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
                                 }
                             )
+                            .foregroundStyle(palette.primaryInk)
                             .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                        .accessibilityLabel("小羊咩，试听主旋律")
-
-                        Spacer()
-
-                        Text(vm.melodyVoice.label)
-                            .font(.caption2.weight(.heavy))
-                            .foregroundStyle(palette.secondaryInk)
+                        .accessibilityLabel("试听小羊咩主旋律音色")
                     }
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -814,6 +814,23 @@ public struct SoundPaletteBoxSheet: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            ChimmoCowView(
+                                isNight: palette.isNight,
+                                accentColor: skyColor,
+                                isAwake: vm.cradleEnabled,
+                                isPlaying: auditionTexture != nil || vm.isPlaying,
+                                phaseTime: reduceMotion ? 0.0 : now
+                            )
+                            .frame(width: 24, height: 20)
+
+                            Text("和声与伴奏 · \(vm.cradleEnabled ? vm.accompanimentTexture.label : "休息")")
+                                .font(.system(.caption, design: .rounded).weight(.heavy))
+                                .foregroundStyle(palette.primaryInk)
+                        }
+
+                        Spacer()
+
                         Button {
                             if !vm.cradleEnabled {
                                 vm.setChordPreset(.autoMatch)
@@ -821,25 +838,13 @@ public struct SoundPaletteBoxSheet: View {
                             vm.auditionDuoCharacter(.mou)
                             triggerAudition(.texture, texture: vm.accompanimentTexture)
                         } label: {
-                            HStack(spacing: 6) {
-                                ChimmoCowView(
-                                    isNight: palette.isNight,
-                                    accentColor: skyColor,
-                                    isAwake: vm.cradleEnabled,
-                                    isPlaying: auditionTexture != nil || vm.isPlaying,
-                                    phaseTime: reduceMotion ? 0.0 : now
-                                )
-                                .frame(width: 24, height: 20)
-
-                                Text("哞 · 伴奏")
-                                    .font(.system(.caption, design: .rounded).weight(.heavy))
-                                    .foregroundStyle(palette.primaryInk)
-
+                            HStack(spacing: 4) {
                                 Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 9.5, weight: .bold))
-                                    .foregroundStyle(palette.secondaryInk)
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("试听")
+                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
                             }
-                            .padding(.horizontal, 10)
+                            .padding(.horizontal, 11)
                             .frame(minHeight: 32)
                             .background(
                                 ZStack {
@@ -851,16 +856,11 @@ public struct SoundPaletteBoxSheet: View {
                                         .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
                                 }
                             )
+                            .foregroundStyle(palette.primaryInk)
                             .contentShape(Capsule())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                        .accessibilityLabel("小牛哞，试听低音伴奏")
-
-                        Spacer()
-
-                        Text(vm.cradleEnabled ? vm.accompanimentTexture.label : "休息")
-                            .font(.caption2.weight(.heavy))
-                            .foregroundStyle(palette.secondaryInk)
+                        .accessibilityLabel("试听小牛哞低音伴奏")
                     }
 
                     ChordPresetBarcodeStrip(vm: vm, palette: palette) {

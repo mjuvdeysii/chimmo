@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.47.0 - 2026-11-24
+- Separated Showcase/Interactive Guide ("欣赏") from a dedicated Creation Space ("创作") and commercial-standard Settings tab ("设置") in `StudioView` and `CreateStudioView`, preserving independent workspace snapshots and `hasUnsavedCreationChanges` state so browsing classics never overwrites unsaved creations.
+- Replaced top-left title rename with an explicit Song Picker pill ("切换曲目") opening `MusicBoxShelfView`, removed misleading floating corner chips/drop-shadow stage framing, and added clear labeled "试听" (Audition), "保存作品" (Save), "作品" drawer, and "来一段起音灵感" starter controls.
+- Enforced strict button-vs-label visual grammar across `ChimmoDesignLanguage`, `OrbitalStageView`, `MusicBoxShelfView`, `DreamCaptureSheet`, and `SoundPaletteBoxSheet` (reserving pill/outline/hard-shadow treatment exclusively for interactive controls and using flat non-capsule styling for read-only labels).
+- Built commercial-standard native `insetGrouped` `SettingsView`, `ChimmoLegalDocumentView` (Privacy, Terms, Open Source Licenses), `CharacterSoundTestView`, and refactored `AboutSheetView` to match Apple HIG conventions.
+
 ## 0.46.0 - 2026-11-24
 - Upgraded OpenMotion Design Studio website to v9 and synced `docs/index.html` (`v0.46.0`): replaced vinyl sleeve and tonearm metaphors with the open storybook songbook cover, bookmark ribbon, minimalist music-box wreath, default full-width hill stage, and refined 29pt-safe 1-3-5 trio AppIcon triptych.
 - Upgraded OpenMotion Director short film (`ea36d037-a0fb-479e-bdd1-3d1ccf653b14`) to v14 with `0` lint errors/warnings: replaced the vinyl ending with a borderless rolling meadow hill, 12-o'clock golden star bookmark wreath, and clean three-beat 12s export verified visually and acoustically.

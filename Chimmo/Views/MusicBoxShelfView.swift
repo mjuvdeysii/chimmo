@@ -7,17 +7,21 @@ public struct MusicBoxShelfView: View {
     public let synth: FeltPianoSynth
     @ObservedObject public var notebook: MelodyNotebookStore
     public let currentDocumentID: UUID
+    public let navigationTitleText: String?
+    public let showsDismissButton: Bool
     public let onLoadSavedToBoard: (SavedMelodyEntry) -> Void
     public let onPlayAlongSpecimen: (MelodyDocument) -> Void
     public let onEditSpecimenOnBoard: (MelodyDocument) -> Void
     public let onBorrowAtmosphere: (MelodyDocument) -> Void
     public let onShareSavedEntry: (SavedMelodyEntry) -> Void
+    public let onForkSpecimenToCreate: ((MelodyDocument) -> Void)?
     public let onStartNewTap: () -> Void
     public let onWillPlayInline: () -> Void
     public let onRenameSavedEntry: (UUID, String) -> Void
     public let onDuplicateSavedEntry: (UUID) -> Void
     public let onDeleteSavedEntry: ((UUID) -> Void)?
 
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedSegment: Int = 1 // 有保存作品优先看 0，否则看名曲殿堂 1
     @State private var selectedCategory: String = "全部"
@@ -36,11 +40,15 @@ public struct MusicBoxShelfView: View {
         synth: FeltPianoSynth,
         notebook: MelodyNotebookStore,
         currentDocumentID: UUID,
+        initialSegment: Int? = nil,
+        navigationTitleText: String? = nil,
+        showsDismissButton: Bool = false,
         onLoadSavedToBoard: @escaping (SavedMelodyEntry) -> Void,
         onPlayAlongSpecimen: @escaping (MelodyDocument) -> Void,
         onEditSpecimenOnBoard: @escaping (MelodyDocument) -> Void,
         onBorrowAtmosphere: @escaping (MelodyDocument) -> Void = { _ in },
         onShareSavedEntry: @escaping (SavedMelodyEntry) -> Void = { _ in },
+        onForkSpecimenToCreate: ((MelodyDocument) -> Void)? = nil,
         onStartNewTap: @escaping () -> Void,
         onWillPlayInline: @escaping () -> Void = {},
         onRenameSavedEntry: @escaping (UUID, String) -> Void = { _, _ in },
@@ -51,17 +59,21 @@ public struct MusicBoxShelfView: View {
         self.synth = synth
         self.notebook = notebook
         self.currentDocumentID = currentDocumentID
+        self.navigationTitleText = navigationTitleText
+        self.showsDismissButton = showsDismissButton
         self.onLoadSavedToBoard = onLoadSavedToBoard
         self.onPlayAlongSpecimen = onPlayAlongSpecimen
         self.onEditSpecimenOnBoard = onEditSpecimenOnBoard
         self.onBorrowAtmosphere = onBorrowAtmosphere
         self.onShareSavedEntry = onShareSavedEntry
+        self.onForkSpecimenToCreate = onForkSpecimenToCreate
         self.onStartNewTap = onStartNewTap
         self.onWillPlayInline = onWillPlayInline
         self.onRenameSavedEntry = onRenameSavedEntry
         self.onDuplicateSavedEntry = onDuplicateSavedEntry
         self.onDeleteSavedEntry = onDeleteSavedEntry
-        self._selectedSegment = State(initialValue: notebook.entries.isEmpty ? 1 : 0)
+        let resolvedSeg = initialSegment ?? (notebook.entries.isEmpty ? 1 : 0)
+        self._selectedSegment = State(initialValue: max(0, min(1, resolvedSeg)))
     }
 
     private var filteredSpecimens: [MelodyDocument] {
@@ -166,7 +178,16 @@ public struct MusicBoxShelfView: View {
                     }
                 }
             }
-            .toolbar(.hidden, for: .navigationBar)
+            .modifier(
+                ShelfNavigationChromeModifier(
+                    title: navigationTitleText,
+                    showsDismissButton: showsDismissButton,
+                    onClose: {
+                        stopInlinePlay()
+                        dismiss()
+                    }
+                )
+            )
             .onChange(of: selectedSegment) { _, _ in
                 stopInlinePlay()
             }
@@ -339,13 +360,6 @@ public struct MusicBoxShelfView: View {
 
                 Text(countText)
                     .font(.system(size: 10.5, weight: .bold, design: .rounded).monospacedDigit())
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        Capsule().fill(
-                            isSelected ? palette.homeAnchor.opacity(0.18) : palette.divider
-                        )
-                    )
                     .foregroundStyle(isSelected ? palette.homeAnchor : palette.secondaryInk)
             }
             .frame(maxWidth: .infinity)
@@ -677,25 +691,10 @@ public struct MusicBoxShelfView: View {
                         .fill(entryModeColor)
                         .frame(width: 7, height: 7)
 
-                    Button {
-                        renameTargetID = entry.id
-                        renameDraftText = entry.document.title
-                        showRenameAlert = true
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(entry.document.title)
-                                .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                                .foregroundStyle(palette.primaryInk)
-                                .lineLimit(1)
-                            Image(systemName: "pencil")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(palette.secondaryInk)
-                        }
-                        .frame(minHeight: 28)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
-                    .accessibilityHint("轻点重命名作品")
+                    Text(entry.document.title)
+                        .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(1)
 
                     Spacer(minLength: 4)
 
@@ -703,19 +702,13 @@ public struct MusicBoxShelfView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(palette.brassHairline)
-                            .accessibilityLabel("当前正放在主舞台")
+                            .accessibilityLabel("当前正位于舞台")
                     }
 
-                    HStack(spacing: 3) {
-                        Image(systemName: entryVoice.iconName)
-                            .font(.system(size: 9.5, weight: .bold))
-                        Text("\(entry.document.notes.count)")
-                            .font(.system(size: 10, weight: .bold).monospacedDigit())
-                    }
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(palette.shelfSurface))
-                    .foregroundStyle(palette.secondaryInk)
+                    Text("\(entryVoice.label) · \(entry.document.notes.count)音")
+                        .font(.system(size: 10.5, weight: .semibold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(palette.secondaryInk)
+                        .lineLimit(1)
                 }
 
                 MiniMelodySparkline(
@@ -735,13 +728,13 @@ public struct MusicBoxShelfView: View {
                         onLoadSavedToBoard(entry)
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: "music.note")
+                            Image(systemName: "pencil.line")
                                 .font(.caption.weight(.bold))
-                            Text("上台")
-                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            Text("打开编辑")
+                                .font(.system(size: 11.5, weight: .heavy, design: .rounded))
                         }
-                        .padding(.horizontal, 12)
-                        .frame(height: 32)
+                        .padding(.horizontal, 13)
+                        .frame(height: 34)
                         .background(
                             ZStack {
                                 Capsule()
@@ -756,18 +749,45 @@ public struct MusicBoxShelfView: View {
                         .contentShape(Capsule())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("在主舞台打开 \(entry.document.title)")
+                    .accessibilityLabel("在创作区打开编辑 \(entry.document.title)")
 
                     Spacer()
 
-                    Button {
-                        stopInlinePlay()
-                        onShareSavedEntry(entry)
+                    Menu {
+                        Button {
+                            renameTargetID = entry.id
+                            renameDraftText = entry.document.title
+                            showRenameAlert = true
+                        } label: {
+                            Label("重命名", systemImage: "pencil")
+                        }
+                        Button {
+                            onDuplicateSavedEntry(entry.id)
+                        } label: {
+                            Label("复制副本", systemImage: "plus.square.on.square")
+                        }
+                        Button {
+                            stopInlinePlay()
+                            onShareSavedEntry(entry)
+                        } label: {
+                            Label("分享导出", systemImage: "square.and.arrow.up")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            if isPlayingThis { stopInlinePlay() }
+                            if let onDeleteSavedEntry {
+                                onDeleteSavedEntry(entry.id)
+                            } else {
+                                notebook.delete(id: entry.id)
+                            }
+                        } label: {
+                            Label("删除作品", systemImage: "trash")
+                        }
                     } label: {
-                        Image(systemName: "square.and.arrow.up")
+                        Image(systemName: "ellipsis")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(palette.homeAnchor)
-                            .frame(width: 36, height: 32)
+                            .foregroundStyle(palette.primaryInk)
+                            .frame(width: 38, height: 34)
                             .background(
                                 ZStack {
                                     Capsule()
@@ -780,35 +800,7 @@ public struct MusicBoxShelfView: View {
                             )
                             .contentShape(Capsule())
                     }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("分享 \(entry.document.title)")
-
-                    Button(role: .destructive) {
-                        if isPlayingThis { stopInlinePlay() }
-                        if let onDeleteSavedEntry {
-                            onDeleteSavedEntry(entry.id)
-                        } else {
-                            notebook.delete(id: entry.id)
-                        }
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(palette.secondaryInk)
-                            .frame(width: 36, height: 32)
-                            .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.cardSurface)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.5))
-                                }
-                            )
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                    .accessibilityLabel("删除 \(entry.document.title)")
+                    .accessibilityLabel("管理作品 \(entry.document.title)")
                 }
             }
         }
@@ -986,11 +978,8 @@ public struct MusicBoxShelfView: View {
                                 .accessibilityLabel("当前正放在主舞台")
                         }
 
-                        Image(systemName: voice.iconName)
-                            .font(.system(size: 10, weight: .bold))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(palette.shelfSurface))
+                        Text("\(voice.label) · \(spec.notes.count)音")
+                            .font(.system(size: 10.5, weight: .semibold, design: .rounded).monospacedDigit())
                             .foregroundStyle(palette.secondaryInk)
                     }
 
@@ -1005,19 +994,47 @@ public struct MusicBoxShelfView: View {
                             .fill(palette.shelfSurface.opacity(0.75))
                     )
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
+                        Button {
+                            stopInlinePlay()
+                            onEditSpecimenOnBoard(spec)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "play.fill")
+                                    .font(.caption2.weight(.bold))
+                                Text("欣赏")
+                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            }
+                            .padding(.horizontal, 11)
+                            .frame(height: 34)
+                            .background(
+                                ZStack {
+                                    Capsule()
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 1.8)
+                                    Capsule()
+                                        .fill(palette.storybookMint)
+                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.82), lineWidth: 1.5))
+                                }
+                            )
+                            .foregroundStyle(palette.primaryInk)
+                            .contentShape(Capsule())
+                        }
+                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                        .accessibilityLabel("在欣赏区播放 \(spec.title)")
+
                         Button {
                             stopInlinePlay()
                             onPlayAlongSpecimen(spec)
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "sparkles")
-                                    .font(.caption.weight(.bold))
+                                    .font(.caption2.weight(.bold))
                                 Text("跟灯")
                                     .font(.system(size: 11, weight: .heavy, design: .rounded))
                             }
-                            .padding(.horizontal, 12)
-                            .frame(height: 32)
+                            .padding(.horizontal, 11)
+                            .frame(height: 34)
                             .background(
                                 ZStack {
                                     Capsule()
@@ -1034,33 +1051,35 @@ public struct MusicBoxShelfView: View {
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("跟灯弹 \(spec.title)")
 
-                        Button {
-                            stopInlinePlay()
-                            onEditSpecimenOnBoard(spec)
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "music.note")
-                                    .font(.caption.weight(.bold))
-                                Text("上台")
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            }
-                            .padding(.horizontal, 12)
-                            .frame(height: 32)
-                            .background(
-                                ZStack {
-                                    Capsule()
-                                        .fill(palette.cartoonShadow)
-                                        .offset(y: 1.8)
-                                    Capsule()
-                                        .fill(palette.cardSurface)
-                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
+                        if let onForkSpecimenToCreate {
+                            Button {
+                                stopInlinePlay()
+                                onForkSpecimenToCreate(spec)
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "wand.and.stars")
+                                        .font(.caption2.weight(.bold))
+                                    Text("改编")
+                                        .font(.system(size: 11, weight: .heavy, design: .rounded))
                                 }
-                            )
-                            .foregroundStyle(palette.primaryInk)
-                            .contentShape(Capsule())
+                                .padding(.horizontal, 11)
+                                .frame(height: 34)
+                                .background(
+                                    ZStack {
+                                        Capsule()
+                                            .fill(palette.cartoonShadow)
+                                            .offset(y: 1.8)
+                                        Capsule()
+                                            .fill(palette.cardSurface)
+                                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.5))
+                                    }
+                                )
+                                .foregroundStyle(palette.primaryInk)
+                                .contentShape(Capsule())
+                            }
+                            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
+                            .accessibilityLabel("改编 \(spec.title)")
                         }
-                        .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-                        .accessibilityLabel("在主舞台打开 \(spec.title)")
 
                         Spacer(minLength: 0)
 
@@ -1070,7 +1089,7 @@ public struct MusicBoxShelfView: View {
                         } label: {
                             ChimmoCraftMark(.atmosphereHorizon, color: modeColor)
                                 .frame(width: 13, height: 13)
-                                .frame(width: 36, height: 32)
+                                .frame(width: 36, height: 34)
                                 .background(
                                     ZStack {
                                         Capsule()
@@ -1366,5 +1385,30 @@ private struct MiniMelodySparkline: View {
             }
         }
         .accessibilityHidden(true)
+    }
+}
+
+private struct ShelfNavigationChromeModifier: ViewModifier {
+    let title: String?
+    let showsDismissButton: Bool
+    let onClose: () -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if title != nil || showsDismissButton {
+            content
+                .navigationTitle(title ?? "曲库")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    if showsDismissButton {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("关闭", action: onClose)
+                        }
+                    }
+                }
+        } else {
+            content
+                .toolbar(.hidden, for: .navigationBar)
+        }
     }
 }

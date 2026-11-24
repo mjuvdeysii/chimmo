@@ -4,9 +4,19 @@ import SwiftUI
 import UIKit
 #endif
 
-public enum ChimmoTab: Int, Hashable, Sendable {
-    case board = 0
-    case musicBox = 1
+public enum StudioSpace: String, CaseIterable, Identifiable, Sendable {
+    case showcase
+    case create
+    public var id: String { rawValue }
+}
+
+public enum ChimmoTab: Int, Hashable, CaseIterable, Sendable {
+    case showcase = 0
+    case create = 1
+    case settings = 2
+
+    public static let board: ChimmoTab = .showcase
+    public static let musicBox: ChimmoTab = .create
 }
 
 public struct StageRippleEvent: Sendable {
@@ -99,6 +109,8 @@ public final class StudioViewModel: ObservableObject {
     @Published public var currentSavedEntryID: UUID? = nil
     @Published public var lastSavedPulse: Int = 0
     @Published public var activeVibratoLane: Int? = nil
+    @Published public var activeSpace: StudioSpace = .showcase
+    @Published public var hasUnsavedCreationChanges: Bool = false
 
     @Published public var activeChordSpanID: Int = 0
     @Published public var activeGuidedMoment: GuidedStoryMoment? = SpecimenLibrary.saintSaensTheSwan.guidedMoments?.first
@@ -114,8 +126,26 @@ public final class StudioViewModel: ObservableObject {
     public let clock = PlaybackClock()
     public let rippleBus = StageRippleBus()
 
+    private struct WorkspaceSnapshot {
+        var document: MelodyDocument
+        var chordPreset: ChordProgressionPreset
+        var chordOverrides: [Int: DiatonicChord]
+        var accompanimentTexture: AccompanimentTexture
+        var melodyVoice: MelodyVoice
+        var pentatonicSafe: Bool
+        var shadowCounterpointEnabled: Bool
+        var playbackRate: Double
+        var selectedBeadID: UUID?
+        var currentSavedEntryID: UUID?
+        var undoStack: [MelodyDocument]
+        var activeGuidedMoment: GuidedStoryMoment?
+        var hasUnsavedChanges: Bool
+    }
+
     private let router = HalfDuplexAudioRouter()
     private var undoStack: [MelodyDocument] = []
+    private var showcaseSnapshot: WorkspaceSnapshot?
+    private var creationSnapshot: WorkspaceSnapshot?
     private var playbackTask: Task<Void, Never>?
     private var contextEchoTask: Task<Void, Never>?
     private var previewArpeggioTask: Task<Void, Never>?
@@ -171,6 +201,202 @@ public final class StudioViewModel: ObservableObject {
         followGlowActive = false
         requestOpenDreamSheet = true
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+    }
+
+    private func captureWorkspaceSnapshot() -> WorkspaceSnapshot {
+        WorkspaceSnapshot(
+            document: document,
+            chordPreset: chordPreset,
+            chordOverrides: chordOverrides,
+            accompanimentTexture: accompanimentTexture,
+            melodyVoice: melodyVoice,
+            pentatonicSafe: pentatonicSafe,
+            shadowCounterpointEnabled: shadowCounterpointEnabled,
+            playbackRate: playbackRate,
+            selectedBeadID: selectedBeadID,
+            currentSavedEntryID: currentSavedEntryID,
+            undoStack: undoStack,
+            activeGuidedMoment: activeGuidedMoment,
+            hasUnsavedChanges: hasUnsavedCreationChanges
+        )
+    }
+
+    private func restoreWorkspaceSnapshot(_ snap: WorkspaceSnapshot) {
+        document = snap.document
+        chordPreset = snap.chordPreset
+        chordOverrides = snap.chordOverrides
+        accompanimentTexture = snap.accompanimentTexture
+        melodyVoice = snap.melodyVoice
+        pentatonicSafe = snap.pentatonicSafe
+        shadowCounterpointEnabled = snap.shadowCounterpointEnabled
+        playbackRate = snap.playbackRate
+        selectedBeadID = snap.selectedBeadID
+        currentSavedEntryID = snap.currentSavedEntryID
+        undoStack = snap.undoStack
+        canUndo = !undoStack.isEmpty
+        activeGuidedMoment = snap.activeGuidedMoment
+        hasUnsavedCreationChanges = snap.hasUnsavedChanges
+        clock.updateTotalDuration(document.totalDuration)
+        synth.applySpaceProfile(AcousticSpaceProfile.profile(for: document.scaleMode))
+        activeChordSpanID = 0
+        if let first = document.notes.first {
+            let t = first.displayOnset(grooveStrength: document.grooveStrength)
+            updateHarmonyDescriptor(for: first.degree, at: t)
+        }
+    }
+
+    public func switchSpace(to target: StudioSpace) {
+        guard target != activeSpace else { return }
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        smartHintActive = false
+        isTappingRhythm = false
+
+        switch activeSpace {
+        case .showcase:
+            showcaseSnapshot = captureWorkspaceSnapshot()
+        case .create:
+            creationSnapshot = captureWorkspaceSnapshot()
+        }
+
+        activeSpace = target
+        switch target {
+        case .showcase:
+            if let snap = showcaseSnapshot {
+                restoreWorkspaceSnapshot(snap)
+            } else {
+                openSpecimen(SpecimenLibrary.saintSaensTheSwan, autoPlay: false)
+            }
+        case .create:
+            if let snap = creationSnapshot {
+                restoreWorkspaceSnapshot(snap)
+            } else {
+                let defaultDoc = MelodyDocument(
+                    title: "我的旋律 #\(notebook.entries.count + 1)",
+                    subtitle: "自由创作",
+                    rootMIDI: 60,
+                    scaleMode: .brightMajor,
+                    harmonyProfile: .feltSun,
+                    grooveStrength: 0.0,
+                    notes: [],
+                    isSpecimen: false,
+                    preferredTexture: accompanimentTexture,
+                    preferredVoice: melodyVoice
+                )
+                restoreWorkspaceSnapshot(
+                    WorkspaceSnapshot(
+                        document: defaultDoc,
+                        chordPreset: .autoMatch,
+                        chordOverrides: [:],
+                        accompanimentTexture: accompanimentTexture,
+                        melodyVoice: melodyVoice,
+                        pentatonicSafe: true,
+                        shadowCounterpointEnabled: false,
+                        playbackRate: 1.0,
+                        selectedBeadID: nil,
+                        currentSavedEntryID: nil,
+                        undoStack: [],
+                        activeGuidedMoment: nil,
+                        hasUnsavedChanges: false
+                    )
+                )
+            }
+        }
+    }
+
+    public func forkCurrentShowcaseIntoCreate() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        if activeSpace == .showcase {
+            showcaseSnapshot = captureWorkspaceSnapshot()
+        }
+
+        let clonedNotes = document.notes.map {
+            NoteBead(
+                degree: $0.degree,
+                octaveOffset: $0.octaveOffset,
+                rawOnset: $0.rawOnset,
+                rawDuration: $0.rawDuration
+            )
+        }
+        let clonedDoc = MelodyDocument(
+            title: "\(document.title) · 改编",
+            subtitle: "改编自经典曲目",
+            rootMIDI: document.rootMIDI,
+            scaleMode: document.scaleMode,
+            harmonyProfile: document.harmonyProfile,
+            grooveStrength: document.grooveStrength,
+            notes: clonedNotes,
+            isSpecimen: false,
+            preferredTexture: accompanimentTexture,
+            preferredVoice: melodyVoice
+        )
+        let createSnap = WorkspaceSnapshot(
+            document: clonedDoc,
+            chordPreset: chordPreset == .off ? .autoMatch : chordPreset,
+            chordOverrides: chordOverrides,
+            accompanimentTexture: accompanimentTexture,
+            melodyVoice: melodyVoice,
+            pentatonicSafe: !XylophoneRollEngine.requiresSevenScale(clonedDoc),
+            shadowCounterpointEnabled: shadowCounterpointEnabled,
+            playbackRate: playbackRate,
+            selectedBeadID: nil,
+            currentSavedEntryID: nil,
+            undoStack: [],
+            activeGuidedMoment: nil,
+            hasUnsavedChanges: !clonedNotes.isEmpty
+        )
+        creationSnapshot = createSnap
+        activeSpace = .create
+        followGlowActive = false
+        smartHintActive = false
+        isTappingRhythm = false
+        restoreWorkspaceSnapshot(createSnap)
+        AcousticHapticsEngine.shared.playSeedBloom()
+    }
+
+    public func auditionShowcaseLane(
+        _ lane: XylophoneLane,
+        touchIntensity: Double = 0.60,
+        touchBrightness: Double = 0.96
+    ) {
+        if followGlowActive {
+            strikeXylophoneLane(lane, touchIntensity: touchIntensity, touchBrightness: touchBrightness)
+            return
+        }
+        if selectedBeadID != nil {
+            selectedBeadID = nil
+        }
+        strikeXylophoneLane(lane, touchIntensity: touchIntensity, touchBrightness: touchBrightness)
+    }
+
+    public func appendOrReplaceNoteFromCreateKey(
+        _ lane: XylophoneLane,
+        touchIntensity: Double = 0.62,
+        touchBrightness: Double = 0.96
+    ) {
+        if selectedBeadID != nil {
+            strikeXylophoneLane(lane, touchIntensity: touchIntensity, touchBrightness: touchBrightness)
+        } else {
+            triggerLadderMember(lane.member, octaveOffset: lane.octaveOffset)
+            selectedBeadID = nil
+        }
+        hasUnsavedCreationChanges = true
+    }
+
+    public func auditionCurrentCreation() {
+        if isPlaying {
+            stopPlayback()
+            return
+        }
+        guard !document.notes.isEmpty else {
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+            return
+        }
+        selectedBeadID = nil
+        clock.setScrubTime(0.0)
+        togglePlayback()
     }
 
     public func auditionDuoCharacter(_ character: ChimmoDuoCharacter) {
@@ -256,6 +482,7 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         selectedBeadID = document.notes.first?.id
         activeGuidedMoment = nil
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playSeedBloom()
         togglePlayback()
     }
@@ -510,6 +737,7 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         selectedBeadID = document.notes.first?.id
         smartHintActive = true
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playResolutionExhale()
         togglePlayback()
     }
@@ -564,6 +792,7 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(document.totalDuration)
         selectedBeadID = document.notes.first?.id
         smartHintActive = false
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playSeedBloom()
         togglePlayback()
     }
@@ -663,6 +892,7 @@ public final class StudioViewModel: ObservableObject {
             document.notes[idx].degree = lane.degree
             document.notes[idx].octaveOffset = lane.octaveOffset
             document.notes[idx].ghostCandidates.removeAll()
+            hasUnsavedCreationChanges = true
             let noteOnset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
             rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: noteOnset, colorHex: member.bodyHex, intensity: vel)
             AcousticHapticsEngine.shared.playExpressivePitchTouch(
@@ -828,6 +1058,7 @@ public final class StudioViewModel: ObservableObject {
         if selectedBeadID == nil {
             selectedBeadID = document.notes.first?.id
         }
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playSeedBloom()
         togglePlayback()
     }
@@ -865,6 +1096,7 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes.first?.id
         smartHintActive = false
         activeGuidedMoment = nil
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playSeedBloom()
         togglePlayback()
     }
@@ -885,6 +1117,7 @@ public final class StudioViewModel: ObservableObject {
         clock.updateTotalDuration(varied.totalDuration)
         selectedBeadID = varied.notes.first?.id
         smartHintActive = false
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playResolutionExhale()
         togglePlayback()
     }
@@ -954,6 +1187,7 @@ public final class StudioViewModel: ObservableObject {
         selectedBeadID = document.notes.first?.id
         smartHintActive = false
         activeGuidedMoment = nil
+        hasUnsavedCreationChanges = true
         AcousticHapticsEngine.shared.playResolutionExhale()
         togglePlayback()
     }
@@ -995,6 +1229,9 @@ public final class StudioViewModel: ObservableObject {
             if !document.title.contains("新风格") {
                 document.title = "\(document.title) · 新风格"
             }
+        }
+        if activeSpace == .create || !document.isSpecimen {
+            hasUnsavedCreationChanges = true
         }
         activeGuidedMoment = nil
         AcousticHapticsEngine.shared.playResolutionExhale()
@@ -1225,6 +1462,7 @@ public final class StudioViewModel: ObservableObject {
         document.notes[idx].degree = lane.degree
         document.notes[idx].octaveOffset = lane.octaveOffset
         document.notes[idx].ghostCandidates.removeAll()
+        hasUnsavedCreationChanges = true
         let onset = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
         flashLane(lane.index, degree: lane.degree)
         rippleBus.emit(laneIndex: lane.index, degree: lane.degree, onset: onset, colorHex: lane.member.bodyHex)
@@ -1249,6 +1487,7 @@ public final class StudioViewModel: ObservableObject {
             document.notes[idx].quantizedOnset = clampedOnset
         }
         document.notes.sort { $0.rawOnset < $1.rawOnset }
+        hasUnsavedCreationChanges = true
         clock.updateTotalDuration(document.totalDuration)
         if let updated = document.notes.first(where: { $0.id == beadID }) {
             let displayT = updated.displayOnset(grooveStrength: document.grooveStrength)
@@ -1284,6 +1523,7 @@ public final class StudioViewModel: ObservableObject {
             let newBead = NoteBead(degree: cur.degree, octaveOffset: cur.octaveOffset, rawOnset: nextOnset, rawDuration: 0.42)
             document.notes.append(newBead)
             document.notes.sort { $0.rawOnset < $1.rawOnset }
+            hasUnsavedCreationChanges = true
             clock.updateTotalDuration(document.totalDuration)
             selectedBeadID = newBead.id
             if let newIdx = document.notes.firstIndex(where: { $0.id == newBead.id }) {
@@ -1324,6 +1564,7 @@ public final class StudioViewModel: ObservableObject {
                     )
                     clock.updateTotalDuration(document.totalDuration)
                     selectedBeadID = document.notes.first?.id
+                    hasUnsavedCreationChanges = true
                     AcousticHapticsEngine.shared.playResolutionExhale()
                     togglePlayback()
                 } else if !capturePipeline.statusMessage.isEmpty {
@@ -1349,6 +1590,7 @@ public final class StudioViewModel: ObservableObject {
                     clock.updateTotalDuration(document.totalDuration)
                     pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(document)
                     selectedBeadID = document.notes.first?.id
+                    hasUnsavedCreationChanges = true
                     AcousticHapticsEngine.shared.playResolutionExhale()
                     togglePlayback()
                 } else if !capturePipeline.statusMessage.isEmpty {
@@ -1364,6 +1606,9 @@ public final class StudioViewModel: ObservableObject {
         if document.scaleMode != mode {
             pushUndo()
             document.scaleMode = mode
+            if activeSpace == .create && !document.notes.isEmpty {
+                hasUnsavedCreationChanges = true
+            }
         }
         synth.ensureRunning()
         synth.applySpaceProfile(AcousticSpaceProfile.profile(for: mode))
@@ -1447,6 +1692,7 @@ public final class StudioViewModel: ObservableObject {
         document.notes.append(bead)
         clock.updateTotalDuration(document.totalDuration)
         selectedBeadID = bead.id
+        hasUnsavedCreationChanges = true
 
         let totalSec = max(3.2, document.totalDuration)
         let xNorm = min(0.94, max(0.06, nextOnset / totalSec))
@@ -1467,6 +1713,7 @@ public final class StudioViewModel: ObservableObject {
         document.notes.sort { $0.rawOnset < $1.rawOnset }
         clock.updateTotalDuration(document.totalDuration)
         selectedBeadID = bead.id
+        hasUnsavedCreationChanges = true
 
         if let idx = document.notes.firstIndex(where: { $0.id == bead.id }) {
             playContextEcho(upToIndex: idx)
@@ -1488,6 +1735,7 @@ public final class StudioViewModel: ObservableObject {
         if document.notes[idx].quantizedDuration != nil {
             document.notes[idx].quantizedDuration = next
         }
+        hasUnsavedCreationChanges = true
         clock.updateTotalDuration(document.totalDuration)
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         playContextEcho(upToIndex: idx)
@@ -1512,6 +1760,7 @@ public final class StudioViewModel: ObservableObject {
         if document.notes[idx].quantizedOnset != nil {
             document.notes[idx].quantizedOnset = nextOnset
         }
+        hasUnsavedCreationChanges = true
         clock.updateTotalDuration(document.totalDuration)
         let displayT = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
         updateContextMetrics(at: displayT)
@@ -1536,8 +1785,10 @@ public final class StudioViewModel: ObservableObject {
             selectedBeadID = nil
             smartHintActive = false
             activeChordSpanID = 0
+            hasUnsavedCreationChanges = false
         } else {
             selectedBeadID = document.notes[min(idx, document.notes.count - 1)].id
+            hasUnsavedCreationChanges = true
         }
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
     }
@@ -1548,6 +1799,9 @@ public final class StudioViewModel: ObservableObject {
         let next = currentSpan.chord.nextChord()
         chordOverrides[spanIndex] = next
         activeChordSpanID = spanIndex
+        if activeSpace == .create && !document.notes.isEmpty {
+            hasUnsavedCreationChanges = true
+        }
         AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.5)
         synth.playDiatonicChord(
             rootMIDI: document.rootMIDI,
@@ -1656,6 +1910,9 @@ public final class StudioViewModel: ObservableObject {
         let clamped = strength.isFinite ? max(0.0, min(1.0, strength)) : 0.0
         if abs(document.grooveStrength - clamped) > 0.001 {
             pushUndo()
+            if activeSpace == .create && !document.notes.isEmpty {
+                hasUnsavedCreationChanges = true
+            }
         }
         if clamped > 0.01 {
             document.notes = GrooveAlignmentEngine.populateQuantizedTargets(for: document.notes)
@@ -1678,8 +1935,8 @@ public final class StudioViewModel: ObservableObject {
         pentatonicSafe = true
         if chordPreset == .off { chordPreset = .autoMatch }
         document = MelodyDocument(
-            title: "空白画布",
-            subtitle: "点画布或下方「写旋律」开始创作",
+            title: "我的旋律 #\(notebook.entries.count + 1)",
+            subtitle: "自由创作",
             rootMIDI: 60,
             scaleMode: document.scaleMode,
             harmonyProfile: document.harmonyProfile,
@@ -1689,14 +1946,22 @@ public final class StudioViewModel: ObservableObject {
             preferredTexture: accompanimentTexture,
             preferredVoice: melodyVoice
         )
+        hasUnsavedCreationChanges = false
         clock.updateTotalDuration(document.totalDuration)
         activeGuidedMoment = nil
         lastFreeNoteTime = nil
+        if activeSpace == .create {
+            creationSnapshot = captureWorkspaceSnapshot()
+        }
     }
 
     public func openSpecimen(_ specimen: MelodyDocument, autoPlay: Bool = true) {
         stopPlayback()
         contextEchoTask?.cancel()
+        if activeSpace == .create {
+            creationSnapshot = captureWorkspaceSnapshot()
+            activeSpace = .showcase
+        }
         pushUndo()
         followGlowActive = false
         followGlowIndex = 0
@@ -1710,9 +1975,11 @@ public final class StudioViewModel: ObservableObject {
         melodyVoice = specimen.preferredVoice ?? .concertPiano
         pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(specimen)
         document = specimen
+        hasUnsavedCreationChanges = false
         synth.applySpaceProfile(AcousticSpaceProfile.profile(for: specimen.scaleMode))
         clock.updateTotalDuration(specimen.totalDuration)
         activeGuidedMoment = specimen.guidedMoments?.first
+        showcaseSnapshot = captureWorkspaceSnapshot()
         if autoPlay { togglePlayback() }
     }
 
@@ -1724,6 +1991,7 @@ public final class StudioViewModel: ObservableObject {
         if let first = specimen.notes.first {
             clock.setScrubTime(first.displayOnset(grooveStrength: specimen.grooveStrength))
         }
+        showcaseSnapshot = captureWorkspaceSnapshot()
     }
 
     public func openSavedEntry(_ entry: SavedMelodyEntry, autoPlay: Bool = true) {
@@ -1745,7 +2013,23 @@ public final class StudioViewModel: ObservableObject {
         melodyVoice = entry.document.preferredVoice ?? .singingCello
         pentatonicSafe = !XylophoneRollEngine.requiresSevenScale(entry.document)
         activeGuidedMoment = nil
+        hasUnsavedCreationChanges = false
+        if activeSpace == .create {
+            creationSnapshot = captureWorkspaceSnapshot()
+        } else {
+            showcaseSnapshot = captureWorkspaceSnapshot()
+        }
         if autoPlay { togglePlayback() }
+    }
+
+    public func openSavedEntryInCreate(_ entry: SavedMelodyEntry, autoPlay: Bool = false) {
+        if activeSpace == .showcase {
+            showcaseSnapshot = captureWorkspaceSnapshot()
+        }
+        activeSpace = .create
+        openSavedEntry(entry, autoPlay: autoPlay)
+        selectedBeadID = nil
+        creationSnapshot = captureWorkspaceSnapshot()
     }
 
     public func saveCurrentToNotebook(moodSticker: String? = nil) {
@@ -1772,7 +2056,11 @@ public final class StudioViewModel: ObservableObject {
         )
         currentSavedEntryID = saved.id
         document = saved.document
+        hasUnsavedCreationChanges = false
         lastSavedPulse &+= 1
+        if activeSpace == .create {
+            creationSnapshot = captureWorkspaceSnapshot()
+        }
         AcousticHapticsEngine.shared.playResolutionExhale()
     }
 
@@ -1786,6 +2074,11 @@ public final class StudioViewModel: ObservableObject {
         document.isSpecimen = false
         if let savedID = currentSavedEntryID {
             notebook.rename(id: savedID, newTitle: trimmed)
+        } else if !document.notes.isEmpty {
+            hasUnsavedCreationChanges = true
+        }
+        if activeSpace == .create {
+            creationSnapshot = captureWorkspaceSnapshot()
         }
         AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
     }
@@ -2127,12 +2420,12 @@ public final class StudioViewModel: ObservableObject {
     }
 }
 
-/// 咩哞 v0.10：零卡顿首帧渲染 + iOS 27 Liquid Glass 双标签旋转声盘玩具架构
+/// 咩哞：三标签商业级分层架构（「欣赏」引导舞台 / 「创作」独立编曲工坊 / 「设置」原生规范页面）。
 public struct StudioView: View {
     @StateObject private var vm = StudioViewModel()
     @Environment(\.colorScheme) private var systemScheme
 
-    @State private var selectedTab: ChimmoTab = .board
+    @State private var selectedTab: ChimmoTab = .showcase
     @State private var showAbout: Bool = false
     @State private var postcardTarget: VinylPostcardRequest? = nil
     @State private var deferredPostcardTask: Task<Void, Never>? = nil
@@ -2149,87 +2442,115 @@ public struct StudioView: View {
 
     private var palette: ChimmoPalette { ChimmoPalette(isNight: isNight) }
 
+    private func makePostcardRequest(headline: String? = nil) -> VinylPostcardRequest {
+        VinylPostcardRequest(
+            document: vm.document,
+            chordPreset: vm.chordPreset,
+            chordOverrides: vm.chordOverrides,
+            accompanimentTexture: vm.accompanimentTexture,
+            melodyVoice: vm.melodyVoice,
+            shadowEnabled: vm.shadowCounterpointEnabled,
+            playbackRate: vm.playbackRate,
+            headline: headline ?? vm.currentInsight.headline,
+            visualMode: vm.visualMode
+        )
+    }
+
+    private func makePostcardRequest(for entry: SavedMelodyEntry) -> VinylPostcardRequest {
+        VinylPostcardRequest(
+            document: entry.document,
+            chordPreset: entry.chordPreset,
+            chordOverrides: entry.chordOverrides,
+            accompanimentTexture: entry.accompanimentTexture ?? entry.document.preferredTexture ?? .swanRipple,
+            melodyVoice: entry.document.preferredVoice,
+            shadowEnabled: false,
+            playbackRate: 1.0,
+            headline: entry.summaryNote.isEmpty ? nil : entry.summaryNote,
+            visualMode: vm.visualMode
+        )
+    }
+
+    private func presentPostcardAfterSheetDismiss(_ req: VinylPostcardRequest) {
+        deferredPostcardTask?.cancel()
+        deferredPostcardTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 320_000_000)
+            if !Task.isCancelled {
+                postcardTarget = req
+            }
+        }
+    }
+
     public var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("演奏", systemImage: "music.quarternote.3", value: ChimmoTab.board) {
+            Tab("欣赏", systemImage: "music.note.house.fill", value: ChimmoTab.showcase) {
                 OrbitalStageView(
                     vm: vm,
                     palette: palette,
                     onOpenAbout: {
-                        showAbout = true
+                        selectedTab = .settings
                     },
                     onOpenSharePostcard: {
-                        postcardTarget = VinylPostcardRequest(
-                            document: vm.document,
-                            chordPreset: vm.chordPreset,
-                            chordOverrides: vm.chordOverrides,
-                            accompanimentTexture: vm.accompanimentTexture,
-                            melodyVoice: vm.melodyVoice,
-                            shadowEnabled: vm.shadowCounterpointEnabled,
-                            playbackRate: vm.playbackRate,
-                            headline: vm.currentInsight.headline,
-                            visualMode: vm.visualMode
-                        )
+                        postcardTarget = makePostcardRequest()
+                    },
+                    onForkToCreate: {
+                        vm.forkCurrentShowcaseIntoCreate()
+                        selectedTab = .create
+                    },
+                    onShareSavedEntry: { entry in
+                        presentPostcardAfterSheetDismiss(makePostcardRequest(for: entry))
                     }
                 )
             }
 
-            Tab("曲库", systemImage: "books.vertical.fill", value: ChimmoTab.musicBox) {
-                MusicBoxShelfView(
+            Tab("创作", systemImage: "wand.and.stars", value: ChimmoTab.create) {
+                CreateStudioView(
+                    vm: vm,
                     palette: palette,
-                    synth: vm.synth,
-                    notebook: vm.notebook,
-                    currentDocumentID: vm.document.id,
-                    onLoadSavedToBoard: { entry in
-                        vm.openSavedEntry(entry, autoPlay: true)
-                        selectedTab = .board
+                    onOpenSharePostcard: {
+                        postcardTarget = makePostcardRequest()
                     },
-                    onPlayAlongSpecimen: { spec in
-                        vm.openSpecimenForFollowGlow(spec)
-                        selectedTab = .board
-                    },
-                    onEditSpecimenOnBoard: { spec in
-                        vm.openSpecimen(spec, autoPlay: true)
-                        selectedTab = .board
-                    },
-                    onBorrowAtmosphere: { spec in
-                        vm.borrowHarmonyAtmosphere(from: spec)
-                        selectedTab = .board
+                    onOpenShowcaseSpecimen: { spec, followGlow in
+                        if followGlow {
+                            vm.openSpecimenForFollowGlow(spec)
+                        } else {
+                            vm.openSpecimen(spec, autoPlay: true)
+                        }
+                        selectedTab = .showcase
                     },
                     onShareSavedEntry: { entry in
-                        postcardTarget = VinylPostcardRequest(
-                            document: entry.document,
-                            chordPreset: entry.chordPreset,
-                            chordOverrides: entry.chordOverrides,
-                            accompanimentTexture: entry.accompanimentTexture ?? entry.document.preferredTexture ?? .swanRipple,
-                            melodyVoice: entry.document.preferredVoice,
-                            shadowEnabled: false,
-                            playbackRate: 1.0,
-                            headline: entry.summaryNote.isEmpty ? nil : entry.summaryNote,
-                            visualMode: vm.visualMode
-                        )
-                    },
-                    onStartNewTap: {
-                        selectedTab = .board
-                        vm.triggerNewCreationFromShelf()
-                    },
-                    onWillPlayInline: {
-                        vm.stopPlayback()
-                    },
-                    onRenameSavedEntry: { id, newTitle in
-                        vm.renameSavedEntry(id: id, newTitle: newTitle)
-                    },
-                    onDuplicateSavedEntry: { id in
-                        vm.duplicateSavedEntry(id: id)
-                    },
-                    onDeleteSavedEntry: { id in
-                        vm.deleteSavedEntry(id: id)
+                        presentPostcardAfterSheetDismiss(makePostcardRequest(for: entry))
+                    }
+                )
+            }
+
+            Tab("设置", systemImage: "gearshape.fill", value: ChimmoTab.settings) {
+                SettingsView(
+                    vm: vm,
+                    palette: palette,
+                    onOpenSharePostcard: {
+                        postcardTarget = makePostcardRequest()
                     }
                 )
             }
         }
         .tint(palette.homeAnchor)
         .modifier(OptionalAppearanceModifier(preference: vm.appearance))
+        .onChange(of: selectedTab) { _, nextTab in
+            switch nextTab {
+            case .showcase:
+                vm.switchSpace(to: .showcase)
+            case .create:
+                vm.switchSpace(to: .create)
+            case .settings:
+                vm.stopPlayback()
+            }
+        }
+        .onChange(of: vm.requestOpenDreamSheet) { _, shouldOpen in
+            if shouldOpen {
+                vm.switchSpace(to: .create)
+                selectedTab = .create
+            }
+        }
         .task {
             // 首帧绘制完约 180ms 后异步预热后台音频引擎，兼具瞬时开屏与首次点按零延迟发声
             try? await Task.sleep(nanoseconds: 180_000_000)
@@ -2254,17 +2575,7 @@ public struct StudioView: View {
                     vm.auditionChimmoMember(member)
                 },
                 onOpenSharePostcard: {
-                    let req = VinylPostcardRequest(
-                        document: vm.document,
-                        chordPreset: vm.chordPreset,
-                        chordOverrides: vm.chordOverrides,
-                        accompanimentTexture: vm.accompanimentTexture,
-                        melodyVoice: vm.melodyVoice,
-                        shadowEnabled: vm.shadowCounterpointEnabled,
-                        playbackRate: vm.playbackRate,
-                        headline: vm.currentInsight.headline,
-                        visualMode: vm.visualMode
-                    )
+                    let req = makePostcardRequest()
                     showAbout = false
                     deferredPostcardTask?.cancel()
                     deferredPostcardTask = Task { @MainActor in

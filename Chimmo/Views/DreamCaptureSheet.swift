@@ -23,9 +23,10 @@ public struct DreamCaptureSheet: View {
     @State private var brushNormX: Double? = nil
     @State private var brushNormY: Double? = nil
 
-    public init(vm: StudioViewModel, palette: ChimmoPalette) {
+    public init(vm: StudioViewModel, palette: ChimmoPalette, initialTab: Int = 0) {
         self.vm = vm
         self.palette = palette
+        self._modeTab = State(initialValue: max(0, min(2, initialTab)))
     }
 
     private func stopActiveCaptureSessions(cancelRhythm: Bool = true, cancelHum: Bool = true) {
@@ -246,10 +247,6 @@ public struct DreamCaptureSheet: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 5)
-                    .background(
-                        Capsule()
-                            .fill(palette.storybookButter.opacity(palette.isNight ? 0.40 : 0.72))
-                    )
                     .frame(maxWidth: .infinity)
 
                     ChimmoCowView(
@@ -282,10 +279,7 @@ public struct DreamCaptureSheet: View {
         let barMetrics = RhythmDrumAccentMapper.barVisualMetrics(timestamps: vm.liveTapTimestamps)
         let hasTaps = !vm.liveTapTimestamps.isEmpty
 
-        return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 20)
-
-            Button {
+        return Button {
                 if !vm.isTappingRhythm {
                     vm.startRhythmTap()
                 }
@@ -308,7 +302,7 @@ public struct DreamCaptureSheet: View {
                         palette: palette,
                         accent: palette.homeAnchor,
                         isActive: hasTaps,
-                        cornerRadius: 16
+                        cornerRadius: 18
                     )
 
                     HStack(spacing: 14) {
@@ -375,27 +369,20 @@ public struct DreamCaptureSheet: View {
                         .frame(height: 44)
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 9)
+                    .padding(.vertical, 10)
 
                     if hasTaps {
-                        Text("\(vm.liveTapTimestamps.count)")
+                        Text("\(vm.liveTapTimestamps.count) 拍")
                             .font(.system(size: 11, weight: .heavy, design: .rounded).monospacedDigit())
-                            .foregroundStyle(palette.primaryInk)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2.5)
-                            .background(
-                                Capsule()
-                                    .fill(palette.storybookButter)
-                            )
-                            .padding(.trailing, 18)
-                            .padding(.bottom, 12)
+                            .foregroundStyle(palette.homeAnchor)
+                            .padding(.trailing, 16)
+                            .padding(.bottom, 10)
                     }
                 }
                 .scaleEffect(drumScale)
-                .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
-            .padding(7)
             .overlay(alignment: .topTrailing) {
                 if hasTaps {
                     HStack(spacing: 6) {
@@ -445,7 +432,7 @@ public struct DreamCaptureSheet: View {
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("重敲节奏")
                     }
-                    .padding(12)
+                    .padding(10)
                 }
             }
             .accessibilityLabel("敲击鼓面输入节奏")
@@ -455,7 +442,6 @@ public struct DreamCaptureSheet: View {
                     dismiss()
                 }
             }
-        }
     }
 
     private var parchmentSketchTrayModule: some View {

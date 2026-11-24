@@ -325,9 +325,12 @@ public struct ChimmoEditorialPill: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 3.5)
         .background(
-            Capsule()
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(surface.opacity(0.65))
-                .overlay(Capsule().fill(accent.opacity(0.14)))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(accent.opacity(0.12))
+                )
         )
     }
 }
@@ -516,11 +519,11 @@ public struct StorybookQuietTag: View {
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundStyle(textColor)
         }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3.5)
         .background(
-            Capsule()
-                .fill(tint.opacity(isNight ? 0.20 : 0.12))
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(tint.opacity(isNight ? 0.16 : 0.10))
         )
     }
 }

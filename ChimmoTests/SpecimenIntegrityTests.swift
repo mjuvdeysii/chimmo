@@ -2832,4 +2832,87 @@ final class SpecimenIntegrityTests: XCTestCase {
             XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: vm.document, isNight: true, visualMode: mode, includeJianpuStrip: true))
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound40ShowcaseCreateSplitSongPickerAndCommercialSettings() {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r40_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertEqual(vm.activeSpace, .showcase)
+        XCTAssertTrue(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.title, SpecimenLibrary.saintSaensTheSwan.title)
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        // 1. 切换进入独立「创作」空间：干净可写的个人空白草稿
+        vm.switchSpace(to: .create)
+        XCTAssertEqual(vm.activeSpace, .create)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertTrue(vm.document.notes.isEmpty)
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+
+        // 2. 通过创作区琴键写入 3 颗音符，确保可连续追加且未保存状态准确标记
+        vm.appendOrReplaceNoteFromCreateKey(XylophoneLane.lane(at: 0))
+        vm.appendOrReplaceNoteFromCreateKey(XylophoneLane.lane(at: 2))
+        vm.appendOrReplaceNoteFromCreateKey(XylophoneLane.lane(at: 4))
+        XCTAssertEqual(vm.document.notes.count, 3)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+        XCTAssertNil(vm.selectedBeadID)
+
+        // 3. 切回「欣赏」浏览名曲与自由伴奏即兴，不得破坏已写草稿，也不篡改经典正典
+        vm.switchSpace(to: .showcase)
+        XCTAssertEqual(vm.activeSpace, .showcase)
+        XCTAssertTrue(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.title, SpecimenLibrary.saintSaensTheSwan.title)
+        vm.auditionShowcaseLane(XylophoneLane.lane(at: 2))
+        XCTAssertTrue(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.notes.count, SpecimenLibrary.saintSaensTheSwan.notes.count)
+
+        // 4. 切回「创作」后，3 颗未保存草稿音符与未保存标记完好保留；支持明确「试听」与「保存作品」
+        vm.switchSpace(to: .create)
+        XCTAssertEqual(vm.activeSpace, .create)
+        XCTAssertEqual(vm.document.notes.count, 3)
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+
+        vm.auditionCurrentCreation()
+        XCTAssertTrue(vm.isPlaying)
+        vm.stopPlayback()
+        XCTAssertFalse(vm.isPlaying)
+
+        vm.saveCurrentToNotebook()
+        XCTAssertFalse(vm.hasUnsavedCreationChanges)
+        XCTAssertNotNil(vm.currentSavedEntryID)
+        XCTAssertEqual(vm.notebook.entries.count, 1)
+
+        // 5. 从「欣赏」点击「去改编」复制经典进入创作空间，不污染原始「天鹅」赏析副本
+        vm.switchSpace(to: .showcase)
+        vm.forkCurrentShowcaseIntoCreate()
+        XCTAssertEqual(vm.activeSpace, .create)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertTrue(vm.document.title.contains(SpecimenLibrary.saintSaensTheSwan.title))
+        XCTAssertTrue(vm.hasUnsavedCreationChanges)
+
+        vm.switchSpace(to: .showcase)
+        XCTAssertTrue(vm.document.isSpecimen)
+        XCTAssertEqual(vm.document.title, SpecimenLibrary.saintSaensTheSwan.title)
+
+        // 6. 商业级三标签架构、创作页、设置页与法务文档视图实例化校验（日夜双色）
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertEqual(ChimmoTab.board, ChimmoTab.showcase)
+        XCTAssertEqual(ChimmoTab.musicBox, ChimmoTab.create)
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}, onForkToCreate: {}))
+        XCTAssertNotNil(MusicBoxShelfView(palette: dayPalette, synth: vm.synth, notebook: vm.notebook, currentDocumentID: vm.document.id, initialSegment: 1, navigationTitleText: "选择曲目", showsDismissButton: true, onLoadSavedToBoard: { _ in }, onPlayAlongSpecimen: { _ in }, onEditSpecimenOnBoard: { _ in }, onForkSpecimenToCreate: { _ in }, onStartNewTap: {}))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: dayPalette, initialTab: 1))
+        XCTAssertNotNil(AboutSheetView(palette: dayPalette, currentDocument: vm.document, cradleEnabled: vm.cradleEnabled))
+        for docKind in ChimmoLegalDocumentView.LegalDocumentKind.allCases {
+            XCTAssertNotNil(ChimmoLegalDocumentView(kind: docKind))
+        }
+        XCTAssertNotNil(CharacterSoundTestView(palette: nightPalette))
+    }
 }
