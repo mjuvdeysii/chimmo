@@ -98,12 +98,12 @@ public struct OrbitalStageView: View {
                     accentTint: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
                 )
 
-                VStack(spacing: 8) {
+                VStack(spacing: 6) {
                     kilnCrownHeader
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 10)
 
                     heroStageContainer
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 10)
 
                     if !vm.followGlowActive && !vm.document.notes.isEmpty {
                         StageHarmonyRibbonView(
@@ -113,23 +113,23 @@ public struct OrbitalStageView: View {
                         ) {
                             wakeRippleTimeline()
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 10)
                     }
 
                     if selectedBeatIndex != nil && !vm.isPlaying && !vm.followGlowActive {
                         compactSelectionPill
-                            .padding(.horizontal, 14)
+                            .padding(.horizontal, 10)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
 
                     rainbowKeyRibbon
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 10)
 
                     bottomGlassDock
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 6)
+                        .padding(.horizontal, 10)
+                        .padding(.bottom, 4)
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
             }
             .toolbar(.hidden, for: .navigationBar)
             .alert("作品名称", isPresented: $showRenameAlert) {
@@ -369,31 +369,18 @@ public struct OrbitalStageView: View {
         return Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                isHighlighted ? tint.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface,
-                                palette.shelfSurface.opacity(palette.isNight ? 0.85 : 0.72)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                    .fill(palette.cartoonShadow)
+                    .offset(x: 0, y: 2)
+
+                Circle()
+                    .fill(isHighlighted ? tint.opacity(palette.isNight ? 0.30 : 0.18) : palette.cardSurface)
                     .overlay(
                         Circle()
                             .strokeBorder(
-                                LinearGradient(
-                                    colors: [
-                                        palette.glazeHighlight,
-                                        isHighlighted ? palette.brassHairline.opacity(0.65) : palette.brassHairline.opacity(0.24)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ),
-                                lineWidth: 1.0
+                                isHighlighted ? tint : palette.cartoonOutline.opacity(palette.isNight ? 0.56 : 0.80),
+                                lineWidth: isHighlighted ? 2.0 : 1.6
                             )
                     )
-                    .shadow(color: palette.recessShadow, radius: 4, y: 2)
 
                 if let bounceValue {
                     icon.symbolEffect(.bounce, value: bounceValue)
@@ -411,17 +398,15 @@ public struct OrbitalStageView: View {
 
     private var heroStageContainer: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let boardBg = palette.isNight ? Color(hex: 0x101733) : Color(hex: 0xFAF5E9)
+        let boardBg = palette.isNight ? Color(hex: 0x101733) : Color(hex: 0xFFFDF7)
         let activeCurtainColor: Color? = (vm.cradleEnabled && (vm.isPlaying || vm.selectedBeadID != nil))
             ? vm.chordSpans.first(where: { $0.id == vm.activeChordSpanID })?.chord.color(isNight: palette.isNight)
             : nil
-        let stageShadowCol = activeCurtainColor?.opacity(palette.isNight ? 0.36 : 0.18)
-            ?? palette.recessShadow
 
         return GeometryReader { geo in
             let innerSize = CGSize(width: max(40, geo.size.width - 10), height: max(40, geo.size.height - 10))
             ZStack {
-                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 30)
+                ChimmoWoodResonatorTray(palette: palette, cornerRadius: 28)
 
                 ZStack {
                     stageInteractiveCanvas
@@ -456,30 +441,89 @@ public struct OrbitalStageView: View {
                                 }
                         )
 
-                    // 顶部天光漫射帘（随和弦色轻柔铺光）
+                    // 顶部童书扇形波浪天篷（平涂淡彩，零渐变）
                     VStack(spacing: 0) {
-                        LinearGradient(
-                            colors: [
-                                (activeCurtainColor ?? skyColor).opacity(palette.isNight ? 0.20 : 0.14),
-                                .clear
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
+                        (activeCurtainColor ?? skyColor)
+                            .opacity(palette.isNight ? 0.16 : 0.11)
+                            .frame(height: 44)
+                        StorybookScallopDivider(
+                            color: (activeCurtainColor ?? skyColor).opacity(palette.isNight ? 0.42 : 0.34),
+                            stepWidth: 16
                         )
-                        .frame(height: 68)
+                        .frame(height: 8)
                         Spacer()
                     }
                     .allowsHitTesting(false)
 
                     if vm.document.notes.isEmpty {
-                        LivingChimmoDuoBadgeView(
-                            isNight: palette.isNight,
-                            accentColor: skyColor,
-                            melodyActive: false,
-                            cowAwake: vm.cradleEnabled
-                        )
-                        .frame(width: 78, height: 50)
-                        .opacity(palette.isNight ? 0.44 : 0.38)
+                        // 空画布童书立体折页舞台：草原山坡 + 咩哞家族齐声迎接，消灭大片空白
+                        VStack(spacing: 0) {
+                            Spacer()
+                            ZStack(alignment: .bottom) {
+                                Canvas { ctx, size in
+                                    let profile = StorybookIllustrationLayout.rollingHillProfile(
+                                        sampleCount: 14,
+                                        amplitude: 0.18,
+                                        phaseShift: 1.2
+                                    )
+                                    guard !profile.isEmpty else { return }
+                                    var ridge = Path()
+                                    for (idx, pt) in profile.enumerated() {
+                                        let p = CGPoint(
+                                            x: CGFloat(pt.xFraction) * size.width,
+                                            y: size.height * 0.28 + CGFloat(pt.yFraction - 0.5) * size.height * 0.35
+                                        )
+                                        if idx == 0 { ridge.move(to: p) } else { ridge.addLine(to: p) }
+                                    }
+                                    var hill = ridge
+                                    hill.addLine(to: CGPoint(x: size.width, y: size.height))
+                                    hill.addLine(to: CGPoint(x: 0, y: size.height))
+                                    hill.closeSubpath()
+                                    ctx.fill(hill, with: .color(palette.storybookHillFront))
+                                    ctx.stroke(
+                                        ridge,
+                                        with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.42 : 0.45)),
+                                        style: StrokeStyle(lineWidth: 2.0, lineCap: .round, lineJoin: .round)
+                                    )
+                                }
+                                .frame(height: 112)
+
+                                HStack(alignment: .bottom, spacing: 10) {
+                                    ChimmoFigureView(
+                                        member: .taono,
+                                        isNight: palette.isNight,
+                                        isMinor: vm.document.scaleMode.isMinorFlavored,
+                                        isSinging: false
+                                    )
+                                    .scaleEffect(0.84)
+
+                                    LivingChimmoDuoBadgeView(
+                                        isNight: palette.isNight,
+                                        accentColor: skyColor,
+                                        melodyActive: false,
+                                        cowAwake: vm.cradleEnabled
+                                    )
+                                    .frame(width: 88, height: 58)
+
+                                    ChimmoFigureView(
+                                        member: .plokko,
+                                        isNight: palette.isNight,
+                                        isMinor: vm.document.scaleMode.isMinorFlavored,
+                                        isSinging: false
+                                    )
+                                    .scaleEffect(0.84)
+
+                                    ChimmoFigureView(
+                                        member: .corllo,
+                                        isNight: palette.isNight,
+                                        isMinor: vm.document.scaleMode.isMinorFlavored,
+                                        isSinging: false
+                                    )
+                                    .scaleEffect(0.84)
+                                }
+                                .padding(.bottom, 54)
+                            }
+                        }
                         .allowsHitTesting(false)
 
                         VStack {
@@ -489,10 +533,19 @@ public struct OrbitalStageView: View {
                                     vm.plantDuoStarterMotif()
                                 } label: {
                                     Label("咩哞起音", systemImage: "sparkles")
-                                        .font(.caption.weight(.bold))
+                                        .font(.caption.weight(.heavy))
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 8)
-                                        .background(Capsule().fill(palette.homeAnchor))
+                                        .background(
+                                            ZStack {
+                                                Capsule()
+                                                    .fill(palette.cartoonShadow)
+                                                    .offset(x: 0, y: 2.5)
+                                                Capsule()
+                                                    .fill(palette.homeAnchor)
+                                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.8))
+                                            }
+                                        )
                                         .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
                                 }
                                 .buttonStyle(.plain)
@@ -502,13 +555,16 @@ public struct OrbitalStageView: View {
                                     showDreamSheet = true
                                 } label: {
                                     Label("写旋律", systemImage: "wand.and.stars")
-                                        .font(.caption.weight(.bold))
+                                        .font(.caption.weight(.heavy))
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 8)
                                         .background(
-                                            Capsule()
-                                                .fill(palette.cardSurface.opacity(0.94))
-                                                .overlay(Capsule().strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 1.0))
+                                            ChimmoKilnPillButtonSurface(
+                                                palette: palette,
+                                                accent: palette.nightLampGold,
+                                                isActive: false,
+                                                cornerRadius: 20
+                                            )
                                         )
                                         .foregroundStyle(palette.primaryInk)
                                 }
@@ -521,7 +577,7 @@ public struct OrbitalStageView: View {
                         stageDuoCornerPerches(skyColor: skyColor)
                     }
 
-                    // 顶部左：声学状态胶囊 + 右：浮雕三态视窗切换仪 + 异常报错条
+                    // 顶部左：声学状态胶囊 + 右：三态视窗切换仪 + 异常报错条
                     VStack(spacing: 6) {
                         HStack(alignment: .top, spacing: 6) {
                             if vm.shadowCounterpointEnabled
@@ -539,7 +595,11 @@ public struct OrbitalStageView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(Capsule().fill(palette.melodyTerracotta.opacity(0.92)))
+                                .background(
+                                    Capsule()
+                                        .fill(palette.melodyTerracotta)
+                                        .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
+                                )
                                 .transition(.opacity)
                         }
                         Spacer()
@@ -547,22 +607,21 @@ public struct OrbitalStageView: View {
                     .padding(9)
                 }
                 .background(
-                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(boardBg)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(
-                            (activeCurtainColor ?? palette.brassHairline).opacity(activeCurtainColor != nil ? 0.50 : 0.25),
-                            lineWidth: activeCurtainColor != nil ? 1.5 : 0.9
+                            (activeCurtainColor ?? palette.cartoonOutline).opacity(activeCurtainColor != nil ? 0.72 : 0.30),
+                            lineWidth: activeCurtainColor != nil ? 2.0 : 1.4
                         )
                 )
                 .padding(5)
 
-                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 30, showCornerPins: true)
+                ChimmoBrassFrameAccent(palette: palette, cornerRadius: 28, showCornerPins: true)
             }
-            .shadow(color: stageShadowCol, radius: activeCurtainColor != nil ? 18 : 14, y: 5)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
         }
         .frame(minHeight: 220, maxHeight: .infinity)
@@ -634,6 +693,7 @@ public struct OrbitalStageView: View {
             HStack {
                 cornerPerchTile(
                     accent: skyColor,
+                    meadowFill: palette.storybookMint,
                     state: mieState,
                     accessibilityLabel: "小羊咩舞台守护",
                     accessibilityHint: "轻点试听主旋律高音"
@@ -665,7 +725,8 @@ public struct OrbitalStageView: View {
                 Spacer()
 
                 cornerPerchTile(
-                    accent: vm.cradleEnabled ? palette.bassRibbon : palette.brassHairline,
+                    accent: vm.cradleEnabled ? palette.bassRibbon : palette.nightLampGold,
+                    meadowFill: palette.storybookButter,
                     state: mouState,
                     accessibilityLabel: "小牛哞舞台守护",
                     accessibilityHint: vm.cradleEnabled ? "轻点试听低音和声" : "轻点唤醒低音和声伴奏"
@@ -696,6 +757,7 @@ public struct OrbitalStageView: View {
 
     private func cornerPerchTile<Avatar: View>(
         accent: Color,
+        meadowFill: Color,
         state: StageHardwareCaliperKinematics.CornerPerchState,
         accessibilityLabel: String,
         accessibilityHint: String,
@@ -704,25 +766,28 @@ public struct OrbitalStageView: View {
     ) -> some View {
         Button(action: action) {
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(palette.cardSurface.opacity(palette.isNight ? 0.84 : 0.90))
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .fill(palette.cartoonShadow)
+                    .offset(x: 0, y: 2.5)
+
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .fill(palette.cardSurface)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(accent.opacity((palette.isNight ? 0.14 : 0.08) * state.glowOpacity))
+                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                            .fill(accent.opacity((palette.isNight ? 0.16 : 0.10) * state.glowOpacity))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: 15, style: .continuous)
                             .strokeBorder(
-                                accent.opacity(0.22 + 0.42 * state.glowOpacity),
-                                lineWidth: state.glowOpacity > 0.7 ? 1.25 : 0.9
+                                state.glowOpacity > 0.7 ? accent : palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.88),
+                                lineWidth: state.glowOpacity > 0.7 ? 2.2 : 1.7
                             )
                     )
-                    .shadow(color: palette.recessShadow, radius: 5, y: 2)
 
                 VStack(spacing: 0) {
                     Circle()
-                        .fill(palette.brassHairline.opacity(state.brassPinOpacity))
-                        .frame(width: 3.5, height: 3.5)
+                        .fill(accent.opacity(state.brassPinOpacity))
+                        .frame(width: 4.5, height: 4.5)
                         .padding(.top, 3.5)
 
                     Spacer(minLength: 0)
@@ -731,21 +796,15 @@ public struct OrbitalStageView: View {
                         .offset(y: state.liftPoints)
 
                     Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [palette.woodTrayTop, palette.woodTrayBottom],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+                        .fill(meadowFill)
                         .overlay(
-                            Capsule().strokeBorder(palette.brassHairline.opacity(0.42), lineWidth: 0.6)
+                            Capsule().strokeBorder(palette.cartoonOutline.opacity(0.65), lineWidth: 1.0)
                         )
-                        .frame(width: 36, height: 4.5)
+                        .frame(width: 38, height: 5.5)
                         .padding(.bottom, 3)
                 }
             }
-            .frame(width: 48, height: 40)
+            .frame(width: 54, height: 44)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityLabel)
@@ -2821,25 +2880,25 @@ public struct OrbitalStageView: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    // MARK: - 4. Tactile 8-Key Beeswax Birch Resonator Box + 3D Kiln Xylophone (Glissando + Colorblind Glyphs)
+    // MARK: - 4. Flat Cartoon Kids' Book Pop-Up Choir Xylophone (Glissando + Colorblind Glyphs + IP Buddies)
 
     private var rainbowKeyRibbon: some View {
         let hints = smartHintByLane
         let chordDegrees = vm.activeChordToneDegrees
+        let isMinor = vm.document.scaleMode.isMinorFlavored
 
         return ZStack {
             ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
 
-            // 两条横贯琴键背后的细拉丝黄铜声学共鸣导轨
-            VStack(spacing: 22) {
-                Capsule()
-                    .fill(palette.brassHairline.opacity(palette.isNight ? 0.34 : 0.30))
-                    .frame(height: 1.8)
-                Capsule()
-                    .fill(palette.brassHairline.opacity(palette.isNight ? 0.28 : 0.24))
-                    .frame(height: 1.8)
+            // 绘本草地彩带基底（代替金属导轨）
+            VStack {
+                Spacer()
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(palette.storybookHillFront.opacity(0.72))
+                    .frame(height: 18)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 7)
             .allowsHitTesting(false)
 
             GeometryReader { geo in
@@ -2856,114 +2915,92 @@ public struct OrbitalStageView: View {
                             isFollowTarget: isFollowTarget || hint != nil,
                             isMuted: isMuted
                         )
-                        let baseH = CGFloat(55 - lane.index * 2)
-                        let barH = isMuted ? max(30, baseH - 6) : baseH
+                        let buddyPose = StorybookIllustrationLayout.keyBuddyPose(
+                            for: lane.member,
+                            isSinging: isPlayingThis || isSympathetic || isFollowTarget,
+                            isMinor: isMinor,
+                            reduceMotion: reduceMotion
+                        )
+                        let baseH = CGFloat(66 - lane.index * 2)
+                        let barH = isMuted ? max(38, baseH - 6) : baseH
                         let col = lane.barColor(isNight: palette.isNight)
+                        let keyBorder = (isFollowTarget || hint != nil)
+                            ? palette.nightLampGold
+                            : (palette.isNight ? Color(hex: 0x0A0F24) : palette.cartoonOutline)
 
-                        VStack(spacing: 3) {
-                            Circle()
-                                .fill(palette.brassHairline.opacity(isMuted ? 0.35 : 0.85))
-                                .frame(width: 3.0, height: 3.0)
+                        VStack(spacing: 2) {
+                            ChimmoCartoonKeyBuddyView(
+                                member: lane.member,
+                                outlineColor: palette.isNight ? Color(hex: 0x0A0F24) : palette.cartoonOutline,
+                                isSinging: buddyPose.showSingingSmile,
+                                isMinor: isMinor
+                            )
+                            .frame(width: 24, height: 18)
+                            .rotationEffect(.degrees(buddyPose.earTiltDegrees))
+                            .offset(y: buddyPose.popOffsetY)
 
                             PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
-                                .frame(width: 11.5, height: 11.5)
+                                .frame(width: 10.5, height: 10.5)
                                 .foregroundStyle(.white.opacity(0.96))
 
                             Text(lane.digitLabel)
-                                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                .font(.system(size: 11.5, weight: .heavy, design: .rounded))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
-
-                            Circle()
-                                .fill(palette.brassHairline.opacity(isMuted ? 0.30 : 0.78))
-                                .frame(width: 3.0, height: 3.0)
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: barH)
-                        .padding(.bottom, elev.frontLipHeight)
                         .background(
-                            ZStack(alignment: .bottom) {
-                                // 深色窑釉物理底边厚度立面
+                            ZStack {
                                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                    .fill(col.opacity(palette.isNight ? 0.45 : 0.62))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                            .fill(Color.black.opacity(palette.isNight ? 0.35 : 0.24))
-                                    )
+                                    .fill(palette.cartoonShadow)
+                                    .offset(x: 0, y: isPlayingThis ? 1.0 : 3.0)
 
-                                // 顶面釉色渐变瓷块
-                                VStack(spacing: 0) {
-                                    ZStack(alignment: .top) {
-                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                            .fill(
-                                                LinearGradient(
-                                                    colors: [col.opacity(0.96), col],
-                                                    startPoint: .top,
-                                                    endPoint: .bottom
-                                                )
-                                            )
-                                        Capsule()
-                                            .fill(Color.white.opacity(palette.isNight ? 0.22 : 0.36))
-                                            .frame(height: 3.2)
-                                            .padding(.horizontal, 6)
-                                            .padding(.top, 2.5)
-                                    }
-                                    Spacer(minLength: elev.frontLipHeight)
-                                }
+                                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                    .fill(col)
                             }
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .strokeBorder(
-                                    (isFollowTarget || hint != nil)
-                                        ? palette.nightLampGold
-                                        : (isSympathetic
-                                            ? Color.white.opacity(palette.isNight ? 0.55 : 0.75)
-                                            : Color.white.opacity(palette.isNight ? 0.20 : 0.40)),
-                                    lineWidth: (isFollowTarget || hint != nil) ? 2.4 : (isSympathetic ? 1.5 : 0.9)
+                                    keyBorder,
+                                    lineWidth: (isFollowTarget || hint != nil) ? 2.4 : (isSympathetic ? 2.0 : 1.7)
                                 )
                         )
                         .overlay(alignment: .top) {
                             if isFollowTarget || hint != nil {
                                 Circle()
                                     .fill(palette.nightLampGold)
-                                    .frame(width: 6.0, height: 6.0)
-                                    .shadow(color: palette.nightLampGold.opacity(0.90), radius: 3.5)
-                                    .offset(y: -4.0)
+                                    .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.0))
+                                    .frame(width: 7.0, height: 7.0)
+                                    .offset(y: -4.5)
                             } else if isSympathetic {
                                 Circle()
-                                    .fill(Color.white.opacity(0.82))
-                                    .frame(width: 4.5, height: 4.5)
-                                    .shadow(color: .white.opacity(0.75), radius: 3)
-                                    .offset(y: -3.0)
+                                    .fill(Color.white)
+                                    .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.0))
+                                    .frame(width: 5.5, height: 5.5)
+                                    .offset(y: -3.5)
                             }
                         }
                         .overlay(alignment: .bottom) {
                             ZStack(alignment: .bottom) {
                                 if struckRibbonLane == lane.index && ribbonMercuryLevel > 0.05 {
                                     Capsule()
-                                        .fill(Color.white.opacity(0.68))
-                                        .frame(width: 5, height: max(8, barH * CGFloat(ribbonMercuryLevel) * 0.68))
-                                        .padding(.bottom, elev.frontLipHeight + 4)
+                                        .fill(Color.white.opacity(0.78))
+                                        .frame(width: 5, height: max(8, barH * CGFloat(ribbonMercuryLevel) * 0.60))
+                                        .padding(.bottom, 4)
                                 }
                                 if isChordResonant {
                                     Capsule()
-                                        .fill(Color.white.opacity(palette.isNight ? 0.58 : 0.78))
-                                        .frame(width: 14, height: 2.8)
-                                        .padding(.bottom, elev.frontLipHeight + 3)
+                                        .fill(Color.white.opacity(palette.isNight ? 0.72 : 0.88))
+                                        .frame(width: 14, height: 3.0)
+                                        .padding(.bottom, 3)
                                 }
                             }
                         }
-                        .shadow(
-                            color: (isFollowTarget || hint != nil)
-                                ? palette.nightLampGold.opacity(0.70)
-                                : col.opacity(isPlayingThis ? 0.52 : 0.16),
-                            radius: elev.shadowRadius,
-                            y: elev.shadowOffsetY
-                        )
                         .offset(y: elev.pressOffsetY)
-                        .scaleEffect(isPlayingThis ? 0.96 : (isFollowTarget ? 1.05 : 1.0))
+                        .scaleEffect(isPlayingThis ? 0.96 : (isFollowTarget ? 1.04 : 1.0))
                         .opacity(isMuted ? 0.28 : 1.0)
                         .animation(reduceMotion ? nil : .spring(response: 0.19, dampingFraction: 0.68), value: isPlayingThis)
                         .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: isFollowTarget)
@@ -3036,18 +3073,17 @@ public struct OrbitalStageView: View {
 
             ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
-        .frame(height: 76)
-        .shadow(color: palette.recessShadow, radius: 6, y: 2.5)
+        .frame(height: 86)
     }
 
-    // MARK: - 5. Clockwork Brass & Kiln Ceramic Transport Console
+    // MARK: - 5. Flat Cartoon Kids' Book Transport Console
 
     private var bottomGlassDock: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
         let dotCount = StageTransportRingMapper.pentatonicIndicatorCount(isSafe: vm.pentatonicSafe)
 
         return HStack(spacing: 10) {
-            // 1. 左：黄铜发条进度播放轮 (52×52pt)
+            // 1. 左：扁平卡通节拍播放轮 (52×52pt)
             Button {
                 vm.togglePlayback()
             } label: {
@@ -3060,28 +3096,32 @@ public struct OrbitalStageView: View {
                         : 0.0
                     ZStack {
                         Circle()
-                            .stroke(palette.brassHairline.opacity(0.26), lineWidth: 2.2)
+                            .stroke(palette.cartoonOutline.opacity(0.24), lineWidth: 2.2)
 
                         if vm.isPlaying && progress > 0.005 {
                             Circle()
                                 .trim(from: 0, to: CGFloat(progress))
                                 .stroke(
                                     palette.nightLampGold,
-                                    style: StrokeStyle(lineWidth: 2.6, lineCap: .round)
+                                    style: StrokeStyle(lineWidth: 3.0, lineCap: .round)
                                 )
                                 .rotationEffect(.degrees(-90))
                         }
 
                         Circle()
+                            .fill(palette.cartoonShadow)
+                            .frame(width: 42, height: 42)
+                            .offset(x: 0, y: 2)
+
+                        Circle()
                             .fill(vm.isPlaying ? palette.homeAnchor : palette.cardSurface)
                             .overlay(
                                 Circle().strokeBorder(
-                                    palette.glazeHighlight,
-                                    lineWidth: 0.9
+                                    palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.88),
+                                    lineWidth: 1.8
                                 )
                             )
                             .frame(width: 42, height: 42)
-                            .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
 
                         Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
                             .font(.subheadline.weight(.bold))
@@ -3097,7 +3137,7 @@ public struct OrbitalStageView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(vm.isPlaying ? "暂停旋转播放" : "开始旋转播放")
 
-            // 2. 中：主创作雕塑胶囊 (height: 52)
+            // 2. 中：主创作扁平贴纸大按键 (height: 50)
             Button {
                 if vm.capturePipeline.isRecording {
                     vm.finishRelativeContourHum()
@@ -3111,21 +3151,19 @@ public struct OrbitalStageView: View {
                     ? palette.melodyTerracotta
                     : (vm.followGlowActive ? palette.nightLampGold : palette.homeAnchor)
 
-                ZStack(alignment: .top) {
+                ZStack {
                     Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [topFill, topFill.opacity(0.88)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+                        .fill(palette.cartoonShadow)
+                        .offset(x: 0, y: 3)
 
                     Capsule()
-                        .fill(Color.white.opacity(palette.isNight ? 0.16 : 0.28))
-                        .frame(height: 3.5)
-                        .padding(.horizontal, 22)
-                        .padding(.top, 4)
+                        .fill(topFill)
+                        .overlay(
+                            Capsule().strokeBorder(
+                                palette.cartoonOutline.opacity(palette.isNight ? 0.78 : 0.90),
+                                lineWidth: 2.0
+                            )
+                        )
 
                     Group {
                         if vm.capturePipeline.isRecording {
@@ -3160,13 +3198,12 @@ public struct OrbitalStageView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .frame(height: 50)
                 .foregroundStyle(
                     vm.capturePipeline.isRecording
                         ? .white
                         : ((vm.followGlowActive || palette.isNight) ? Color(hex: 0x0E142C) : .white)
                 )
-                .shadow(color: topFill.opacity(0.30), radius: 9, y: 3)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(
@@ -3195,15 +3232,19 @@ public struct OrbitalStageView: View {
                     }
 
                     Circle()
+                        .fill(palette.cartoonShadow)
+                        .frame(width: 40, height: 40)
+                        .offset(x: 0, y: 2)
+
+                    Circle()
                         .fill(palette.cardSurface)
                         .overlay(
                             Circle().strokeBorder(
-                                (vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.brassHairline).opacity(0.32),
-                                lineWidth: 1.0
+                                (vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.cartoonOutline).opacity(palette.isNight ? 0.72 : 0.86),
+                                lineWidth: 1.8
                             )
                         )
                         .frame(width: 40, height: 40)
-                        .shadow(color: palette.recessShadow, radius: 4, y: 1.5)
 
                     Image(systemName: vm.document.scaleMode.iconName)
                         .font(.subheadline.weight(.bold))
@@ -3217,31 +3258,22 @@ public struct OrbitalStageView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [palette.cardSurface, palette.shelfSurface.opacity(0.92)],
-                        startPoint: .top,
-                        endPoint: .bottom
+            ZStack {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(palette.cartoonShadow)
+                    .offset(x: 0, y: 3)
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(palette.cardSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.68 : 0.85), lineWidth: 1.8)
                     )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 30, style: .continuous)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [palette.glazeHighlight, palette.brassHairline.opacity(0.28)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1.0
-                        )
-                )
-                .shadow(color: palette.recessShadow, radius: 12, y: 4)
+            }
         )
     }
 }
 
-/// 主舞台「哞 · 四幕彩色和声触控轨」：跨星盘/山河/星云三态一致的四幕和弦切分交互带。
+/// 主舞台「哞 · 四幕彩色和声触控轨」：扁平卡通童书平涂和弦交互带。
 private struct StageHarmonyRibbonView: View {
     @ObservedObject var vm: StudioViewModel
     let palette: ChimmoPalette
@@ -3262,14 +3294,13 @@ private struct StageHarmonyRibbonView: View {
             } label: {
                 ZStack {
                     Capsule()
-                        .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.24 : 0.15) : palette.cardSurface)
+                        .fill(vm.cradleEnabled ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.18) : palette.cardSurface)
                         .overlay(
                             Capsule().strokeBorder(
-                                vm.cradleEnabled ? palette.bassRibbon.opacity(0.65) : palette.brassHairline.opacity(0.24),
-                                lineWidth: vm.cradleEnabled ? 1.2 : 0.9
+                                vm.cradleEnabled ? palette.bassRibbon : palette.cartoonOutline.opacity(0.65),
+                                lineWidth: vm.cradleEnabled ? 1.8 : 1.4
                             )
                         )
-                        .shadow(color: vm.cradleEnabled ? palette.bassRibbon.opacity(0.24) : .clear, radius: 4, y: 1)
                     ChimmoCowView(
                         isNight: palette.isNight,
                         accentColor: skyCol,
@@ -3298,33 +3329,21 @@ private struct StageHarmonyRibbonView: View {
                                 vm.cycleSpanChord(spanIndex: seg.spanID)
                                 onWakeTimeline()
                             } label: {
-                                ZStack(alignment: .top) {
+                                ZStack {
                                     Capsule()
-                                        .fill(
-                                            isActive
-                                                ? AnyShapeStyle(LinearGradient(colors: [segCol.opacity(0.95), segCol], startPoint: .top, endPoint: .bottom))
-                                                : AnyShapeStyle(segCol.opacity(palette.isNight ? 0.20 : 0.12))
-                                        )
+                                        .fill(isActive ? segCol : segCol.opacity(palette.isNight ? 0.22 : 0.14))
                                         .overlay(
                                             Capsule().strokeBorder(
-                                                isActive ? palette.glazeHighlight : segCol.opacity(0.36),
-                                                lineWidth: isActive ? 1.2 : 0.9
+                                                isActive ? palette.cartoonOutline.opacity(0.85) : segCol.opacity(0.52),
+                                                lineWidth: isActive ? 1.8 : 1.2
                                             )
                                         )
-                                    if isActive {
-                                        Capsule()
-                                            .fill(Color.white.opacity(0.26))
-                                            .frame(height: 2.2)
-                                            .padding(.horizontal, 8)
-                                            .padding(.top, 2)
-                                    }
                                     Text(seg.romanLabel)
                                         .font(.system(size: 10.5, weight: .heavy, design: .rounded))
                                         .foregroundStyle(isActive ? .white : segCol)
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
                                 .frame(width: segW, height: 26)
-                                .shadow(color: isActive ? segCol.opacity(0.34) : .clear, radius: 4.5, y: 1.5)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("第 \(seg.spanID + 1) 幕和弦 \(seg.romanLabel) \(seg.chord.moodTitle)")
@@ -3341,15 +3360,19 @@ private struct StageHarmonyRibbonView: View {
                     HStack(spacing: 6) {
                         ForEach(0..<4, id: \.self) { _ in
                             Capsule()
-                                .fill(palette.secondaryInk.opacity(0.20))
+                                .fill(palette.secondaryInk.opacity(0.24))
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 3.5)
+                                .frame(height: 4.0)
                         }
                     }
                     .padding(.horizontal, 10)
                     .frame(maxWidth: .infinity)
                     .frame(height: 26)
-                    .background(Capsule().fill(palette.cardSurface.opacity(0.78)))
+                    .background(
+                        Capsule()
+                            .fill(palette.cardSurface)
+                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.35), lineWidth: 1.2))
+                    )
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("开启智能和弦伴奏")
@@ -3358,11 +3381,11 @@ private struct StageHarmonyRibbonView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(palette.shelfSurface.opacity(0.82))
+            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                .fill(palette.shelfSurface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(palette.brassHairline.opacity(0.24), lineWidth: 0.9)
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.55 : 0.72), lineWidth: 1.6)
                 )
         )
     }

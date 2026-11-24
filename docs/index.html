@@ -7,104 +7,100 @@
   <style>
     :root {
       --bg: #F4EDE0;
-      --paper: #FBF7EE;
-      --card: #FBF7EE;
-      --shelf: #E7DEC9;
-      --wood: #DFCFAF;
-      --wood-edge: #C7B08A;
-      --brass: #C88F2D;
-      --ink: #1E1B16;
-      --sub: #635B4F;
+      --paper: #FFFDF7;
+      --card: #FFFDF7;
+      --shelf: #EFE4CF;
+      --butter: #FFE49E;
+      --mint: #D8F1E7;
+      --hill-back: #E6D7BC;
+      --hill-front: #D7E6D8;
+      --outline: #231B15;
+      --ink: #231B15;
+      --sub: #5E5245;
       --accent: #0E766E;
-      --accent-soft: rgba(14, 118, 110, 0.13);
-      --gold: #C88F2D;
-      --gold-soft: rgba(200, 143, 45, 0.18);
-      --terra: #E64B58;
-      --blue: #257BD4;
-      --violet: #6C4AD6;
-      --border: rgba(200, 143, 45, 0.26);
-      --recess: rgba(58, 46, 30, 0.12);
-      --shadow: 0 14px 34px rgba(58, 46, 30, 0.09);
+      --accent-soft: #D8F1E7;
+      --gold: #E59900;
+      --gold-soft: #FFE49E;
+      --terra: #F25563;
+      --blue: #228BE6;
+      --violet: #7950F2;
+      --shadow-hard: rgba(35, 27, 21, 0.22);
     }
     html[data-theme="night"] {
       --bg: #0E142C;
-      --paper: #172042;
-      --card: #1D274E;
-      --shelf: #172042;
-      --wood: #22294A;
-      --wood-edge: #131934;
-      --brass: #E5AA4A;
+      --paper: #162048;
+      --card: #1D2856;
+      --shelf: #172149;
+      --butter: #2B2952;
+      --mint: #162C46;
+      --hill-back: #18234C;
+      --hill-front: #213063;
+      --outline: #FFB94E;
       --ink: #F5ECDD;
-      --sub: #A7B0CE;
+      --sub: #B3BEDC;
       --accent: #53DFCF;
-      --accent-soft: rgba(83, 223, 207, 0.16);
+      --accent-soft: #162C46;
       --gold: #FFB94E;
-      --gold-soft: rgba(255, 185, 78, 0.18);
+      --gold-soft: #2B2952;
       --terra: #FF7B82;
       --blue: #66B5FF;
       --violet: #B39BFF;
-      --border: rgba(229, 170, 74, 0.28);
-      --recess: rgba(0, 0, 0, 0.42);
-      --shadow: 0 18px 42px rgba(5, 8, 22, 0.48);
+      --shadow-hard: rgba(4, 7, 20, 0.78);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 28px 18px 48px;
+      padding: 18px 14px 34px;
       background-color: var(--bg);
-      background-image:
-        radial-gradient(circle at 18% 8%, var(--gold-soft), transparent 44%),
-        radial-gradient(circle at 86% 18%, var(--accent-soft), transparent 42%),
-        radial-gradient(rgba(94, 71, 42, 0.045) 1px, transparent 1px);
-      background-size: auto, auto, 24px 24px;
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
-      line-height: 1.6;
-      transition: background-color 0.35s ease, color 0.35s ease;
+      line-height: 1.5;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
     .wrap {
       max-width: 960px;
       margin: 0 auto;
       display: grid;
-      gap: 20px;
+      gap: 14px;
     }
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .brand-mark {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
       padding: 6px 12px 6px 8px;
       border-radius: 999px;
-      background: linear-gradient(180deg, var(--card), var(--shelf));
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
+      background: var(--card);
+      border: 2.2px solid var(--outline);
+      box-shadow: 0 4px 0 var(--shadow-hard);
     }
     .brand-seal {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: var(--butter);
+      border: 2px solid var(--outline);
       display: grid;
       place-items: center;
     }
     .brand-title {
       font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
+      font-weight: 900;
+      letter-spacing: 0.04em;
     }
     .brand-ver {
       font-size: 11.5px;
-      font-weight: 700;
-      color: var(--brass);
-      background: var(--gold-soft);
-      padding: 2px 8px;
+      font-weight: 800;
+      color: #231B15;
+      background: #FFE49E;
+      border: 1.5px solid #231B15;
+      padding: 1px 8px;
       border-radius: 999px;
     }
     .controls {
@@ -115,129 +111,169 @@
     }
     .pill-btn {
       appearance: none;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--card), var(--shelf));
+      border: 2.2px solid var(--outline);
+      background: var(--card);
       color: var(--ink);
       border-radius: 999px;
       padding: 7px 14px;
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 4px 12px var(--recess);
-      transition: transform 0.16s ease, border-color 0.2s ease, background-color 0.2s ease;
+      box-shadow: 0 3px 0 var(--shadow-hard);
+      transition: transform 0.14s ease, background-color 0.16s ease;
     }
-    .pill-btn:hover { transform: translateY(-1px); border-color: var(--brass); }
+    .pill-btn:hover { transform: translateY(-1px); }
+    .pill-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--shadow-hard); }
     .pill-btn[aria-pressed="true"] {
       background: var(--accent);
       color: #FFFFFF;
-      border-color: var(--accent);
     }
     html[data-theme="night"] .pill-btn[aria-pressed="true"] {
       color: #0E142C;
     }
+
+    /* Flat Cartoon Picture-Book Spread Hero */
     .hero {
       position: relative;
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
-      border: 1.5px solid var(--brass);
-      border-radius: 30px;
-      padding: 6px;
-      box-shadow: var(--shadow);
-    }
-    .hero-cavity {
       background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 24px 22px 20px;
+      border: 2.5px solid var(--outline);
+      border-radius: 26px;
+      padding: 18px 18px 16px;
       display: grid;
-      gap: 18px;
+      gap: 14px;
+      overflow: hidden;
+      box-shadow: 0 5px 0 var(--shadow-hard);
+    }
+    .hero-scenery {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .hero-hills-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .hero-sun-badge {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      width: 66px;
+      height: 66px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-head, .duo-stage, .choir-shelf {
+      position: relative;
+      z-index: 1;
     }
     .hero-head {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      gap: 16px;
+      align-items: center;
+      gap: 12px;
       flex-wrap: wrap;
+      padding-right: 76px;
+    }
+    .book-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--butter);
+      color: var(--ink);
+      border: 1.8px solid var(--outline);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 6px;
     }
     h1 {
       margin: 0;
-      font-size: clamp(26px, 4.2vw, 38px);
+      font-size: clamp(25px, 4.1vw, 36px);
       line-height: 1.15;
       letter-spacing: -0.02em;
     }
     .lead {
-      margin: 6px 0 0;
+      margin: 4px 0 0;
       color: var(--sub);
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 600;
       max-width: 640px;
     }
     .duo-stage {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
     .mascot-card {
       position: relative;
-      background: linear-gradient(180deg, var(--card), var(--shelf));
-      border: 1.5px solid var(--border);
-      border-radius: 22px;
-      padding: 16px 14px 14px;
+      background: var(--card);
+      border: 2.2px solid var(--outline);
+      border-radius: 20px;
+      padding: 12px 12px 10px;
       text-align: center;
       cursor: pointer;
       display: grid;
       justify-items: center;
-      gap: 8px;
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+      gap: 5px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
+      transition: transform 0.16s ease;
       user-select: none;
     }
-    .mascot-card:hover { transform: translateY(-2px); border-color: var(--brass); }
+    .mascot-card.mie-theme { background: var(--mint); }
+    .mascot-card.mou-theme { background: var(--butter); }
+    .mascot-card:hover { transform: translateY(-2px); }
     .mascot-card.singing {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-soft);
+      background: var(--paper);
+      box-shadow: 0 0 0 3px var(--accent), 0 4px 0 var(--shadow-hard);
     }
-    .mascot-card.sleeping { opacity: 0.84; }
+    .mascot-card.sleeping { opacity: 0.88; }
     .mascot-svg {
-      width: 112px;
-      height: 92px;
+      width: 108px;
+      height: 86px;
       overflow: visible;
     }
     .mascot-name {
-      font-size: 16px;
-      font-weight: 800;
+      font-size: 15.5px;
+      font-weight: 900;
       margin: 0;
     }
     .mascot-role {
-      font-size: 12.5px;
+      font-size: 12px;
+      font-weight: 700;
       color: var(--sub);
       margin: 0;
     }
     .wave-badge {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 10px;
+      right: 10px;
       width: 26px;
       height: 26px;
       border-radius: 999px;
-      background: var(--shelf);
-      border: 1px solid var(--border);
+      background: var(--paper);
+      border: 1.8px solid var(--outline);
       display: grid;
       place-items: center;
-      color: var(--sub);
+      color: var(--ink);
     }
     .mascot-card.singing .wave-badge {
-      color: var(--accent);
-      background: var(--accent-soft);
+      background: var(--accent);
+      color: #FFFFFF;
     }
     .choir-shelf {
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
-      border: 1.2px solid var(--brass);
-      border-radius: 22px;
-      padding: 16px 14px 14px;
+      background: var(--shelf);
+      border: 2.2px solid var(--outline);
+      border-radius: 20px;
+      padding: 12px 12px 10px;
       display: grid;
-      gap: 10px;
-      box-shadow: inset 0 2px 8px var(--recess);
+      gap: 8px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
     }
     .choir-header {
       display: flex;
@@ -245,48 +281,38 @@
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
-      padding: 4px 10px;
+      padding: 5px 10px;
       border-radius: 12px;
       background: var(--paper);
-      border: 1px solid var(--border);
+      border: 1.8px solid var(--outline);
     }
-    .choir-title {
-      font-size: 13.5px;
-      font-weight: 800;
-      margin: 0;
-    }
-    .choir-hint {
-      font-size: 12px;
-      color: var(--sub);
-      margin: 0;
-    }
-    .shelf-stage {
-      position: relative;
-      padding-bottom: 12px;
-    }
-    .wood-plank {
+    .choir-title { font-size: 13px; font-weight: 900; margin: 0; }
+    .choir-hint { font-size: 11.5px; font-weight: 700; color: var(--sub); margin: 0; }
+    .shelf-stage { position: relative; padding-bottom: 2px; }
+    .meadow-strip {
       position: absolute;
-      left: 6px;
-      right: 6px;
-      bottom: 8px;
-      height: 10px;
+      left: 4px;
+      right: 4px;
+      bottom: 42px;
+      height: 11px;
       border-radius: 999px;
-      background: linear-gradient(180deg, var(--brass), rgba(145, 96, 28, 0.85));
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+      background: var(--hill-front);
+      border: 1.8px solid var(--outline);
+      z-index: 0;
     }
     .choir-grid {
       position: relative;
       z-index: 1;
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 6px;
+      gap: 4px;
       align-items: end;
     }
     .figure-btn {
       appearance: none;
       border: 0;
       background: transparent;
-      padding: 4px 2px 0;
+      padding: 2px 2px 0;
       cursor: pointer;
       display: grid;
       justify-items: center;
@@ -295,135 +321,143 @@
     }
     .figure-svg {
       width: 100%;
-      max-width: 78px;
-      height: 78px;
+      max-width: 74px;
+      height: 74px;
       overflow: visible;
-      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .figure-btn:hover .figure-svg { transform: translateY(-3px); }
-    .figure-btn.singing .figure-svg { transform: translateY(-8px) scale(1.06); }
-    .figure-meta {
-      display: grid;
-      justify-items: center;
-      gap: 1px;
-    }
+    .figure-btn.singing .figure-svg { transform: translateY(-7px) scale(1.06); }
+    .figure-meta { display: grid; justify-items: center; gap: 2px; }
     .figure-deg {
-      font-size: 11px;
-      font-weight: 800;
+      font-size: 10.5px;
+      font-weight: 900;
       padding: 1px 7px;
       border-radius: 999px;
       color: #FFFFFF;
+      border: 1.5px solid #231B15;
     }
-    .figure-name {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--ink);
-    }
+    .figure-name { font-size: 11px; font-weight: 800; color: var(--ink); }
 
-    /* Interactive 3D Kiln Xylophone & Boutique Vinyl Sleeve Demo (v0.35.0) */
+    /* Flat Cartoon Choir Xylophone + Picture-Book Sleeve Bench */
     .workshop-bench {
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
-      border: 1.2px solid var(--brass);
-      border-radius: 24px;
-      padding: 14px;
       display: grid;
-      grid-template-columns: 1.25fr 1fr;
+      grid-template-columns: 1.28fr 1fr;
       gap: 14px;
       align-items: stretch;
-      box-shadow: var(--shadow);
     }
-    .kiln-xylo-box {
+    .kiln-xylo-box, .vinyl-boutique-card {
       background: var(--paper);
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      padding: 14px;
-      display: grid;
-      gap: 10px;
+      border: 2.2px solid var(--outline);
+      border-radius: 22px;
+      padding: 13px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
     }
+    .kiln-xylo-box { display: grid; gap: 9px; }
     .bench-label {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
       font-size: 12.5px;
-      font-weight: 800;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .bench-sub {
+      font-size: 11.5px;
+      font-weight: 700;
       color: var(--sub);
     }
     .xylo-keys {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 8px;
+      gap: 7px;
       align-items: end;
       padding: 10px 8px;
-      border-radius: 14px;
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
-      box-shadow: inset 0 2px 6px var(--recess);
+      border-radius: 16px;
+      background: var(--hill-front);
+      border: 2px solid var(--outline);
     }
     .xylo-key {
       appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-bottom: 5px solid rgba(0, 0, 0, 0.28);
-      border-radius: 11px;
+      border: 2px solid #231B15;
+      border-radius: 12px;
       color: #FFFFFF;
-      font-weight: 800;
-      font-size: 13px;
+      font-weight: 900;
+      font-size: 12.5px;
       cursor: pointer;
       display: grid;
       justify-items: center;
       align-content: space-between;
       padding: 6px 4px;
-      transition: transform 0.14s ease, border-bottom-width 0.14s ease;
+      box-shadow: 0 4px 0 #231B15;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
     }
     .xylo-key:active, .xylo-key.struck {
       transform: translateY(3px);
-      border-bottom-width: 2px;
+      box-shadow: 0 1px 0 #231B15;
     }
-    .rivet {
-      width: 4px;
-      height: 4px;
+    .key-buddy-chip {
+      width: 22px;
+      height: 16px;
       border-radius: 999px;
-      background: #E8C57B;
-    }
-    .vinyl-boutique-card {
-      background: var(--paper);
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      padding: 14px;
+      background: #FFFDF7;
+      border: 1.6px solid #231B15;
       display: flex;
       align-items: center;
-      gap: 14px;
+      justify-content: center;
+      gap: 4px;
+    }
+    .key-buddy-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 999px;
+      background: #231B15;
+    }
+    .vinyl-boutique-card {
+      display: flex;
+      align-items: center;
+      gap: 13px;
       cursor: pointer;
+      background: var(--butter);
+      text-align: left;
     }
     .sleeve-wrap {
       position: relative;
-      width: 96px;
+      width: 92px;
       height: 74px;
-      flex: 0 0 96px;
+      flex: 0 0 92px;
     }
     .peeking-disc {
       position: absolute;
-      left: 24px;
+      left: 22px;
       top: 5px;
-      width: 64px;
-      height: 64px;
+      width: 62px;
+      height: 62px;
       border-radius: 999px;
-      background: radial-gradient(circle, var(--gold) 0 18%, var(--paper) 19% 25%, #232A4B 26% 100%);
-      border: 1.5px solid var(--brass);
-      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      background: #232A4B;
+      border: 2px solid #231B15;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .vinyl-boutique-card.spinning .peeking-disc {
-      transform: translateX(8px) rotate(160deg);
+    .peeking-disc::after {
+      content: "";
+      position: absolute;
+      inset: 19px;
+      border-radius: 999px;
+      background: #FFB94E;
+      border: 2px solid #231B15;
     }
+    .vinyl-boutique-card.spinning .peeking-disc { transform: translateX(9px) rotate(140deg); }
     .sleeve-cover {
       position: absolute;
       left: 0;
       top: 3px;
-      width: 62px;
-      height: 68px;
-      border-radius: 11px;
-      background: linear-gradient(135deg, var(--card), var(--shelf));
-      border: 1px solid var(--brass);
-      box-shadow: 2px 3px 8px var(--recess);
+      width: 60px;
+      height: 66px;
+      border-radius: 12px;
+      background: var(--paper);
+      border: 2px solid #231B15;
+      box-shadow: 2px 2px 0 rgba(35, 27, 21, 0.25);
       display: grid;
       place-items: center;
     }
@@ -431,43 +465,36 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      transform-origin: 86px 9px;
+      transform-origin: 82px 10px;
       transform: rotate(-8deg);
-      transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .vinyl-boutique-card.spinning .tonearm-svg {
-      transform: rotate(20deg);
-    }
+    .vinyl-boutique-card.spinning .tonearm-svg { transform: rotate(20deg); }
 
-    /* Sound Palette Box & Brass VU Bench (v0.37.0 - v0.38.0) */
+    /* Flat Cartoon Sound Palette Card & Bouncing Sound-Hill Meter */
     .soundbox-bench {
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
-      border: 1.3px solid var(--brass);
-      border-radius: 26px;
-      padding: 14px;
       display: grid;
       grid-template-columns: 1.38fr 1fr;
       gap: 14px;
       align-items: stretch;
-      box-shadow: var(--shadow);
     }
     .soundbox-card, .vu-meter-card {
       background: var(--paper);
-      border-radius: 19px;
-      border: 1px solid var(--border);
-      padding: 14px;
+      border: 2.2px solid var(--outline);
+      border-radius: 22px;
+      padding: 13px;
       display: grid;
-      gap: 10px;
+      gap: 9px;
       align-content: space-between;
+      box-shadow: 0 4px 0 var(--shadow-hard);
     }
     .osc-glass {
-      border-radius: 14px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      box-shadow: inset 0 3px 9px var(--recess);
-      padding: 8px 10px 6px;
+      border-radius: 15px;
+      background: var(--shelf);
+      border: 2px solid var(--outline);
+      padding: 8px 10px 7px;
       display: grid;
-      gap: 6px;
+      gap: 7px;
     }
     .triad-row {
       display: grid;
@@ -476,86 +503,71 @@
     }
     .triad-pill {
       appearance: none;
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      background: linear-gradient(180deg, var(--card), var(--shelf));
+      border: 2px solid var(--outline);
+      border-radius: 12px;
+      background: var(--card);
       color: var(--ink);
       font-size: 11.5px;
       font-weight: 800;
-      padding: 6px 6px;
+      padding: 6px 5px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+      gap: 5px;
+      box-shadow: 0 2px 0 var(--shadow-hard);
+      transition: transform 0.16s ease, background-color 0.16s ease;
     }
-    .triad-pill:hover { border-color: var(--brass); }
-    .triad-pill.lit {
-      border-color: var(--brass);
-      box-shadow: 0 0 0 2px var(--gold-soft);
-    }
+    .triad-pill.lit { background: var(--butter); }
     .triad-pill.mood-happy { transform: translateY(-2px); }
-    .triad-pill.mood-soft { transform: translateY(1px); opacity: 0.92; }
+    .triad-pill.mood-soft { transform: translateY(1px); }
     .triad-dot {
-      width: 9px;
-      height: 9px;
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
-      flex: 0 0 9px;
+      border: 1.4px solid #231B15;
+      flex: 0 0 10px;
     }
-    .sb-controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .sb-controls-row { display: flex; flex-wrap: wrap; gap: 6px; }
     .sb-chip {
       appearance: none;
-      border: 1px solid var(--border);
+      border: 1.8px solid var(--outline);
       background: var(--shelf);
       color: var(--ink);
       border-radius: 999px;
       padding: 5px 11px;
       font-size: 11.5px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
-      transition: border-color 0.16s ease, background-color 0.16s ease;
     }
-    .sb-chip:hover { border-color: var(--brass); }
     .sb-chip.active {
       background: var(--accent);
-      border-color: var(--accent);
       color: #FFFFFF;
     }
-    html[data-theme="night"] .sb-chip.active {
-      color: #0E142C;
-    }
-    .lever-row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
+    html[data-theme="night"] .sb-chip.active { color: #0E142C; }
+    .lever-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .lever-btn {
       appearance: none;
-      border: 1px solid var(--border);
+      border: 2px solid var(--outline);
       border-radius: 13px;
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      background: var(--shelf);
       color: var(--ink);
-      padding: 8px 10px;
+      padding: 7px 10px;
       font-size: 11.5px;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      box-shadow: inset 0 2px 5px var(--recess);
+      gap: 6px;
+      box-shadow: 0 2px 0 var(--shadow-hard);
     }
     .lever-track {
       width: 34px;
-      height: 16px;
+      height: 17px;
       border-radius: 999px;
       background: var(--paper);
-      border: 1px solid var(--brass);
+      border: 1.8px solid var(--outline);
       position: relative;
       flex: 0 0 34px;
     }
@@ -563,115 +575,100 @@
       position: absolute;
       top: 1.5px;
       left: 2px;
-      width: 11px;
-      height: 11px;
+      width: 10.5px;
+      height: 10.5px;
       border-radius: 999px;
       background: var(--sub);
-      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.16s ease;
     }
     .lever-btn[aria-pressed="true"] .lever-knob {
-      transform: translateX(17px);
+      transform: translateX(16px);
       background: var(--gold);
-      box-shadow: 0 0 8px var(--gold);
     }
-    .vu-dial-box {
+
+    /* Flat Cartoon Rainbow Sound-Hills Stage */
+    .hill-meter-box {
       border-radius: 15px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      box-shadow: inset 0 3px 10px var(--recess);
-      padding: 10px 10px 6px;
+      background: var(--mint);
+      border: 2px solid var(--outline);
+      padding: 12px 12px 10px;
       display: grid;
-      justify-items: center;
-      gap: 6px;
+      gap: 12px;
     }
-    .vu-needle {
-      transform-origin: 120px 106px;
-      transform: rotate(-44deg);
-      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    .hill-meter-sky {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
-    .vu-leds {
-      width: 100%;
+    .hill-mini-mie {
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .hill-meter-box.singing .hill-mini-mie {
+      transform: translateY(-5px) scale(1.08);
+    }
+    .sound-hills {
+      height: 98px;
       display: grid;
       grid-template-columns: repeat(9, minmax(0, 1fr));
-      gap: 4px;
+      gap: 5px;
+      align-items: end;
     }
-    .vu-led {
-      height: 7px;
-      border-radius: 999px;
-      background: var(--shelf);
-      border: 1px solid var(--border);
-      transition: background-color 0.14s ease, box-shadow 0.14s ease;
+    .sound-hill {
+      height: 36%;
+      border-radius: 999px 999px 6px 6px;
+      background: var(--paper);
+      border: 1.8px solid var(--outline);
+      transition: height 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.14s ease;
     }
-    .vu-led.on {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-    .vu-led.on.warm {
-      background: var(--gold);
-      border-color: var(--gold);
-    }
-    .vu-led.on.hot {
-      background: var(--terra);
-      border-color: var(--terra);
-      box-shadow: 0 0 6px var(--terra);
-    }
+    .sound-hill:nth-child(even) { height: 46%; background: var(--butter); }
+    .sound-hill.on { background: var(--accent); }
+    .sound-hill.on.warm { background: #F7882F; }
+    .sound-hill.on.hot { background: #F25563; }
 
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
     .feature-card {
-      background: linear-gradient(180deg, var(--card), var(--shelf));
-      border: 1px solid var(--border);
+      background: var(--paper);
+      border: 2.2px solid var(--outline);
       border-radius: 20px;
-      padding: 18px;
-      box-shadow: var(--shadow);
+      padding: 15px;
+      box-shadow: 0 4px 0 var(--shadow-hard);
       display: grid;
-      gap: 8px;
+      gap: 7px;
       align-content: start;
     }
     .feature-chip {
       width: 34px;
       height: 34px;
-      border-radius: 10px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--butter);
+      color: var(--ink);
+      border: 1.8px solid var(--outline);
       display: grid;
       place-items: center;
     }
-    .feature-card h2 {
-      margin: 2px 0 0;
-      font-size: 15.5px;
-    }
-    .feature-card p {
-      margin: 0;
-      font-size: 13.5px;
-      color: var(--sub);
-    }
+    .feature-card h2 { margin: 2px 0 0; font-size: 15px; font-weight: 900; }
+    .feature-card p { margin: 0; font-size: 13px; font-weight: 600; color: var(--sub); }
     .footer-card {
       background: var(--shelf);
-      border: 1px solid var(--border);
+      border: 2.2px solid var(--outline);
       border-radius: 18px;
-      padding: 16px 18px;
+      padding: 13px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 12px;
       flex-wrap: wrap;
-      font-size: 13px;
-    }
-    .links {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    a {
-      color: var(--accent);
-      text-decoration: none;
+      font-size: 12.5px;
       font-weight: 700;
+      box-shadow: 0 3px 0 var(--shadow-hard);
     }
+    .links { display: flex; gap: 14px; flex-wrap: wrap; }
+    a { color: var(--accent); text-decoration: none; font-weight: 800; }
     a:hover { text-decoration: underline; }
 
     @keyframes breatheSheep {
@@ -709,13 +706,15 @@
       .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd {
         animation: none !important;
       }
-      .vu-needle, .lever-knob, .triad-pill {
+      .sound-hill, .hill-mini-mie, .lever-knob, .triad-pill {
         transition: none !important;
       }
     }
     @media (max-width: 740px) {
+      .hero-head { padding-right: 0; }
+      .hero-sun-badge { width: 48px; height: 48px; top: 10px; right: 10px; opacity: 0.85; }
       .duo-stage, .workshop-bench, .soundbox-bench, .cards-grid { grid-template-columns: 1fr; }
-      .choir-grid { gap: 3px; }
+      .choir-grid { gap: 2px; }
       .figure-name { font-size: 10px; }
       .lever-row { grid-template-columns: 1fr; }
     }
@@ -726,14 +725,13 @@
     <header class="topbar">
       <div class="brand-mark">
         <div class="brand-seal" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8" opacity="0.9"/>
-            <circle cx="12" cy="12" r="4.6" stroke="var(--gold)" stroke-width="1.5"/>
-            <circle cx="12" cy="12" r="1.8" fill="var(--accent)"/>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#231B15" stroke-width="2.2" fill="#FFFDF7"/>
+            <circle cx="12" cy="12" r="4" fill="#0E766E"/>
           </svg>
         </div>
         <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.38.0</span>
+        <span class="brand-ver">v0.39.0</span>
       </div>
 
       <div class="controls">
@@ -743,7 +741,7 @@
         <button id="toggleThemeBtn" class="pill-btn" type="button" aria-pressed="false">
           <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="5" fill="currentColor"/>
-            <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
           <span id="themeLabel">切换夜灯</span>
         </button>
@@ -751,173 +749,207 @@
     </header>
 
     <section class="hero">
-      <div class="hero-cavity">
-        <div class="hero-head">
-          <div>
-            <h1>把脑海里的旋律唱出来、看得见</h1>
-            <p class="lead">暖窑象牙宣纸 × 蜂蜡桦木 × 拉丝黄铜高定乐器体验。点按下方窑陶声学伙伴、调色示波木盒与木琴琴块，实时试听真实音高、呼吸与和声对话。</p>
-          </div>
+      <div class="hero-scenery" aria-hidden="true">
+        <svg class="hero-hills-svg" viewBox="0 0 960 440" preserveAspectRatio="none">
+          <path d="M0 320 Q210 265 440 315 T960 290 L960 440 L0 440 Z" fill="var(--hill-back)" opacity="0.62"/>
+          <path d="M0 365 Q300 325 610 362 T960 345 L960 440 L0 440 Z" fill="var(--hill-front)" opacity="0.72"/>
+        </svg>
+      </div>
+
+      <svg class="hero-sun-badge" viewBox="0 0 72 72" aria-hidden="true">
+        <g stroke="var(--outline)" stroke-width="2.2" stroke-linecap="round" opacity="0.88">
+          <line x1="36" y1="6" x2="36" y2="12"/>
+          <line x1="36" y1="60" x2="36" y2="66"/>
+          <line x1="6" y1="36" x2="12" y2="36"/>
+          <line x1="60" y1="36" x2="66" y2="36"/>
+          <line x1="15" y1="15" x2="20" y2="20"/>
+          <line x1="52" y1="52" x2="57" y2="57"/>
+          <line x1="57" y1="15" x2="52" y2="20"/>
+          <line x1="20" y1="52" x2="15" y2="57"/>
+        </g>
+        <circle cx="36" cy="36" r="18" fill="var(--butter)" stroke="var(--outline)" stroke-width="2.2"/>
+      </svg>
+
+      <div class="hero-head">
+        <div>
+          <span class="book-tag">CHIMMO KIDS' BOOK EDITION · 扁平插画交互绘本</span>
+          <h1>把脑海里的旋律唱出来、看得见</h1>
+          <p class="lead">零拟物、明快扁平水粉纸艺童书风格。轻触小羊咩、小牛哞、七小只合唱伙伴与彩色琴块，让每一句轻哼即刻变成能蹦能跳的卡通小剧场。</p>
         </div>
+      </div>
 
-        <div class="duo-stage">
-          <button id="mieCard" class="mascot-card" type="button" aria-label="小羊咩，点击试听高音主旋律">
-            <span class="wave-badge" aria-hidden="true">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-                <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-              <ellipse cx="56" cy="83" rx="28" ry="5" fill="rgba(0,0,0,0.12)"/>
-              <g class="sheep-body-anim">
-                <g id="mieWaves" opacity="0">
-                  <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-                </g>
-                <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
-                <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
-                <circle cx="43" cy="48" r="18" fill="#FFFBF3"/>
-                <circle cx="69" cy="48" r="18" fill="#FFFBF3"/>
-                <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFBF3"/>
-                <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFBF3" stroke="#C8BCAC" stroke-width="1"/>
-                <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4"/>
-                <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#C88F2D" stroke-width="3.6" stroke-linecap="round"/>
-                <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#C88F2D" stroke-width="3.6" stroke-linecap="round"/>
-                <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
-                <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
-                <g id="mieOpenEyes" class="eye-blink">
-                  <circle class="pupil" cx="48" cy="48" r="3.4" fill="#1C1D19"/>
-                  <circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-                  <circle class="pupil" cx="64" cy="48" r="3.4" fill="#1C1D19"/>
-                  <circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-                </g>
-                <g id="mieSingEyes" opacity="0">
-                  <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
-                  <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
-                </g>
-                <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
-                <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
-              </g>
+      <div class="duo-stage">
+        <button id="mieCard" class="mascot-card mie-theme" type="button" aria-label="小羊咩，点击试听高音主旋律">
+          <span class="wave-badge" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+              <path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
             </svg>
-            <p class="mascot-name">咩 · Mie（云朵小羊）</p>
-            <p class="mascot-role">高音主旋律 · 舞台左下角声部领唱</p>
-          </button>
+          </span>
+          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+            <ellipse cx="56" cy="83" rx="28" ry="4.5" fill="rgba(35,27,21,0.16)"/>
+            <g class="sheep-body-anim">
+              <g id="mieWaves" opacity="0">
+                <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
+              <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
+              <circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
+              <circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
+              <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
+              <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
+              <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4" stroke="#231B15" stroke-width="1.4"/>
+              <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
+              <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
+              <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
+              <g id="mieOpenEyes" class="eye-blink">
+                <circle class="pupil" cx="48" cy="48" r="3.4" fill="#231B15"/>
+                <circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+                <circle class="pupil" cx="64" cy="48" r="3.4" fill="#231B15"/>
+                <circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+              </g>
+              <g id="mieSingEyes" opacity="0">
+                <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
+              <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
+            </g>
+          </svg>
+          <p class="mascot-name">咩 · Mie（云朵小羊）</p>
+          <p class="mascot-role">高音主旋律 · 扁平草地角落领唱</p>
+        </button>
 
-          <button id="mouCard" class="mascot-card" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
-            <span class="wave-badge" aria-hidden="true">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-                <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-              <ellipse cx="56" cy="83" rx="31" ry="5" fill="rgba(0,0,0,0.14)"/>
-              <g class="cow-body-anim">
-                <g id="mouSleepArcs" opacity="0">
-                  <path class="sleep-arc-1" d="M88 21 Q92 17 96 21" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path class="sleep-arc-2" d="M95 14 Q99.5 9.5 104 14" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round"/>
-                </g>
-                <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
-                <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
-                <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
-                <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
-                <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
-                <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD"/>
-                <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-                <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-                <g id="mouOpenEyes" class="eye-blink-delay">
-                  <circle class="pupil" cx="46" cy="44" r="3.4" fill="#1C1D19"/>
-                  <circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-                  <circle class="pupil" cx="66" cy="44" r="3.4" fill="#1C1D19"/>
-                  <circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-                </g>
-                <g id="mouSleepEyes" opacity="0">
-                  <path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
-                  <path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
-                </g>
-                <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23"/>
-                <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23"/>
-              </g>
+        <button id="mouCard" class="mascot-card mou-theme" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
+          <span class="wave-badge" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+              <path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
             </svg>
-            <p class="mascot-name">哞 · Mou（可可小牛）</p>
-            <p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
-          </button>
+          </span>
+          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+            <ellipse cx="56" cy="83" rx="31" ry="4.5" fill="rgba(35,27,21,0.16)"/>
+            <g class="cow-body-anim">
+              <g id="mouSleepArcs" opacity="0">
+                <path class="sleep-arc-1" d="M88 21 Q92 17 96 21" fill="none" stroke="var(--gold)" stroke-width="2.0" stroke-linecap="round"/>
+                <path class="sleep-arc-2" d="M95 14 Q99.5 9.5 104 14" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
+              <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
+              <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
+              <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
+              <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
+              <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD" stroke="#231B15" stroke-width="1.4"/>
+              <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+              <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+              <g id="mouOpenEyes" class="eye-blink-delay">
+                <circle class="pupil" cx="46" cy="44" r="3.4" fill="#231B15"/>
+                <circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+                <circle class="pupil" cx="66" cy="44" r="3.4" fill="#231B15"/>
+                <circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+              </g>
+              <g id="mouSleepEyes" opacity="0">
+                <path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.2" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
+              <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
+            </g>
+          </svg>
+          <p class="mascot-name">哞 · Mou（可可小牛）</p>
+          <p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
+        </button>
+      </div>
+
+      <div class="choir-shelf">
+        <div class="choir-header">
+          <p class="choir-title">咩哞七小只合唱山坡（调内 1–7 音级）</p>
+          <p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
         </div>
-
-        <div class="choir-shelf">
-          <div class="choir-header">
-            <p class="choir-title">咩哞七小只合唱木架（调内 1–7 音级）</p>
-            <p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
-          </div>
-          <div class="shelf-stage">
-            <div class="choir-grid" id="choirGrid"></div>
-            <div class="wood-plank" aria-hidden="true"></div>
-          </div>
+        <div class="shelf-stage">
+          <div class="choir-grid" id="choirGrid"></div>
+          <div class="meadow-strip" aria-hidden="true"></div>
         </div>
       </div>
     </section>
 
-    <section class="workshop-bench" aria-label="蜂蜡桦木琴盒与黑胶精品封套体验">
+    <section class="workshop-bench" aria-label="扁平卡通 IP 合唱琴键与绘本黑胶封套体验">
       <div class="kiln-xylo-box">
         <div class="bench-label">
-          <span>3D 窑陶木琴共鸣箱（五音安心守护）</span>
-          <span>点按试音</span>
+          <span>IP 合唱五音彩块琴（小偶直接住进琴键）</span>
+          <span class="bench-sub">点按试音</span>
         </div>
         <div class="xylo-keys" id="xyloKeys">
-          <button class="xylo-key" type="button" data-hz="261.63" style="height:76px;background:#E8534A"><span class="rivet"></span><span>1 Do</span><span class="rivet"></span></button>
-          <button class="xylo-key" type="button" data-hz="293.66" style="height:70px;background:#F58A2C"><span class="rivet"></span><span>2 Re</span><span class="rivet"></span></button>
-          <button class="xylo-key" type="button" data-hz="329.63" style="height:64px;background:#EBB31A"><span class="rivet"></span><span>3 Mi</span><span class="rivet"></span></button>
-          <button class="xylo-key" type="button" data-hz="392.00" style="height:58px;background:#15A6AE"><span class="rivet"></span><span>5 Sol</span><span class="rivet"></span></button>
-          <button class="xylo-key" type="button" data-hz="440.00" style="height:52px;background:#4C74EB"><span class="rivet"></span><span>6 La</span><span class="rivet"></span></button>
+          <button class="xylo-key" type="button" data-hz="261.63" style="height:82px;background:#F25563">
+            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+            <span>1 Do</span>
+          </button>
+          <button class="xylo-key" type="button" data-hz="293.66" style="height:76px;background:#F7882F">
+            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+            <span>2 Re</span>
+          </button>
+          <button class="xylo-key" type="button" data-hz="329.63" style="height:70px;background:#E64980">
+            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+            <span>3 Mi</span>
+          </button>
+          <button class="xylo-key" type="button" data-hz="392.00" style="height:64px;background:#228BE6">
+            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+            <span>5 Sol</span>
+          </button>
+          <button class="xylo-key" type="button" data-hz="440.00" style="height:58px;background:#7950F2">
+            <span class="key-buddy-chip" aria-hidden="true"><span class="key-buddy-dot"></span><span class="key-buddy-dot"></span></span>
+            <span>6 La</span>
+          </button>
         </div>
       </div>
 
-      <button id="vinylBoutiqueCard" class="vinyl-boutique-card" type="button" aria-label="试听黑胶唱片工坊封套唱盘">
+      <button id="vinylBoutiqueCard" class="vinyl-boutique-card" type="button" aria-label="试听天鹅湖畔绘本黑胶唱片">
         <div class="sleeve-wrap" aria-hidden="true">
           <div class="peeking-disc"></div>
           <div class="sleeve-cover">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" stroke="var(--accent)" stroke-width="1.6"/>
-              <circle cx="12" cy="12" r="3.2" fill="var(--gold)"/>
+              <circle cx="12" cy="12" r="9" fill="#D8F1E7" stroke="#231B15" stroke-width="1.8"/>
+              <circle cx="12" cy="12" r="3.4" fill="#F25563"/>
             </svg>
           </div>
-          <svg class="tonearm-svg" width="96" height="74" viewBox="0 0 96 74">
-            <line x1="86" y1="9" x2="74" y2="33" stroke="var(--brass)" stroke-width="2.2" stroke-linecap="round"/>
-            <circle cx="86" cy="9" r="3.5" fill="var(--brass)"/>
-            <circle cx="74" cy="33" r="2.5" fill="var(--gold)"/>
+          <svg class="tonearm-svg" width="92" height="74" viewBox="0 0 92 74">
+            <line x1="82" y1="10" x2="70" y2="33" stroke="#231B15" stroke-width="2.6" stroke-linecap="round"/>
+            <circle cx="82" cy="10" r="4.0" fill="#FFE49E" stroke="#231B15" stroke-width="1.5"/>
+            <circle cx="70" cy="33" r="3.0" fill="#F25563" stroke="#231B15" stroke-width="1.4"/>
           </svg>
         </div>
-        <div style="text-align:left">
-          <div style="font-size:15px;font-weight:800">天鹅湖畔 · 黑胶工坊封套</div>
-          <div id="vinylStatusText" style="font-size:12.5px;color:var(--sub);margin-top:4px">轻点唱片滑出封套，黄铜唱臂自动落针试听</div>
+        <div>
+          <div style="font-size:15px;font-weight:900">天鹅湖畔 · 绘本黑胶封套</div>
+          <div id="vinylStatusText" style="font-size:12px;font-weight:700;color:var(--sub);margin-top:3px">轻点唱片滑出纸套，跟随唱针一起跳音阶</div>
         </div>
       </button>
     </section>
 
-    <section class="soundbox-bench" aria-label="童书声音调色木盒与黄铜 VU 示波台">
+    <section class="soundbox-bench" aria-label="童书声音调色卡与跳跃声波山坡表">
       <div class="soundbox-card">
         <div class="bench-label">
-          <span>童书声音调色木盒（音色 × 调式 × 三音偶）</span>
-          <span id="soundStatusText">暖阳钢琴 · 1·3·5 和鸣</span>
+          <span>童书声音调色盒（音色 × 调式 × 三音偶）</span>
+          <span class="bench-sub" id="soundStatusText">毛毡钢琴 · 暖阳大调</span>
         </div>
 
         <div class="osc-glass">
-          <svg width="100%" height="78" viewBox="0 0 420 78" aria-label="声音调色实时声学示波窗">
-            <line x1="12" y1="39" x2="408" y2="39" stroke="rgba(200,143,45,0.34)" stroke-width="1.2" stroke-dasharray="5 5"/>
-            <path id="soundOscSoft" d="" fill="none" stroke="rgba(14,118,110,0.22)" stroke-width="7" stroke-linecap="round"/>
-            <path id="soundOscWave" d="" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/>
+          <svg width="100%" height="74" viewBox="0 0 420 74" aria-label="声音调色扁平示波曲线">
+            <line x1="12" y1="37" x2="408" y2="37" stroke="var(--outline)" stroke-opacity="0.24" stroke-width="1.5" stroke-dasharray="6 5"/>
+            <path id="soundOscWave" d="" fill="none" stroke="var(--accent)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <div class="triad-row">
             <button id="triad1Btn" class="triad-pill lit" type="button" data-deg="1">
-              <span class="triad-dot" style="background:#C4513A"></span>
+              <span class="triad-dot" style="background:#F25563"></span>
               <span>1 陶诺 Do</span>
             </button>
             <button id="triad3Btn" class="triad-pill mood-happy" type="button" data-deg="3">
-              <span class="triad-dot" style="background:#CF5B68"></span>
+              <span class="triad-dot" style="background:#E64980"></span>
               <span>3 拍咯 Mi</span>
             </button>
             <button id="triad5Btn" class="triad-pill" type="button" data-deg="5">
-              <span class="triad-dot" style="background:#C88F2D"></span>
+              <span class="triad-dot" style="background:#228BE6"></span>
               <span>5 壳咯 Sol</span>
             </button>
           </div>
@@ -938,7 +970,7 @@
 
         <div class="lever-row">
           <button id="leverPentaBtn" class="lever-btn" type="button" aria-pressed="true">
-            <span>五音安心拨杆</span>
+            <span>五音安心开关</span>
             <span class="lever-track" aria-hidden="true"><span class="lever-knob"></span></span>
           </button>
           <button id="leverBachBtn" class="lever-btn" type="button" aria-pressed="false">
@@ -950,43 +982,37 @@
 
       <div class="vu-meter-card">
         <div class="bench-label">
-          <span>模拟黄铜 VU 声压表</span>
-          <span id="vuReadoutBadge">静候入画 · -48 dB</span>
+          <span>跳跃声波小山坡（全站联动）</span>
+          <span class="bench-sub" id="vuReadoutBadge">静候开唱</span>
         </div>
 
-        <div class="vu-dial-box">
-          <svg width="220" height="114" viewBox="0 0 240 120" aria-hidden="true">
-            <path d="M36 106 A84 84 0 0 1 204 106" fill="none" stroke="rgba(200,143,45,0.28)" stroke-width="6" stroke-linecap="round"/>
-            <path d="M162 34 A84 84 0 0 1 204 106" fill="none" stroke="var(--terra)" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
-            <g stroke="var(--brass)" stroke-width="1.6" opacity="0.72">
-              <line x1="48" y1="74" x2="56" y2="79"/>
-              <line x1="74" y1="44" x2="80" y2="52"/>
-              <line x1="120" y1="22" x2="120" y2="32"/>
-              <line x1="166" y1="44" x2="160" y2="52"/>
-              <line x1="192" y1="74" x2="184" y2="79"/>
-            </g>
-            <g id="vuNeedle" class="vu-needle">
-              <line x1="120" y1="106" x2="120" y2="32" stroke="var(--terra)" stroke-width="2.8" stroke-linecap="round"/>
-            </g>
-            <circle cx="120" cy="106" r="8" fill="var(--brass)"/>
-            <circle cx="120" cy="106" r="3.4" fill="var(--card)"/>
-          </svg>
+        <div id="hillMeterBox" class="hill-meter-box">
+          <div class="hill-meter-sky">
+            <span class="bench-sub">发声越响，小羊与彩虹山坡跳得越高</span>
+            <svg class="hill-mini-mie" width="34" height="28" viewBox="0 0 112 92" aria-hidden="true">
+              <circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
+              <circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
+              <ellipse cx="56" cy="50" rx="22" ry="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
+              <circle cx="48" cy="49" r="3.8" fill="#231B15"/>
+              <circle cx="64" cy="49" r="3.8" fill="#231B15"/>
+            </svg>
+          </div>
 
-          <div class="vu-leds" id="vuSegments" aria-hidden="true">
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
-            <span class="vu-led"></span>
+          <div class="sound-hills" id="soundHills" aria-hidden="true">
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
+            <span class="sound-hill"></span>
           </div>
         </div>
 
-        <button id="vuPingBtn" class="pill-btn" type="button" style="justify-content:center">
-          <span>点按敲击木鼓 · 联动校准指针</span>
+        <button id="vuPingBtn" class="pill-btn" type="button" style="justify-content:center;background:var(--butter);color:#231B15">
+          <span>点按咩哞合奏 · 唤醒全部山坡</span>
         </button>
       </div>
     </section>
@@ -995,33 +1021,33 @@
       <article class="feature-card">
         <div class="feature-chip" aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2.2"/>
             <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
           </svg>
         </div>
-        <h2>木框黄铜底座与舞台游标卡尺</h2>
-        <p>全新 v0.38.0 升级双子四角木框座与音符黄铜游标卡尺，单指手摇星盘搓盘、流淌山河与星座星云三态联动。</p>
+        <h2>零拟物扁平卡通与绘本全幅舞台</h2>
+        <p>全面告别木纹与金属渐变拟物，用暖墨描边、纸艺云朵山坡与紧凑构图填满画幅，打造真正会唱的交互儿童绘本。</p>
       </article>
 
       <article class="feature-card">
         <div class="feature-chip" aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+            <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>童书声音调色盒与模拟 VU 电台</h2>
-        <p>内凹示波窗随音色与移调重绘波形，1·3·5 三音偶响应大/小调情绪变化，支持轻敲木鼓与无延迟轻哼捕梦。</p>
+        <h2>咩哞七小只直接化作每枚琴键</h2>
+        <p>陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫与叮尖按调内音级住进琴键与空画布折页，眼神、笑眼与倾角随旋律同步呼吸。</p>
       </article>
 
       <article class="feature-card">
         <div class="feature-chip" aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2"/>
-            <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>28 首黑胶唱片馆与离线导出</h2>
-        <p>木纹陈列架收纳 20 首公版古典与 8 首原创曲目，纯本机离线导出黄铜黑胶明信片、WAV 音频与标准 MIDI。</p>
+        <h2>28 首黑胶绘本馆与离线导出</h2>
+        <p>收纳 20 首公版古典与 8 首原创作品，100% 本机离线运行、零乐理三秒起音，支持明信片 PNG、WAV 与标准 MIDI 导出。</p>
       </article>
     </section>
 
@@ -1054,31 +1080,33 @@
       let activeDegree = null;
       let clearTimer = null;
       let vinylTimer = null;
-      let vuTimer = null;
+      let hillTimer = null;
 
-      const vuNeedle = document.getElementById("vuNeedle");
-      const vuBadge = document.getElementById("vuReadoutBadge");
-      const vuLeds = Array.from(document.querySelectorAll("#vuSegments .vu-led"));
+      const hillBox = document.getElementById("hillMeterBox");
+      const hillBadge = document.getElementById("vuReadoutBadge");
+      const hills = Array.from(document.querySelectorAll("#soundHills .sound-hill"));
 
-      function pulseVUMeter(level) {
-        const lv = Math.max(0.08, Math.min(1.0, level || 0.55));
-        const curved = Math.pow(lv, 0.72);
-        const angle = -44 + curved * 88;
-        vuNeedle.style.transform = `rotate(${angle.toFixed(1)}deg)`;
-        const lit = Math.max(1, Math.min(9, Math.round(curved * 9)));
-        vuLeds.forEach((led, idx) => {
-          const isOn = idx < lit;
-          led.classList.toggle("on", isOn);
-          led.classList.toggle("warm", isOn && idx >= 5 && idx < 7);
-          led.classList.toggle("hot", isOn && idx >= 7);
+      function pulseSoundHills(level) {
+        const lv = Math.max(0.15, Math.min(1.0, level || 0.6));
+        const litCount = Math.max(2, Math.min(9, Math.round(lv * 9)));
+        hillBox.classList.add("singing");
+        hills.forEach((el, idx) => {
+          const isOn = idx < litCount;
+          const arch = 34 + Math.sin(((idx + 1) / 10) * Math.PI) * (62 * lv);
+          el.style.height = `${isOn ? Math.round(arch) : (idx % 2 === 1 ? 46 : 36)}%`;
+          el.classList.toggle("on", isOn);
+          el.classList.toggle("warm", isOn && idx >= 4 && idx < 7);
+          el.classList.toggle("hot", isOn && idx >= 7);
         });
-        const db = Math.round(-36 + lv * 34);
-        vuBadge.textContent = lv >= 0.74 ? `饱满泛音 · ${db} dB` : `实时声压 · ${db} dB`;
-        clearTimeout(vuTimer);
-        vuTimer = setTimeout(() => {
-          vuNeedle.style.transform = "rotate(-44deg)";
-          vuLeds.forEach((led) => led.classList.remove("on", "warm", "hot"));
-          vuBadge.textContent = "静候入画 · -48 dB";
+        hillBadge.textContent = lv >= 0.74 ? "欢快高音齐唱" : "轻柔声波跃动";
+        clearTimeout(hillTimer);
+        hillTimer = setTimeout(() => {
+          hillBox.classList.remove("singing");
+          hills.forEach((el, idx) => {
+            el.style.height = `${idx % 2 === 1 ? 46 : 36}%`;
+            el.classList.remove("on", "warm", "hot");
+          });
+          hillBadge.textContent = "静候开唱";
         }, 720);
       }
 
@@ -1091,7 +1119,7 @@
       }
 
       function playTone(freq, durationSec, delaySec, gainPeak, type) {
-        pulseVUMeter(Math.min(0.95, 0.42 + (gainPeak || 0.16) * 2.5));
+        pulseSoundHills(Math.min(0.96, 0.44 + (gainPeak || 0.16) * 2.5));
         const ctx = ensureAudio();
         if (!ctx) return;
         const t0 = ctx.currentTime + (delaySec || 0);
@@ -1124,73 +1152,73 @@
         let detail = "";
         if (m.shape === "taono") {
           detail = `
-            <rect x="20" y="13" width="6" height="14" rx="3" fill="${m.color}"/>
-            <circle cx="23" cy="12" r="3.6" fill="#F2E6D0"/>
+            <rect x="20" y="13" width="6" height="14" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/>
+            <circle cx="23" cy="12" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/>
             <g transform="rotate(-11 38 22)">
-              <rect x="34" y="14" width="6" height="13" rx="3" fill="${m.color}"/>
-              <circle cx="37" cy="13" r="3.6" fill="#F2E6D0"/>
+              <rect x="34" y="14" width="6" height="13" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/>
+              <circle cx="37" cy="13" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/>
             </g>
-            <rect x="14" y="25" width="32" height="31" rx="14" fill="${m.color}"/>
-            <circle cx="27" cy="47" r="5.5" fill="#F2E6D0"/>
-            <circle cx="27" cy="47" r="2.8" fill="#D99E32"/>
+            <rect x="14" y="25" width="32" height="31" rx="14" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+            <circle cx="27" cy="47" r="5.5" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/>
+            <circle cx="27" cy="47" r="2.8" fill="#FFB94E"/>
           `;
         } else if (m.shape === "doko") {
           detail = `
-            <rect x="14" y="29" width="32" height="27" rx="13" fill="${m.color}"/>
+            <rect x="14" y="29" width="32" height="27" rx="13" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
             <rect x="23" y="26" width="14" height="3.2" rx="1.6" fill="${m.dark}"/>
           `;
         } else if (m.shape === "plokko") {
           detail = `
             <ellipse cx="30" cy="57" rx="12" ry="3.2" fill="${m.dark}"/>
-            <rect x="8" y="37" width="13" height="7" rx="3.5" transform="rotate(10 14 40)" fill="${m.color}" stroke="#D9A438" stroke-width="1.2"/>
-            <rect x="39" y="37" width="13" height="7" rx="3.5" transform="rotate(-10 45 40)" fill="${m.color}" stroke="#D9A438" stroke-width="1.2"/>
-            <circle cx="30" cy="42" r="15" fill="${m.color}"/>
-            <circle cx="30" cy="28" r="2.5" fill="#D9A438"/>
+            <rect x="8" y="37" width="13" height="7" rx="3.5" transform="rotate(10 14 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/>
+            <rect x="39" y="37" width="13" height="7" rx="3.5" transform="rotate(-10 45 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/>
+            <circle cx="30" cy="42" r="15" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+            <circle cx="30" cy="28" r="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>
           `;
         } else if (m.shape === "udo") {
           detail = `
-            <ellipse cx="30" cy="42" rx="14" ry="16" fill="${m.color}"/>
+            <ellipse cx="30" cy="42" rx="14" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
             <circle cx="39" cy="34" r="2.2" fill="${m.dark}"/>
             <circle cx="39" cy="40" r="1.7" fill="${m.dark}"/>
           `;
         } else if (m.shape === "corllo") {
           detail = `
-            <circle cx="43" cy="34" r="9.5" fill="${m.dark}"/>
-            <circle cx="43" cy="34" r="5.5" fill="#EFE7D8"/>
-            <circle cx="43" cy="34" r="2.8" fill="${m.dark}"/>
-            <ellipse cx="28" cy="42" rx="13" ry="16" fill="${m.color}"/>
+            <circle cx="43" cy="34" r="9.5" fill="${m.dark}" stroke="#231B15" stroke-width="1.6"/>
+            <circle cx="43" cy="34" r="5.5" fill="#FFFDF7"/>
+            <circle cx="43" cy="34" r="2.8" fill="#FFE49E"/>
+            <ellipse cx="28" cy="42" rx="13" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
           `;
         } else if (m.shape === "bomo") {
           detail = `
-            <ellipse cx="30" cy="44" rx="16.5" ry="12.5" fill="${m.color}"/>
-            <ellipse cx="30" cy="34" rx="9" ry="2.8" fill="#E8BD6B"/>
+            <ellipse cx="30" cy="44" rx="16.5" ry="12.5" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
+            <ellipse cx="30" cy="34" rx="9" ry="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>
           `;
         } else {
           detail = `
-            <line x1="30" y1="18" x2="30" y2="25" stroke="#6B430C" stroke-width="2.2" stroke-linecap="round"/>
-            <circle cx="30" cy="15" r="3.4" fill="#FFC45A"/>
-            <rect x="19" y="25" width="22" height="31" rx="11" fill="${m.color}"/>
+            <line x1="30" y1="18" x2="30" y2="25" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="30" cy="15" r="3.6" fill="#FFE49E" stroke="#231B15" stroke-width="1.4"/>
+            <rect x="19" y="25" width="22" height="31" rx="11" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>
           `;
         }
 
         const eyeY = m.shape === "bomo" ? 44 : (m.shape === "doko" ? 42 : 39);
         return `
           <svg class="figure-svg" viewBox="0 0 60 66" aria-hidden="true">
-            <ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(0,0,0,0.13)"/>
+            <ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(35,27,21,0.16)"/>
             <g class="${animClass}" transform="rotate(${m.tilt} 30 58)">
-              <circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="${m.color}" stroke-width="1.8" opacity="0"/>
+              <circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="${m.color}" stroke-width="2.2" opacity="0"/>
               <ellipse cx="24" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
               <ellipse cx="36" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
               ${detail}
               <g class="eyes-open">
-                <circle class="eye-pupil" cx="25.5" cy="${eyeY}" r="2.4" fill="#1C1D19"/>
+                <circle class="eye-pupil" cx="25.5" cy="${eyeY}" r="2.5" fill="#231B15"/>
                 <circle cx="24.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
-                <circle class="eye-pupil" cx="34.5" cy="${eyeY}" r="2.4" fill="#1C1D19"/>
+                <circle class="eye-pupil" cx="34.5" cy="${eyeY}" r="2.5" fill="#231B15"/>
                 <circle cx="33.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
               </g>
               <g class="eyes-sing" opacity="0">
-                <path d="M23 ${eyeY + 0.8} Q25.5 ${eyeY - 2.4} 28 ${eyeY + 0.8}" fill="none" stroke="#1C1D19" stroke-width="1.7" stroke-linecap="round"/>
-                <path d="M32 ${eyeY + 0.8} Q34.5 ${eyeY - 2.4} 37 ${eyeY + 0.8}" fill="none" stroke="#1C1D19" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M23 ${eyeY + 0.8} Q25.5 ${eyeY - 2.4} 28 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/>
+                <path d="M32 ${eyeY + 0.8} Q34.5 ${eyeY - 2.4} 37 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/>
               </g>
             </g>
           </svg>
@@ -1226,7 +1254,7 @@
           const halo = btn.querySelector(".sing-halo");
           const open = btn.querySelector(".eyes-open");
           const sing = btn.querySelector(".eyes-sing");
-          if (halo) halo.setAttribute("opacity", isTarget ? "0.55" : "0");
+          if (halo) halo.setAttribute("opacity", isTarget ? "0.75" : "0");
           if (open) open.setAttribute("opacity", isTarget ? "0" : "1");
           if (sing) sing.setAttribute("opacity", isTarget ? "1" : "0");
           const pupils = btn.querySelectorAll(".eye-pupil");
@@ -1273,14 +1301,13 @@
           });
           vinylTimer = setTimeout(() => {
             vinylCard.classList.remove("spinning");
-            vinylStatus.textContent = "轻点唱片滑出封套，黄铜唱臂自动落针试听";
+            vinylStatus.textContent = "轻点唱片滑出纸套，跟随唱针一起跳音阶";
           }, 1500);
         } else {
-          vinylStatus.textContent = "轻点唱片滑出封套，黄铜唱臂自动落针试听";
+          vinylStatus.textContent = "轻点唱片滑出纸套，跟随唱针一起跳音阶";
         }
       });
 
-      /* Sound Palette Box Oscilloscope + Triad + Brass Toggles */
       const voiceSpecs = {
         piano:   { name: "毛毡钢琴", cycles: 4.0, ratio: 2.5, hw: 0.22, waveType: "triangle", color: "var(--accent)", hz: 329.63 },
         harp:    { name: "液态竖琴", cycles: 5.0, ratio: 3.0, hw: 0.26, waveType: "sine",     color: "var(--blue)",   hz: 392.00 },
@@ -1295,7 +1322,6 @@
       let currentVoice = "piano";
       let currentMood = "major";
       const oscWave = document.getElementById("soundOscWave");
-      const oscSoft = document.getElementById("soundOscSoft");
       const soundStatus = document.getElementById("soundStatusText");
       const triad3Btn = document.getElementById("triad3Btn");
 
@@ -1310,12 +1336,10 @@
           const env = Math.sin(u * Math.PI) * m.envScale;
           const ang = u * Math.PI * 2 * v.cycles;
           const val = (Math.sin(ang) + v.hw * Math.sin(ang * v.ratio + 0.45)) / (1 + v.hw);
-          const y = (39 - env * val * 26).toFixed(1);
+          const y = (37 - env * val * 25).toFixed(1);
           pts.push((i === 0 ? "M" : "L") + x + " " + y);
         }
-        const d = pts.join(" ");
-        oscWave.setAttribute("d", d);
-        oscSoft.setAttribute("d", d);
+        oscWave.setAttribute("d", pts.join(" "));
         oscWave.style.stroke = v.color;
         soundStatus.textContent = `${v.name} · ${m.name}`;
       }
@@ -1363,8 +1387,10 @@
       });
 
       document.getElementById("vuPingBtn").addEventListener("click", () => {
-        playTone(196.00, 0.28, 0, 0.22, "triangle");
-        pulseVUMeter(0.84);
+        playTone(261.63, 0.52, 0, 0.18, "triangle");
+        playTone(329.63, 0.56, 0.09, 0.16, "triangle");
+        playTone(392.00, 0.70, 0.18, 0.20, "triangle");
+        pulseSoundHills(0.92);
       });
 
       renderOscilloscope();

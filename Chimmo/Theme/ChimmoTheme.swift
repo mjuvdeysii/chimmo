@@ -39,51 +39,69 @@ public struct ChimmoPalette: Sendable {
     public let tensionFilament: Color  // 暖橘张力 (#DE5B18 / #FFB34D)
     public let nightLampGold: Color    // 暖钨丝琥珀 (#C88F2D / #FFB94E)
 
-    // Physical kiln-ceramic, wood resonator tray & brushed brass primitives
+    // Flat cartoon storybook card & ink-border primitives
     public let woodTrayTop: Color
     public let woodTrayBottom: Color
     public let brassHairline: Color
     public let glazeHighlight: Color
     public let recessShadow: Color
+    public let cartoonOutline: Color
+    public let cartoonShadow: Color
+    public let storybookButter: Color
+    public let storybookMint: Color
+    public let storybookHillBack: Color
+    public let storybookHillFront: Color
 
     public init(isNight: Bool) {
         self.isNight = isNight
         if isNight {
             self.paper = Color(hex: 0x0E142C)
-            self.shelfSurface = Color(hex: 0x172042)
-            self.cardSurface = Color(hex: 0x1D274E)
+            self.shelfSurface = Color(hex: 0x162048)
+            self.cardSurface = Color(hex: 0x1D2856)
             self.primaryInk = Color(hex: 0xF5ECDD)
-            self.secondaryInk = Color(hex: 0xA7B0CE)
-            self.divider = Color(hex: 0xF5ECDD).opacity(0.11)
+            self.secondaryInk = Color(hex: 0xB3BEDC)
+            self.divider = Color(hex: 0xF5ECDD).opacity(0.14)
             self.homeAnchor = Color(hex: 0x53DFCF)
             self.bassRibbon = Color(hex: 0x66B5FF)
             self.harmonyWash = Color(hex: 0xB39BFF)
             self.melodyTerracotta = Color(hex: 0xFF7B82)
             self.tensionFilament = Color(hex: 0xFFB34D)
             self.nightLampGold = Color(hex: 0xFFB94E)
-            self.woodTrayTop = Color(hex: 0x22294A)
-            self.woodTrayBottom = Color(hex: 0x131934)
-            self.brassHairline = Color(hex: 0xE5AA4A)
-            self.glazeHighlight = Color.white.opacity(0.14)
-            self.recessShadow = Color.black.opacity(0.42)
+            self.woodTrayTop = Color(hex: 0x172149)
+            self.woodTrayBottom = Color(hex: 0x172149)
+            self.brassHairline = Color(hex: 0xFFB94E)
+            self.glazeHighlight = Color(hex: 0xFFB94E).opacity(0.28)
+            self.recessShadow = Color(hex: 0x040714).opacity(0.65)
+            self.cartoonOutline = Color(hex: 0xFFB94E)
+            self.cartoonShadow = Color(hex: 0x040714).opacity(0.72)
+            self.storybookButter = Color(hex: 0x2B2952)
+            self.storybookMint = Color(hex: 0x162C46)
+            self.storybookHillBack = Color(hex: 0x18234C)
+            self.storybookHillFront = Color(hex: 0x213063)
         } else {
             self.paper = Color(hex: 0xF4EDE0)
-            self.shelfSurface = Color(hex: 0xE7DEC9)
-            self.cardSurface = Color(hex: 0xFBF7EE)
-            self.primaryInk = Color(hex: 0x1E1B16)
-            self.secondaryInk = Color(hex: 0x635B4F)
-            self.divider = Color(hex: 0x1E1B16).opacity(0.09)
+            self.shelfSurface = Color(hex: 0xEDE1CA)
+            self.cardSurface = Color(hex: 0xFFFDF7)
+            self.primaryInk = Color(hex: 0x231B15)
+            self.secondaryInk = Color(hex: 0x5E5245)
+            self.divider = Color(hex: 0x231B15).opacity(0.12)
             self.homeAnchor = Color(hex: 0x0E766E)
             self.bassRibbon = Color(hex: 0x257BD4)
             self.harmonyWash = Color(hex: 0x6C4AD6)
             self.melodyTerracotta = Color(hex: 0xE64B58)
             self.tensionFilament = Color(hex: 0xDE5B18)
-            self.nightLampGold = Color(hex: 0xC88F2D)
-            self.woodTrayTop = Color(hex: 0xDFCFAF)
-            self.woodTrayBottom = Color(hex: 0xC7B08A)
+            self.nightLampGold = Color(hex: 0xE59900)
+            self.woodTrayTop = Color(hex: 0xEFE4CF)
+            self.woodTrayBottom = Color(hex: 0xEFE4CF)
             self.brassHairline = Color(hex: 0xC88F2D)
-            self.glazeHighlight = Color.white.opacity(0.78)
-            self.recessShadow = Color(hex: 0x3A2E1E).opacity(0.14)
+            self.glazeHighlight = Color(hex: 0x231B15).opacity(0.18)
+            self.recessShadow = Color(hex: 0x231B15).opacity(0.16)
+            self.cartoonOutline = Color(hex: 0x231B15)
+            self.cartoonShadow = Color(hex: 0x231B15).opacity(0.18)
+            self.storybookButter = Color(hex: 0xFFE49E)
+            self.storybookMint = Color(hex: 0xD8F1E7)
+            self.storybookHillBack = Color(hex: 0xE6D7BC)
+            self.storybookHillFront = Color(hex: 0xD7E6D8)
         }
     }
 }

@@ -2316,4 +2316,53 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(singing.liftPoints, -2.5, accuracy: 0.0001)
         XCTAssertEqual(reduced.liftPoints, 0.0, accuracy: 0.0001)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound32StorybookFlatCartoonLayoutAndIPKeyBuddies() throws {
+        // 1. StorybookIllustrationLayout 童书山坡轮廓生成与 NaN 安全防护
+        XCTAssertTrue(StorybookIllustrationLayout.rollingHillProfile(sampleCount: 0, amplitude: 0.16, phaseShift: 0.0).isEmpty)
+        let solo = StorybookIllustrationLayout.rollingHillProfile(sampleCount: 1, amplitude: 0.16, phaseShift: 0.0)
+        XCTAssertEqual(solo.count, 1)
+        XCTAssertEqual(solo[0].xFraction, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(solo[0].yFraction, 0.5, accuracy: 0.0001)
+
+        let hills = StorybookIllustrationLayout.rollingHillProfile(sampleCount: 16, amplitude: 0.18, phaseShift: 1.2)
+        XCTAssertEqual(hills.count, 16)
+        XCTAssertEqual(hills.first?.xFraction ?? -1, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(hills.last?.xFraction ?? -1, 1.0, accuracy: 0.0001)
+        XCTAssertTrue(hills.allSatisfy { $0.yFraction.isFinite && $0.yFraction >= 0.05 && $0.yFraction <= 0.95 })
+
+        let nanHills = StorybookIllustrationLayout.rollingHillProfile(sampleCount: 10, amplitude: .nan, phaseShift: .infinity)
+        XCTAssertEqual(nanHills.count, 10)
+        XCTAssertTrue(nanHills.allSatisfy { $0.xFraction.isFinite && $0.yFraction >= 0.05 && $0.yFraction <= 0.95 })
+
+        // 2. 咩哞七小只琴键融合头像姿态联动（大/小调、欢唱与减弱动态效果）
+        let plokkoMajor = StorybookIllustrationLayout.keyBuddyPose(for: .plokko, isSinging: false, isMinor: false, reduceMotion: false)
+        let plokkoMinor = StorybookIllustrationLayout.keyBuddyPose(for: .plokko, isSinging: false, isMinor: true, reduceMotion: false)
+        let plokkoSinging = StorybookIllustrationLayout.keyBuddyPose(for: .plokko, isSinging: true, isMinor: false, reduceMotion: false)
+        let plokkoReduced = StorybookIllustrationLayout.keyBuddyPose(for: .plokko, isSinging: true, isMinor: true, reduceMotion: true)
+
+        XCTAssertEqual(plokkoMajor.popOffsetY, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(plokkoMajor.earTiltDegrees, -6.0, accuracy: 0.0001)
+        XCTAssertEqual(plokkoMinor.earTiltDegrees, 10.0, accuracy: 0.0001)
+        XCTAssertFalse(plokkoMajor.showSingingSmile)
+
+        XCTAssertEqual(plokkoSinging.popOffsetY, -3.0, accuracy: 0.0001)
+        XCTAssertEqual(plokkoSinging.earTiltDegrees, -12.0, accuracy: 0.0001)
+        XCTAssertTrue(plokkoSinging.showSingingSmile)
+
+        XCTAssertEqual(plokkoReduced.popOffsetY, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(plokkoReduced.earTiltDegrees, 0.0, accuracy: 0.0001)
+        XCTAssertTrue(plokkoReduced.showSingingSmile)
+
+        let dokoIdle = StorybookIllustrationLayout.keyBuddyPose(for: .doko, isSinging: false, isMinor: false, reduceMotion: false)
+        let udoIdle = StorybookIllustrationLayout.keyBuddyPose(for: .udo, isSinging: false, isMinor: false, reduceMotion: false)
+        let tinkiIdle = StorybookIllustrationLayout.keyBuddyPose(for: .tinki, isSinging: false, isMinor: false, reduceMotion: false)
+        let tinkiSinging = StorybookIllustrationLayout.keyBuddyPose(for: .tinki, isSinging: true, isMinor: false, reduceMotion: false)
+        XCTAssertEqual(dokoIdle.earTiltDegrees, 4.0, accuracy: 0.0001)
+        XCTAssertEqual(udoIdle.earTiltDegrees, -4.0, accuracy: 0.0001)
+        XCTAssertEqual(tinkiIdle.earTiltDegrees, -7.0, accuracy: 0.0001)
+        XCTAssertEqual(tinkiSinging.earTiltDegrees, -10.0, accuracy: 0.0001)
+        XCTAssertEqual(tinkiSinging.popOffsetY, -3.0, accuracy: 0.0001)
+    }
 }

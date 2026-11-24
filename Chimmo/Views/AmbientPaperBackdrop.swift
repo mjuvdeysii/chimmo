@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// 零能耗静态手抄陶纸声学桌面背景层（无全屏持续 `TimelineView` 重绘）：
-/// 结合斜向工作室窗光 / 夜灯暖钨丝光晕、四周微暗角景深与 120 颗确定性宣纸矿物微粒/纤维肌理，
-/// 让主画布与木琴独享 120Hz 算力的同时呈现实体桌面材质触感。
+/// 扁平卡通童书绘本全画幅背景舞台（零拟物、零无意义留白、零高耗能 60Hz 重绘）：
+/// 用明快平涂纸艺云朵、角落小太阳 / 夜灯新月星辰、双层童话小山坡与星点音阶符号铺陈完整绘本语境。
 public struct AmbientPaperBackdrop: View {
     public let palette: ChimmoPalette
     public var accentTint: Color?
@@ -17,80 +16,171 @@ public struct AmbientPaperBackdrop: View {
         ZStack {
             palette.paper
 
-            if palette.isNight {
-                RadialGradient(
-                    colors: [
-                        palette.nightLampGold.opacity(0.18),
-                        tint.opacity(0.08),
-                        .clear
-                    ],
-                    center: UnitPoint(x: 0.50, y: 0.16),
-                    startRadius: 10,
-                    endRadius: 430
-                )
-
-                RadialGradient(
-                    colors: [.clear, Color.black.opacity(0.32)],
-                    center: .center,
-                    startRadius: 180,
-                    endRadius: 560
-                )
-            } else {
-                RadialGradient(
-                    colors: [
-                        Color(hex: 0xFFE3A6).opacity(0.30),
-                        tint.opacity(0.08),
-                        .clear
-                    ],
-                    center: UnitPoint(x: 0.86, y: 0.06),
-                    startRadius: 12,
-                    endRadius: 500
-                )
-
-                // 斜向柔和工作室窗光束
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.30),
-                        tint.opacity(0.05),
-                        Color(hex: 0xD8C6A8).opacity(0.14)
-                    ],
-                    startPoint: .topTrailing,
-                    endPoint: .bottomLeading
-                )
-            }
-
-            // 静态确定性手抄陶纸矿物微粒与微纤维纹理
             Canvas { ctx, size in
                 let w = max(1, size.width)
                 let h = max(1, size.height)
-                let speckDark = palette.isNight ? Color.white.opacity(0.045) : Color(hex: 0x5A4832).opacity(0.055)
-                let speckWarm = palette.isNight ? palette.nightLampGold.opacity(0.055) : Color.white.opacity(0.38)
-                let fiberInk = palette.isNight ? Color.white.opacity(0.028) : Color(hex: 0x7A654A).opacity(0.045)
+                let outline = palette.cartoonOutline.opacity(palette.isNight ? 0.32 : 0.22)
+                let lineStroke = StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round)
 
-                for i in 0..<120 {
-                    let s1 = Double((i * 73 + 19) % 997) / 997.0
-                    let s2 = Double((i * 137 + 53) % 991) / 991.0
-                    let s3 = Double((i * 41 + 7) % 89) / 89.0
-                    let px = CGFloat(s1) * w
-                    let py = CGFloat(s2) * h
-                    let r = CGFloat(0.55 + s3 * 0.70)
-                    let rect = CGRect(x: px - r, y: py - r, width: r * 2, height: r * 2)
-                    ctx.fill(Path(ellipseIn: rect), with: .color(i % 3 == 0 ? speckWarm : speckDark))
+                // 1. 顶部绘本角落太阳（日光）或新月星辰（夜灯）
+                if palette.isNight {
+                    let moonCenter = CGPoint(x: w * 0.86, y: h * 0.11)
+                    var crescent = Path()
+                    crescent.addArc(center: moonCenter, radius: 22, startAngle: .degrees(30), endAngle: .degrees(290), clockwise: false)
+                    crescent.addQuadCurve(
+                        to: CGPoint(x: moonCenter.x + 22 * cos(30 * .pi / 180), y: moonCenter.y + 22 * sin(30 * .pi / 180)),
+                        control: CGPoint(x: moonCenter.x - 4, y: moonCenter.y - 2)
+                    )
+                    ctx.fill(crescent, with: .color(palette.nightLampGold.opacity(0.82)))
+                    ctx.stroke(crescent, with: .color(outline), style: lineStroke)
 
-                    if i % 5 == 0 {
-                        let ang = CGFloat(s3 * Double.pi)
-                        let len = CGFloat(4.5 + s1 * 5.5)
-                        var fiber = Path()
-                        fiber.move(to: CGPoint(x: px, y: py))
-                        fiber.addLine(to: CGPoint(x: px + cos(ang) * len, y: py + sin(ang) * len))
-                        ctx.stroke(fiber, with: .color(fiberInk), lineWidth: 0.65)
+                    let starPts: [CGPoint] = [
+                        CGPoint(x: w * 0.14, y: h * 0.10),
+                        CGPoint(x: w * 0.28, y: h * 0.16),
+                        CGPoint(x: w * 0.68, y: h * 0.08),
+                        CGPoint(x: w * 0.74, y: h * 0.18),
+                        CGPoint(x: w * 0.92, y: h * 0.24)
+                    ]
+                    for (idx, sp) in starPts.enumerated() {
+                        drawPaperStar(ctx: &ctx, center: sp, radius: idx.isMultiple(of: 2) ? 6.5 : 4.5, color: palette.nightLampGold.opacity(0.68))
+                    }
+                } else {
+                    let sunCenter = CGPoint(x: w * 0.87, y: h * 0.10)
+                    let sunDisc = Path(ellipseIn: CGRect(x: sunCenter.x - 22, y: sunCenter.y - 22, width: 44, height: 44))
+                    ctx.fill(sunDisc, with: .color(palette.storybookButter))
+                    ctx.stroke(sunDisc, with: .color(outline), style: lineStroke)
+                    for i in 0..<8 {
+                        let ang = Double(i) * Double.pi / 4.0
+                        let p0 = CGPoint(x: sunCenter.x + CGFloat(cos(ang)) * 28, y: sunCenter.y + CGFloat(sin(ang)) * 28)
+                        let p1 = CGPoint(x: sunCenter.x + CGFloat(cos(ang)) * 36, y: sunCenter.y + CGFloat(sin(ang)) * 36)
+                        var ray = Path()
+                        ray.move(to: p0)
+                        ray.addLine(to: p1)
+                        ctx.stroke(ray, with: .color(palette.brassHairline.opacity(0.55)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
                     }
                 }
+
+                // 2. 扁平纸艺云朵（消灭上半屏空白边缘）
+                drawPaperCloud(
+                    ctx: &ctx,
+                    center: CGPoint(x: w * 0.18, y: h * 0.14),
+                    scale: 0.95,
+                    fill: palette.cardSurface.opacity(palette.isNight ? 0.18 : 0.78),
+                    outline: outline
+                )
+                drawPaperCloud(
+                    ctx: &ctx,
+                    center: CGPoint(x: w * 0.60, y: h * 0.13),
+                    scale: 0.72,
+                    fill: palette.cardSurface.opacity(palette.isNight ? 0.14 : 0.65),
+                    outline: outline
+                )
+
+                // 3. 点缀调性音符微星（呼应当前调式情绪色）
+                for i in 0..<18 {
+                    let fx = Double((i * 73 + 11) % 97) / 97.0
+                    let fy = 0.22 + Double((i * 47 + 23) % 58) / 100.0
+                    let r: CGFloat = i.isMultiple(of: 3) ? 3.2 : 2.0
+                    let pt = CGPoint(x: CGFloat(fx) * w, y: CGFloat(fy) * h)
+                    let dot = Path(ellipseIn: CGRect(x: pt.x - r, y: pt.y - r, width: r * 2, height: r * 2))
+                    ctx.fill(dot, with: .color(i.isMultiple(of: 4) ? tint.opacity(0.26) : palette.nightLampGold.opacity(0.24)))
+                }
+
+                // 4. 下半幅双层扁平卡通起伏山坡（平涂水粉 + 清晰绘本轮廓线）
+                drawStorybookHillBand(
+                    ctx: &ctx,
+                    size: size,
+                    baseTopRatio: 0.66,
+                    amplitude: 0.16,
+                    phaseShift: 0.4,
+                    fill: palette.storybookHillBack,
+                    outline: outline
+                )
+                drawStorybookHillBand(
+                    ctx: &ctx,
+                    size: size,
+                    baseTopRatio: 0.78,
+                    amplitude: 0.14,
+                    phaseShift: 2.1,
+                    fill: palette.storybookHillFront,
+                    outline: outline
+                )
             }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .animation(.easeInOut(duration: 0.55), value: palette.isNight)
+        .animation(.easeInOut(duration: 0.35), value: palette.isNight)
+    }
+
+    private func drawPaperCloud(
+        ctx: inout GraphicsContext,
+        center: CGPoint,
+        scale: CGFloat,
+        fill: Color,
+        outline: Color
+    ) {
+        var cloud = Path()
+        cloud.addRoundedRect(
+            in: CGRect(x: center.x - 36 * scale, y: center.y - 6 * scale, width: 72 * scale, height: 22 * scale),
+            cornerSize: CGSize(width: 11 * scale, height: 11 * scale)
+        )
+        cloud.addEllipse(in: CGRect(x: center.x - 24 * scale, y: center.y - 20 * scale, width: 32 * scale, height: 28 * scale))
+        cloud.addEllipse(in: CGRect(x: center.x - 4 * scale, y: center.y - 16 * scale, width: 28 * scale, height: 24 * scale))
+        ctx.fill(cloud, with: .color(fill))
+        ctx.stroke(cloud, with: .color(outline), style: StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round))
+    }
+
+    private func drawPaperStar(ctx: inout GraphicsContext, center: CGPoint, radius: CGFloat, color: Color) {
+        var star = Path()
+        let inner = radius * 0.36
+        for i in 0..<8 {
+            let ang = Double(i) * Double.pi / 4.0
+            let r = i.isMultiple(of: 2) ? radius : inner
+            let pt = CGPoint(x: center.x + CGFloat(cos(ang)) * r, y: center.y + CGFloat(sin(ang)) * r)
+            if i == 0 { star.move(to: pt) } else { star.addLine(to: pt) }
+        }
+        star.closeSubpath()
+        ctx.fill(star, with: .color(color))
+    }
+
+    private func drawStorybookHillBand(
+        ctx: inout GraphicsContext,
+        size: CGSize,
+        baseTopRatio: CGFloat,
+        amplitude: Double,
+        phaseShift: Double,
+        fill: Color,
+        outline: Color
+    ) {
+        let profile = StorybookIllustrationLayout.rollingHillProfile(
+            sampleCount: 16,
+            amplitude: amplitude,
+            phaseShift: phaseShift
+        )
+        guard !profile.isEmpty else { return }
+        let bandHeight = size.height * 0.26
+        let topAnchor = size.height * baseTopRatio
+
+        var ridge = Path()
+        for (idx, pt) in profile.enumerated() {
+            let canvasPt = CGPoint(
+                x: CGFloat(pt.xFraction) * size.width,
+                y: topAnchor + CGFloat(pt.yFraction - 0.5) * bandHeight
+            )
+            if idx == 0 {
+                ridge.move(to: canvasPt)
+            } else {
+                ridge.addLine(to: canvasPt)
+            }
+        }
+
+        var area = ridge
+        area.addLine(to: CGPoint(x: size.width, y: size.height))
+        area.addLine(to: CGPoint(x: 0, y: size.height))
+        area.closeSubpath()
+
+        ctx.fill(area, with: .color(fill))
+        ctx.stroke(ridge, with: .color(outline), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
     }
 }

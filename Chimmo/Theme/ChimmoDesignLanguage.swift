@@ -310,7 +310,7 @@ public struct PitchGlyphVectorView: View {
     }
 }
 
-/// 蜂蜡桦木 / 烟熏胡桃木内凹声学共鸣槽底板（含纵向深浅渐变、细微木纹平行丝线、顶部内凹阴影唇边与底部高光倒角）
+/// 扁平卡通童书纸板面板（零木纹渐变、零立体高光：采用平涂水粉底色 + 清晰暖墨描边 + 硬朗无模糊偏移阴影）
 public struct ChimmoWoodResonatorTray: View {
     public let palette: ChimmoPalette
     public var cornerRadius: CGFloat
@@ -321,50 +321,23 @@ public struct ChimmoWoodResonatorTray: View {
     }
 
     public var body: some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [palette.woodTrayTop, palette.woodTrayBottom],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+            shape
+                .fill(palette.cartoonShadow)
+                .offset(x: 0, y: 3)
 
-            // 细微纵向/横向木材丝线纹理与内凹槽阴影
-            Canvas { ctx, size in
-                let grainCol = palette.isNight ? Color.white.opacity(0.032) : Color(hex: 0x5E472A).opacity(0.065)
-                let count = max(5, Int(size.height / 14))
-                for idx in 1..<count {
-                    let y = (CGFloat(idx) / CGFloat(count)) * size.height
-                    let drift = CGFloat(((idx * 37) % 7) - 3) * 0.8
-                    var line = Path()
-                    line.move(to: CGPoint(x: 10, y: y + drift))
-                    line.addQuadCurve(
-                        to: CGPoint(x: size.width - 10, y: y - drift),
-                        control: CGPoint(x: size.width * 0.5, y: y + drift * 1.4)
-                    )
-                    ctx.stroke(line, with: .color(grainCol), lineWidth: 0.7)
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            shape
+                .fill(palette.woodTrayTop)
 
-            // 顶部内凹阴影唇边 + 底部边缘高光倒角
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [palette.recessShadow, .clear, palette.glazeHighlight.opacity(0.45)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 1.5
-                )
+            shape
+                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.85), lineWidth: 1.8)
         }
         .accessibilityHidden(true)
     }
 }
 
-/// 拉丝黄铜边饰与四角精密微铆钉（为声盘共鸣腔、琴盒与硬件面板提供乐器质感收边）
+/// 扁平卡通手绘书页框线与纸艺贴纸角落点缀（零金属反光与铆钉）
 public struct ChimmoBrassFrameAccent: View {
     public let palette: ChimmoPalette
     public var cornerRadius: CGFloat
@@ -379,39 +352,26 @@ public struct ChimmoBrassFrameAccent: View {
     public var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            palette.brassHairline.opacity(0.68),
-                            palette.brassHairline.opacity(0.24),
-                            palette.brassHairline.opacity(0.54)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.1
-                )
+                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.72 : 0.88), lineWidth: 2.0)
 
             if showCornerPins {
                 GeometryReader { geo in
-                    let inset = max(10.0, cornerRadius * 0.44)
+                    let inset = max(10.0, cornerRadius * 0.42)
                     let pts = [
                         CGPoint(x: inset, y: inset),
                         CGPoint(x: geo.size.width - inset, y: inset),
                         CGPoint(x: inset, y: geo.size.height - inset),
                         CGPoint(x: geo.size.width - inset, y: geo.size.height - inset)
                     ]
-                    ForEach(Array(pts.enumerated()), id: \.offset) { _, pt in
-                        ZStack {
-                            Circle()
-                                .fill(palette.brassHairline.opacity(palette.isNight ? 0.85 : 0.78))
-                                .frame(width: 4.5, height: 4.5)
-                            Circle()
-                                .fill(Color.white.opacity(0.75))
-                                .frame(width: 1.5, height: 1.5)
-                                .offset(x: -0.7, y: -0.7)
-                        }
-                        .position(pt)
+                    ForEach(Array(pts.enumerated()), id: \.offset) { idx, pt in
+                        Circle()
+                            .fill(idx.isMultiple(of: 2) ? palette.nightLampGold : palette.homeAnchor)
+                            .frame(width: 5.5, height: 5.5)
+                            .overlay(
+                                Circle()
+                                    .strokeBorder(palette.cartoonOutline.opacity(0.85), lineWidth: 1.0)
+                            )
+                            .position(pt)
                     }
                 }
             }
@@ -421,7 +381,7 @@ public struct ChimmoBrassFrameAccent: View {
     }
 }
 
-/// 哑光窑陶立体按钮表面（顶边缘高光倒角 + 釉面微渐变 + 黄铜/暖瓷外描边 + 接地柔影）
+/// 扁平卡通贴纸按键表面（纯平涂底色 + 硬朗卡通偏移阴影 + 清晰墨线外框）
 public struct ChimmoKilnPillButtonSurface: View {
     public let palette: ChimmoPalette
     public var accent: Color?
@@ -443,32 +403,145 @@ public struct ChimmoKilnPillButtonSurface: View {
     public var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         let activeTint = accent ?? palette.homeAnchor
-        let topCol = isActive
-            ? activeTint.opacity(palette.isNight ? 0.34 : 0.18)
+        let fillCol = isActive
+            ? activeTint.opacity(palette.isNight ? 0.34 : 0.20)
             : palette.cardSurface
-        let botCol = isActive
-            ? activeTint.opacity(palette.isNight ? 0.22 : 0.10)
-            : palette.shelfSurface.opacity(palette.isNight ? 0.72 : 0.60)
         let strokeCol = isActive
-            ? palette.brassHairline.opacity(0.70)
-            : palette.brassHairline.opacity(palette.isNight ? 0.26 : 0.22)
+            ? activeTint
+            : palette.cartoonOutline.opacity(palette.isNight ? 0.56 : 0.80)
 
         ZStack {
             shape
-                .fill(LinearGradient(colors: [topCol, botCol], startPoint: .top, endPoint: .bottom))
-                .shadow(color: palette.recessShadow, radius: isActive ? 7 : 5, y: 2.5)
+                .fill(isActive ? activeTint.opacity(palette.isNight ? 0.45 : 0.28) : palette.cartoonShadow)
+                .offset(x: 0, y: 2.5)
 
             shape
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [palette.glazeHighlight, strokeCol],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: isActive ? 1.3 : 1.0
-                )
+                .fill(fillCol)
+
+            shape
+                .strokeBorder(strokeCol, lineWidth: isActive ? 2.0 : 1.6)
         }
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 童书扇形波浪分隔彩带（用明快绘本节律代替空白留白）
+public struct StorybookScallopDivider: View {
+    public let color: Color
+    public var stepWidth: CGFloat
+
+    public init(color: Color, stepWidth: CGFloat = 14) {
+        self.color = color
+        self.stepWidth = stepWidth
+    }
+
+    public var body: some View {
+        Canvas { ctx, size in
+            let w = max(1, size.width)
+            let h = max(1, size.height)
+            let count = max(4, Int(w / stepWidth))
+            let sw = w / CGFloat(count)
+            var wave = Path()
+            wave.move(to: CGPoint(x: 0, y: h * 0.55))
+            for i in 0..<count {
+                let x0 = CGFloat(i) * sw
+                let xMid = x0 + sw * 0.5
+                let x1 = x0 + sw
+                wave.addQuadCurve(
+                    to: CGPoint(x: x1, y: h * 0.55),
+                    control: CGPoint(x: xMid, y: i.isMultiple(of: 2) ? h * 0.10 : h * 0.96)
+                )
+            }
+            ctx.stroke(
+                wave,
+                with: .color(color),
+                style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round)
+            )
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// 扁平卡通「琴键小偶」微缩头像：把 7 只咩哞七声音阶性格直接融进每一个按键里（零渐变、清晰墨线、尊重微笑音）
+public struct ChimmoCartoonKeyBuddyView: View {
+    public let member: ChimmoMember
+    public let outlineColor: Color
+    public let isSinging: Bool
+    public let isMinor: Bool
+
+    public init(
+        member: ChimmoMember,
+        outlineColor: Color,
+        isSinging: Bool,
+        isMinor: Bool
+    ) {
+        self.member = member
+        self.outlineColor = outlineColor
+        self.isSinging = isSinging
+        self.isMinor = isMinor
+    }
+
+    public var body: some View {
+        Canvas { ctx, size in
+            let w = size.width
+            let h = size.height
+            let cx = w * 0.5
+            let cy = h * 0.58
+            let ink = outlineColor
+            let fill = Color.white.opacity(0.95)
+            let stroke = StrokeStyle(lineWidth: 1.35, lineCap: .round, lineJoin: .round)
+
+            switch member {
+            case .taono:
+                for sx in [-1.0, 1.0] {
+                    let ear = CGRect(x: cx + CGFloat(sx) * 4.5 - 2.0, y: cy - 9.5, width: 4.0, height: 6.0)
+                    ctx.fill(RoundedRectangle(cornerRadius: 2).path(in: ear), with: .color(fill))
+                    ctx.stroke(RoundedRectangle(cornerRadius: 2).path(in: ear), with: .color(ink), style: stroke)
+                }
+            case .plokko:
+                let tilt: CGFloat = isSinging ? -2.2 : (isMinor ? 2.2 : -1.2)
+                for sx in [-1.0, 1.0] {
+                    let wing = CGRect(x: cx + CGFloat(sx) * 7.8 - 2.4, y: cy - 1.5 + tilt, width: 4.8, height: 3.4)
+                    ctx.fill(Capsule().path(in: wing), with: .color(fill))
+                    ctx.stroke(Capsule().path(in: wing), with: .color(ink), style: stroke)
+                }
+            case .corllo:
+                let swirl = CGRect(x: cx + 4.5, y: cy - 6.5, width: 5.5, height: 5.5)
+                ctx.fill(Circle().path(in: swirl), with: .color(fill))
+                ctx.stroke(Circle().path(in: swirl), with: .color(ink), style: stroke)
+            case .tinki:
+                let bobble = CGRect(x: cx - 2.2, y: cy - 10.2, width: 4.4, height: 4.4)
+                ctx.fill(Circle().path(in: bobble), with: .color(Color(hex: 0xFFE49E)))
+                ctx.stroke(Circle().path(in: bobble), with: .color(ink), style: stroke)
+            case .bomo:
+                let cap = CGRect(x: cx - 5.2, y: cy - 7.5, width: 10.4, height: 3.6)
+                ctx.fill(Capsule().path(in: cap), with: .color(Color(hex: 0xFFE49E)))
+                ctx.stroke(Capsule().path(in: cap), with: .color(ink), style: stroke)
+            case .doko, .udo:
+                break
+            }
+
+            let headW: CGFloat = (member == .bomo) ? 14.5 : (member == .tinki ? 11.5 : 13.0)
+            let headH: CGFloat = (member == .tinki) ? 11.5 : 10.2
+            let headRect = CGRect(x: cx - headW * 0.5, y: cy - headH * 0.5, width: headW, height: headH)
+            let headPath = RoundedRectangle(cornerRadius: headH * 0.48, style: .continuous).path(in: headRect)
+            ctx.fill(headPath, with: .color(fill))
+            ctx.stroke(headPath, with: .color(ink), style: stroke)
+
+            for sx in [-1.0, 1.0] {
+                let ex = cx + CGFloat(sx) * 2.6
+                let ey = cy - 0.5
+                if isSinging {
+                    var arc = Path()
+                    arc.move(to: CGPoint(x: ex - 1.3, y: ey + 0.6))
+                    arc.addQuadCurve(to: CGPoint(x: ex + 1.3, y: ey + 0.6), control: CGPoint(x: ex, y: ey - 1.4))
+                    ctx.stroke(arc, with: .color(ink), style: StrokeStyle(lineWidth: 1.25, lineCap: .round))
+                } else {
+                    ctx.fill(Path(ellipseIn: CGRect(x: ex - 1.1, y: ey - 1.1, width: 2.2, height: 2.2)), with: .color(ink))
+                }
+            }
+        }
         .accessibilityHidden(true)
     }
 }

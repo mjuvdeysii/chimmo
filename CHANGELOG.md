@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.39.0 - 2026-11-24
+- **零拟物扁平卡通 × 深度融合 IP × 绘本全幅舞台跃迁（Flat Cartoon Kids' Book Edition v0.39.0）**：
+  - 彻底清除全站木纹渐变、金属拉丝描边、黄铜铆钉、镜面高光与模糊硬件阴影，建立纯粹明快的扁平卡通童书绘本语言（清晰暖墨描边 `#231B15` / `#FFB94E` + 高饱和平涂水粉块 + 无模糊硬朗漫画偏移阴影 `radius: 0`）；
+  - [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 与 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift)：新增扁平绘本色票（`cartoonOutline`、`cartoonShadow`、`storybookButter`、`storybookMint`、`storybookHillBack`、`storybookHillFront`）、`StorybookScallopDivider` 波浪花边与 `ChimmoCartoonKeyBuddyView` 琴键小偶头像，并原地重构 `ChimmoWoodResonatorTray`、`ChimmoBrassFrameAccent` 与 `ChimmoKilnPillButtonSurface` 为全局共用的扁平卡通绘本容器与贴纸按钮；
+  - [AmbientPaperBackdrop.swift](Chimmo/Views/AmbientPaperBackdrop.swift) 与 [ChimmoFigureView.swift](Chimmo/Views/ChimmoFigureView.swift)：重绘全画幅扁平卡通太阳/新月星辰、纸艺云朵、双层山坡草地与星尘音点以消灭背景无效留白；七小只彻底去除径向立体渐变，换装平涂水粉填色 + 暖墨闭合轮廓；
+  - [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 与 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)：新增 `StorybookIllustrationLayout` 纯函数引擎；收紧主舞台无意义边缘留白，将空画布重塑为「草原山坡 + 咩哞家族齐聚折页舞台」，将七小只 `ChimmoCartoonKeyBuddyView` 直接融进 8 枚彩色合唱琴键顶部（大/小调 3 号拍咯扬翅/轻倾、弹唱瞬间变弯弯笑眼）并重塑顶栏、角落草地贴纸底座、底部扁平控制台与和声彩带；
+  - OpenMotion Design Studio 互动官网同步演进至 `v6`（[docs/index.html](docs/index.html)）：全站去拟物化并融合绘本山坡、太阳、IP 合唱琴键、调色示波木盒与跳跃声波小山坡交互，完成渲染 PNG 目视验收；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound32StorybookFlatCartoonLayoutAndIPKeyBuddies`。
+
 ## 0.38.0 - 2026-11-24
 - **主舞台冠栏、角落木铜底座与黄铜游标卡尺重构（StageHardwareCaliperKinematics v0.38.0）**：
   - 在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增纯函数运动学引擎 `StageHardwareCaliperKinematics`，解耦音符时长刻度尺、位置浮标与「咩 / 哞」舞台底座激活/静卧态光效及减弱动态效果位移；

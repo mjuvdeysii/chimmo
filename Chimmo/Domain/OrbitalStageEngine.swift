@@ -1851,4 +1851,76 @@ public enum StageHardwareCaliperKinematics {
     }
 }
 
+/// 扁平卡通童书绘本风景插画与琴键小偶联动运动学（零拟物、纯函数、100% 可单测）。
+public enum StorybookIllustrationLayout {
+    public struct HillCrestPoint: Equatable, Sendable {
+        public let xFraction: Double
+        public let yFraction: Double
+
+        public init(xFraction: Double, yFraction: Double) {
+            self.xFraction = xFraction
+            self.yFraction = yFraction
+        }
+    }
+
+    public struct KeyBuddyPose: Equatable, Sendable {
+        public let popOffsetY: CGFloat
+        public let earTiltDegrees: Double
+        public let showSingingSmile: Bool
+
+        public init(popOffsetY: CGFloat, earTiltDegrees: Double, showSingingSmile: Bool) {
+            self.popOffsetY = popOffsetY
+            self.earTiltDegrees = earTiltDegrees
+            self.showSingingSmile = showSingingSmile
+        }
+    }
+
+    public static func rollingHillProfile(
+        sampleCount: Int,
+        amplitude: Double,
+        phaseShift: Double
+    ) -> [HillCrestPoint] {
+        guard sampleCount > 0 else { return [] }
+        if sampleCount == 1 {
+            return [HillCrestPoint(xFraction: 0.0, yFraction: 0.5)]
+        }
+        let safeAmp = amplitude.isFinite ? max(0.0, min(0.42, amplitude)) : 0.14
+        let safePhase = phaseShift.isFinite ? phaseShift : 0.0
+        let denom = Double(sampleCount - 1)
+        return (0..<sampleCount).map { idx in
+            let u = Double(idx) / denom
+            let wave = sin(u * Double.pi * 2.2 + safePhase) * 0.65 + cos(u * Double.pi * 1.1 + safePhase * 0.5) * 0.35
+            let y = max(0.05, min(0.95, 0.55 - wave * safeAmp))
+            return HillCrestPoint(xFraction: u, yFraction: y)
+        }
+    }
+
+    public static func keyBuddyPose(
+        for member: ChimmoMember,
+        isSinging: Bool,
+        isMinor: Bool,
+        reduceMotion: Bool
+    ) -> KeyBuddyPose {
+        let baseTilt: Double
+        switch member {
+        case .plokko:
+            baseTilt = isSinging ? -12.0 : (isMinor ? 10.0 : -6.0)
+        case .tinki:
+            baseTilt = isSinging ? -10.0 : -7.0
+        case .doko:
+            baseTilt = 4.0
+        case .udo:
+            baseTilt = -4.0
+        default:
+            baseTilt = 0.0
+        }
+        let pop: CGFloat = (isSinging && !reduceMotion) ? -3.0 : 0.0
+        return KeyBuddyPose(
+            popOffsetY: pop,
+            earTiltDegrees: reduceMotion ? 0.0 : baseTilt,
+            showSingingSmile: isSinging
+        )
+    }
+}
+
 

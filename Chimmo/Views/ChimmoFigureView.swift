@@ -62,13 +62,12 @@ public struct ChimmoFigureView: View {
         return CGSize(width: wander, height: 0)
     }
 
-    private var ceramicGradient: RadialGradient {
-        RadialGradient(
-            colors: [member.bodyColor, member.bodyColor.opacity(0.84)],
-            center: UnitPoint(x: 0.34, y: 0.26),
-            startRadius: 2,
-            endRadius: 36
-        )
+    private var bodyFillColor: Color {
+        member.bodyColor
+    }
+
+    private var inkContour: Color {
+        isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
     }
 
     private var baseTiltDegrees: Double {
@@ -100,9 +99,9 @@ public struct ChimmoFigureView: View {
 
     public var body: some View {
         ZStack {
-            // 脚下接地柔影（跳跃时缩小变淡，落地时踏实）
+            // 脚下接地柔影（扁平卡通平涂椭圆）
             Ellipse()
-                .fill(Color.black.opacity(isNight ? 0.34 : 0.13))
+                .fill(inkContour.opacity(isNight ? 0.45 : 0.16))
                 .frame(width: isSinging ? 22 : 28, height: 5.5)
                 .offset(y: 25)
 
@@ -177,12 +176,24 @@ public struct ChimmoFigureView: View {
         ZStack {
             HStack(spacing: 7) {
                 VStack(spacing: -3) {
-                    Circle().fill(Color(hex: 0xF2E6D0)).frame(width: 7, height: 7)
-                    RoundedRectangle(cornerRadius: 3.5).fill(ceramicGradient).frame(width: 6.5, height: 14)
+                    Circle()
+                        .fill(Color(hex: 0xF2E6D0))
+                        .overlay(Circle().stroke(inkContour, lineWidth: 1.2))
+                        .frame(width: 7, height: 7)
+                    RoundedRectangle(cornerRadius: 3.5)
+                        .fill(bodyFillColor)
+                        .overlay(RoundedRectangle(cornerRadius: 3.5).stroke(inkContour, lineWidth: 1.3))
+                        .frame(width: 6.5, height: 14)
                 }
                 VStack(spacing: -3) {
-                    Circle().fill(Color(hex: 0xF2E6D0)).frame(width: 7, height: 7)
-                    RoundedRectangle(cornerRadius: 3.5).fill(ceramicGradient).frame(width: 6.5, height: 13)
+                    Circle()
+                        .fill(Color(hex: 0xF2E6D0))
+                        .overlay(Circle().stroke(inkContour, lineWidth: 1.2))
+                        .frame(width: 7, height: 7)
+                    RoundedRectangle(cornerRadius: 3.5)
+                        .fill(bodyFillColor)
+                        .overlay(RoundedRectangle(cornerRadius: 3.5).stroke(inkContour, lineWidth: 1.3))
+                        .frame(width: 6.5, height: 13)
                 }
                 .rotationEffect(.degrees(isSinging ? -4 : -13))
             }
@@ -195,7 +206,11 @@ public struct ChimmoFigureView: View {
             .offset(y: 22)
 
             RoundedRectangle(cornerRadius: 15, style: .continuous)
-                .fill(ceramicGradient)
+                .fill(bodyFillColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .stroke(inkContour, lineWidth: 1.6)
+                )
                 .frame(width: 32, height: 32)
                 .offset(y: 5)
 
@@ -205,14 +220,14 @@ public struct ChimmoFigureView: View {
                 Circle()
                     .fill(Color(hex: 0xF2E6D0))
                     .frame(width: 11.5, height: 11.5)
-                    .overlay(Circle().stroke(member.accentColor.opacity(0.25), lineWidth: 0.8))
+                    .overlay(Circle().stroke(inkContour, lineWidth: 1.1))
                 if isNight || isSinging {
                     Circle()
                         .fill(member.nightGlowColor.opacity(isSinging ? 0.55 : 0.34))
                         .frame(width: isSinging ? 20 : 16, height: isSinging ? 20 : 16)
                 }
                 Circle()
-                    .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xD99E32))
+                    .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFB94E))
                     .frame(width: 6.2, height: 6.2)
             }
             .offset(x: -3, y: 11)
@@ -230,12 +245,16 @@ public struct ChimmoFigureView: View {
             .offset(y: 22)
 
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(ceramicGradient)
+                .fill(bodyFillColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(inkContour, lineWidth: 1.6)
+                )
                 .frame(width: 32, height: 27)
                 .offset(y: 8)
 
             Capsule()
-                .fill(isNight || isSinging ? member.nightGlowColor.opacity(0.9) : member.accentColor.opacity(0.72))
+                .fill(isNight || isSinging ? member.nightGlowColor.opacity(0.9) : member.accentColor)
                 .frame(width: isSinging ? 17 : 14, height: 2.8)
                 .offset(y: -1)
 
@@ -247,7 +266,7 @@ public struct ChimmoFigureView: View {
 
     private var plokkoBody: some View {
         let wingAngle: Double = isSinging ? 18 : (isMinor ? -15 : 10)
-        let rimColor: Color = isNight || isSinging ? member.nightGlowColor : Color(hex: 0xD9A438)
+        let rimColor: Color = isNight || isSinging ? member.nightGlowColor : inkContour
         return ZStack {
             Ellipse()
                 .fill(member.accentColor)
@@ -256,26 +275,28 @@ public struct ChimmoFigureView: View {
 
             HStack(spacing: 22) {
                 Capsule()
-                    .fill(ceramicGradient)
-                    .overlay(Capsule().stroke(rimColor, lineWidth: 1.3))
+                    .fill(bodyFillColor)
+                    .overlay(Capsule().stroke(rimColor, lineWidth: 1.4))
                     .frame(width: 13.5, height: 7.5)
                     .rotationEffect(.degrees(wingAngle))
                 Capsule()
-                    .fill(ceramicGradient)
-                    .overlay(Capsule().stroke(rimColor, lineWidth: 1.3))
+                    .fill(bodyFillColor)
+                    .overlay(Capsule().stroke(rimColor, lineWidth: 1.4))
                     .frame(width: 13.5, height: 7.5)
                     .rotationEffect(.degrees(-wingAngle))
             }
             .offset(y: 7)
 
             Circle()
-                .fill(ceramicGradient)
+                .fill(bodyFillColor)
+                .overlay(Circle().stroke(inkContour, lineWidth: 1.6))
                 .frame(width: 30, height: 30)
                 .offset(y: 6)
 
             Circle()
-                .fill(rimColor)
-                .frame(width: isSinging ? 5.6 : 4.5, height: isSinging ? 5.6 : 4.5)
+                .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFB94E))
+                .overlay(Circle().stroke(inkContour, lineWidth: 0.9))
+                .frame(width: isSinging ? 6.0 : 5.0, height: isSinging ? 6.0 : 5.0)
                 .offset(y: -3.5)
 
             glazedEyes(spacing: 9, yOffset: 6, size: 4.5)
@@ -293,7 +314,8 @@ public struct ChimmoFigureView: View {
             .offset(y: 22)
 
             Ellipse()
-                .fill(ceramicGradient)
+                .fill(bodyFillColor)
+                .overlay(Ellipse().stroke(inkContour, lineWidth: 1.6))
                 .frame(width: 28, height: 32)
                 .offset(y: 5)
 
@@ -313,10 +335,13 @@ public struct ChimmoFigureView: View {
     private var corlloBody: some View {
         ZStack {
             ZStack {
-                Circle().fill(member.accentColor).frame(width: 19.5, height: 19.5)
+                Circle()
+                    .fill(member.accentColor)
+                    .overlay(Circle().stroke(inkContour, lineWidth: 1.3))
+                    .frame(width: 19.5, height: 19.5)
                 Circle().fill(member.bodyColor).frame(width: 12, height: 12)
                 Circle()
-                    .fill(isNight || isSinging ? member.nightGlowColor : member.accentColor)
+                    .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFE49E))
                     .frame(width: isSinging ? 7.5 : 6, height: isSinging ? 7.5 : 6)
             }
             .offset(x: 13, y: -3)
@@ -328,8 +353,8 @@ public struct ChimmoFigureView: View {
             .offset(y: 22)
 
             Ellipse()
-                .fill(ceramicGradient)
-                .overlay(Ellipse().stroke(member.accentColor.opacity(isNight ? 0.18 : 0.32), lineWidth: 1.1))
+                .fill(bodyFillColor)
+                .overlay(Ellipse().stroke(inkContour, lineWidth: 1.6))
                 .frame(width: 26, height: 33)
                 .offset(x: -2, y: 5)
 
@@ -349,12 +374,14 @@ public struct ChimmoFigureView: View {
             .offset(y: 22)
 
             Ellipse()
-                .fill(ceramicGradient)
+                .fill(bodyFillColor)
+                .overlay(Ellipse().stroke(inkContour, lineWidth: 1.6))
                 .frame(width: 34, height: 25)
                 .offset(y: 8)
 
             Ellipse()
-                .fill(member.accentColor.opacity(isNight || isSinging ? 0.96 : 0.80))
+                .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFE49E))
+                .overlay(Ellipse().stroke(inkContour, lineWidth: 1.0))
                 .frame(width: isSinging ? 20 : 18, height: 5.8)
                 .offset(y: -2)
 
@@ -371,14 +398,18 @@ public struct ChimmoFigureView: View {
                     if isNight || isSinging {
                         Circle().fill(member.nightGlowColor.opacity(isSinging ? 0.55 : 0.35)).frame(width: 16, height: 16)
                     }
-                    Circle().fill(isNight || isSinging ? Color(hex: 0xFFC45A) : Color(hex: 0xE8BD6B)).frame(width: 6.8, height: 6.8)
+                    Circle()
+                        .fill(isNight || isSinging ? Color(hex: 0xFFC45A) : Color(hex: 0xFFE49E))
+                        .overlay(Circle().stroke(inkContour, lineWidth: 1.1))
+                        .frame(width: 7.2, height: 7.2)
                 }
-                RoundedRectangle(cornerRadius: 1).fill(Color(hex: 0x6B430C)).frame(width: 2.2, height: 6)
+                RoundedRectangle(cornerRadius: 1).fill(inkContour).frame(width: 2.2, height: 6)
             }
             .offset(y: -17)
 
             Capsule()
-                .fill(ceramicGradient)
+                .fill(bodyFillColor)
+                .overlay(Capsule().stroke(inkContour, lineWidth: 1.6))
                 .frame(width: 22, height: 32)
                 .offset(y: 5)
 
