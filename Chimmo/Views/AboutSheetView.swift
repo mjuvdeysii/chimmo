@@ -1,13 +1,15 @@
 import SwiftUI
 
-/// 明信片与标准 MIDI 导出请求载体
+/// 明信片、立体声音频与标准 MIDI 导出请求载体
 public struct VinylPostcardRequest: Identifiable, Sendable {
     public let id: UUID
     public let document: MelodyDocument
     public let chordPreset: ChordProgressionPreset
     public let chordOverrides: [Int: DiatonicChord]
+    public let accompanimentTexture: AccompanimentTexture
     public let melodyVoice: MelodyVoice?
     public let shadowEnabled: Bool
+    public let playbackRate: Double
     public let headline: String?
     public let visualMode: StageVisualMode
 
@@ -16,8 +18,10 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
         document: MelodyDocument,
         chordPreset: ChordProgressionPreset = .autoMatch,
         chordOverrides: [Int: DiatonicChord] = [:],
+        accompanimentTexture: AccompanimentTexture = .swanRipple,
         melodyVoice: MelodyVoice? = nil,
         shadowEnabled: Bool = false,
+        playbackRate: Double = 1.0,
         headline: String? = nil,
         visualMode: StageVisualMode = .orbitalDisc
     ) {
@@ -25,14 +29,16 @@ public struct VinylPostcardRequest: Identifiable, Sendable {
         self.document = document
         self.chordPreset = chordPreset
         self.chordOverrides = chordOverrides
+        self.accompanimentTexture = accompanimentTexture
         self.melodyVoice = melodyVoice
         self.shadowEnabled = shadowEnabled
+        self.playbackRate = playbackRate
         self.headline = headline
         self.visualMode = visualMode
     }
 }
 
-/// 离线黑胶星轨明信片 & 标准 MIDI 分享抽屉（零 Emoji，纯粹的窑陶 × 黄铜版画展示体验）
+/// 离线黑胶星轨明信片、可播音频 & 标准 MIDI 分享抽屉（零 Emoji，纯粹的窑陶 × 黄铜版画展示体验）
 public struct VinylPostcardShareSheet: View {
     public let palette: ChimmoPalette
     public let request: VinylPostcardRequest
@@ -41,6 +47,8 @@ public struct VinylPostcardShareSheet: View {
     @State private var useNightCard: Bool
     @State private var selectedMode: StageVisualMode
     @State private var exportedPNGURL: URL?
+    @State private var exportedWAVURL: URL?
+    @State private var isRenderingWAV: Bool = false
     @State private var exportedMIDIURL: URL?
 
     public init(palette: ChimmoPalette, request: VinylPostcardRequest) {
@@ -124,6 +132,36 @@ public struct VinylPostcardShareSheet: View {
                             .buttonStyle(.plain)
                         }
 
+                        if let wavURL = exportedWAVURL {
+                            ShareLink(item: wavURL) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "waveform")
+                                        .font(.subheadline.weight(.bold))
+                                    Text("分享音频 (.wav)")
+                                        .font(.subheadline.weight(.bold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Capsule().fill(palette.nightLampGold.opacity(0.18)))
+                                .overlay(Capsule().strokeBorder(palette.nightLampGold.opacity(0.45), lineWidth: 1.0))
+                                .foregroundStyle(palette.nightLampGold)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("分享可播放立体声音频")
+                        } else if isRenderingWAV {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text("准备音频")
+                                    .font(.subheadline.weight(.semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Capsule().fill(palette.cardSurface))
+                            .overlay(Capsule().strokeBorder(palette.divider, lineWidth: 1.0))
+                            .foregroundStyle(palette.secondaryInk)
+                        }
+
                         if let midiURL = exportedMIDIURL {
                             ShareLink(item: midiURL) {
                                 HStack(spacing: 8) {
@@ -143,7 +181,7 @@ public struct VinylPostcardShareSheet: View {
                     }
                     .padding(.horizontal, 16)
 
-                    Text("图片和 MIDI 均在本机离线生成，不联网")
+                    Text("图片、音频和 MIDI 均在本机离线生成，不联网")
                         .font(.caption2)
                         .foregroundStyle(palette.secondaryInk)
                 }
@@ -159,6 +197,26 @@ public struct VinylPostcardShareSheet: View {
             }
             .onAppear {
                 refreshFiles()
+            }
+            .task(id: request.id) {
+                isRenderingWAV = true
+                let req = request
+                let url = await Task.detached(priority: .userInitiated) {
+                    try? StudioAudioExporter.writeTemporaryWAVFile(
+                        document: req.document,
+                        chordPreset: req.chordPreset,
+                        chordOverrides: req.chordOverrides,
+                        accompanimentTexture: req.accompanimentTexture,
+                        melodyVoice: req.melodyVoice,
+                        shadowEnabled: req.shadowEnabled,
+                        playbackRate: req.playbackRate,
+                        visualMode: req.visualMode
+                    )
+                }.value
+                if !Task.isCancelled {
+                    exportedWAVURL = url
+                    isRenderingWAV = false
+                }
             }
             .onChange(of: useNightCard) { _, _ in
                 refreshPostcardOnly()
@@ -203,13 +261,17 @@ public struct AboutSheetView: View {
     public let cradleEnabled: Bool
     public let chordPreset: ChordProgressionPreset
     public let chordOverrides: [Int: DiatonicChord]
+    public let accompanimentTexture: AccompanimentTexture
     public let melodyVoice: MelodyVoice?
     public let shadowEnabled: Bool
+    public let playbackRate: Double
     public let visualMode: StageVisualMode
 
     @Environment(\.dismiss) private var dismiss
     @State private var exportedMIDIURL: URL?
     @State private var exportedPNGURL: URL?
+    @State private var exportedWAVURL: URL?
+    @State private var isRenderingWAV: Bool = false
 
     public init(
         palette: ChimmoPalette,
@@ -217,8 +279,10 @@ public struct AboutSheetView: View {
         cradleEnabled: Bool,
         chordPreset: ChordProgressionPreset = .autoMatch,
         chordOverrides: [Int: DiatonicChord] = [:],
+        accompanimentTexture: AccompanimentTexture = .swanRipple,
         melodyVoice: MelodyVoice? = nil,
         shadowEnabled: Bool = false,
+        playbackRate: Double = 1.0,
         visualMode: StageVisualMode = .orbitalDisc
     ) {
         self.palette = palette
@@ -226,8 +290,10 @@ public struct AboutSheetView: View {
         self.cradleEnabled = cradleEnabled
         self.chordPreset = chordPreset
         self.chordOverrides = chordOverrides
+        self.accompanimentTexture = accompanimentTexture
         self.melodyVoice = melodyVoice
         self.shadowEnabled = shadowEnabled
+        self.playbackRate = playbackRate
         self.visualMode = visualMode
     }
 
@@ -256,21 +322,21 @@ public struct AboutSheetView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface))
 
-                    // 离线导出图片与 MIDI
+                    // 离线导出图片、音频与 MIDI
                     VStack(alignment: .leading, spacing: 10) {
                         Text("导出当前作品")
                             .font(.headline)
                             .foregroundStyle(palette.primaryInk)
-                        Text("可导出图片分享给朋友，或导出标准 MIDI 文件导入 GarageBand / Logic Pro 继续编曲。")
+                        Text("可导出图片、可播放立体声音频，或标准 MIDI 导入 GarageBand / Logic Pro。")
                             .font(.caption)
                             .foregroundStyle(palette.secondaryInk)
 
-                        HStack(spacing: 10) {
+                        HStack(spacing: 8) {
                             if let pngURL = exportedPNGURL {
                                 ShareLink(item: pngURL) {
                                     Label("分享图片", systemImage: "photo.on.rectangle")
                                         .font(.caption.weight(.bold))
-                                        .padding(.horizontal, 13)
+                                        .padding(.horizontal, 12)
                                         .padding(.vertical, 9)
                                         .background(Capsule().fill(palette.homeAnchor))
                                         .foregroundStyle(palette.isNight ? Color(hex: 0x102026) : .white)
@@ -287,9 +353,9 @@ public struct AboutSheetView: View {
                                         visualMode: visualMode
                                     )
                                 } label: {
-                                    Label("生成图片 (.png)", systemImage: "photo")
+                                    Label("生成图片", systemImage: "photo")
                                         .font(.caption.weight(.bold))
-                                        .padding(.horizontal, 13)
+                                        .padding(.horizontal, 12)
                                         .padding(.vertical, 9)
                                         .background(Capsule().fill(palette.homeAnchor))
                                         .foregroundStyle(palette.isNight ? Color(hex: 0x102026) : .white)
@@ -297,11 +363,60 @@ public struct AboutSheetView: View {
                                 .buttonStyle(.plain)
                             }
 
+                            if let wavURL = exportedWAVURL {
+                                ShareLink(item: wavURL) {
+                                    Label("分享音频", systemImage: "waveform")
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 9)
+                                        .background(Capsule().fill(palette.nightLampGold.opacity(0.20)))
+                                        .foregroundStyle(palette.nightLampGold)
+                                }
+                            } else {
+                                Button {
+                                    guard !isRenderingWAV else { return }
+                                    isRenderingWAV = true
+                                    let doc = currentDocument
+                                    let preset = cradleEnabled ? chordPreset : .off
+                                    let ov = chordOverrides
+                                    let tex = accompanimentTexture
+                                    let voice = melodyVoice
+                                    let sh = shadowEnabled
+                                    let rate = playbackRate
+                                    let vis = visualMode
+                                    Task {
+                                        let url = await Task.detached(priority: .userInitiated) {
+                                            try? StudioAudioExporter.writeTemporaryWAVFile(
+                                                document: doc,
+                                                chordPreset: preset,
+                                                chordOverrides: ov,
+                                                accompanimentTexture: tex,
+                                                melodyVoice: voice,
+                                                shadowEnabled: sh,
+                                                playbackRate: rate,
+                                                visualMode: vis
+                                            )
+                                        }.value
+                                        exportedWAVURL = url
+                                        isRenderingWAV = false
+                                    }
+                                } label: {
+                                    Label(isRenderingWAV ? "生成中" : "生成音频", systemImage: "waveform")
+                                        .font(.caption.weight(.bold))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 9)
+                                        .background(Capsule().fill(palette.cardSurface))
+                                        .foregroundStyle(palette.primaryInk)
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(isRenderingWAV)
+                            }
+
                             if let url = exportedMIDIURL {
                                 ShareLink(item: url) {
                                     Label("分享 .mid", systemImage: "square.and.arrow.up")
                                         .font(.caption.weight(.semibold))
-                                        .padding(.horizontal, 13)
+                                        .padding(.horizontal, 12)
                                         .padding(.vertical, 9)
                                         .background(Capsule().fill(palette.cardSurface))
                                         .foregroundStyle(palette.primaryInk)
@@ -319,7 +434,7 @@ public struct AboutSheetView: View {
                                 } label: {
                                     Label("生成 MIDI", systemImage: "pianokeys")
                                         .font(.caption.weight(.semibold))
-                                        .padding(.horizontal, 13)
+                                        .padding(.horizontal, 12)
                                         .padding(.vertical, 9)
                                         .background(Capsule().fill(palette.cardSurface))
                                         .foregroundStyle(palette.primaryInk)

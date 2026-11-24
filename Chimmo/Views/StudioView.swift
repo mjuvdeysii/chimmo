@@ -169,6 +169,23 @@ public final class StudioViewModel: ObservableObject {
         playbackRate = clamped
         clock.setRate(clamped)
         AcousticHapticsEngine.shared.playScrubTick()
+
+        if !isPlaying {
+            previewArpeggioTask?.cancel()
+            let gapSec = max(0.24, min(0.70, 0.42 / clamped))
+            let mode = document.scaleMode
+            let rootMIDI = document.rootMIDI
+            let voice = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+            let h1 = mode.frequencyHz(rootMIDI: rootMIDI, degree: 1, octaveOffset: 0)
+            let h5 = mode.frequencyHz(rootMIDI: rootMIDI, degree: 5, octaveOffset: 0)
+            synth.playNote(frequency: h1, velocity: 0.44, decay: 0.72, timbre: voice, pan: -0.14)
+            previewArpeggioTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(gapSec * 1_000_000_000))
+                guard let self, !Task.isCancelled, !self.isPlaying else { return }
+                AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+                self.synth.playNote(frequency: h5, velocity: 0.50, decay: 0.90, timbre: voice, pan: 0.14)
+            }
+        }
     }
 
     public var smartHints: [SmartPitchHint] {
@@ -1865,8 +1882,10 @@ public struct StudioView: View {
                             document: vm.document,
                             chordPreset: vm.chordPreset,
                             chordOverrides: vm.chordOverrides,
+                            accompanimentTexture: vm.accompanimentTexture,
                             melodyVoice: vm.melodyVoice,
                             shadowEnabled: vm.shadowCounterpointEnabled,
+                            playbackRate: vm.playbackRate,
                             headline: vm.currentInsight.headline,
                             visualMode: vm.visualMode
                         )
@@ -1901,8 +1920,10 @@ public struct StudioView: View {
                             document: entry.document,
                             chordPreset: entry.chordPreset,
                             chordOverrides: entry.chordOverrides,
+                            accompanimentTexture: entry.accompanimentTexture ?? entry.document.preferredTexture ?? .swanRipple,
                             melodyVoice: entry.document.preferredVoice,
                             shadowEnabled: false,
+                            playbackRate: 1.0,
                             headline: entry.summaryNote.isEmpty ? nil : entry.summaryNote,
                             visualMode: vm.visualMode
                         )
@@ -1931,8 +1952,10 @@ public struct StudioView: View {
                 cradleEnabled: vm.cradleEnabled,
                 chordPreset: vm.chordPreset,
                 chordOverrides: vm.chordOverrides,
+                accompanimentTexture: vm.accompanimentTexture,
                 melodyVoice: vm.melodyVoice,
                 shadowEnabled: vm.shadowCounterpointEnabled,
+                playbackRate: vm.playbackRate,
                 visualMode: vm.visualMode
             )
         }

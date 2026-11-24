@@ -1298,4 +1298,94 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound19StudioWAVExportAndTempoPreview() throws {
+        // 1. RIFF/WAVE Stereo 16-bit 头部与 NaN 安全编码检验
+        let sampleWAV = StudioAudioExporter.encodePCM16StereoWAV(
+            left: [0.0, 0.5, -0.5, .nan, 2.0],
+            right: [0.0, -0.5, 0.5, .infinity, -2.0],
+            sampleRate: 44_100
+        )
+        XCTAssertEqual(sampleWAV.count, 44 + 5 * 4)
+        let bytes = [UInt8](sampleWAV)
+        XCTAssertEqual(String(bytes: bytes[0..<4], encoding: .ascii), "RIFF")
+        XCTAssertEqual(String(bytes: bytes[8..<12], encoding: .ascii), "WAVE")
+        XCTAssertEqual(String(bytes: bytes[12..<16], encoding: .ascii), "fmt ")
+        XCTAssertEqual(String(bytes: bytes[36..<40], encoding: .ascii), "data")
+
+        // 2. 整曲离线隔离立体声渲染 + 倍速时长真实联动
+        let doc = SpecimenLibrary.saintSaensTheSwan
+        let fastWAV = try StudioAudioExporter.renderWAVData(
+            document: doc,
+            chordPreset: .autoMatch,
+            chordOverrides: [:],
+            accompanimentTexture: .swanRipple,
+            melodyVoice: .singingCello,
+            shadowEnabled: true,
+            playbackRate: 1.25,
+            visualMode: .orbitalDisc,
+            sampleRate: 44_100
+        )
+        let slowWAV = try StudioAudioExporter.renderWAVData(
+            document: doc,
+            chordPreset: .autoMatch,
+            chordOverrides: [:],
+            accompanimentTexture: .swanRipple,
+            melodyVoice: .singingCello,
+            shadowEnabled: true,
+            playbackRate: 0.75,
+            visualMode: .orbitalDisc,
+            sampleRate: 44_100
+        )
+        XCTAssertGreaterThan(fastWAV.count, 44_100)
+        XCTAssertLessThan(fastWAV.count, slowWAV.count, "1.25x 倍速导出的 WAV 文件应显著短于 0.75x")
+
+        // 验证生成 PCM 存在真实有声波形且绝不削波
+        let fastBytes = [UInt8](fastWAV)
+        var maxSampleAbs = 0
+        var idx = 44
+        while idx + 1 < fastBytes.count {
+            let lo = Int16(fastBytes[idx])
+            let hi = Int16(fastBytes[idx + 1]) << 8
+            let sample = abs(Int(Int16(bitPattern: UInt16(bitPattern: lo | hi))))
+            if sample > maxSampleAbs { maxSampleAbs = sample }
+            idx += 8
+        }
+        XCTAssertGreaterThan(maxSampleAbs, 650, "离线导出的 WAV 波形应有清晰可听声压")
+        XCTAssertLessThanOrEqual(maxSampleAbs, 32_767)
+
+        // 3. 空文档兜底与临时 .wav 文件落盘校验
+        let emptyDoc = MelodyDocument(
+            title: "空曲/测试:1",
+            subtitle: "",
+            rootMIDI: 60,
+            scaleMode: .cloudLydian,
+            harmonyProfile: .clearWater,
+            grooveStrength: 0.0,
+            notes: []
+        )
+        let emptyWAV = try StudioAudioExporter.renderWAVData(document: emptyDoc, sampleRate: 22_050)
+        XCTAssertGreaterThan(emptyWAV.count, 44)
+        let emptyHeader = [UInt8](emptyWAV.prefix(12))
+        XCTAssertEqual(String(bytes: emptyHeader[0..<4], encoding: .ascii), "RIFF")
+
+        let fileURL = try StudioAudioExporter.writeTemporaryWAVFile(
+            document: emptyDoc,
+            sampleRate: 22_050
+        )
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        XCTAssertEqual(fileURL.pathExtension, "wav")
+        let diskSize = (try? Data(contentsOf: fileURL).count) ?? 0
+        XCTAssertEqual(diskSize, emptyWAV.count)
+
+        // 4. 暂停态调节播放速度时触发双拍节奏耳返与范围钳位且零 Toast
+        let vm = StudioViewModel()
+        vm.setPlaybackRate(1.25)
+        XCTAssertEqual(vm.playbackRate, 1.25, accuracy: 1e-6)
+        vm.setPlaybackRate(4.0)
+        XCTAssertEqual(vm.playbackRate, 1.6, accuracy: 1e-6)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

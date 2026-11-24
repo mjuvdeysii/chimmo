@@ -17,6 +17,34 @@ public struct AcousticEnvelopeSnapshot: Equatable, Sendable {
     public static let silent = AcousticEnvelopeSnapshot(rmsEnergy: 0.0, warmthEnergy: 0.0, shimmerEnergy: 0.0)
 }
 
+public struct OfflineSynthNoteEvent: Sendable {
+    public let timeSec: Double
+    public let frequency: Double
+    public let velocity: Double
+    public let decay: Double
+    public let brightness: Double
+    public let timbre: FeltPianoSynth.Timbre
+    public let pan: Double?
+
+    public init(
+        timeSec: Double,
+        frequency: Double,
+        velocity: Double,
+        decay: Double,
+        brightness: Double,
+        timbre: FeltPianoSynth.Timbre,
+        pan: Double? = nil
+    ) {
+        self.timeSec = timeSec
+        self.frequency = frequency
+        self.velocity = velocity
+        self.decay = decay
+        self.brightness = brightness
+        self.timbre = timbre
+        self.pan = pan
+    }
+}
+
 /// 温暖五声部室内乐声学合成器（歌唱大提琴 Singing Cello + 音乐厅毛毡钢琴 Felt Piano + 湖面竖琴 Liquid Harp + 大提琴低音 Warm Bass + 星光钢片琴 Celesta）。
 /// 全异步懒初始化与无锁渲染护航：不在 `init()` 或主线程阻塞构建 `AVAudioEngine` / `AVAudioUnitReverb`，彻底杜绝真机首屏卡死与音频线程优先级反转。
 public final class FeltPianoSynth: @unchecked Sendable {
@@ -230,6 +258,52 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
     }
 
+    private static func enqueueVoice(
+        into state: inout AudioState,
+        frequency: Double,
+        velocity: Double,
+        decay: Double,
+        brightness: Double,
+        timbre: Timbre,
+        delaySeconds: Double,
+        pan: Double?
+    ) {
+        guard frequency.isFinite && frequency >= 28.0 && frequency <= 4800.0 else { return }
+
+        let resolvedPan = pan.map { max(-0.65, min(0.65, $0.isFinite ? $0 : 0.0)) }
+            ?? max(-0.46, min(0.46, log2(max(40.0, frequency) / 261.63) * 0.20))
+        let scaledDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: decay, frequency: frequency)
+        let absorbedBright = max(0.2, min(1.4, brightness * PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: frequency)))
+
+        let delaySamps = max(0.0, delaySeconds * state.sampleRate)
+        var targetIdx = 0
+        var oldestAge = -1.0
+        for i in 0..<state.voices.count {
+            if !state.voices[i].active {
+                targetIdx = i
+                break
+            }
+            if state.voices[i].ageSamples > oldestAge {
+                oldestAge = state.voices[i].ageSamples
+                targetIdx = i
+            }
+        }
+        state.voices[targetIdx] = Voice(
+            active: true,
+            timbre: timbre,
+            frequency: frequency,
+            phase: 0.0,
+            phaseDetune: 0.0,
+            hammerPhase: 0.0,
+            ageSamples: 0.0,
+            delaySamples: delaySamps,
+            velocity: max(0.03, min(1.0, velocity)),
+            decaySeconds: scaledDecay,
+            brightness: absorbedBright,
+            pan: resolvedPan
+        )
+    }
+
     public func playNote(
         frequency: Double,
         velocity: Double = 0.55,
@@ -242,38 +316,16 @@ public final class FeltPianoSynth: @unchecked Sendable {
         ensureRunning()
         guard frequency.isFinite && frequency >= 28.0 && frequency <= 4800.0 else { return }
 
-        let resolvedPan = pan.map { max(-0.65, min(0.65, $0.isFinite ? $0 : 0.0)) }
-            ?? max(-0.46, min(0.46, log2(max(40.0, frequency) / 261.63) * 0.20))
-        let scaledDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: decay, frequency: frequency)
-        let absorbedBright = max(0.2, min(1.4, brightness * PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: frequency)))
-
         lock.withLock { state in
-            let delaySamps = max(0.0, delaySeconds * state.sampleRate)
-            var targetIdx = 0
-            var oldestAge = -1.0
-            for i in 0..<state.voices.count {
-                if !state.voices[i].active {
-                    targetIdx = i
-                    break
-                }
-                if state.voices[i].ageSamples > oldestAge {
-                    oldestAge = state.voices[i].ageSamples
-                    targetIdx = i
-                }
-            }
-            state.voices[targetIdx] = Voice(
-                active: true,
-                timbre: timbre,
+            Self.enqueueVoice(
+                into: &state,
                 frequency: frequency,
-                phase: 0.0,
-                phaseDetune: 0.0,
-                hammerPhase: 0.0,
-                ageSamples: 0.0,
-                delaySamples: delaySamps,
-                velocity: max(0.03, min(1.0, velocity)),
-                decaySeconds: scaledDecay,
-                brightness: absorbedBright,
-                pan: resolvedPan
+                velocity: velocity,
+                decay: decay,
+                brightness: brightness,
+                timbre: timbre,
+                delaySeconds: delaySeconds,
+                pan: pan
             )
         }
     }
@@ -326,15 +378,15 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
     }
 
-    /// 弹奏指定调内三和弦，支持 4 种真实大师左手立体声宽伴奏织体。
-    public func playDiatonicChord(
+    public static func diatonicChordEvents(
+        startTime: Double = 0.0,
         rootMIDI: Int,
         mode: ScaleMode,
         chord: DiatonicChord,
         texture: AccompanimentTexture = .swanRipple,
         spanDuration: Double = 1.6,
         intensity: Double = 0.82
-    ) {
+    ) -> [OfflineSynthNoteEvent] {
         let clamped = max(0.2, min(1.0, intensity))
         let dur = max(0.75, min(3.8, spanDuration))
         let tones = chord.chordToneDegrees
@@ -347,62 +399,95 @@ public final class FeltPianoSynth: @unchecked Sendable {
         let thirdHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: thirdDeg, octaveOffset: thirdDeg < rDeg ? 0 : -1)
         let fifthHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: fifthDeg, octaveOffset: fifthDeg < rDeg ? 0 : -1)
 
+        var out: [OfflineSynthNoteEvent] = []
         switch texture {
         case .swanRipple:
-            playNote(frequency: bassHz, velocity: 0.25 * clamped, decay: dur * 1.35, brightness: 0.50, timbre: .warmBass, delaySeconds: 0.0, pan: 0.0)
+            out.append(OfflineSynthNoteEvent(timeSec: startTime, frequency: bassHz, velocity: 0.25 * clamped, decay: dur * 1.35, brightness: 0.50, timbre: .warmBass, pan: 0.0))
             let pattern: [Double] = [bassHz, fifthHz, midRootHz, thirdHz, midRootHz, fifthHz]
             let harpPans = [-0.28, -0.14, 0.08, 0.28, 0.14, -0.10]
             let stepSec = min(0.24, max(0.11, dur / Double(pattern.count)))
             for (idx, hz) in pattern.enumerated() {
                 let vel = (idx == 0 ? 0.16 : (idx == 3 ? 0.19 : 0.14)) * clamped
-                playNote(
+                out.append(OfflineSynthNoteEvent(
+                    timeSec: startTime + Double(idx) * stepSec,
                     frequency: hz,
                     velocity: vel,
                     decay: 1.65,
                     brightness: 0.84,
                     timbre: .liquidHarp,
-                    delaySeconds: Double(idx) * stepSec,
                     pan: harpPans[idx % harpPans.count]
-                )
+                ))
             }
 
         case .feltWaltz:
-            playNote(frequency: bassHz, velocity: 0.30 * clamped, decay: dur * 1.25, brightness: 0.54, timbre: .warmBass, delaySeconds: 0.0, pan: 0.0)
+            out.append(OfflineSynthNoteEvent(timeSec: startTime, frequency: bassHz, velocity: 0.30 * clamped, decay: dur * 1.25, brightness: 0.54, timbre: .warmBass, pan: 0.0))
             let beat = min(0.55, max(0.26, dur / 3.0))
             for beatIdx in 1...2 {
                 let t = Double(beatIdx) * beat
                 let liftVel = (beatIdx == 1 ? 0.17 : 0.13) * clamped
-                playNote(frequency: fifthHz, velocity: liftVel, decay: 1.35, brightness: 0.76, timbre: .feltPiano, delaySeconds: t, pan: -0.22)
-                playNote(frequency: thirdHz, velocity: liftVel * 0.95, decay: 1.35, brightness: 0.80, timbre: .feltPiano, delaySeconds: t + 0.018, pan: 0.24)
-                playNote(frequency: midRootHz, velocity: liftVel * 0.85, decay: 1.35, brightness: 0.82, timbre: .feltPiano, delaySeconds: t + 0.032, pan: 0.0)
+                out.append(OfflineSynthNoteEvent(timeSec: startTime + t, frequency: fifthHz, velocity: liftVel, decay: 1.35, brightness: 0.76, timbre: .feltPiano, pan: -0.22))
+                out.append(OfflineSynthNoteEvent(timeSec: startTime + t + 0.018, frequency: thirdHz, velocity: liftVel * 0.95, decay: 1.35, brightness: 0.80, timbre: .feltPiano, pan: 0.24))
+                out.append(OfflineSynthNoteEvent(timeSec: startTime + t + 0.032, frequency: midRootHz, velocity: liftVel * 0.85, decay: 1.35, brightness: 0.82, timbre: .feltPiano, pan: 0.0))
             }
 
         case .summerGlass:
             let ninthDeg = ((rDeg) % 7) + 1
             let ninthHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: ninthDeg, octaveOffset: 0)
             let sparkleHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: fifthDeg, octaveOffset: 1)
-            playNote(frequency: bassHz, velocity: 0.24 * clamped, decay: 2.4, brightness: 0.50, timbre: .warmBass, delaySeconds: 0.0, pan: 0.0)
-            playNote(frequency: fifthHz, velocity: 0.18 * clamped, decay: 2.1, brightness: 0.82, timbre: .feltPiano, delaySeconds: 0.055, pan: -0.24)
-            playNote(frequency: ninthHz, velocity: 0.17 * clamped, decay: 2.0, brightness: 0.88, timbre: .feltPiano, delaySeconds: 0.13, pan: 0.18)
-            playNote(frequency: thirdHz, velocity: 0.16 * clamped, decay: 1.9, brightness: 0.86, timbre: .feltPiano, delaySeconds: 0.21, pan: -0.12)
-            playNote(frequency: sparkleHz, velocity: 0.14 * clamped, decay: 1.5, brightness: 1.05, timbre: .celesta, delaySeconds: min(0.52, dur * 0.42), pan: 0.36)
+            out.append(OfflineSynthNoteEvent(timeSec: startTime, frequency: bassHz, velocity: 0.24 * clamped, decay: 2.4, brightness: 0.50, timbre: .warmBass, pan: 0.0))
+            out.append(OfflineSynthNoteEvent(timeSec: startTime + 0.055, frequency: fifthHz, velocity: 0.18 * clamped, decay: 2.1, brightness: 0.82, timbre: .feltPiano, pan: -0.24))
+            out.append(OfflineSynthNoteEvent(timeSec: startTime + 0.13, frequency: ninthHz, velocity: 0.17 * clamped, decay: 2.0, brightness: 0.88, timbre: .feltPiano, pan: 0.18))
+            out.append(OfflineSynthNoteEvent(timeSec: startTime + 0.21, frequency: thirdHz, velocity: 0.16 * clamped, decay: 1.9, brightness: 0.86, timbre: .feltPiano, pan: -0.12))
+            out.append(OfflineSynthNoteEvent(timeSec: startTime + min(0.52, dur * 0.42), frequency: sparkleHz, velocity: 0.14 * clamped, decay: 1.5, brightness: 1.05, timbre: .celesta, pan: 0.36))
 
         case .pureChorale:
-            playNote(frequency: bassHz, velocity: 0.25 * clamped, decay: 2.3, brightness: 0.55, timbre: .warmBass, delaySeconds: 0.0, pan: 0.0)
+            out.append(OfflineSynthNoteEvent(timeSec: startTime, frequency: bassHz, velocity: 0.25 * clamped, decay: 2.3, brightness: 0.55, timbre: .warmBass, pan: 0.0))
             let choralePans = [-0.24, 0.0, 0.24]
             for (idx, deg) in tones.enumerated() {
                 let oct = (idx > 0 && deg < rDeg) ? 0 : (idx == 0 ? -1 : 0)
                 let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
-                playNote(
+                out.append(OfflineSynthNoteEvent(
+                    timeSec: startTime + Double(idx) * 0.025,
                     frequency: hz,
                     velocity: 0.19 * clamped,
                     decay: 2.1,
                     brightness: 0.80,
                     timbre: .feltPiano,
-                    delaySeconds: Double(idx) * 0.025,
                     pan: choralePans[idx % choralePans.count]
-                )
+                ))
             }
+        }
+        return out
+    }
+
+    /// 弹奏指定调内三和弦，支持 4 种真实大师左手立体声宽伴奏织体。
+    public func playDiatonicChord(
+        rootMIDI: Int,
+        mode: ScaleMode,
+        chord: DiatonicChord,
+        texture: AccompanimentTexture = .swanRipple,
+        spanDuration: Double = 1.6,
+        intensity: Double = 0.82
+    ) {
+        let events = Self.diatonicChordEvents(
+            startTime: 0.0,
+            rootMIDI: rootMIDI,
+            mode: mode,
+            chord: chord,
+            texture: texture,
+            spanDuration: spanDuration,
+            intensity: intensity
+        )
+        for ev in events {
+            playNote(
+                frequency: ev.frequency,
+                velocity: ev.velocity,
+                decay: ev.decay,
+                brightness: ev.brightness,
+                timbre: ev.timbre,
+                delaySeconds: ev.timeSec,
+                pan: ev.pan
+            )
         }
     }
 
@@ -1016,5 +1101,224 @@ public final class FeltPianoSynth: @unchecked Sendable {
         silenceAll()
         let afterEnv = currentAcousticEnvelope()
         return (peak, peakL, peakR, inRate, outRate, duringEnv, afterEnv)
+    }
+
+    /// 完全隔离的整曲离线立体声渲染（绝不触碰实时 `AVAudioSession` 或正在播放的引擎，用于本地离线导出可播放音频）。
+    public static func renderOfflineSongPCM(
+        document: MelodyDocument,
+        chordPreset: ChordProgressionPreset = .autoMatch,
+        chordOverrides: [Int: DiatonicChord] = [:],
+        accompanimentTexture: AccompanimentTexture = .swanRipple,
+        melodyVoice: MelodyVoice? = nil,
+        shadowEnabled: Bool = false,
+        playbackRate: Double = 1.0,
+        visualMode: StageVisualMode = .orbitalDisc,
+        sampleRate: Double = 44_100.0
+    ) throws -> (left: [Float], right: [Float], sampleRate: Int) {
+        let safeSR = max(22_050.0, min(48_000.0, sampleRate.isFinite ? sampleRate : 44_100.0))
+        let safeRate = max(0.5, min(1.6, playbackRate.isFinite ? playbackRate : 1.0))
+        let rateScale = 1.0 / safeRate
+        let profile = AcousticSpaceProfile.profile(for: document.scaleMode)
+
+        let synth = FeltPianoSynth(router: HalfDuplexAudioRouter())
+        synth.lock.withLock { state in
+            state.sampleRate = safeSR
+            state.reverbWetMix = Float(max(12.0, min(46.0, profile.reverbWetMix.isFinite ? profile.reverbWetMix : 28.0)))
+            state.warmthDamping = max(0.65, min(1.30, profile.warmthDamping.isFinite ? profile.warmthDamping : 1.0))
+            state.stereoSpread = max(0.60, min(1.40, profile.stereoSpread.isFinite ? profile.stereoSpread : 1.0))
+        }
+
+        let groove = document.grooveStrength
+        let totalDur = max(0.6, document.totalDuration)
+        let resolvedVoice = melodyVoice ?? document.preferredVoice ?? .singingCello
+        let voiceTimbre = Timbre.from(voice: resolvedVoice)
+        let spans = TheoryLensEngine.buildChordSpans(
+            document: document,
+            preset: chordPreset,
+            overrides: chordOverrides
+        )
+
+        var events: [OfflineSynthNoteEvent] = []
+        if chordPreset != .off {
+            for span in spans {
+                let chordEvents = diatonicChordEvents(
+                    startTime: span.startTime * rateScale,
+                    rootMIDI: document.rootMIDI,
+                    mode: document.scaleMode,
+                    chord: span.chord,
+                    texture: accompanimentTexture,
+                    spanDuration: max(0.75, (span.endTime - span.startTime) * rateScale),
+                    intensity: 0.72
+                )
+                events.append(contentsOf: chordEvents)
+            }
+        }
+
+        let sortedNotes = document.notes.sorted {
+            $0.displayOnset(grooveStrength: groove) < $1.displayOnset(grooveStrength: groove)
+        }
+        for bead in sortedNotes {
+            let onset = bead.displayOnset(grooveStrength: groove)
+            let dur = bead.displayDuration(grooveStrength: groove)
+            let hz = document.scaleMode.frequencyHz(
+                rootMIDI: document.rootMIDI,
+                degree: bead.degree,
+                octaveOffset: bead.octaveOffset
+            )
+            let pan = AcousticSpatialPanMapper.pan(
+                forBeatOnset: onset,
+                totalDuration: totalDur,
+                visualMode: visualMode
+            )
+            events.append(OfflineSynthNoteEvent(
+                timeSec: onset * rateScale,
+                frequency: hz,
+                velocity: 0.62,
+                decay: max(0.85, dur * 1.45 * rateScale),
+                brightness: 0.96,
+                timbre: voiceTimbre,
+                pan: pan
+            ))
+        }
+
+        if shadowEnabled {
+            let shadowNotes = CounterpointShadowEngine.generateShadowVoice(document: document, spans: spans)
+            let shadowTimbre: Timbre = (resolvedVoice == .liquidHarp) ? .celesta : .liquidHarp
+            for shadow in shadowNotes {
+                let sHz = document.scaleMode.frequencyHz(
+                    rootMIDI: document.rootMIDI,
+                    degree: shadow.degree,
+                    octaveOffset: shadow.octaveOffset
+                )
+                let sPan = -AcousticSpatialPanMapper.pan(
+                    forBeatOnset: shadow.onset,
+                    totalDuration: totalDur,
+                    visualMode: visualMode
+                ) * 0.65
+                events.append(OfflineSynthNoteEvent(
+                    timeSec: shadow.onset * rateScale,
+                    frequency: sHz,
+                    velocity: 0.36,
+                    decay: max(0.85, shadow.duration * rateScale * 1.35),
+                    brightness: 0.85,
+                    timbre: shadowTimbre,
+                    pan: sPan
+                ))
+            }
+        }
+        events.sort { $0.timeSec < $1.timeSec }
+
+        let rawSeconds = document.notes.isEmpty ? 1.0 : (totalDur * rateScale + 1.85)
+        let clampedSeconds = max(1.0, min(28.0, rawSeconds))
+        let totalFrames = max(512, Int((clampedSeconds * safeSR).rounded()))
+        let chunkFrames: AVAudioFrameCount = 512
+
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: safeSR, channels: 2) else {
+            throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
+        }
+
+        let eng = AVAudioEngine()
+        let node = synth.makeSourceNode(format: format)
+        let mixer = eng.mainMixerNode
+        mixer.outputVolume = 1.0
+        eng.attach(node)
+
+        do {
+            let rev = AVAudioUnitReverb()
+            rev.loadFactoryPreset(.mediumHall2)
+            rev.wetDryMix = Float(max(12.0, min(46.0, profile.reverbWetMix.isFinite ? profile.reverbWetMix : 28.0)))
+            eng.attach(rev)
+            try eng.connectNode(node, to: rev, format: format)
+            try eng.connectNode(rev, to: mixer, format: format)
+        } catch {
+            try eng.connectNode(node, to: mixer, format: format)
+        }
+
+        try eng.enableManualRenderingMode(.offline, format: format, maximumFrameCount: chunkFrames)
+        try eng.start()
+        defer { eng.stop() }
+
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: eng.manualRenderingFormat, frameCapacity: chunkFrames) else {
+            throw NSError(domain: "app.chimmo.synth", code: -2, userInfo: [NSLocalizedDescriptionKey: "Buffer allocation failed"])
+        }
+
+        var leftOut: [Float] = []
+        var rightOut: [Float] = []
+        leftOut.reserveCapacity(totalFrames)
+        rightOut.reserveCapacity(totalFrames)
+
+        let immutableEvents = events
+        var renderedFrames = 0
+        var nextEventIdx = 0
+        while renderedFrames < totalFrames {
+            let remaining = totalFrames - renderedFrames
+            let blockCount = min(Int(chunkFrames), remaining)
+            let blockStartSec = Double(renderedFrames) / safeSR
+            let blockEndSec = Double(renderedFrames + blockCount) / safeSR
+
+            let batchStart = nextEventIdx
+            while nextEventIdx < immutableEvents.count && immutableEvents[nextEventIdx].timeSec < blockEndSec {
+                nextEventIdx += 1
+            }
+            if batchStart < nextEventIdx {
+                let batch = immutableEvents[batchStart..<nextEventIdx]
+                synth.lock.withLock { state in
+                    for ev in batch {
+                        Self.enqueueVoice(
+                            into: &state,
+                            frequency: ev.frequency,
+                            velocity: ev.velocity,
+                            decay: ev.decay,
+                            brightness: ev.brightness,
+                            timbre: ev.timbre,
+                            delaySeconds: max(0.0, ev.timeSec - blockStartSec),
+                            pan: ev.pan
+                        )
+                    }
+                }
+            }
+
+            let status = try eng.renderOffline(AVAudioFrameCount(blockCount), to: buffer)
+            if status == .success, let channels = buffer.floatChannelData {
+                let len = Int(buffer.frameLength)
+                let chCount = Int(buffer.format.channelCount)
+                for i in 0..<len {
+                    let sL = channels[0][i]
+                    let sR = chCount > 1 ? channels[1][i] : sL
+                    leftOut.append(sL.isFinite ? sL : 0.0)
+                    rightOut.append(sR.isFinite ? sR : 0.0)
+                }
+            } else {
+                for _ in 0..<blockCount {
+                    leftOut.append(0.0)
+                    rightOut.append(0.0)
+                }
+            }
+            renderedFrames += blockCount
+        }
+
+        var maxAbs: Float = 0.0
+        for i in 0..<leftOut.count {
+            maxAbs = max(maxAbs, max(abs(leftOut[i]), abs(rightOut[i])))
+        }
+        if maxAbs > 0.88 {
+            let scale = 0.88 / maxAbs
+            for i in 0..<leftOut.count {
+                leftOut[i] *= scale
+                rightOut[i] *= scale
+            }
+        }
+
+        let fadeSamples = min(leftOut.count, Int(safeSR * 0.06))
+        if fadeSamples > 0 {
+            let startIdx = leftOut.count - fadeSamples
+            for offset in 0..<fadeSamples {
+                let gain = Float(fadeSamples - offset) / Float(fadeSamples)
+                leftOut[startIdx + offset] *= gain
+                rightOut[startIdx + offset] *= gain
+            }
+        }
+
+        return (leftOut, rightOut, Int(safeSR))
     }
 }
