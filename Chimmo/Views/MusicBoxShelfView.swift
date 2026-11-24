@@ -1512,7 +1512,8 @@ private struct StorybookSongbookCoverThumb: View {
                     .frame(width: 24, height: 24)
                     .overlay(
                         Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(.caption2, design: .rounded).weight(.bold))
+                            .scaleEffect(0.88)
                             .foregroundStyle(isPlaying ? palette.contrastInkOnHighlight : palette.homeAnchor)
                     )
                     .offset(x: 52, y: 48)

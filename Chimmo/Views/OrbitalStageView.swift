@@ -610,7 +610,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 stageInteractiveCanvas
                     .modifier(StagePlaybackNavigationActions(vm: vm))
                     .modifier(StageBeatEditActions(vm: vm, isEnabled: allowsEditing))
-                    .contentShape(Rectangle())
+                    .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.stage, style: .continuous))
                     .gesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { val in
@@ -2660,7 +2660,7 @@ internal struct StageChoirKeyboardBar: View {
                                 .foregroundStyle(keyInk.opacity(0.92))
 
                             Text(lane.digitLabel)
-                                .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                                .font(.system(.caption2, design: .rounded).weight(.heavy))
                                 .foregroundStyle(keyInk)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
@@ -2743,7 +2743,7 @@ internal struct StageChoirKeyboardBar: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .contentShape(Rectangle())
+                .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { val in
@@ -2886,10 +2886,13 @@ internal struct StageHarmonyRibbonView: View {
                                         )
                                     HStack(spacing: 3) {
                                         Text(seg.romanLabel)
-                                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                            .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.72)
                                         if segW >= 54 {
                                             Image(systemName: "chevron.up.chevron.down")
-                                                .font(.system(size: 7.5, weight: .bold))
+                                                .font(.system(.caption2, design: .rounded).weight(.bold))
+                                                .scaleEffect(0.78)
                                                 .opacity(0.72)
                                         } else if segW >= 36 {
                                             Circle()

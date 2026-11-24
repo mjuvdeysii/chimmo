@@ -4065,4 +4065,89 @@ final class SpecimenIntegrityTests: XCTestCase {
             XCTAssertEqual(lane.barForegroundHex(isNight: true), 0x0E1430)
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound63DynamicTypeClosureAndCanonParity() throws {
+        func relativeLuminance(_ hex: UInt32) -> Double {
+            func linearize(_ component: UInt32) -> Double {
+                let srgb = Double(component) / 255.0
+                return srgb <= 0.03928 ? (srgb / 12.92) : pow((srgb + 0.055) / 1.055, 2.4)
+            }
+            let r = linearize((hex >> 16) & 0xFF)
+            let g = linearize((hex >> 8) & 0xFF)
+            let b = linearize(hex & 0xFF)
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+
+        func contrastRatio(_ a: UInt32, _ b: UInt32) -> Double {
+            let l1 = relativeLuminance(a)
+            let l2 = relativeLuminance(b)
+            return (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
+        }
+
+        for member in ChimmoMember.allCases {
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(member.nightGlowHex, 0x0E1430),
+                6.5,
+                "\(member.chineseName) 夜灯荧光对比窑墨前景 #0E1430 需达到 >= 6.5:1"
+            )
+        }
+
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r63_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(
+            StageChoirKeyboardBar(
+                vm: vm,
+                palette: day,
+                reduceMotion: false,
+                showsSmartHints: false,
+                onWakeTimeline: {},
+                onKeyStrike: { _, _, _ in }
+            )
+        )
+        XCTAssertNotNil(
+            StageChoirKeyboardBar(
+                vm: vm,
+                palette: night,
+                reduceMotion: true,
+                showsSmartHints: true,
+                onWakeTimeline: {},
+                onKeyStrike: { _, _, _ in }
+            )
+        )
+        XCTAssertNotNil(StageHarmonyRibbonView(vm: vm, palette: day, reduceMotion: false, onWakeTimeline: {}))
+        XCTAssertNotNil(StageHarmonyRibbonView(vm: vm, palette: night, reduceMotion: true, onWakeTimeline: {}))
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: day,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                initialSegment: 0,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: night,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                initialSegment: 0,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+    }
 }
