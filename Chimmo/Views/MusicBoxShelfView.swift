@@ -127,31 +127,39 @@ public struct MusicBoxShelfView: View {
                     .padding(.vertical, 10)
 
                     if selectedSegment == 1 || !notebook.entries.isEmpty {
-                        VStack(spacing: 7) {
+                        VStack(spacing: 8) {
                             if selectedSegment == 1 {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
-                                        ForEach(SpecimenLibrary.categories, id: \.self) { cat in
-                                            let active = selectedCategory == cat
-                                            Button {
-                                                selectedCategory = cat
-                                                if cat != "全部",
-                                                   let mood = selectedMoodFilter,
-                                                   !SpecimenLibrary.all.contains(where: { $0.specimenCategory == cat && $0.scaleMode == mood }) {
-                                                    selectedMoodFilter = nil
-                                                }
-                                            } label: {
-                                                Text(cat)
-                                                    .font(.caption.weight(active ? .bold : .medium))
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 6)
-                                                    .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                                    .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                                HStack(spacing: 6) {
+                                    ForEach(LibraryCategoryBadgeMapper.badges()) { badge in
+                                        let active = selectedCategory == badge.rawCategory
+                                        Button {
+                                            selectedCategory = badge.rawCategory
+                                            if badge.rawCategory != "全部",
+                                               let mood = selectedMoodFilter,
+                                               !SpecimenLibrary.all.contains(where: { $0.specimenCategory == badge.rawCategory && $0.scaleMode == mood }) {
+                                                selectedMoodFilter = nil
                                             }
-                                            .buttonStyle(.plain)
+                                            AcousticHapticsEngine.shared.playScrubTick()
+                                        } label: {
+                                            VStack(spacing: 3) {
+                                                Image(systemName: badge.iconName)
+                                                    .font(.system(size: 11.5, weight: .bold))
+                                                Text(badge.shortLabel)
+                                                    .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                                                    .lineLimit(1)
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 6)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                                    .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                            )
+                                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
                                         }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel("分类 \(badge.rawCategory)")
+                                        .accessibilityValue(active ? "已选中" : "")
                                     }
-                                    .padding(.horizontal, 16)
                                 }
                             }
 
@@ -182,9 +190,11 @@ public struct MusicBoxShelfView: View {
                                 }
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 16)
                         }
-                        .padding(.bottom, 8)
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.shelfSurface.opacity(0.65)))
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 6)
                     }
 
                     ScrollView {
@@ -228,12 +238,15 @@ public struct MusicBoxShelfView: View {
     private var mySavedDiscsSection: some View {
         if notebook.entries.isEmpty {
             VStack(spacing: 16) {
-                ChimmoDuoBadgeView(
-                    isNight: palette.isNight,
-                    accentColor: palette.homeAnchor,
-                    melodyActive: false,
-                    cowAwake: true
-                )
+                TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+                    ChimmoDuoBadgeView(
+                        isNight: palette.isNight,
+                        accentColor: palette.homeAnchor,
+                        melodyActive: false,
+                        cowAwake: true,
+                        phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime()
+                    )
+                }
                 .frame(width: 96, height: 64)
 
                 Text("暂无作品")
@@ -270,12 +283,15 @@ public struct MusicBoxShelfView: View {
 
     private var filteredEmptyPlaceholder: some View {
         VStack(spacing: 14) {
-            ChimmoDuoBadgeView(
-                isNight: palette.isNight,
-                accentColor: palette.secondaryInk,
-                melodyActive: false,
-                cowAwake: false
-            )
+            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+                ChimmoDuoBadgeView(
+                    isNight: palette.isNight,
+                    accentColor: palette.secondaryInk,
+                    melodyActive: false,
+                    cowAwake: false,
+                    phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime()
+                )
+            }
             .frame(width: 72, height: 48)
             Text("暂无匹配曲目")
                 .font(.subheadline.weight(.bold))
@@ -361,6 +377,13 @@ public struct MusicBoxShelfView: View {
                     .accessibilityHint("轻点重命名作品")
 
                     Spacer(minLength: 4)
+
+                    if entry.document.id == currentDocumentID {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(palette.homeAnchor)
+                            .accessibilityLabel("当前正放在主舞台")
+                    }
 
                     HStack(spacing: 3) {
                         Image(systemName: entryVoice.iconName)

@@ -101,12 +101,96 @@ public struct ChimmoDuoCompanionState: Equatable, Sendable {
     }
 }
 
+/// 实时呼吸、错峰眨眼、声部视线跟随与小憩呼吸弧的纯值运动学快照（100% 可单测、严格尊重减弱动态效果）。
+public struct ChimmoDuoMotionKinematics: Equatable, Sendable {
+    public let sheepBreathY: CGFloat
+    public let sheepBreathScaleY: CGFloat
+    public let sheepBlinkClosed: Bool
+    public let cowBreathY: CGFloat
+    public let cowBreathScale: CGFloat
+    public let cowBlinkClosed: Bool
+    public let sleepArcProgress: Double
+    public let gazeOffsetX: CGFloat
+
+    public init(
+        sheepBreathY: CGFloat,
+        sheepBreathScaleY: CGFloat,
+        sheepBlinkClosed: Bool,
+        cowBreathY: CGFloat,
+        cowBreathScale: CGFloat,
+        cowBlinkClosed: Bool,
+        sleepArcProgress: Double,
+        gazeOffsetX: CGFloat
+    ) {
+        self.sheepBreathY = sheepBreathY
+        self.sheepBreathScaleY = sheepBreathScaleY
+        self.sheepBlinkClosed = sheepBlinkClosed
+        self.cowBreathY = cowBreathY
+        self.cowBreathScale = cowBreathScale
+        self.cowBlinkClosed = cowBlinkClosed
+        self.sleepArcProgress = sleepArcProgress
+        self.gazeOffsetX = gazeOffsetX
+    }
+
+    public static func compute(
+        phaseTime: Double,
+        melodyActive: Bool,
+        cowAwake: Bool,
+        isPlaying: Bool,
+        gazeBias: Double = 0.0,
+        reduceMotion: Bool
+    ) -> ChimmoDuoMotionKinematics {
+        let safeTime = phaseTime.isFinite ? max(0.0, phaseTime) : 0.0
+        let safeGaze = gazeBias.isFinite ? max(-1.0, min(1.0, gazeBias)) : 0.0
+
+        if reduceMotion || safeTime <= 0.0001 {
+            return ChimmoDuoMotionKinematics(
+                sheepBreathY: 0.0,
+                sheepBreathScaleY: 1.0,
+                sheepBlinkClosed: false,
+                cowBreathY: 0.0,
+                cowBreathScale: 1.0,
+                cowBlinkClosed: false,
+                sleepArcProgress: 0.0,
+                gazeOffsetX: reduceMotion ? 0.0 : CGFloat(safeGaze)
+            )
+        }
+
+        let sheepWave = sin(safeTime * (2.0 * Double.pi / 2.9))
+        let sheepBreathY = CGFloat(-1.25 * sheepWave)
+        let sheepBreathScaleY = CGFloat(1.0 + 0.018 * sheepWave)
+        let sheepBlinkLocal = safeTime.truncatingRemainder(dividingBy: 4.7)
+        let sheepBlinkClosed = !melodyActive && sheepBlinkLocal >= 0.0 && sheepBlinkLocal < 0.13
+
+        let cowWave = sin(safeTime * (2.0 * Double.pi / 3.8) + 1.1)
+        let cowBreathY = CGFloat(-0.95 * cowWave)
+        let cowBreathScale = CGFloat(1.0 + ((cowAwake && isPlaying) ? 0.024 : 0.014) * cowWave)
+        let cowBlinkLocal = (safeTime + 2.15).truncatingRemainder(dividingBy: 5.6)
+        let cowBlinkClosed = cowAwake && cowBlinkLocal >= 0.0 && cowBlinkLocal < 0.13
+
+        let sleepArcProgress = cowAwake ? 0.0 : (safeTime.truncatingRemainder(dividingBy: 3.2) / 3.2)
+
+        return ChimmoDuoMotionKinematics(
+            sheepBreathY: sheepBreathY,
+            sheepBreathScaleY: sheepBreathScaleY,
+            sheepBlinkClosed: sheepBlinkClosed,
+            cowBreathY: cowBreathY,
+            cowBreathScale: cowBreathScale,
+            cowBlinkClosed: cowBlinkClosed,
+            sleepArcProgress: sleepArcProgress,
+            gazeOffsetX: CGFloat(safeGaze)
+        )
+    }
+}
+
 /// 「咩 · Mie」云朵瓷小羊矢量绘制组件（支持任意缩放与离线 ImageRenderer 渲染）。
 public struct ChimmoSheepView: View {
     public let isNight: Bool
     public let accentColor: Color
     public var isSinging: Bool = false
     public var tiltProgress: Double = 0.0
+    public var phaseTime: Double = 0.0
+    public var gazeBias: Double = 0.0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -114,12 +198,16 @@ public struct ChimmoSheepView: View {
         isNight: Bool,
         accentColor: Color,
         isSinging: Bool = false,
-        tiltProgress: Double = 0.0
+        tiltProgress: Double = 0.0,
+        phaseTime: Double = 0.0,
+        gazeBias: Double = 0.0
     ) {
         self.isNight = isNight
         self.accentColor = accentColor
         self.isSinging = isSinging
         self.tiltProgress = tiltProgress
+        self.phaseTime = phaseTime
+        self.gazeBias = gazeBias
     }
 
     public var body: some View {
@@ -130,17 +218,31 @@ public struct ChimmoSheepView: View {
             isPlaying: isSinging,
             reduceMotion: reduceMotion
         )
+        let kin = ChimmoDuoMotionKinematics.compute(
+            phaseTime: phaseTime,
+            melodyActive: isSinging,
+            cowAwake: true,
+            isPlaying: isSinging,
+            gazeBias: gazeBias,
+            reduceMotion: reduceMotion
+        )
 
         Canvas { ctx, size in
-            drawSheep(ctx: &ctx, size: size, state: state)
+            drawSheep(ctx: &ctx, size: size, state: state, kin: kin)
         }
-        .offset(y: state.sheepBouncePt)
+        .scaleEffect(x: 1.0, y: kin.sheepBreathScaleY, anchor: .bottom)
+        .offset(y: state.sheepBouncePt + kin.sheepBreathY)
         .rotationEffect(.degrees(clampedTilt * 9.0 + state.sheepEarWiggleDeg * 0.35), anchor: .bottom)
         .animation(reduceMotion ? nil : .spring(response: 0.24, dampingFraction: 0.62), value: isSinging)
         .accessibilityHidden(true)
     }
 
-    private func drawSheep(ctx: inout GraphicsContext, size: CGSize, state: ChimmoDuoCompanionState) {
+    private func drawSheep(
+        ctx: inout GraphicsContext,
+        size: CGSize,
+        state: ChimmoDuoCompanionState,
+        kin: ChimmoDuoMotionKinematics
+    ) {
         let w = size.width
         let h = size.height
         let s = min(w, h)
@@ -228,12 +330,34 @@ public struct ChimmoSheepView: View {
                 with: .color(hornColor),
                 style: StrokeStyle(lineWidth: lw * 1.15, lineCap: .round, lineJoin: .round)
             )
+            if isSinging {
+                for waveIdx in 0..<2 {
+                    let waveR = s * (0.14 + CGFloat(waveIdx) * 0.075)
+                    let centerPt = CGPoint(x: cx + sx * s * 0.30, y: cy - s * 0.32)
+                    var waveArc = Path()
+                    let startDeg = side < 0 ? 135.0 : -45.0
+                    let endDeg = side < 0 ? 225.0 : 45.0
+                    waveArc.addArc(
+                        center: centerPt,
+                        radius: waveR,
+                        startAngle: .degrees(startDeg),
+                        endAngle: .degrees(endDeg),
+                        clockwise: false
+                    )
+                    ctx.stroke(
+                        waveArc,
+                        with: .color(accentColor.opacity(waveIdx == 0 ? 0.42 : 0.20)),
+                        style: StrokeStyle(lineWidth: max(0.9, lw * 0.55), lineCap: .round)
+                    )
+                }
+            }
         }
 
-        // 上釉圆眼 / 陶醉弯笑眼（零台词零嘴型）
+        // 上釉圆眼 / 自然眨眼 / 陶醉弯笑眼（零台词零嘴型）
         let inkColor = Color(hex: 0x1C1D19)
         let eyeY = cy - s * 0.03
         let eyeDX = s * 0.095
+        let gazeShiftX = kin.gazeOffsetX * s * 0.022
         for side in [-1.0, 1.0] {
             let ex = cx + CGFloat(side) * eyeDX
             if isSinging {
@@ -248,15 +372,25 @@ public struct ChimmoSheepView: View {
                     with: .color(inkColor),
                     style: StrokeStyle(lineWidth: max(1.1, lw * 0.78), lineCap: .round)
                 )
+            } else if kin.sheepBlinkClosed {
+                var blinkLine = Path()
+                blinkLine.move(to: CGPoint(x: ex - s * 0.038, y: eyeY))
+                blinkLine.addLine(to: CGPoint(x: ex + s * 0.038, y: eyeY))
+                ctx.stroke(
+                    blinkLine,
+                    with: .color(inkColor),
+                    style: StrokeStyle(lineWidth: max(1.1, lw * 0.76), lineCap: .round)
+                )
             } else {
                 let er = max(1.5, s * 0.042)
+                let gx = ex + gazeShiftX
                 ctx.fill(
-                    Path(ellipseIn: CGRect(x: ex - er, y: eyeY - er, width: er * 2, height: er * 2)),
+                    Path(ellipseIn: CGRect(x: gx - er, y: eyeY - er, width: er * 2, height: er * 2)),
                     with: .color(inkColor)
                 )
                 let hr = max(0.6, er * 0.34)
                 ctx.fill(
-                    Path(ellipseIn: CGRect(x: ex - er * 0.45, y: eyeY - er * 0.55, width: hr * 2, height: hr * 2)),
+                    Path(ellipseIn: CGRect(x: gx - er * 0.45, y: eyeY - er * 0.55, width: hr * 2, height: hr * 2)),
                     with: .color(Color.white.opacity(0.92))
                 )
             }
@@ -287,6 +421,8 @@ public struct ChimmoCowView: View {
     public let accentColor: Color
     public var isAwake: Bool = true
     public var isPlaying: Bool = false
+    public var phaseTime: Double = 0.0
+    public var gazeBias: Double = 0.0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -294,12 +430,16 @@ public struct ChimmoCowView: View {
         isNight: Bool,
         accentColor: Color,
         isAwake: Bool = true,
-        isPlaying: Bool = false
+        isPlaying: Bool = false,
+        phaseTime: Double = 0.0,
+        gazeBias: Double = 0.0
     ) {
         self.isNight = isNight
         self.accentColor = accentColor
         self.isAwake = isAwake
         self.isPlaying = isPlaying
+        self.phaseTime = phaseTime
+        self.gazeBias = gazeBias
     }
 
     public var body: some View {
@@ -309,17 +449,31 @@ public struct ChimmoCowView: View {
             isPlaying: isPlaying,
             reduceMotion: reduceMotion
         )
+        let kin = ChimmoDuoMotionKinematics.compute(
+            phaseTime: phaseTime,
+            melodyActive: false,
+            cowAwake: isAwake,
+            isPlaying: isPlaying,
+            gazeBias: gazeBias,
+            reduceMotion: reduceMotion
+        )
 
         Canvas { ctx, size in
-            drawCow(ctx: &ctx, size: size, state: state)
+            drawCow(ctx: &ctx, size: size, state: state, kin: kin)
         }
-        .scaleEffect(state.cowBreathScale)
+        .scaleEffect(state.cowBreathScale * kin.cowBreathScale)
+        .offset(y: kin.cowBreathY)
         .opacity(isAwake ? 1.0 : 0.78)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: isAwake)
         .accessibilityHidden(true)
     }
 
-    private func drawCow(ctx: inout GraphicsContext, size: CGSize, state: ChimmoDuoCompanionState) {
+    private func drawCow(
+        ctx: inout GraphicsContext,
+        size: CGSize,
+        state: ChimmoDuoCompanionState,
+        kin: ChimmoDuoMotionKinematics
+    ) {
         let w = size.width
         let h = size.height
         let s = min(w, h)
@@ -392,10 +546,11 @@ public struct ChimmoCowView: View {
             ctx.fill(Path(ellipseIn: CGRect(x: nx - nr, y: ny - nr * 0.8, width: nr * 2, height: nr * 1.6)), with: .color(nostrilCol))
         }
 
-        // 眼睛（唤醒时温厚圆眼 / 伴奏关闭时静谧闭眼弧）
+        // 眼睛（唤醒时温厚圆眼 / 错峰眨眼 / 伴奏关闭时静谧闭眼弧）
         let eyeY = cy - s * 0.08
         let eyeDX = s * 0.11
         let inkColor = Color(hex: 0x1C1D19)
+        let gazeShiftX = kin.gazeOffsetX * s * 0.022
         for side in [-1.0, 1.0] {
             let ex = cx + CGFloat(side) * eyeDX
             if !isAwake {
@@ -410,16 +565,49 @@ public struct ChimmoCowView: View {
                     with: .color(Color(hex: 0xEFE7DC).opacity(0.9)),
                     style: StrokeStyle(lineWidth: max(1.0, lw * 0.72), lineCap: .round)
                 )
+            } else if kin.cowBlinkClosed {
+                var blinkLine = Path()
+                blinkLine.move(to: CGPoint(x: ex - s * 0.038, y: eyeY))
+                blinkLine.addLine(to: CGPoint(x: ex + s * 0.038, y: eyeY))
+                ctx.stroke(
+                    blinkLine,
+                    with: .color(inkColor),
+                    style: StrokeStyle(lineWidth: max(1.0, lw * 0.74), lineCap: .round)
+                )
             } else {
                 let er = max(1.5, s * 0.043)
+                let gx = ex + gazeShiftX
                 ctx.fill(
-                    Path(ellipseIn: CGRect(x: ex - er, y: eyeY - er, width: er * 2, height: er * 2)),
+                    Path(ellipseIn: CGRect(x: gx - er, y: eyeY - er, width: er * 2, height: er * 2)),
                     with: .color(inkColor)
                 )
                 let hr = max(0.6, er * 0.34)
                 ctx.fill(
-                    Path(ellipseIn: CGRect(x: ex - er * 0.45, y: eyeY - er * 0.55, width: hr * 2, height: hr * 2)),
+                    Path(ellipseIn: CGRect(x: gx - er * 0.45, y: eyeY - er * 0.55, width: hr * 2, height: hr * 2)),
                     with: .color(Color.white.opacity(0.92))
+                )
+            }
+        }
+
+        // 小憩纯矢量漂浮呼吸弧（无字母气泡，仅以柔和月弧表达均匀吐息）
+        if !isAwake && kin.sleepArcProgress > 0.01 {
+            for arcIdx in 0..<2 {
+                let localProg = (kin.sleepArcProgress + Double(arcIdx) * 0.45).truncatingRemainder(dividingBy: 1.0)
+                let fade = sin(localProg * Double.pi)
+                let bx = cx + s * (0.28 + CGFloat(arcIdx) * 0.06)
+                let by = cy - s * (0.34 + CGFloat(localProg) * 0.14)
+                let arcHalfW = s * (0.042 + CGFloat(arcIdx) * 0.015)
+                var breathArc = Path()
+                breathArc.move(to: CGPoint(x: bx - arcHalfW, y: by))
+                breathArc.addQuadCurve(
+                    to: CGPoint(x: bx + arcHalfW, y: by),
+                    control: CGPoint(x: bx, y: by - s * 0.045)
+                )
+                let arcColor = isNight ? Color(hex: 0xEFE7DC) : accentColor
+                ctx.stroke(
+                    breathArc,
+                    with: .color(arcColor.opacity(0.55 * fade)),
+                    style: StrokeStyle(lineWidth: max(0.9, lw * 0.52), lineCap: .round)
                 )
             }
         }
@@ -443,17 +631,23 @@ public struct ChimmoDuoBadgeView: View {
     public let accentColor: Color
     public var melodyActive: Bool = false
     public var cowAwake: Bool = true
+    public var phaseTime: Double = 0.0
+    public var gazeBias: Double = 0.0
 
     public init(
         isNight: Bool,
         accentColor: Color,
         melodyActive: Bool = false,
-        cowAwake: Bool = true
+        cowAwake: Bool = true,
+        phaseTime: Double = 0.0,
+        gazeBias: Double = 0.0
     ) {
         self.isNight = isNight
         self.accentColor = accentColor
         self.melodyActive = melodyActive
         self.cowAwake = cowAwake
+        self.phaseTime = phaseTime
+        self.gazeBias = gazeBias
     }
 
     public var body: some View {
@@ -468,7 +662,9 @@ public struct ChimmoDuoBadgeView: View {
                     isNight: isNight,
                     accentColor: accentColor,
                     isAwake: cowAwake,
-                    isPlaying: melodyActive && cowAwake
+                    isPlaying: melodyActive && cowAwake,
+                    phaseTime: phaseTime,
+                    gazeBias: gazeBias
                 )
                 .frame(width: itemW, height: itemH)
                 .offset(x: w * 0.20, y: 0)
@@ -476,7 +672,9 @@ public struct ChimmoDuoBadgeView: View {
                 ChimmoSheepView(
                     isNight: isNight,
                     accentColor: accentColor,
-                    isSinging: melodyActive
+                    isSinging: melodyActive,
+                    phaseTime: phaseTime,
+                    gazeBias: gazeBias
                 )
                 .frame(width: itemW, height: itemH)
                 .offset(x: -w * 0.20, y: -h * 0.03)

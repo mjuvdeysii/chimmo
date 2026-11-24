@@ -1726,4 +1726,157 @@ final class SpecimenIntegrityTests: XCTestCase {
         vm.stopPlayback()
         XCTAssertNil(vm.statusToast)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound25LivingDuoKinematicsChoirCategoryBadgesAndEditFixes() throws {
+        // 1. 「咩 × 哞」实时呼吸、眨眼、视线跟随与小憩弧线运动学验证
+        let reduced = ChimmoDuoMotionKinematics.compute(
+            phaseTime: 0.05,
+            melodyActive: false,
+            cowAwake: false,
+            isPlaying: true,
+            gazeBias: 0.8,
+            reduceMotion: true
+        )
+        XCTAssertEqual(reduced.sheepBreathY, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(reduced.sheepBreathScaleY, 1.0, accuracy: 1e-6)
+        XCTAssertFalse(reduced.sheepBlinkClosed)
+        XCTAssertEqual(reduced.cowBreathY, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(reduced.cowBreathScale, 1.0, accuracy: 1e-6)
+        XCTAssertFalse(reduced.cowBlinkClosed)
+        XCTAssertEqual(reduced.sleepArcProgress, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(reduced.gazeOffsetX, 0.0, accuracy: 1e-6)
+
+        let neutralClamped = ChimmoDuoMotionKinematics.compute(
+            phaseTime: 0.0,
+            melodyActive: false,
+            cowAwake: true,
+            isPlaying: false,
+            gazeBias: 2.5,
+            reduceMotion: false
+        )
+        XCTAssertEqual(neutralClamped.gazeOffsetX, 1.0, accuracy: 1e-6)
+
+        let sheepBlink = ChimmoDuoMotionKinematics.compute(
+            phaseTime: 0.05,
+            melodyActive: false,
+            cowAwake: true,
+            isPlaying: false,
+            gazeBias: -0.5,
+            reduceMotion: false
+        )
+        XCTAssertTrue(sheepBlink.sheepBlinkClosed)
+        XCTAssertEqual(sheepBlink.gazeOffsetX, -0.5, accuracy: 1e-6)
+
+        let singingSuppressesBlink = ChimmoDuoMotionKinematics.compute(
+            phaseTime: 0.05,
+            melodyActive: true,
+            cowAwake: true,
+            isPlaying: true,
+            gazeBias: 0.0,
+            reduceMotion: false
+        )
+        XCTAssertFalse(singingSuppressesBlink.sheepBlinkClosed)
+
+        let cowBlink = ChimmoDuoMotionKinematics.compute(
+            phaseTime: 3.50,
+            melodyActive: false,
+            cowAwake: true,
+            isPlaying: false,
+            gazeBias: 0.2,
+            reduceMotion: false
+        )
+        XCTAssertTrue(cowBlink.cowBlinkClosed)
+
+        let cowSleeping = ChimmoDuoMotionKinematics.compute(
+            phaseTime: 1.25,
+            melodyActive: false,
+            cowAwake: false,
+            isPlaying: false,
+            gazeBias: 0.0,
+            reduceMotion: false
+        )
+        XCTAssertFalse(cowSleeping.cowBlinkClosed)
+        XCTAssertGreaterThan(cowSleeping.sleepArcProgress, 0.0)
+
+        let nanSafe = ChimmoDuoMotionKinematics.compute(
+            phaseTime: .nan,
+            melodyActive: false,
+            cowAwake: false,
+            isPlaying: false,
+            gazeBias: .infinity,
+            reduceMotion: false
+        )
+        XCTAssertTrue(nanSafe.sheepBreathY.isFinite && nanSafe.cowBreathScale.isFinite && nanSafe.gazeOffsetX.isFinite)
+
+        // 2. 曲库短分类图标短标映射与 0 Emoji 校验
+        let badges = LibraryCategoryBadgeMapper.badges()
+        XCTAssertEqual(badges.count, SpecimenLibrary.categories.count)
+        for badge in badges {
+            XCTAssertFalse(badge.shortLabel.isEmpty)
+            XCTAssertLessThanOrEqual(badge.shortLabel.count, 2)
+            XCTAssertFalse(badge.iconName.isEmpty)
+            for scalar in (badge.shortLabel + badge.rawCategory).unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji)
+            }
+        }
+        XCTAssertEqual(LibraryCategoryBadgeMapper.badge(for: "室内乐精选").shortLabel, "室内")
+        XCTAssertEqual(LibraryCategoryBadgeMapper.badge(for: "   ").shortLabel, "曲目")
+
+        // 3. 时值修改/删除断连修复、空画布双子起音与七小只试听零 Toast 契约
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r25_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.openSpecimen(SpecimenLibrary.saintSaensTheSwan, autoPlay: true)
+        XCTAssertTrue(vm.isPlaying)
+        let firstID = try XCTUnwrap(vm.document.notes.first?.id)
+        let origDur = vm.document.notes[0].rawDuration
+
+        vm.adjustSelectedBeadDuration(delta: 0.22)
+        XCTAssertFalse(vm.isPlaying)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertTrue(vm.document.title.contains("我的改写"))
+        XCTAssertGreaterThan(vm.document.notes.first(where: { $0.id == firstID })?.rawDuration ?? 0, origDur)
+        XCTAssertNil(vm.statusToast)
+
+        vm.adjustSelectedBeadDuration(delta: .nan)
+        XCTAssertTrue((vm.document.notes.first(where: { $0.id == firstID })?.rawDuration ?? -1).isFinite)
+
+        vm.togglePlayback()
+        XCTAssertTrue(vm.isPlaying)
+        vm.deleteSelectedBead()
+        XCTAssertFalse(vm.isPlaying)
+        XCTAssertNil(vm.statusToast)
+
+        // 单音删除清空画布时同步清零选中态、提示灯与和弦段索引
+        vm.startBlankCanvas()
+        vm.placeNoteOnCanvas(degree: 1, octaveOffset: 0, atTime: 0.16)
+        vm.smartHintActive = true
+        XCTAssertEqual(vm.document.notes.count, 1)
+        vm.deleteSelectedBead()
+        XCTAssertTrue(vm.document.notes.isEmpty)
+        XCTAssertNil(vm.selectedBeadID)
+        XCTAssertFalse(vm.smartHintActive)
+        XCTAssertEqual(vm.activeChordSpanID, 0)
+
+        // 空画布一键「咩哞起音」与七小只声部试听
+        vm.chordPreset = .off
+        vm.plantDuoStarterMotif()
+        XCTAssertEqual(vm.document.notes.count, 5)
+        XCTAssertTrue(vm.pentatonicSafe)
+        XCTAssertTrue(vm.cradleEnabled)
+        XCTAssertFalse(vm.document.isSpecimen)
+        XCTAssertEqual(vm.selectedBeadID, vm.document.notes.first?.id)
+        XCTAssertNil(vm.statusToast)
+
+        for member in ChimmoMember.allCases {
+            vm.auditionChimmoMember(member)
+        }
+        vm.stopPlayback()
+        XCTAssertNil(vm.statusToast)
+    }
 }

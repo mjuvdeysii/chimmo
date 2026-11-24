@@ -144,11 +144,13 @@ public struct OrbitalStageView: View {
                             }
                         }
                     } label: {
+                        let crownGaze = Double((vm.latestDegree ?? 4) - 4) / 3.0
                         ChimmoDuoBadgeView(
                             isNight: palette.isNight,
                             accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
                             melodyActive: !vm.activeLaneIndices.isEmpty || duoGreetingPulse,
-                            cowAwake: vm.cradleEnabled
+                            cowAwake: vm.cradleEnabled,
+                            gazeBias: crownGaze
                         )
                         .frame(width: 38, height: 24)
                     }
@@ -370,9 +372,45 @@ public struct OrbitalStageView: View {
                         melodyActive: false,
                         cowAwake: vm.cradleEnabled
                     )
-                    .frame(width: 74, height: 48)
-                    .opacity(palette.isNight ? 0.36 : 0.30)
+                    .frame(width: 78, height: 50)
+                    .opacity(palette.isNight ? 0.44 : 0.38)
                     .allowsHitTesting(false)
+
+                    VStack {
+                        Spacer()
+                        HStack(spacing: 10) {
+                            Button {
+                                vm.plantDuoStarterMotif()
+                            } label: {
+                                Label("咩哞起音", systemImage: "sparkles")
+                                    .font(.caption.weight(.bold))
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(Capsule().fill(palette.homeAnchor))
+                                    .foregroundStyle(palette.isNight ? Color(hex: 0x1B2245) : .white)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("生成咩哞示范短句")
+
+                            Button {
+                                showDreamSheet = true
+                            } label: {
+                                Label("写旋律", systemImage: "wand.and.stars")
+                                    .font(.caption.weight(.bold))
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        Capsule()
+                                            .fill(palette.cardSurface.opacity(0.94))
+                                            .overlay(Capsule().strokeBorder(palette.divider, lineWidth: 1.0))
+                                    )
+                                    .foregroundStyle(palette.primaryInk)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("打开写旋律面板")
+                        }
+                        .padding(.bottom, 12)
+                    }
                 }
 
                 // 顶部极简声学状态标（无文字堆砌；展示伴唱、倍速、音区移调与律动状态，及麦克风异常提示）
@@ -2189,11 +2227,16 @@ public struct OrbitalStageView: View {
                 let distPt = hypot(val.location.x - hitPt.x, val.location.y - hitPt.y)
                 let dyn = StarHitDynamicsMapper.hitDynamics(distancePt: distPt, hitRadius: 36.0)
                 wakeRippleTimeline()
-                vm.strikeXylophoneLane(
-                    XylophoneLane.lane(at: laneIdx),
-                    touchIntensity: dyn.velocity,
-                    touchBrightness: dyn.brightness
-                )
+                if vm.document.notes.isEmpty && !vm.followGlowActive {
+                    let lane = XylophoneLane.lane(at: laneIdx)
+                    vm.placeNoteOnCanvas(degree: lane.degree, octaveOffset: lane.octaveOffset, atTime: 0.16)
+                } else {
+                    vm.strikeXylophoneLane(
+                        XylophoneLane.lane(at: laneIdx),
+                        touchIntensity: dyn.velocity,
+                        touchBrightness: dyn.brightness
+                    )
+                }
             } else if !vm.followGlowActive {
                 let dx = val.location.x - nebulaHoldCenter.x
                 let dy = val.location.y - nebulaHoldCenter.y

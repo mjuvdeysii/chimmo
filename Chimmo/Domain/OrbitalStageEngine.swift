@@ -1402,3 +1402,46 @@ public enum HarmonyCurtainStripMapper {
     }
 }
 
+/// 曲库顶部分类图标短标映射：把超长中文分类标题收敛为单屏均分无溢出图标短标，消除横向盲扫滚动。
+public enum LibraryCategoryBadgeMapper {
+    public struct CategoryBadge: Identifiable, Equatable, Sendable {
+        public let rawCategory: String
+        public let shortLabel: String
+        public let iconName: String
+
+        public var id: String { rawCategory }
+
+        public init(rawCategory: String, shortLabel: String, iconName: String) {
+            self.rawCategory = rawCategory
+            self.shortLabel = shortLabel
+            self.iconName = iconName
+        }
+    }
+
+    public static func badge(for rawCategory: String) -> CategoryBadge {
+        switch rawCategory {
+        case "全部":
+            return CategoryBadge(rawCategory: rawCategory, shortLabel: "全部", iconName: "square.grid.2x2.fill")
+        case "圣桑·李斯特·浪漫派":
+            return CategoryBadge(rawCategory: rawCategory, shortLabel: "浪漫", iconName: "wind")
+        case "巴赫·古典名作":
+            return CategoryBadge(rawCategory: rawCategory, shortLabel: "古典", iconName: "building.columns.fill")
+        case "印象·民族与夜曲":
+            return CategoryBadge(rawCategory: rawCategory, shortLabel: "夜曲", iconName: "moon.stars.fill")
+        case "原创夏日治愈风":
+            return CategoryBadge(rawCategory: rawCategory, shortLabel: "原创", iconName: "sun.haze.fill")
+        default:
+            let prefix = String(rawCategory.trimmingCharacters(in: .whitespacesAndNewlines).prefix(2))
+            return CategoryBadge(
+                rawCategory: rawCategory,
+                shortLabel: prefix.isEmpty ? "曲目" : prefix,
+                iconName: "music.note"
+            )
+        }
+    }
+
+    public static func badges(for categories: [String] = SpecimenLibrary.categories) -> [CategoryBadge] {
+        categories.map(badge(for:))
+    }
+}
+

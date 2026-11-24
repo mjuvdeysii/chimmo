@@ -5,49 +5,832 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>咩哞 · Chimmo — 把脑海里的旋律唱出来、看得见</title>
   <style>
-    :root { --bg: #F7F3EA; --card: #EFE8DA; --ink: #1C1D19; --sub: #5E5F66; --accent: #0B7D74; --terra: #C4513A; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #1B2245; --card: #222B56; --ink: #F4EBDD; --sub: #AEB4CC; --accent: #4FD8CB; --terra: #FFB84D; }
+    :root {
+      --bg: #F7F3EA;
+      --paper: #FBF8F1;
+      --card: #FFFFFF;
+      --shelf: #EFE8DA;
+      --wood: #DECBB3;
+      --wood-edge: #C7B093;
+      --ink: #1C1D19;
+      --sub: #5E5F66;
+      --accent: #0B7D74;
+      --accent-soft: rgba(11, 125, 116, 0.12);
+      --gold: #D99E32;
+      --gold-soft: rgba(217, 158, 50, 0.16);
+      --terra: #C4513A;
+      --border: rgba(28, 29, 25, 0.09);
+      --shadow: 0 12px 32px rgba(28, 29, 25, 0.07);
     }
-    body { margin: 0; padding: 36px 20px; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; line-height: 1.65; }
-    .wrap { max-width: 720px; margin: 0 auto; }
-    h1 { font-size: 28px; margin-bottom: 6px; }
-    .lead { color: var(--sub); font-size: 16px; margin-bottom: 28px; }
-    .card { background: var(--card); border-radius: 18px; padding: 20px 22px; margin-bottom: 18px; }
-    h2 { font-size: 18px; margin: 0 0 10px 0; }
-    ul { margin: 0; padding-left: 20px; }
-    li { margin-bottom: 6px; }
-    a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    html[data-theme="night"] {
+      --bg: #1B2245;
+      --paper: #161C3B;
+      --card: #242E5C;
+      --shelf: #202952;
+      --wood: #3D3248;
+      --wood-edge: #564663;
+      --ink: #F4EBDD;
+      --sub: #AEB4CC;
+      --accent: #4FD8CB;
+      --accent-soft: rgba(79, 216, 203, 0.16);
+      --gold: #FFB84D;
+      --gold-soft: rgba(255, 184, 77, 0.18);
+      --terra: #FF7A7E;
+      --border: rgba(244, 235, 221, 0.12);
+      --shadow: 0 16px 38px rgba(7, 10, 26, 0.42);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 18px 48px;
+      background:
+        radial-gradient(circle at 18% 8%, var(--gold-soft), transparent 44%),
+        radial-gradient(circle at 86% 18%, var(--accent-soft), transparent 42%),
+        var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      line-height: 1.6;
+      transition: background-color 0.35s ease, color 0.35s ease;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-seal {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow);
+    }
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .brand-ver {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.16s ease, border-color 0.2s ease, background-color 0.2s ease;
+    }
+    .pill-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+    .pill-btn[aria-pressed="true"] {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+    }
+    html[data-theme="night"] .pill-btn[aria-pressed="true"] {
+      color: #151B36;
+    }
+    .hero {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 26px 24px 22px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 18px;
+    }
+    .hero-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 4.2vw, 38px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .lead {
+      margin: 6px 0 0;
+      color: var(--sub);
+      font-size: 15px;
+      max-width: 640px;
+    }
+    .duo-stage {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .mascot-card {
+      position: relative;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      padding: 16px 14px 14px;
+      text-align: center;
+      cursor: pointer;
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+    }
+    .mascot-card:hover { transform: translateY(-2px); border-color: var(--gold); }
+    .mascot-card.singing {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    .mascot-card.sleeping { opacity: 0.84; }
+    .mascot-svg {
+      width: 112px;
+      height: 92px;
+      overflow: visible;
+    }
+    .mascot-name {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .mascot-role {
+      font-size: 12.5px;
+      color: var(--sub);
+      margin: 0;
+    }
+    .wave-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--shelf);
+      display: grid;
+      place-items: center;
+      color: var(--sub);
+    }
+    .mascot-card.singing .wave-badge {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .choir-shelf {
+      background: var(--shelf);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 18px 14px 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .choir-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 4px;
+    }
+    .choir-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .choir-hint {
+      font-size: 12px;
+      color: var(--sub);
+      margin: 0;
+    }
+    .shelf-stage {
+      position: relative;
+      padding-bottom: 12px;
+    }
+    .wood-plank {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 8px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+    .choir-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+      align-items: end;
+    }
+    .figure-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 4px 2px 0;
+      cursor: pointer;
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+      color: var(--ink);
+    }
+    .figure-svg {
+      width: 100%;
+      max-width: 78px;
+      height: 78px;
+      overflow: visible;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .figure-btn:hover .figure-svg { transform: translateY(-3px); }
+    .figure-btn.singing .figure-svg { transform: translateY(-8px) scale(1.06); }
+    .figure-meta {
+      display: grid;
+      justify-items: center;
+      gap: 1px;
+    }
+    .figure-deg {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 7px;
+      border-radius: 999px;
+      color: #FFFFFF;
+    }
+    .figure-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sub);
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+    .feature-chip {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+    }
+    .feature-card h2 {
+      margin: 2px 0 0;
+      font-size: 15.5px;
+    }
+    .feature-card p {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--sub);
+    }
+    .footer-card {
+      background: var(--shelf);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+    .links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
     a:hover { text-decoration: underline; }
-    .links { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 24px; font-size: 14px; }
+
+    /* Kiln Ceramic Living Kinematics */
+    @keyframes breatheSheep {
+      0%, 100% { transform: translateY(0px) scaleY(1); }
+      50% { transform: translateY(-2.4px) scaleY(1.022); }
+    }
+    @keyframes breatheCow {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-1.8px) scale(1.018); }
+    }
+    @keyframes blinkEyes {
+      0%, 94%, 100% { transform: scaleY(1); }
+      97% { transform: scaleY(0.12); }
+    }
+    @keyframes floatBreathArc {
+      0% { opacity: 0; transform: translateY(4px) scale(0.85); }
+      45% { opacity: 0.72; }
+      100% { opacity: 0; transform: translateY(-10px) scale(1.12); }
+    }
+    @keyframes bounceFigure {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-2px); }
+    }
+    .sheep-body-anim { transform-origin: 56px 78px; animation: breatheSheep 2.9s ease-in-out infinite; }
+    .cow-body-anim { transform-origin: 56px 78px; animation: breatheCow 3.8s ease-in-out infinite; }
+    .eye-blink { transform-box: fill-box; transform-origin: center; animation: blinkEyes 4.8s ease-in-out infinite; }
+    .eye-blink-delay { transform-box: fill-box; transform-origin: center; animation: blinkEyes 5.6s ease-in-out 1.8s infinite; }
+    .sleep-arc-1 { animation: floatBreathArc 3.2s ease-in-out infinite; }
+    .sleep-arc-2 { animation: floatBreathArc 3.2s ease-in-out 1.4s infinite; }
+    .fig-idle-even { animation: bounceFigure 2.8s ease-in-out infinite; }
+    .fig-idle-odd { animation: bounceFigure 3.3s ease-in-out 0.9s infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sheep-body-anim, .cow-body-anim, .eye-blink, .eye-blink-delay,
+      .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd {
+        animation: none !important;
+      }
+    }
+    @media (max-width: 720px) {
+      .duo-stage { grid-template-columns: 1fr; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .choir-grid { gap: 3px; }
+      .figure-name { font-size: 10px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>咩哞 · Chimmo</h1>
-    <p class="lead">把脑海里的旋律唱出来、看得见。iOS 原生音乐可视化与零乐理脑放旋律复现器物（完全离线、无账号、无广告）。</p>
+    <header class="topbar">
+      <div class="brand-mark">
+        <div class="brand-seal" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8" opacity="0.9"/>
+            <circle cx="12" cy="12" r="4.6" stroke="var(--gold)" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="1.8" fill="var(--accent)"/>
+          </svg>
+        </div>
+        <span class="brand-title">咩哞 · CHIMMO</span>
+        <span class="brand-ver">v0.32.0</span>
+      </div>
 
-    <div class="card">
-      <h2>咩哞七小只（调内 1–7 音级）</h2>
-      <p>坐在矮木架上的七只哑光窑陶小偶分别对应当前调内的七个音级：<strong>1 陶诺（家）</strong>、<strong>2 豆叩（迈步）</strong>、<strong>3 拍咯（晴雨）</strong>、<strong>4 呜嘟（悬步）</strong>、<strong>5 壳咯（远望）</strong>、<strong>6 钵莫（怀旧）</strong>、<strong>7 叮尖（踮脚）</strong>。全员不说话，只用姿态、倾角、呼吸与微光回应真实发生的音乐。</p>
-    </div>
+      <div class="controls">
+        <button id="toggleMouBtn" class="pill-btn" type="button" aria-pressed="true">
+          <span>哞 · 伴奏唤醒</span>
+        </button>
+        <button id="toggleThemeBtn" class="pill-btn" type="button" aria-pressed="false">
+          <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" fill="currentColor"/>
+            <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span id="themeLabel">切换夜灯</span>
+        </button>
+      </div>
+    </header>
 
-    <div class="card">
-      <h2>核心功能与支持</h2>
-      <ul>
-        <li><strong>单音节轻哼捉珠</strong>：端侧离线将哼唱凝结为纸面陶珠，附带半透明幽灵备选珠一指微调。</li>
-        <li><strong>水面托底现代和声</strong>：向上托起水面即可铺开毛毡暖阳、透明水波、电影微光三种现代和声织体。</li>
-        <li><strong>16 首可拆解编曲标本</strong>：内置 8 首自编公版古典与 8 首原创现代技法标本，支持拆轨独奏与 0.5× 慢放。</li>
-        <li><strong>技术支持与反馈</strong>：如有任何问题或建议，请访问 <a href="https://github.com/mjuvdeysii/chimmo/issues">GitHub Issues</a>。</li>
-      </ul>
-    </div>
+    <section class="hero">
+      <div class="hero-head">
+        <div>
+          <h1>把脑海里的旋律唱出来、看得见</h1>
+          <p class="lead">iOS 原生声学音乐盒与零乐理旋律创作器物。点按下方窑陶声学伙伴即可试听真实音高、呼吸与和声对话。</p>
+        </div>
+      </div>
 
-    <div class="links">
-      <a href="privacy.html">隐私政策 (Privacy Policy)</a>
-      <a href="terms.html">使用条款 (Terms of Use)</a>
-      <a href="licenses.html">开源许可 (Open Source Licenses)</a>
-      <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
-    </div>
+      <div class="duo-stage">
+        <button id="mieCard" class="mascot-card" type="button" aria-label="小羊咩，点击试听高音主旋律">
+          <span class="wave-badge" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+              <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+            <ellipse cx="56" cy="83" rx="28" ry="5" fill="rgba(0,0,0,0.12)"/>
+            <g class="sheep-body-anim">
+              <g id="mieWaves" opacity="0">
+                <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
+              <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
+              <circle cx="43" cy="48" r="18" fill="#FFFBF3"/>
+              <circle cx="69" cy="48" r="18" fill="#FFFBF3"/>
+              <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFBF3"/>
+              <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFBF3" stroke="#C8BCAC" stroke-width="1"/>
+              <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4"/>
+              <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#D99E32" stroke-width="3.6" stroke-linecap="round"/>
+              <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#D99E32" stroke-width="3.6" stroke-linecap="round"/>
+              <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
+              <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
+              <g id="mieOpenEyes" class="eye-blink">
+                <circle class="pupil" cx="48" cy="48" r="3.4" fill="#1C1D19"/>
+                <circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+                <circle class="pupil" cx="64" cy="48" r="3.4" fill="#1C1D19"/>
+                <circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+              </g>
+              <g id="mieSingEyes" opacity="0">
+                <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
+              <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
+            </g>
+          </svg>
+          <p class="mascot-name">咩 · Mie（云朵小羊）</p>
+          <p class="mascot-role">高音主旋律 · 哼唱侧耳倾听</p>
+        </button>
+
+        <button id="mouCard" class="mascot-card" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
+          <span class="wave-badge" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+              <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+            <ellipse cx="56" cy="83" rx="31" ry="5" fill="rgba(0,0,0,0.14)"/>
+            <g class="cow-body-anim">
+              <g id="mouSleepArcs" opacity="0">
+                <path class="sleep-arc-1" d="M77 25 Q81 21 85 25" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
+                <path class="sleep-arc-2" d="M84 19 Q89 14 94 19" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
+              <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
+              <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
+              <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
+              <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
+              <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD"/>
+              <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+              <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+              <g id="mouOpenEyes" class="eye-blink-delay">
+                <circle class="pupil" cx="46" cy="44" r="3.4" fill="#1C1D19"/>
+                <circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+                <circle class="pupil" cx="66" cy="44" r="3.4" fill="#1C1D19"/>
+                <circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+              </g>
+              <g id="mouSleepEyes" opacity="0">
+                <path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
+                <path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
+              </g>
+              <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23"/>
+              <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23"/>
+            </g>
+          </svg>
+          <p class="mascot-name">哞 · Mou（可可小牛）</p>
+          <p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
+        </button>
+      </div>
+
+      <div class="choir-shelf">
+        <div class="choir-header">
+          <p class="choir-title">咩哞七小只合唱架（调内 1–7 音级）</p>
+          <p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
+        </div>
+        <div class="shelf-stage">
+          <div class="choir-grid" id="choirGrid"></div>
+          <div class="wood-plank" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards-grid">
+      <article class="feature-card">
+        <div class="feature-chip" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+          </svg>
+        </div>
+        <h2>星盘 · 山河 · 星云三态画境</h2>
+        <p>单指手摇黑胶星盘搓盘、随光束流淌的旋律山河，以及按压即可微揉弦的星座星云。</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-chip" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h2>零乐理捕梦创作工坊</h2>
+        <p>支持轻敲手鼓定节拍、单指画坡线即划即响、相对哼唱捉珠与闭眼夜间触觉滑音录曲。</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-chip" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h2>28 首离线曲库与高清导出</h2>
+        <p>内置 20 首公版古典与 8 首原创治愈曲目；100% 离线导出高清 PNG 明信片、立体声 WAV 与多轨 MIDI。</p>
+      </article>
+    </section>
+
+    <footer class="footer-card">
+      <span>100% 本机离线运行 · 无账号 · 无广告 · 不上传任何录音</span>
+      <div class="links">
+        <a href="privacy.html">隐私政策</a>
+        <a href="terms.html">使用条款</a>
+        <a href="licenses.html">开源许可</a>
+        <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
+        <a href="https://github.com/mjuvdeysii/chimmo/issues">问题反馈</a>
+      </div>
+    </footer>
   </div>
+
+  <script>
+    (function () {
+      const members = [
+        { deg: 1, name: "陶诺", sol: "Do", role: "家", color: "#F25563", dark: "#8F1D28", tilt: 0, hz: 261.63, shape: "taono" },
+        { deg: 2, name: "豆叩", sol: "Re", role: "迈步", color: "#F7882F", dark: "#8A420A", tilt: 4, hz: 293.66, shape: "doko" },
+        { deg: 3, name: "拍咯", sol: "Mi", role: "晴雨", color: "#E64980", dark: "#861942", tilt: 0, hz: 329.63, shape: "plokko" },
+        { deg: 4, name: "呜嘟", sol: "Fa", role: "悬步", color: "#12B886", dark: "#085E45", tilt: -4.5, hz: 349.23, shape: "udo" },
+        { deg: 5, name: "壳咯", sol: "Sol", role: "远望", color: "#228BE6", dark: "#0F4C8A", tilt: 0, hz: 392.00, shape: "corllo" },
+        { deg: 6, name: "钵莫", sol: "La", role: "怀旧", color: "#7950F2", dark: "#3F2299", tilt: 0, hz: 440.00, shape: "bomo" },
+        { deg: 7, name: "叮尖", sol: "Ti", role: "踮脚", color: "#E59900", dark: "#7A4E00", tilt: -9, hz: 493.88, shape: "tinki" }
+      ];
+
+      let audioCtx = null;
+      let mouAwake = true;
+      let activeDegree = null;
+      let clearTimer = null;
+
+      function ensureAudio() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+      }
+
+      function playTone(freq, durationSec, delaySec, gainPeak, type) {
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const t0 = ctx.currentTime + (delaySec || 0);
+        const osc = ctx.createOscillator();
+        const sub = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || "triangle";
+        sub.type = "sine";
+        osc.frequency.setValueAtTime(freq, t0);
+        sub.frequency.setValueAtTime(freq * 2, t0);
+
+        const subGain = ctx.createGain();
+        subGain.gain.setValueAtTime(0.18, t0);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(gainPeak || 0.16, t0 + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (durationSec || 0.75));
+
+        osc.connect(gain);
+        sub.connect(subGain);
+        subGain.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        sub.start(t0);
+        osc.stop(t0 + (durationSec || 0.75) + 0.04);
+        sub.stop(t0 + (durationSec || 0.75) + 0.04);
+      }
+
+      function buildFigureSVG(m, index) {
+        const animClass = index % 2 === 0 ? "fig-idle-even" : "fig-idle-odd";
+        let detail = "";
+        if (m.shape === "taono") {
+          detail = `
+            <rect x="20" y="13" width="6" height="14" rx="3" fill="${m.color}"/>
+            <circle cx="23" cy="12" r="3.6" fill="#F2E6D0"/>
+            <g transform="rotate(-11 38 22)">
+              <rect x="34" y="14" width="6" height="13" rx="3" fill="${m.color}"/>
+              <circle cx="37" cy="13" r="3.6" fill="#F2E6D0"/>
+            </g>
+            <rect x="14" y="25" width="32" height="31" rx="14" fill="${m.color}"/>
+            <circle cx="27" cy="47" r="5.5" fill="#F2E6D0"/>
+            <circle cx="27" cy="47" r="2.8" fill="#D99E32"/>
+          `;
+        } else if (m.shape === "doko") {
+          detail = `
+            <rect x="14" y="29" width="32" height="27" rx="13" fill="${m.color}"/>
+            <rect x="23" y="26" width="14" height="3.2" rx="1.6" fill="${m.dark}"/>
+          `;
+        } else if (m.shape === "plokko") {
+          detail = `
+            <ellipse cx="30" cy="57" rx="12" ry="3.2" fill="${m.dark}"/>
+            <rect x="8" y="37" width="13" height="7" rx="3.5" transform="rotate(10 14 40)" fill="${m.color}" stroke="#D9A438" stroke-width="1.2"/>
+            <rect x="39" y="37" width="13" height="7" rx="3.5" transform="rotate(-10 45 40)" fill="${m.color}" stroke="#D9A438" stroke-width="1.2"/>
+            <circle cx="30" cy="42" r="15" fill="${m.color}"/>
+            <circle cx="30" cy="28" r="2.5" fill="#D9A438"/>
+          `;
+        } else if (m.shape === "udo") {
+          detail = `
+            <ellipse cx="30" cy="42" rx="14" ry="16" fill="${m.color}"/>
+            <circle cx="39" cy="34" r="2.2" fill="${m.dark}"/>
+            <circle cx="39" cy="40" r="1.7" fill="${m.dark}"/>
+          `;
+        } else if (m.shape === "corllo") {
+          detail = `
+            <circle cx="43" cy="34" r="9.5" fill="${m.dark}"/>
+            <circle cx="43" cy="34" r="5.5" fill="#EFE7D8"/>
+            <circle cx="43" cy="34" r="2.8" fill="${m.dark}"/>
+            <ellipse cx="28" cy="42" rx="13" ry="16" fill="${m.color}"/>
+          `;
+        } else if (m.shape === "bomo") {
+          detail = `
+            <ellipse cx="30" cy="44" rx="16.5" ry="12.5" fill="${m.color}"/>
+            <ellipse cx="30" cy="34" rx="9" ry="2.8" fill="#E8BD6B"/>
+          `;
+        } else {
+          detail = `
+            <line x1="30" y1="18" x2="30" y2="25" stroke="#6B430C" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="30" cy="15" r="3.4" fill="#FFC45A"/>
+            <rect x="19" y="25" width="22" height="31" rx="11" fill="${m.color}"/>
+          `;
+        }
+
+        const eyeY = m.shape === "bomo" ? 44 : (m.shape === "doko" ? 42 : 39);
+        return `
+          <svg class="figure-svg" viewBox="0 0 60 66" aria-hidden="true">
+            <ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(0,0,0,0.13)"/>
+            <g class="${animClass}" transform="rotate(${m.tilt} 30 58)">
+              <circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="${m.color}" stroke-width="1.8" opacity="0"/>
+              <ellipse cx="24" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
+              <ellipse cx="36" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
+              ${detail}
+              <g class="eyes-open">
+                <circle class="eye-pupil" cx="25.5" cy="${eyeY}" r="2.4" fill="#1C1D19"/>
+                <circle cx="24.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
+                <circle class="eye-pupil" cx="34.5" cy="${eyeY}" r="2.4" fill="#1C1D19"/>
+                <circle cx="33.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/>
+              </g>
+              <g class="eyes-sing" opacity="0">
+                <path d="M23 ${eyeY + 0.8} Q25.5 ${eyeY - 2.4} 28 ${eyeY + 0.8}" fill="none" stroke="#1C1D19" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M32 ${eyeY + 0.8} Q34.5 ${eyeY - 2.4} 37 ${eyeY + 0.8}" fill="none" stroke="#1C1D19" stroke-width="1.7" stroke-linecap="round"/>
+              </g>
+            </g>
+          </svg>
+        `;
+      }
+
+      const choirGrid = document.getElementById("choirGrid");
+      const choirStatus = document.getElementById("choirStatus");
+
+      members.forEach((m, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "figure-btn";
+        btn.dataset.deg = String(m.deg);
+        btn.setAttribute("aria-label", `${m.deg} ${m.name} ${m.sol}，${m.role}`);
+        btn.innerHTML = `
+          ${buildFigureSVG(m, idx)}
+          <div class="figure-meta">
+            <span class="figure-deg" style="background:${m.color}">${m.deg}</span>
+            <span class="figure-name">${m.name}</span>
+          </div>
+        `;
+        btn.addEventListener("click", () => triggerMember(m));
+        choirGrid.appendChild(btn);
+      });
+
+      function updateGaze(targetDeg) {
+        const buttons = choirGrid.querySelectorAll(".figure-btn");
+        buttons.forEach((btn) => {
+          const deg = Number(btn.dataset.deg);
+          const isTarget = deg === targetDeg;
+          btn.classList.toggle("singing", isTarget);
+          const halo = btn.querySelector(".sing-halo");
+          const open = btn.querySelector(".eyes-open");
+          const sing = btn.querySelector(".eyes-sing");
+          if (halo) halo.setAttribute("opacity", isTarget ? "0.55" : "0");
+          if (open) open.setAttribute("opacity", isTarget ? "0" : "1");
+          if (sing) sing.setAttribute("opacity", isTarget ? "1" : "0");
+          const pupils = btn.querySelectorAll(".eye-pupil");
+          const dx = targetDeg == null ? 0 : Math.max(-1.8, Math.min(1.8, (targetDeg - deg) * 0.6));
+          const dy = targetDeg == null ? 0 : -0.7;
+          pupils.forEach((p) => {
+            p.setAttribute("transform", `translate(${dx}, ${dy})`);
+          });
+        });
+      }
+
+      function triggerMember(m) {
+        activeDegree = m.deg;
+        updateGaze(m.deg);
+        choirStatus.textContent = `${m.deg} ${m.sol} · ${m.name}（${m.role}）`;
+        playTone(m.hz, 0.9, 0, 0.16, "triangle");
+        clearTimeout(clearTimer);
+        clearTimer = setTimeout(() => {
+          if (activeDegree === m.deg) {
+            activeDegree = null;
+            updateGaze(null);
+          }
+        }, 720);
+      }
+
+      const mieCard = document.getElementById("mieCard");
+      const mouCard = document.getElementById("mouCard");
+      const mieWaves = document.getElementById("mieWaves");
+      const mieOpen = document.getElementById("mieOpenEyes");
+      const mieSing = document.getElementById("mieSingEyes");
+      const mouOpen = document.getElementById("mouOpenEyes");
+      const mouSleep = document.getElementById("mouSleepEyes");
+      const mouArcs = document.getElementById("mouSleepArcs");
+      const toggleMouBtn = document.getElementById("toggleMouBtn");
+      const mouRoleText = document.getElementById("mouRoleText");
+
+      mieCard.addEventListener("click", () => {
+        mieCard.classList.add("singing");
+        mieWaves.setAttribute("opacity", "1");
+        mieOpen.setAttribute("opacity", "0");
+        mieSing.setAttribute("opacity", "1");
+        playTone(392.0, 0.65, 0, 0.15, "triangle");
+        playTone(523.25, 0.95, 0.10, 0.17, "triangle");
+        setTimeout(() => {
+          mieCard.classList.remove("singing");
+          mieWaves.setAttribute("opacity", "0");
+          mieOpen.setAttribute("opacity", "1");
+          mieSing.setAttribute("opacity", "0");
+        }, 820);
+      });
+
+      function syncMouState() {
+        mouCard.classList.toggle("sleeping", !mouAwake);
+        mouOpen.setAttribute("opacity", mouAwake ? "1" : "0");
+        mouSleep.setAttribute("opacity", mouAwake ? "0" : "1");
+        mouArcs.setAttribute("opacity", mouAwake ? "0" : "1");
+        toggleMouBtn.setAttribute("aria-pressed", mouAwake ? "true" : "false");
+        toggleMouBtn.querySelector("span").textContent = mouAwake ? "哞 · 伴奏唤醒" : "哞 · 闭眼小憩";
+        mouRoleText.textContent = mouAwake ? "低音根音 · 睁眼四幕和声护航" : "当前纯清唱 · 闭眼安静小憩";
+      }
+
+      mouCard.addEventListener("click", () => {
+        if (!mouAwake) {
+          mouAwake = true;
+          syncMouState();
+        }
+        mouCard.classList.add("singing");
+        playTone(130.81, 1.05, 0, 0.18, "sine");
+        playTone(196.00, 0.95, 0.03, 0.09, "triangle");
+        playTone(329.63, 0.95, 0.06, 0.08, "triangle");
+        setTimeout(() => mouCard.classList.remove("singing"), 860);
+      });
+
+      toggleMouBtn.addEventListener("click", () => {
+        mouAwake = !mouAwake;
+        syncMouState();
+      });
+
+      const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+      const themeLabel = document.getElementById("themeLabel");
+      const prefersNight = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      let isNight = prefersNight;
+
+      function applyTheme() {
+        document.documentElement.dataset.theme = isNight ? "night" : "day";
+        toggleThemeBtn.setAttribute("aria-pressed", isNight ? "true" : "false");
+        themeLabel.textContent = isNight ? "切换日光" : "切换夜灯";
+      }
+      applyTheme();
+      syncMouState();
+
+      toggleThemeBtn.addEventListener("click", () => {
+        isNight = !isNight;
+        applyTheme();
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -222,6 +222,67 @@ public final class StudioViewModel: ObservableObject {
         }
     }
 
+    public func plantDuoStarterMotif() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        pushUndo()
+        followGlowActive = false
+        smartHintActive = false
+        isTappingRhythm = false
+        currentSavedEntryID = nil
+        chordOverrides.removeAll()
+        pentatonicSafe = true
+        if chordPreset == .off { chordPreset = .autoMatch }
+
+        let starterNotes = [
+            NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.16, rawDuration: 0.42),
+            NoteBead(degree: 3, octaveOffset: 0, rawOnset: 0.62, rawDuration: 0.42),
+            NoteBead(degree: 5, octaveOffset: 0, rawOnset: 1.08, rawDuration: 0.56),
+            NoteBead(degree: 6, octaveOffset: 0, rawOnset: 1.70, rawDuration: 0.42),
+            NoteBead(degree: 5, octaveOffset: 0, rawOnset: 2.18, rawDuration: 0.88)
+        ]
+        document = MelodyDocument(
+            title: "咩哞灵感 #\(notebook.entries.count + 1)",
+            subtitle: "点音符或彩条微调",
+            rootMIDI: document.rootMIDI,
+            scaleMode: document.scaleMode,
+            harmonyProfile: document.harmonyProfile,
+            grooveStrength: 0.0,
+            notes: starterNotes,
+            isSpecimen: false,
+            preferredTexture: accompanimentTexture,
+            preferredVoice: melodyVoice
+        )
+        clock.updateTotalDuration(document.totalDuration)
+        selectedBeadID = document.notes.first?.id
+        activeGuidedMoment = nil
+        AcousticHapticsEngine.shared.playSeedBloom()
+        togglePlayback()
+    }
+
+    public func auditionChimmoMember(_ member: ChimmoMember) {
+        synth.ensureRunning()
+        let laneIdx = max(0, min(6, member.degree - 1))
+        let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: member.degree, octaveOffset: 0)
+        let pan = SympatheticResonanceMapper.keyBenchPan(
+            laneIndex: laneIdx,
+            stereoSpread: synth.currentSpaceProfile().stereoSpread
+        )
+        synth.playNote(
+            frequency: hz,
+            velocity: 0.60,
+            decay: 1.15,
+            brightness: 0.96,
+            timbre: FeltPianoSynth.Timbre.from(voice: melodyVoice),
+            pan: pan
+        )
+        AcousticHapticsEngine.shared.playPitchTouch(
+            laneIndex: laneIdx,
+            isHome: member.degree == 1,
+            isTension: member.isTensionDegree
+        )
+    }
+
     public func previewHumReference(degree: Int) {
         let safeDeg = max(1, min(7, degree))
         synth.ensureRunning()
@@ -1405,9 +1466,15 @@ public final class StudioViewModel: ObservableObject {
     }
 
     public func adjustSelectedBeadDuration(delta: Double) {
+        guard delta.isFinite else { return }
         guard let targetID = selectedBeadID,
               let idx = document.notes.firstIndex(where: { $0.id == targetID }) else { return }
+        stopPlayback()
         pushUndo()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 我的改写"
+        }
         let next = max(0.16, min(2.4, document.notes[idx].rawDuration + delta))
         document.notes[idx].rawDuration = next
         if document.notes[idx].quantizedDuration != nil {
@@ -1448,11 +1515,19 @@ public final class StudioViewModel: ObservableObject {
     public func deleteSelectedBead() {
         guard let targetID = selectedBeadID,
               let idx = document.notes.firstIndex(where: { $0.id == targetID }) else { return }
+        stopPlayback()
+        contextEchoTask?.cancel()
         pushUndo()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 我的改写"
+        }
         document.notes.remove(at: idx)
         clock.updateTotalDuration(document.totalDuration)
         if document.notes.isEmpty {
             selectedBeadID = nil
+            smartHintActive = false
+            activeChordSpanID = 0
         } else {
             selectedBeadID = document.notes[min(idx, document.notes.count - 1)].id
         }
@@ -2158,6 +2233,9 @@ public struct StudioView: View {
                 visualMode: vm.visualMode,
                 onAuditionDuo: { character in
                     vm.auditionDuoCharacter(character)
+                },
+                onAuditionMember: { member in
+                    vm.auditionChimmoMember(member)
                 },
                 onOpenSharePostcard: {
                     let req = VinylPostcardRequest(

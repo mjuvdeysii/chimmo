@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.32.0 - 2026-11-24
+
+- **活体「咩 × 哞」生命运动学 × 七小只窑陶合唱木架 × OpenMotion 互动绘本展示页 × 曲库单屏分类短标与舞台一致性修复 · 创意炼金术第 25 轮重构**：
+  - **「咩 × 哞」生命运动学与七小只合唱台复活（`ChimmoDuoMotionKinematics`、`ChimmoDuoMascotView` & `AboutSheetView`）**：为小羊「咩」与小牛「哞」注入错峰呼吸起伏、自然眨眼、发声护角声波、音级眼神跟随与闭眼小憩漂浮呼吸弧（完整兼容减弱动态效果）；在「关于咩哞」复活 7 只活体窑陶小偶（`ChimmoFigureView`）同台矮木架，支持单点试听与单指横扫七音连奏，其余伙伴实时转眼注视发声者，并同步点亮哼唱页小羊与曲库空态双子呼吸动态。
+  - **空画布破冰与状态一致性修复（`StudioViewModel`、`OrbitalStageView`）**：新增 `plantDuoStarterMotif()` 让空白星盘一键奏出五音示范短句并可直入写旋律；打通「星云」模式在空白画布落指即刻记入首颗音符；补齐 `adjustSelectedBeadDuration` 与 `deleteSelectedBead` 的停播、改写标记、`NaN` 钳位及清空画布重置状态。
+  - **曲库单屏短分类控制台与 OpenMotion 官网绘本更新（`LibraryCategoryBadgeMapper`、`MusicBoxShelfView` & `docs/index.html`）**：将 5 组冗长曲库分类收束为单屏均分无滚动图标短标并与五色情绪极光圆钮整合为一整块紧凑筛选面板；为「我的作品」补齐主舞台当前在播对勾徽章；通过 OpenMotion Design Studio 创作可点击试听「咩 × 哞 × 七小只」的互动 SVG 绘本展示页并同步更新官网主页。
+
 ## 0.31.0 - 2026-11-24
 
 - **主舞台四幕和声彩色触控轨 × 五档和弦进行彩色条码卡 × 全站状态与手感修复 · 创意炼金术第 24 轮重构**：

@@ -1,3 +1,4 @@
+import QuartzCore
 import SwiftUI
 
 /// 零乐理 3 秒「捕梦创作」抽屉：
@@ -407,12 +408,16 @@ public struct DreamCaptureSheet: View {
         let earTilt = isRec ? min(1.0, max(-1.0, (Double(level) - 0.14) * 1.4)) : 0.0
 
         return VStack(spacing: 18) {
-            ChimmoSheepView(
-                isNight: palette.isNight,
-                accentColor: skyColor,
-                isSinging: isRec && level > 0.06,
-                tiltProgress: earTilt
-            )
+            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+                ChimmoSheepView(
+                    isNight: palette.isNight,
+                    accentColor: skyColor,
+                    isSinging: isRec && level > 0.06,
+                    tiltProgress: earTilt,
+                    phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime(),
+                    gazeBias: isRec ? 0.35 : 0.0
+                )
+            }
             .frame(width: 56, height: 46)
 
             ZStack {
