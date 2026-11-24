@@ -250,12 +250,15 @@ public struct ChimmoSheepView: View {
         let cx = w * 0.5
         let cy = h * 0.54
         let lw = max(1.1, s * 0.055)
+        let inkContour = isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
+        let contourWidth = max(1.2, lw * 0.85)
+        let comicStroke = StrokeStyle(lineWidth: contourWidth, lineCap: .round, lineJoin: .round)
 
-        // 接地投影
+        // 扁平接地接触投影
         let shadowRect = CGRect(x: cx - s * 0.28, y: cy + s * 0.34, width: s * 0.56, height: s * 0.11)
         ctx.fill(
             Path(ellipseIn: shadowRect),
-            with: .color(Color.black.opacity(isNight ? 0.34 : 0.12))
+            with: .color(isNight ? Color(hex: 0x0A0F24).opacity(0.42) : Color(hex: 0x231B15).opacity(0.14))
         )
 
         // 唱响外环微光
@@ -263,14 +266,13 @@ public struct ChimmoSheepView: View {
             let haloR = s * 0.46
             ctx.stroke(
                 Path(ellipseIn: CGRect(x: cx - haloR, y: cy - haloR, width: haloR * 2, height: haloR * 2)),
-                with: .color(accentColor.opacity(0.45)),
-                lineWidth: max(1.0, lw * 0.75)
+                with: .color(accentColor.opacity(0.55)),
+                lineWidth: max(1.2, lw * 0.85)
             )
         }
 
-        // 柔垂双耳
+        // 柔垂双耳（扁平卡通暖墨闭合描边）
         let earColor = isNight ? Color(hex: 0xD8CCB8) : Color(hex: 0xE7DDD0)
-        let earStroke = isNight ? Color(hex: 0x7A736E) : Color(hex: 0xB8AD9E)
         let wiggleRad: Double = state.sheepEarWiggleDeg * (Double.pi / 180.0) * 0.35
         for side in [-1.0, 1.0] {
             let sx = CGFloat(side)
@@ -283,12 +285,11 @@ public struct ChimmoSheepView: View {
                 .translatedBy(x: -ex, y: -ey)
             let earPath = Path(ellipseIn: earRect).applying(earRot)
             ctx.fill(earPath, with: .color(earColor))
-            ctx.stroke(earPath, with: .color(earStroke.opacity(0.65)), lineWidth: max(0.8, lw * 0.55))
+            ctx.stroke(earPath, with: .color(inkContour), style: comicStroke)
         }
 
-        // 云朵瓷小羊身体（三瓣蓬松轮廓）
-        let woolFill = isNight ? Color(hex: 0xEDE4D5) : Color(hex: 0xFFFBF3)
-        let woolStroke = isNight ? Color(hex: 0x9C9488) : Color(hex: 0xC8BCAC)
+        // 云朵瓷小羊身体（外圈先描墨线再平涂填充，形成连续无内缝童书外轮廓）
+        let woolFill = isNight ? Color(hex: 0xEDE4D5) : Color(hex: 0xFFFDF7)
         let cloudPuffs: [CGRect] = [
             CGRect(x: cx - s * 0.31, y: cy - s * 0.16, width: s * 0.38, height: s * 0.38),
             CGRect(x: cx - s * 0.07, y: cy - s * 0.16, width: s * 0.38, height: s * 0.38),
@@ -296,22 +297,28 @@ public struct ChimmoSheepView: View {
             CGRect(x: cx - s * 0.29, y: cy - s * 0.08, width: s * 0.58, height: s * 0.44)
         ]
         for puff in cloudPuffs {
+            ctx.stroke(
+                Path(ellipseIn: puff),
+                with: .color(inkContour),
+                style: StrokeStyle(lineWidth: contourWidth * 2.0, lineCap: .round, lineJoin: .round)
+            )
+        }
+        for puff in cloudPuffs {
             ctx.fill(Path(ellipseIn: puff), with: .color(woolFill))
         }
-        let mainBodyRect = CGRect(x: cx - s * 0.30, y: cy - s * 0.27, width: s * 0.60, height: s * 0.58)
-        ctx.stroke(
-            Path(ellipseIn: mainBodyRect),
-            with: .color(woolStroke.opacity(0.45)),
-            lineWidth: max(0.8, lw * 0.50)
-        )
 
-        // 暖杏陶面部椭圆
+        // 暖杏陶面部椭圆（清晰暖墨外框）
         let faceFill = isNight ? Color(hex: 0xD9C8B4) : Color(hex: 0xF3E6D4)
         let faceRect = CGRect(x: cx - s * 0.19, y: cy - s * 0.16, width: s * 0.38, height: s * 0.31)
         ctx.fill(Path(ellipseIn: faceRect), with: .color(faceFill))
+        ctx.stroke(
+            Path(ellipseIn: faceRect),
+            with: .color(inkContour.opacity(0.65)),
+            style: StrokeStyle(lineWidth: max(0.9, contourWidth * 0.65), lineCap: .round)
+        )
 
-        // 螺旋卷羊角（左、右对称声学高音卷涡）
-        let hornColor = isSinging ? accentColor : (isNight ? Color(hex: 0xFFB84D) : Color(hex: 0xD99E32))
+        // 螺旋卷羊角（粗墨线描边 + 明快高彩平涂填色）
+        let hornColor = isSinging ? accentColor : (isNight ? Color(hex: 0xFFB84D) : Color(hex: 0xE59900))
         for side in [-1.0, 1.0] {
             let sx = CGFloat(side)
             var horn = Path()
@@ -328,8 +335,13 @@ public struct ChimmoSheepView: View {
             )
             ctx.stroke(
                 horn,
+                with: .color(inkContour),
+                style: StrokeStyle(lineWidth: lw * 1.65, lineCap: .round, lineJoin: .round)
+            )
+            ctx.stroke(
+                horn,
                 with: .color(hornColor),
-                style: StrokeStyle(lineWidth: lw * 1.15, lineCap: .round, lineJoin: .round)
+                style: StrokeStyle(lineWidth: lw * 0.95, lineCap: .round, lineJoin: .round)
             )
             if isSinging {
                 for waveIdx in 0..<2 {
@@ -408,9 +420,12 @@ public struct ChimmoSheepView: View {
 
             let fx = cx + sx * s * 0.115
             let fy = cy + s * 0.30
-            ctx.fill(
-                Path(ellipseIn: CGRect(x: fx - s * 0.055, y: fy - s * 0.035, width: s * 0.11, height: s * 0.07)),
-                with: .color(Color(hex: 0x5B4A42))
+            let hoofRect = CGRect(x: fx - s * 0.055, y: fy - s * 0.035, width: s * 0.11, height: s * 0.07)
+            ctx.fill(Path(ellipseIn: hoofRect), with: .color(Color(hex: 0x5B4A42)))
+            ctx.stroke(
+                Path(ellipseIn: hoofRect),
+                with: .color(inkContour),
+                style: StrokeStyle(lineWidth: max(0.9, contourWidth * 0.8), lineCap: .round)
             )
         }
     }
@@ -481,11 +496,14 @@ public struct ChimmoCowView: View {
         let cx = w * 0.5
         let cy = h * 0.56
         let lw = max(1.1, s * 0.055)
+        let inkContour = isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
+        let contourWidth = max(1.2, lw * 0.85)
+        let comicStroke = StrokeStyle(lineWidth: contourWidth, lineCap: .round, lineJoin: .round)
 
-        // 接地投影
+        // 扁平接地接触投影
         ctx.fill(
             Path(ellipseIn: CGRect(x: cx - s * 0.32, y: cy + s * 0.32, width: s * 0.64, height: s * 0.11)),
-            with: .color(Color.black.opacity(isNight ? 0.36 : 0.14))
+            with: .color(isNight ? Color(hex: 0x0A0F24).opacity(0.42) : Color(hex: 0x231B15).opacity(0.14))
         )
 
         // 发声 / 伴奏唤醒微光环
@@ -493,31 +511,29 @@ public struct ChimmoCowView: View {
             let haloR = s * 0.45
             ctx.stroke(
                 Path(ellipseIn: CGRect(x: cx - haloR, y: cy - haloR * 0.96, width: haloR * 2, height: haloR * 1.92)),
-                with: .color(accentColor.opacity(state.cowGlowOpacity * 0.48)),
-                lineWidth: max(1.0, lw * 0.78)
+                with: .color(accentColor.opacity(min(1.0, state.cowGlowOpacity * 0.60))),
+                lineWidth: max(1.2, lw * 0.85)
             )
         }
 
-        // 两侧圆润牛耳
+        // 两侧圆润牛耳（清晰暖墨外轮廓）
         let bodyColor = isNight ? Color(hex: 0x4E426E) : Color(hex: 0x8F5F4E)
-        let bodyRim = isNight ? Color(hex: 0x7A6BA3) : Color(hex: 0x694235)
         for side in [-1.0, 1.0] {
             let ex = cx + CGFloat(side) * s * 0.34
             let ey = cy - s * 0.12
             let earRect = CGRect(x: ex - s * 0.095, y: ey - s * 0.055, width: s * 0.19, height: s * 0.11)
             ctx.fill(Path(ellipseIn: earRect), with: .color(bodyColor))
-            ctx.stroke(Path(ellipseIn: earRect), with: .color(bodyRim.opacity(0.6)), lineWidth: max(0.8, lw * 0.45))
+            ctx.stroke(Path(ellipseIn: earRect), with: .color(inkContour), style: comicStroke)
         }
 
-        // 敦厚可可窑陶身躯
+        // 敦厚可可窑陶身躯（水粉平涂 + 粗暖墨闭合轮廓）
         let bodyRect = CGRect(x: cx - s * 0.33, y: cy - s * 0.25, width: s * 0.66, height: s * 0.57)
         let bodyPath = RoundedRectangle(cornerRadius: s * 0.28, style: .continuous).path(in: bodyRect)
         ctx.fill(bodyPath, with: .color(bodyColor))
-        ctx.stroke(bodyPath, with: .color(bodyRim.opacity(0.55)), lineWidth: max(0.8, lw * 0.48))
+        ctx.stroke(bodyPath, with: .color(inkContour), style: comicStroke)
 
-        // 象牙黄铜新月弯牛角（呼应和声摇篮与音叉弧）
-        let hornFill = isAwake ? (isNight ? Color(hex: 0xFFD275) : Color(hex: 0xF3E4CB)) : Color(hex: 0xB8AE9E).opacity(0.75)
-        let hornEdge = isAwake ? (isNight ? Color(hex: 0xD99E32) : Color(hex: 0xB98532)) : Color(hex: 0x8F867A).opacity(0.6)
+        // 象牙黄新月弯牛角（平涂暖彩 + 暖墨描边）
+        let hornFill = isAwake ? (isNight ? Color(hex: 0xFFD275) : Color(hex: 0xFFE49E)) : Color(hex: 0xC6BCAC)
         for side in [-1.0, 1.0] {
             let sx = CGFloat(side)
             var horn = Path()
@@ -532,13 +548,18 @@ public struct ChimmoCowView: View {
             )
             horn.closeSubpath()
             ctx.fill(horn, with: .color(hornFill))
-            ctx.stroke(horn, with: .color(hornEdge), lineWidth: max(0.8, lw * 0.45))
+            ctx.stroke(horn, with: .color(inkContour), style: StrokeStyle(lineWidth: max(1.0, contourWidth * 0.85), lineCap: .round, lineJoin: .round))
         }
 
-        // 宽厚奶油鼻吻椭圆与鼻点
-        let snoutFill = isNight ? Color(hex: 0xDFD0BE) : Color(hex: 0xF6EBDD)
+        // 宽厚奶油鼻吻椭圆与鼻点（墨线轮廓）
+        let snoutFill = isNight ? Color(hex: 0xDFD0BE) : Color(hex: 0xFFF3E2)
         let snoutRect = CGRect(x: cx - s * 0.22, y: cy + s * 0.01, width: s * 0.44, height: s * 0.23)
         ctx.fill(Path(ellipseIn: snoutRect), with: .color(snoutFill))
+        ctx.stroke(
+            Path(ellipseIn: snoutRect),
+            with: .color(inkContour),
+            style: StrokeStyle(lineWidth: max(0.9, contourWidth * 0.78), lineCap: .round)
+        )
         let nostrilCol = Color(hex: 0x5A3D34)
         for side in [-1.0, 1.0] {
             let nx = cx + CGFloat(side) * s * 0.085
@@ -563,8 +584,8 @@ public struct ChimmoCowView: View {
                 )
                 ctx.stroke(
                     sleepArc,
-                    with: .color(Color(hex: 0xEFE7DC).opacity(0.9)),
-                    style: StrokeStyle(lineWidth: max(1.0, lw * 0.72), lineCap: .round)
+                    with: .color(Color(hex: 0xEFE7DC).opacity(0.95)),
+                    style: StrokeStyle(lineWidth: max(1.1, lw * 0.78), lineCap: .round)
                 )
             } else if kin.cowBlinkClosed {
                 var blinkLine = Path()
@@ -573,7 +594,7 @@ public struct ChimmoCowView: View {
                 ctx.stroke(
                     blinkLine,
                     with: .color(inkColor),
-                    style: StrokeStyle(lineWidth: max(1.0, lw * 0.74), lineCap: .round)
+                    style: StrokeStyle(lineWidth: max(1.1, lw * 0.78), lineCap: .round)
                 )
             } else {
                 let er = max(1.5, s * 0.043)
@@ -585,18 +606,18 @@ public struct ChimmoCowView: View {
                 let hr = max(0.6, er * 0.34)
                 ctx.fill(
                     Path(ellipseIn: CGRect(x: gx - er * 0.45, y: eyeY - er * 0.55, width: hr * 2, height: hr * 2)),
-                    with: .color(Color.white.opacity(0.92))
+                    with: .color(Color.white.opacity(0.94))
                 )
             }
         }
 
-        // 小憩纯矢量漂浮呼吸弧（无字母气泡，仅以柔和月弧表达均匀吐息）
+        // 小憩纯矢量漂浮呼吸弧（避开右侧牛角描边）
         if !isAwake && kin.sleepArcProgress > 0.01 {
             for arcIdx in 0..<2 {
                 let localProg = (kin.sleepArcProgress + Double(arcIdx) * 0.45).truncatingRemainder(dividingBy: 1.0)
                 let fade = sin(localProg * Double.pi)
-                let bx = cx + s * (0.28 + CGFloat(arcIdx) * 0.06)
-                let by = cy - s * (0.34 + CGFloat(localProg) * 0.14)
+                let bx = cx + s * (0.33 + CGFloat(arcIdx) * 0.06)
+                let by = cy - s * (0.35 + CGFloat(localProg) * 0.14)
                 let arcHalfW = s * (0.042 + CGFloat(arcIdx) * 0.015)
                 var breathArc = Path()
                 breathArc.move(to: CGPoint(x: bx - arcHalfW, y: by))
@@ -607,20 +628,23 @@ public struct ChimmoCowView: View {
                 let arcColor = isNight ? Color(hex: 0xEFE7DC) : accentColor
                 ctx.stroke(
                     breathArc,
-                    with: .color(arcColor.opacity(0.55 * fade)),
-                    style: StrokeStyle(lineWidth: max(0.9, lw * 0.52), lineCap: .round)
+                    with: .color(arcColor.opacity(0.62 * fade)),
+                    style: StrokeStyle(lineWidth: max(0.95, lw * 0.58), lineCap: .round)
                 )
             }
         }
 
-        // 稳重双蹄
+        // 稳重双蹄（墨线轮廓）
         let hoofColor = isNight ? Color(hex: 0x261E38) : Color(hex: 0x452B23)
         for side in [-1.0, 1.0] {
             let hx = cx + CGFloat(side) * s * 0.145
             let hy = cy + s * 0.30
-            ctx.fill(
-                Path(ellipseIn: CGRect(x: hx - s * 0.065, y: hy - s * 0.035, width: s * 0.13, height: s * 0.07)),
-                with: .color(hoofColor)
+            let hoofRect = CGRect(x: hx - s * 0.065, y: hy - s * 0.035, width: s * 0.13, height: s * 0.07)
+            ctx.fill(Path(ellipseIn: hoofRect), with: .color(hoofColor))
+            ctx.stroke(
+                Path(ellipseIn: hoofRect),
+                with: .color(inkContour),
+                style: StrokeStyle(lineWidth: max(0.9, contourWidth * 0.8), lineCap: .round)
             )
         }
     }

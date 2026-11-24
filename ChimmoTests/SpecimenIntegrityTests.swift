@@ -2365,4 +2365,69 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertEqual(tinkiSinging.earTiltDegrees, -10.0, accuracy: 0.0001)
         XCTAssertEqual(tinkiSinging.popOffsetY, -3.0, accuracy: 0.0001)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound33StorybookChoirMeterAndDreamAudioReadiness() throws {
+        // 1. StorybookChoirMeterKinematics 声浪合唱舞台轮廓与减弱动态效果尊重
+        XCTAssertTrue(StorybookChoirMeterKinematics.hillBars(inputLevel: 0.5, isRecording: true, barCount: 0, reduceMotion: false).isEmpty)
+
+        let soloHill = StorybookChoirMeterKinematics.hillBars(inputLevel: 0.0, isRecording: false, barCount: 1, reduceMotion: false)
+        XCTAssertEqual(soloHill.count, 1)
+        XCTAssertEqual(soloHill[0].heightFraction, 0.36, accuracy: 0.0001)
+        XCTAssertFalse(soloHill[0].isLit)
+        XCTAssertFalse(soloHill[0].isPeakZone)
+        XCTAssertEqual(soloHill[0].buddyPopOffsetY, 0.0, accuracy: 0.0001)
+
+        let idleBars = StorybookChoirMeterKinematics.hillBars(inputLevel: 0.9, isRecording: false, barCount: 9, reduceMotion: false)
+        XCTAssertEqual(idleBars.count, 9)
+        XCTAssertTrue(idleBars.allSatisfy { !$0.isLit && !$0.isPeakZone && $0.buddyPopOffsetY == 0.0 && $0.heightFraction >= 0.22 && $0.heightFraction <= 0.36 })
+
+        let nanBars = StorybookChoirMeterKinematics.hillBars(inputLevel: .nan, isRecording: true)
+        let infBars = StorybookChoirMeterKinematics.hillBars(inputLevel: .infinity, isRecording: true)
+        XCTAssertEqual(nanBars.count, 9)
+        XCTAssertEqual(infBars.count, 9)
+        XCTAssertTrue(nanBars.allSatisfy { !$0.isLit && $0.heightFraction.isFinite })
+        XCTAssertTrue(infBars.allSatisfy { !$0.isLit && $0.heightFraction.isFinite })
+
+        let lowBars = StorybookChoirMeterKinematics.hillBars(inputLevel: 0.15, isRecording: true, barCount: 9, reduceMotion: false)
+        XCTAssertGreaterThanOrEqual(lowBars.filter(\.isLit).count, 1)
+        XCTAssertFalse(lowBars[6].isPeakZone)
+        XCTAssertTrue(lowBars[7].isPeakZone)
+        XCTAssertTrue(lowBars[8].isPeakZone)
+        XCTAssertLessThan(lowBars[0].buddyPopOffsetY, 0.0)
+
+        let hotBars = StorybookChoirMeterKinematics.hillBars(inputLevel: 0.95, isRecording: true, barCount: 9, reduceMotion: false)
+        XCTAssertTrue(hotBars.allSatisfy(\.isLit))
+        XCTAssertGreaterThan(hotBars[4].heightFraction, hotBars[0].heightFraction)
+        XCTAssertGreaterThanOrEqual(hotBars[4].heightFraction, 0.85)
+
+        let reducedBars = StorybookChoirMeterKinematics.hillBars(inputLevel: 0.95, isRecording: true, barCount: 9, reduceMotion: true)
+        XCTAssertTrue(reducedBars.allSatisfy { $0.isLit && $0.buddyPopOffsetY == 0.0 })
+
+        // 2. 七小只声压点头助威集合映射与越界保护
+        XCTAssertTrue(StorybookChoirMeterKinematics.cheeringBuddyIndices(activeSegments: 0, totalSegments: 9, buddyCount: 7).isEmpty)
+        XCTAssertTrue(StorybookChoirMeterKinematics.cheeringBuddyIndices(activeSegments: 3, totalSegments: 0, buddyCount: 7).isEmpty)
+        XCTAssertEqual(StorybookChoirMeterKinematics.cheeringBuddyIndices(activeSegments: 1, totalSegments: 9, buddyCount: 7), [0])
+        XCTAssertEqual(StorybookChoirMeterKinematics.cheeringBuddyIndices(activeSegments: 5, totalSegments: 9, buddyCount: 7), Set(0..<4))
+        XCTAssertEqual(StorybookChoirMeterKinematics.cheeringBuddyIndices(activeSegments: 9, totalSegments: 9, buddyCount: 7), Set(0..<7))
+
+        // 3. 捕梦工坊鼓点与开头音高推子试听唤醒且零例行 Toast
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r33_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.startBlankCanvas()
+        vm.startRhythmTap()
+        vm.recordRhythmDrumTap()
+        vm.recordRhythmDrumTap()
+        XCTAssertEqual(vm.liveTapTimestamps.count, 2)
+        vm.previewSeedShift(index: 0, shift: 1)
+        vm.previewSeedShift(index: 2, shift: -1)
+        vm.cancelRhythmTap()
+        XCTAssertFalse(vm.isTappingRhythm)
+        XCTAssertTrue(vm.liveTapTimestamps.isEmpty)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

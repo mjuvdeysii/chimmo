@@ -1,10 +1,10 @@
 import QuartzCore
 import SwiftUI
 
-/// 童书声音调色木盒（Best Kids' Book Design × 窑陶蜂蜡桦木拉丝黄铜硬件调音台）：
-/// - 顶部：一体式黄铜外观平衡仪 + 木框标题冠徽；
-/// - 核心舞台：内凹声学示波窗 × 活体「咩 × 1·3·5 三音小偶 × 哞」实体木架，实时响应音色、移调、节拍与调式晴雨；
-/// - 实体控制区：机械黄铜拨杆三连开关、五色极光调式木槽、倍速/节拍/音区三层混音柜，以及「咩 · 音色」与「哞 · 伴奏」双木盒。
+/// 童书声音调色盒（Flat Cartoon Best Kids' Book Design × 咩哞合唱绘本工作台，零拟物）：
+/// - 顶部：扁平卡通外观平衡贴纸 + 扇形波浪彩带分隔；
+/// - 核心舞台：绘本草坡合唱剧场（平涂天空 + 太阳/新月云朵 + 起伏草坡），声波示波线实时呼应「咩 × 1·3·5 三音小偶 × 哞」；
+/// - 控制区：扁平漫画拨片三连开关、五色极光调式卡纸、波浪分隔三层混音盒、以及「咩 · 音色」「哞 · 伴奏」IP 专属卡片。
 public struct SoundPaletteBoxSheet: View {
     @ObservedObject public var vm: StudioViewModel
     public let palette: ChimmoPalette
@@ -61,13 +61,20 @@ public struct SoundPaletteBoxSheet: View {
                     accentTint: skyColor
                 )
 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     soundBoxCrownHeader
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 8)
+
+                    StorybookScallopDivider(
+                        color: palette.cartoonOutline.opacity(palette.isNight ? 0.34 : 0.24),
+                        stepWidth: 14
+                    )
+                    .frame(height: 6)
+                    .padding(.horizontal, 14)
 
                     ScrollView(showsIndicators: false) {
-                        VStack(spacing: 12) {
+                        VStack(spacing: 9) {
                             soundBoxDioramaOscilloscope
                             brassToggleSwitchBank
                             auroraScalePaletteBox
@@ -75,9 +82,9 @@ public struct SoundPaletteBoxSheet: View {
                             mieVoiceCabinet
                             mouAccompanimentCabinet
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 12)
                         .padding(.top, 2)
-                        .padding(.bottom, 22)
+                        .padding(.bottom, 18)
                     }
                 }
             }
@@ -169,16 +176,16 @@ public struct SoundPaletteBoxSheet: View {
         }
     }
 
-    // MARK: - 2. Recessed Diorama Oscilloscope + Mie / 1-3-5 Triad / Mou Shelf
+    // MARK: - 2. Flat Cartoon Storybook Meadow Oscilloscope + Mie / 1-3-5 Triad / Mou Chorus
 
     private var soundBoxDioramaOscilloscope: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
-        let recessBg = palette.isNight ? Color(hex: 0x0A0F24) : Color(hex: 0xEFE6D4)
+        let skyBg = palette.isNight ? Color(hex: 0x10193C) : Color(hex: 0xFFF7E2)
         let focusedDeg = SoundPaletteBoxKinematics.triadFocusDegree(for: activeChannel)
         let shelfFigures: [ChimmoMember] = [.taono, .plokko, .corllo]
 
         return ZStack {
-            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 22)
+            ChimmoWoodResonatorTray(palette: palette, cornerRadius: 20)
 
             TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
                 let now = CACurrentMediaTime()
@@ -204,30 +211,71 @@ public struct SoundPaletteBoxSheet: View {
                     sampleCount: 28
                 )
 
-                VStack(spacing: 4) {
-                    SoundBoxOscilloscopeWindow(
-                        samples: samples,
-                        waveColor: skyColor,
-                        brassColor: palette.brassHairline,
-                        sweepProgress: sweep
-                    )
-                    .frame(height: 36)
+                ZStack(alignment: .bottom) {
+                    Canvas { ctx, size in
+                        let w = max(1, size.width)
+                        let h = max(1, size.height)
+                        let ink = palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.78)
+                        let cloudFill = palette.isNight ? Color(hex: 0x1D2856) : palette.cardSurface
 
-                    ZStack(alignment: .bottom) {
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [palette.woodTrayTop, palette.woodTrayBottom],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
+                        if palette.isNight {
+                            let moonC = CGPoint(x: w * 0.88, y: 20)
+                            var moon = Path()
+                            moon.addArc(center: moonC, radius: 10, startAngle: .degrees(30), endAngle: .degrees(290), clockwise: false)
+                            moon.addQuadCurve(
+                                to: CGPoint(x: moonC.x + 10 * cos(30 * .pi / 180), y: moonC.y + 10 * sin(30 * .pi / 180)),
+                                control: CGPoint(x: moonC.x - 2, y: moonC.y - 1)
                             )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                    .strokeBorder(palette.brassHairline.opacity(0.35), lineWidth: 0.7)
-                            )
-                            .frame(height: 6)
-                            .padding(.horizontal, 6)
+                            ctx.fill(moon, with: .color(palette.nightLampGold))
+                            ctx.stroke(moon, with: .color(ink), lineWidth: 1.2)
+                        } else {
+                            let sunC = CGPoint(x: w * 0.89, y: 20)
+                            let sun = Path(ellipseIn: CGRect(x: sunC.x - 10, y: sunC.y - 10, width: 20, height: 20))
+                            ctx.fill(sun, with: .color(palette.storybookButter))
+                            ctx.stroke(sun, with: .color(ink), lineWidth: 1.3)
+                            for i in 0..<6 {
+                                let a = Double(i) * Double.pi / 3.0
+                                var r = Path()
+                                r.move(to: CGPoint(x: sunC.x + CGFloat(cos(a)) * 13, y: sunC.y + CGFloat(sin(a)) * 13))
+                                r.addLine(to: CGPoint(x: sunC.x + CGFloat(cos(a)) * 16.5, y: sunC.y + CGFloat(sin(a)) * 16.5))
+                                ctx.stroke(r, with: .color(palette.brassHairline), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                            }
+                        }
+
+                        for (cxFrac, cyPt, sc) in [(0.16, 20.0, 0.56), (0.64, 17.0, 0.44)] {
+                            let c = CGPoint(x: w * cxFrac, y: cyPt)
+                            var cloud = Path()
+                            cloud.addRoundedRect(in: CGRect(x: c.x - 24 * sc, y: c.y - 4 * sc, width: 48 * sc, height: 14 * sc), cornerSize: CGSize(width: 7 * sc, height: 7 * sc))
+                            cloud.addEllipse(in: CGRect(x: c.x - 15 * sc, y: c.y - 13 * sc, width: 20 * sc, height: 18 * sc))
+                            cloud.addEllipse(in: CGRect(x: c.x - 2 * sc, y: c.y - 10 * sc, width: 18 * sc, height: 15 * sc))
+                            ctx.fill(cloud, with: .color(cloudFill))
+                            ctx.stroke(cloud, with: .color(ink.opacity(0.6)), lineWidth: 1.1)
+                        }
+
+                        var hill = Path()
+                        let hillY = h * 0.72
+                        hill.move(to: CGPoint(x: 0, y: hillY + 4))
+                        hill.addQuadCurve(to: CGPoint(x: w * 0.5, y: hillY - 3), control: CGPoint(x: w * 0.25, y: hillY - 10))
+                        hill.addQuadCurve(to: CGPoint(x: w, y: hillY + 2), control: CGPoint(x: w * 0.75, y: hillY + 8))
+                        var area = hill
+                        area.addLine(to: CGPoint(x: w, y: h))
+                        area.addLine(to: CGPoint(x: 0, y: h))
+                        area.closeSubpath()
+                        ctx.fill(area, with: .color(palette.storybookHillFront))
+                        ctx.stroke(hill, with: .color(ink), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                    .allowsHitTesting(false)
+
+                    VStack(spacing: 2) {
+                        SoundBoxOscilloscopeWindow(
+                            samples: samples,
+                            waveColor: skyColor,
+                            outlineColor: palette.cartoonOutline,
+                            dotColor: palette.nightLampGold,
+                            sweepProgress: sweep
+                        )
+                        .frame(height: 36)
 
                         HStack(alignment: .bottom, spacing: 6) {
                             Button {
@@ -241,7 +289,7 @@ public struct SoundPaletteBoxSheet: View {
                                     phaseTime: phaseTime,
                                     gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? 0.25
                                 )
-                                .frame(width: 38, height: 34)
+                                .frame(width: 40, height: 36)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("小羊咩，试听高音主旋律")
@@ -263,8 +311,8 @@ public struct SoundPaletteBoxSheet: View {
                                         time: phaseTime,
                                         listeningTilt: 0
                                     )
-                                    .scaleEffect(0.66, anchor: .bottom)
-                                    .frame(width: 36, height: 42, alignment: .bottom)
+                                    .scaleEffect(0.68, anchor: .bottom)
+                                    .frame(width: 38, height: 44, alignment: .bottom)
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel("\(member.degree) \(member.chineseName) \(member.solfege)")
@@ -286,43 +334,35 @@ public struct SoundPaletteBoxSheet: View {
                                     phaseTime: phaseTime,
                                     gazeBias: focusedDeg.map { Double($0 - 4) / 3.0 } ?? -0.25
                                 )
-                                .frame(width: 38, height: 34)
+                                .frame(width: 40, height: 36)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("小牛哞，试听低音伴奏")
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.bottom, 4)
+                        .padding(.bottom, 3)
                     }
-                    .frame(height: 50)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(recessBg)
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(skyBg)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [palette.recessShadow, palette.brassHairline.opacity(0.32)],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    ),
-                                    lineWidth: 1.1
-                                )
+                            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.82), lineWidth: 1.6)
                         )
                 )
-                .padding(8)
+                .padding(7)
             }
 
-            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 22, showCornerPins: true)
+            ChimmoBrassFrameAccent(palette: palette, cornerRadius: 20, showCornerPins: true)
         }
-        .frame(height: 118)
-        .shadow(color: palette.recessShadow, radius: 10, y: 3)
+        .frame(height: 124)
     }
 
-    // MARK: - 3. Brass Toggle Switch Bank
+    // MARK: - 3. Flat Cartoon Pull-Tab Toggle Bank
 
     private var brassToggleSwitchBank: some View {
         ZStack {
@@ -381,30 +421,21 @@ public struct SoundPaletteBoxSheet: View {
         return Button(action: action) {
             HStack(spacing: 8) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(palette.isNight ? Color(hex: 0x0A0F24) : Color(hex: 0xE6D8BE))
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(palette.isNight ? Color(hex: 0x0E142C) : palette.storybookButter.opacity(0.48))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .strokeBorder(palette.brassHairline.opacity(0.45), lineWidth: 0.9)
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.65 : 0.85), lineWidth: 1.5)
                         )
-                        .frame(width: 12, height: 28)
+                        .frame(width: 14, height: 28)
 
                     RoundedRectangle(cornerRadius: 4.5, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    isOn ? palette.nightLampGold : palette.cardSurface,
-                                    palette.brassHairline.opacity(isOn ? 0.95 : 0.65)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+                        .fill(isOn ? activeColor : palette.cardSurface)
                         .overlay(
                             RoundedRectangle(cornerRadius: 4.5, style: .continuous)
-                                .strokeBorder(palette.glazeHighlight, lineWidth: 0.7)
+                                .strokeBorder(palette.cartoonOutline, lineWidth: 1.4)
                         )
-                        .frame(width: 10, height: 12)
+                        .frame(width: 11, height: 13)
                         .offset(y: CGFloat(6.0 - lever.travelFraction * 12.0))
                         .rotationEffect(.degrees(lever.tiltDegrees))
                         .animation(reduceMotion ? nil : .spring(response: 0.24, dampingFraction: 0.66), value: isOn)
@@ -419,9 +450,12 @@ public struct SoundPaletteBoxSheet: View {
                         .frame(width: 17, height: 17)
 
                         Circle()
-                            .fill(activeColor.opacity(lever.lampGlowOpacity))
-                            .frame(width: 5.5, height: 5.5)
-                            .shadow(color: isOn ? activeColor.opacity(0.65) : .clear, radius: 3)
+                            .fill(isOn ? activeColor : palette.divider)
+                            .frame(width: 6.5, height: 6.5)
+                            .overlay(
+                                Circle()
+                                    .strokeBorder(palette.cartoonOutline.opacity(0.80), lineWidth: 1.0)
+                            )
                     }
 
                     Text(shortLabel)
@@ -462,20 +496,24 @@ public struct SoundPaletteBoxSheet: View {
                     } label: {
                         VStack(spacing: 5) {
                             Circle()
-                                .fill(selected ? palette.brassHairline : palette.brassHairline.opacity(0.28))
-                                .frame(width: 3.5, height: 3.5)
+                                .fill(selected ? skyCol : palette.cardSurface)
+                                .frame(width: 6, height: 6)
+                                .overlay(
+                                    Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.0)
+                                )
 
                             Image(systemName: mode.iconName)
-                                .font(.subheadline.weight(.semibold))
+                                .font(.subheadline.weight(.bold))
                                 .foregroundStyle(skyCol)
 
                             Capsule()
-                                .fill(skyCol.opacity(selected ? 0.96 : 0.42))
-                                .frame(height: 3.5)
+                                .fill(skyCol.opacity(selected ? 1.0 : 0.60))
+                                .frame(height: 4.5)
+                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.55), lineWidth: 0.9))
                                 .padding(.horizontal, 6)
 
                             Text(mode.shortSkyLabel)
-                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .font(.system(size: 11, weight: .heavy, design: .rounded))
                                 .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk)
                                 .lineLimit(1)
                         }
@@ -501,15 +539,15 @@ public struct SoundPaletteBoxSheet: View {
         }
     }
 
-    // MARK: - 5. Tempo x Groove x Pitch Mixing Cabinet
+    // MARK: - 5. Tempo x Groove x Pitch Storybook Mixing Box
 
     private var tempoGroovePitchCabinet: some View {
         ZStack {
             ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
 
-            VStack(spacing: 7) {
+            VStack(spacing: 6) {
                 HStack(spacing: 6) {
-                    ChimmoCraftMark(.tempoDial, color: palette.brassHairline)
+                    ChimmoCraftMark(.tempoDial, color: palette.cartoonOutline)
                         .frame(width: 15, height: 15)
                         .frame(width: 22)
                         .accessibilityHidden(true)
@@ -522,11 +560,18 @@ public struct SoundPaletteBoxSheet: View {
                             triggerAudition(.tempo)
                         } label: {
                             Text(label)
-                                .font(.caption.weight(.bold).monospacedDigit())
+                                .font(.caption.weight(.heavy).monospacedDigit())
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                                 .background(
-                                    Capsule().fill(active ? palette.homeAnchor : palette.cardSurface)
+                                    Capsule()
+                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                        .overlay(
+                                            Capsule().strokeBorder(
+                                                palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
+                                                lineWidth: active ? 1.8 : 1.4
+                                            )
+                                        )
                                 )
                                 .foregroundStyle(
                                     active
@@ -539,14 +584,16 @@ public struct SoundPaletteBoxSheet: View {
                     }
                 }
 
-                Rectangle()
-                    .fill(palette.brassHairline.opacity(0.24))
-                    .frame(height: 0.75)
+                StorybookScallopDivider(
+                    color: palette.cartoonOutline.opacity(0.28),
+                    stepWidth: 14
+                )
+                .frame(height: 6)
 
                 HStack(spacing: 6) {
                     Image(systemName: "metronome")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.brassHairline)
+                        .foregroundStyle(palette.cartoonOutline)
                         .frame(width: 22)
                         .accessibilityHidden(true)
 
@@ -564,7 +611,14 @@ public struct SoundPaletteBoxSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 7)
                             .background(
-                                Capsule().fill(active ? palette.homeAnchor : palette.cardSurface)
+                                Capsule()
+                                    .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                    .overlay(
+                                        Capsule().strokeBorder(
+                                            palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
+                                            lineWidth: active ? 1.8 : 1.4
+                                        )
+                                    )
                             )
                         }
                         .buttonStyle(.plain)
@@ -573,14 +627,16 @@ public struct SoundPaletteBoxSheet: View {
                     }
                 }
 
-                Rectangle()
-                    .fill(palette.brassHairline.opacity(0.24))
-                    .frame(height: 0.75)
+                StorybookScallopDivider(
+                    color: palette.cartoonOutline.opacity(0.28),
+                    stepWidth: 14
+                )
+                .frame(height: 6)
 
                 HStack(spacing: 6) {
                     Image(systemName: "tuningfork")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.brassHairline)
+                        .foregroundStyle(palette.cartoonOutline)
                         .frame(width: 22)
                         .accessibilityHidden(true)
 
@@ -594,19 +650,26 @@ public struct SoundPaletteBoxSheet: View {
                         } label: {
                             VStack(spacing: 3) {
                                 Text(RootTranspositionHelper.compactLabel(forRootMIDI: targetMIDI))
-                                    .font(.caption2.weight(.bold).monospacedDigit())
+                                    .font(.caption2.weight(.heavy).monospacedDigit())
                                 Capsule()
                                     .fill(
                                         active
-                                            ? (palette.isNight ? Color(hex: 0x0E142C) : .white).opacity(0.85)
-                                            : palette.homeAnchor.opacity(0.45)
+                                            ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
+                                            : palette.homeAnchor.opacity(0.65)
                                     )
-                                    .frame(width: barWidth, height: 2.5)
+                                    .frame(width: barWidth, height: 2.8)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)
                             .background(
-                                Capsule().fill(active ? palette.homeAnchor : palette.cardSurface)
+                                Capsule()
+                                    .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                    .overlay(
+                                        Capsule().strokeBorder(
+                                            palette.cartoonOutline.opacity(active ? 0.90 : 0.65),
+                                            lineWidth: active ? 1.8 : 1.4
+                                        )
+                                    )
                             )
                             .foregroundStyle(
                                 active
@@ -620,13 +683,13 @@ public struct SoundPaletteBoxSheet: View {
                     }
                 }
             }
-            .padding(10)
+            .padding(9)
 
             ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: false)
         }
     }
 
-    // MARK: - 6. Mie Melody Voice Cabinet
+    // MARK: - 6. Mie Melody Voice Cabinet (Deep IP Fusion)
 
     private var mieVoiceCabinet: some View {
         let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
@@ -647,18 +710,24 @@ public struct SoundPaletteBoxSheet: View {
                             triggerAudition(.voice, voice: vm.melodyVoice)
                         } label: {
                             HStack(spacing: 6) {
-                                ChimmoCraftMark(.humWave, color: skyColor)
-                                    .frame(width: 15, height: 15)
+                                ChimmoSheepView(
+                                    isNight: palette.isNight,
+                                    accentColor: skyColor,
+                                    isSinging: auditionVoice != nil || vm.isPlaying,
+                                    phaseTime: reduceMotion ? 0.0 : now
+                                )
+                                .frame(width: 24, height: 20)
+
                                 Text("咩 · 音色")
                                     .font(.system(.caption, design: .rounded).weight(.heavy))
                                     .foregroundStyle(palette.primaryInk)
                             }
-                            .padding(.horizontal, 9)
+                            .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(
                                 Capsule()
-                                    .fill(palette.cardSurface.opacity(0.92))
-                                    .overlay(Capsule().strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.8))
+                                    .fill(palette.storybookButter)
+                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
                             )
                         }
                         .buttonStyle(.plain)
@@ -667,7 +736,7 @@ public struct SoundPaletteBoxSheet: View {
                         Spacer()
 
                         Text(vm.melodyVoice.label)
-                            .font(.caption2.weight(.bold))
+                            .font(.caption2.weight(.heavy))
                             .foregroundStyle(palette.secondaryInk)
                     }
 
@@ -690,22 +759,27 @@ public struct SoundPaletteBoxSheet: View {
                                     .frame(width: 44, height: 20)
 
                                     Text(v.label)
-                                        .font(.caption.weight(.bold))
+                                        .font(.caption.weight(.heavy))
                                         .foregroundStyle(fgColor)
                                     Spacer(minLength: 0)
                                 }
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 10)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                        .fill(active ? palette.homeAnchor : palette.cardSurface)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                                .strokeBorder(
-                                                    active ? palette.glazeHighlight : palette.brassHairline.opacity(0.22),
-                                                    lineWidth: 0.9
-                                                )
-                                        )
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                            .fill(palette.cartoonShadow)
+                                            .offset(x: 0, y: 2)
+                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                            .fill(active ? palette.homeAnchor : palette.cardSurface)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                                    .strokeBorder(
+                                                        active ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.75),
+                                                        lineWidth: active ? 2.0 : 1.5
+                                                    )
+                                            )
+                                    }
                                 )
                             }
                             .buttonStyle(.plain)
@@ -714,17 +788,19 @@ public struct SoundPaletteBoxSheet: View {
                         }
                     }
                 }
-                .padding(11)
+                .padding(10)
             }
 
             ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: true)
         }
     }
 
-    // MARK: - 7. Mou Accompaniment & Chord Barcode Cabinet
+    // MARK: - 7. Mou Accompaniment & Chord Sticker Cabinet (Deep IP Fusion)
 
     private var mouAccompanimentCabinet: some View {
-        ZStack {
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+
+        return ZStack {
             ChimmoWoodResonatorTray(palette: palette, cornerRadius: 18)
 
             TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
@@ -733,7 +809,7 @@ public struct SoundPaletteBoxSheet: View {
                     ? AcousticSignatureAnimationHelper.sweepProgress(elapsedSeconds: now - auditionStartTime)
                     : nil
 
-                VStack(alignment: .leading, spacing: 9) {
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         Button {
                             if !vm.cradleEnabled {
@@ -743,19 +819,25 @@ public struct SoundPaletteBoxSheet: View {
                             triggerAudition(.texture, texture: vm.accompanimentTexture)
                         } label: {
                             HStack(spacing: 6) {
-                                Circle()
-                                    .fill(vm.cradleEnabled ? palette.bassRibbon : palette.secondaryInk.opacity(0.35))
-                                    .frame(width: 6.5, height: 6.5)
+                                ChimmoCowView(
+                                    isNight: palette.isNight,
+                                    accentColor: skyColor,
+                                    isAwake: vm.cradleEnabled,
+                                    isPlaying: auditionTexture != nil || vm.isPlaying,
+                                    phaseTime: reduceMotion ? 0.0 : now
+                                )
+                                .frame(width: 24, height: 20)
+
                                 Text("哞 · 伴奏")
                                     .font(.system(.caption, design: .rounded).weight(.heavy))
                                     .foregroundStyle(palette.primaryInk)
                             }
-                            .padding(.horizontal, 9)
+                            .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(
                                 Capsule()
-                                    .fill(palette.cardSurface.opacity(0.92))
-                                    .overlay(Capsule().strokeBorder(palette.brassHairline.opacity(0.32), lineWidth: 0.8))
+                                    .fill(palette.storybookMint)
+                                    .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.5))
                             )
                         }
                         .buttonStyle(.plain)
@@ -764,7 +846,7 @@ public struct SoundPaletteBoxSheet: View {
                         Spacer()
 
                         Text(vm.cradleEnabled ? vm.accompanimentTexture.label : "休息")
-                            .font(.caption2.weight(.bold))
+                            .font(.caption2.weight(.heavy))
                             .foregroundStyle(palette.secondaryInk)
                     }
 
@@ -794,24 +876,29 @@ public struct SoundPaletteBoxSheet: View {
                                     .frame(width: 44, height: 20)
 
                                     Text(tex.label)
-                                        .font(.caption.weight(.bold))
+                                        .font(.caption.weight(.heavy))
                                         .foregroundStyle(fgColor)
                                     Spacer(minLength: 0)
                                 }
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 10)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                        .fill(active ? palette.bassRibbon : palette.cardSurface)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                                .strokeBorder(
-                                                    active ? palette.glazeHighlight : palette.brassHairline.opacity(0.22),
-                                                    lineWidth: 0.9
-                                                )
-                                        )
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                            .fill(palette.cartoonShadow)
+                                            .offset(x: 0, y: 2)
+                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                            .fill(active ? palette.bassRibbon : palette.cardSurface)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                                    .strokeBorder(
+                                                        active ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.75),
+                                                        lineWidth: active ? 2.0 : 1.5
+                                                    )
+                                            )
+                                    }
                                 )
-                                .opacity(vm.cradleEnabled ? 1.0 : 0.56)
+                                .opacity(vm.cradleEnabled ? 1.0 : 0.65)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("\(tex.label)伴奏")
@@ -819,7 +906,7 @@ public struct SoundPaletteBoxSheet: View {
                         }
                     }
                 }
-                .padding(11)
+                .padding(10)
             }
 
             ChimmoBrassFrameAccent(palette: palette, cornerRadius: 18, showCornerPins: true)
@@ -832,7 +919,8 @@ public struct SoundPaletteBoxSheet: View {
 private struct SoundBoxOscilloscopeWindow: View {
     let samples: [Double]
     let waveColor: Color
-    let brassColor: Color
+    let outlineColor: Color
+    let dotColor: Color
     var sweepProgress: Double? = nil
 
     var body: some View {
@@ -843,7 +931,7 @@ private struct SoundBoxOscilloscopeWindow: View {
             var centerLine = Path()
             centerLine.move(to: CGPoint(x: 4, y: h * 0.5))
             centerLine.addLine(to: CGPoint(x: w - 4, y: h * 0.5))
-            ctx.stroke(centerLine, with: .color(brassColor.opacity(0.28)), style: StrokeStyle(lineWidth: 0.7, dash: [3, 4]))
+            ctx.stroke(centerLine, with: .color(outlineColor.opacity(0.22)), style: StrokeStyle(lineWidth: 1.0, dash: [3, 4]))
 
             guard samples.count > 1 else { return }
             let padX: CGFloat = 6
@@ -869,20 +957,15 @@ private struct SoundBoxOscilloscopeWindow: View {
                 curve.addLine(to: last)
             }
 
-            ctx.stroke(curve, with: .color(waveColor.opacity(0.28)), style: StrokeStyle(lineWidth: 4.5, lineCap: .round, lineJoin: .round))
-            ctx.stroke(curve, with: .color(waveColor.opacity(0.95)), style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+            ctx.stroke(curve, with: .color(outlineColor.opacity(0.85)), style: StrokeStyle(lineWidth: 4.2, lineCap: .round, lineJoin: .round))
+            ctx.stroke(curve, with: .color(waveColor), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
 
             if let sweep = sweepProgress,
                let activeIdx = AcousticSignatureAnimationHelper.activeIndex(progress: sweep, itemCount: pts.count) {
                 let activePt = pts[activeIdx]
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: activePt.x - 4.5, y: activePt.y - 4.5, width: 9.0, height: 9.0)),
-                    with: .color(brassColor.opacity(0.36))
-                )
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: activePt.x - 2.6, y: activePt.y - 2.6, width: 5.2, height: 5.2)),
-                    with: .color(brassColor)
-                )
+                let dotRect = CGRect(x: activePt.x - 4.0, y: activePt.y - 4.0, width: 8.0, height: 8.0)
+                ctx.fill(Path(ellipseIn: dotRect), with: .color(dotColor))
+                ctx.stroke(Path(ellipseIn: dotRect), with: .color(outlineColor), lineWidth: 1.4)
             }
         }
         .accessibilityHidden(true)
@@ -1047,7 +1130,7 @@ private struct ChordPresetBarcodeStrip: View {
                         }
 
                         Text(tag)
-                            .font(.system(size: 10.5, weight: .bold, design: .rounded).monospacedDigit())
+                            .font(.system(size: 10.5, weight: .heavy, design: .rounded).monospacedDigit())
                             .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk)
                             .lineLimit(1)
                     }
@@ -1055,10 +1138,13 @@ private struct ChordPresetBarcodeStrip: View {
                     .padding(.vertical, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.22 : 0.13) : palette.cardSurface)
+                            .fill(selected ? palette.bassRibbon.opacity(palette.isNight ? 0.28 : 0.16) : palette.cardSurface)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .strokeBorder(selected ? palette.brassHairline : Color.clear, lineWidth: 1.3)
+                                    .strokeBorder(
+                                        selected ? palette.cartoonOutline : palette.cartoonOutline.opacity(0.52),
+                                        lineWidth: selected ? 1.8 : 1.2
+                                    )
                             )
                     )
                 }

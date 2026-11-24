@@ -1923,4 +1923,98 @@ public enum StorybookIllustrationLayout {
     }
 }
 
+/// 扁平卡通童书声浪合唱柱与七小只声压联动纯值运动学（100% 纯函数、可单测、尊重减弱动态效果）。
+public enum StorybookChoirMeterKinematics {
+    public struct HillBarState: Equatable, Sendable {
+        public let index: Int
+        public let heightFraction: Double
+        public let isLit: Bool
+        public let isPeakZone: Bool
+        public let buddyPopOffsetY: CGFloat
+
+        public init(
+            index: Int,
+            heightFraction: Double,
+            isLit: Bool,
+            isPeakZone: Bool,
+            buddyPopOffsetY: CGFloat
+        ) {
+            self.index = index
+            self.heightFraction = heightFraction
+            self.isLit = isLit
+            self.isPeakZone = isPeakZone
+            self.buddyPopOffsetY = buddyPopOffsetY
+        }
+    }
+
+    public static func hillBars(
+        inputLevel: Double,
+        isRecording: Bool,
+        barCount: Int = 9,
+        reduceMotion: Bool = false
+    ) -> [HillBarState] {
+        guard barCount > 0 else { return [] }
+
+        let archWeights: [Double] = (0..<barCount).map { idx in
+            let norm = barCount == 1 ? 0.5 : Double(idx) / Double(barCount - 1)
+            return 1.0 - abs(norm - 0.5) * 0.75
+        }
+
+        guard isRecording, inputLevel.isFinite else {
+            return (0..<barCount).map { idx in
+                let baseline = barCount == 1
+                    ? 0.36
+                    : (0.22 + (archWeights[idx] - 0.625) / 0.375 * 0.14)
+                return HillBarState(
+                    index: idx,
+                    heightFraction: max(0.22, min(0.36, baseline)),
+                    isLit: false,
+                    isPeakZone: false,
+                    buddyPopOffsetY: 0.0
+                )
+            }
+        }
+
+        let meter = HumVUMeterKinematics.reading(
+            inputLevel: inputLevel,
+            isRecording: true,
+            totalSegments: barCount
+        )
+        let clampedLevel = max(0.0, min(1.0, inputLevel))
+        let peakStart = max(0, barCount - 2)
+
+        return (0..<barCount).map { idx in
+            let isLit = idx < meter.activeSegments
+            let isPeakZone = idx >= peakStart
+            let weight = archWeights[idx]
+            let rawHeight = 0.26 + clampedLevel * 0.52 * weight + (isLit ? 0.18 * weight : 0.0)
+            let clampedHeight = max(0.18, min(0.96, rawHeight))
+            let pop: CGFloat = (isLit && !reduceMotion)
+                ? CGFloat(-3.0 - Double(idx % 3) * 1.1)
+                : 0.0
+            return HillBarState(
+                index: idx,
+                heightFraction: clampedHeight,
+                isLit: isLit,
+                isPeakZone: isPeakZone,
+                buddyPopOffsetY: pop
+            )
+        }
+    }
+
+    public static func cheeringBuddyIndices(
+        activeSegments: Int,
+        totalSegments: Int = 9,
+        buddyCount: Int = 7
+    ) -> Set<Int> {
+        guard activeSegments > 0, totalSegments > 0, buddyCount > 0 else {
+            return []
+        }
+        let ratio = min(1.0, Double(activeSegments) / Double(totalSegments))
+        let count = max(1, min(buddyCount, Int((ratio * Double(buddyCount)).rounded(.up))))
+        return Set(0..<count)
+    }
+}
+
+
 

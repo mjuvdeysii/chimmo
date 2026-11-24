@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.40.0 - 2026-11-24
+- **声音调色盒、捕梦工坊 × 双子星轮廓 × OpenMotion 短片 v10 全扁平卡通绘本化（Flat Cartoon Kids' Book Edition v0.40.0）**：
+  - [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)：彻底移除木架与开关中的全部渐变及模糊投影，将顶部示波器升级为含太阳/新月、纸艺云朵、草坡与「咩 × 1·3·5 三音偶 × 哞」交互演出的绘本草坡舞台；将拨杆重构为漫画拨片贴纸开关，并用 `StorybookScallopDivider` 扇形彩带分隔混音三层，在「咩 · 音色」「哞 · 伴奏」标题胶囊内直接嵌入活体微缩双子视图；
+  - [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 与 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift)：新增 `StorybookChoirMeterKinematics` 纯函数引擎并以「七小只声浪合唱舞台」`StorybookChoirLevelStageView` 取代原机械黄铜指针 `AnalogHumVUMeterView`（声压升高逐个唤醒七小只点赞微笑并与 9 座彩色糖果音山坡共舞）；Tab 0 绘板叠加起伏草坡与墨线漫画笔触、Tab 1 广播麦按钮与 1/5 定音贴纸嵌入 `taono`/`corllo` 头像、Tab 2 变奏推子柱顶集成随调音欢笑点头的 `ChimmoCartoonKeyBuddyView`；
+  - [ChimmoDuoMascotView.swift](Chimmo/Views/ChimmoDuoMascotView.swift) 与 [StudioView.swift](Chimmo/Views/StudioView.swift)：为「咩」与「哞」升级与七小只同源的暖墨闭合漫画轮廓与扁平接地投影；为 `recordRhythmDrumTap`、`previewSeedShift` 与指尖画盘试听补齐 `synth.ensureRunning()` 音频引擎首触唤醒；
+  - OpenMotion 绘本动画短片推进至 `v11`（`ea36d037-a0fb-479e-bdd1-3d1ccf653b14`）：全三幕清除 `<radialGradient>` / `<linearGradient>`、金属铆钉与模糊阴影，重构为含扇形顶帘、太阳/新月、双层低矮草坡与粗墨线卡通黑胶唱盘的绘本跨页，完成 1080p MP4 导出、音频响度检查与六时刻抽帧视觉验收；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound33StorybookChoirMeterAndDreamAudioReadiness`。
+
 ## 0.39.0 - 2026-11-24
 - **零拟物扁平卡通 × 深度融合 IP × 绘本全幅舞台跃迁（Flat Cartoon Kids' Book Edition v0.39.0）**：
   - 彻底清除全站木纹渐变、金属拉丝描边、黄铜铆钉、镜面高光与模糊硬件阴影，建立纯粹明快的扁平卡通童书绘本语言（清晰暖墨描边 `#231B15` / `#FFB94E` + 高饱和平涂水粉块 + 无模糊硬朗漫画偏移阴影 `radius: 0`）；

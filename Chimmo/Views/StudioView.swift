@@ -420,6 +420,7 @@ public final class StudioViewModel: ObservableObject {
     }
 
     public func recordRhythmDrumTap() {
+        synth.ensureRunning()
         let now = Date().timeIntervalSinceReferenceDate
         if liveTapTimestamps.count >= 16 {
             liveTapTimestamps.removeFirst()
@@ -891,6 +892,7 @@ public final class StudioViewModel: ObservableObject {
     /// 在「更多 · 变奏」调节开头三音高度柱时即点即响试听音高变化。
     public func previewSeedShift(index: Int, shift: Int) {
         guard index >= 0 && index < 3 else { return }
+        synth.ensureRunning()
         let baseDoc = document.notes.isEmpty ? SpecimenLibrary.saintSaensTheSwan : document
         let defaultDegrees = [1, 3, 5]
         let (baseDeg, baseOct): (Int, Int) = baseDoc.notes.indices.contains(index)
