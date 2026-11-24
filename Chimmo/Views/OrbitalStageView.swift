@@ -213,7 +213,7 @@ public struct OrbitalStageView: View {
                         .minimumScaleFactor(0.75)
 
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(palette.secondaryInk)
                 }
                 .padding(.horizontal, 13)
@@ -240,9 +240,11 @@ public struct OrbitalStageView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 12.5, weight: .bold))
+                            .font(.footnote.weight(.bold))
                         Text("调音")
-                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                            .font(.system(.caption, design: .rounded).weight(.heavy))
+                            .lineLimit(1)
+                            .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                     }
                     .padding(.horizontal, 11)
                     .frame(minHeight: 40)
@@ -265,9 +267,11 @@ public struct OrbitalStageView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 12.5, weight: .bold))
+                            .font(.footnote.weight(.bold))
                         Text("分享")
-                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                            .font(.system(.caption, design: .rounded).weight(.heavy))
+                            .lineLimit(1)
+                            .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                     }
                     .padding(.horizontal, 11)
                     .frame(minHeight: 40)
@@ -306,13 +310,14 @@ public struct OrbitalStageView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(chip.badge)
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.heavy))
                         .foregroundStyle(palette.primaryInk)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
 
                     if let nav = chapterNav, nav.totalCount > 1 {
                         Text(nav.progressLabel)
-                            .font(.system(size: 10.5, weight: .bold, design: .rounded).monospacedDigit())
+                            .font(.system(.caption2, design: .rounded).weight(.bold).monospacedDigit())
                             .foregroundStyle(palette.secondaryInk)
                     }
                 }
@@ -357,9 +362,11 @@ public struct OrbitalStageView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "play.fill")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.caption2.weight(.bold))
                         Text("试听此段")
-                            .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                            .font(.system(.caption, design: .rounded).weight(.heavy))
+                            .lineLimit(1)
+                            .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                     }
                     .padding(.horizontal, 11)
                     .frame(minHeight: 40)
@@ -410,7 +417,7 @@ public struct OrbitalStageView: View {
                         )
                     )
                 Image(systemName: systemName)
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(enabled ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
             }
             .frame(
@@ -763,11 +770,12 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: mode.iconName)
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.caption.weight(.bold))
                         if active {
                             Text(mode.storybookLabel)
-                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .font(.system(.caption2, design: .rounded).weight(.heavy))
                                 .lineLimit(1)
+                                .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                         }
                     }
                     .padding(.horizontal, active ? 10 : 9)
@@ -779,6 +787,10 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                         active
                             ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
                             : palette.secondaryInk
+                    )
+                    .frame(
+                        minWidth: active ? 62 : StorybookAffordanceMetrics.compactToolMinHitDimension,
+                        minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                     )
                     .contentShape(Capsule())
                 }
@@ -854,30 +866,30 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                         ChimmoCraftMark(.tempoDial, color: palette.nightLampGold)
                             .frame(width: 11, height: 11)
                         Text(String(format: "%.2g×", vm.playbackRate))
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .font(.system(.caption2, design: .rounded).weight(.bold))
                     }
                     .foregroundStyle(palette.nightLampGold)
                 }
                 if vm.document.rootMIDI != 60 {
                     HStack(spacing: 2) {
                         Image(systemName: "tuningfork")
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.caption2.weight(.bold))
                         Text(RootTranspositionHelper.compactLabel(forRootMIDI: vm.document.rootMIDI))
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .font(.system(.caption2, design: .rounded).weight(.bold))
                     }
                     .foregroundStyle(palette.harmonyWash)
                 }
                 if vm.document.grooveStrength > 0.08 {
                     Image(systemName: "metronome")
-                        .font(.system(size: 9.5, weight: .bold))
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(palette.homeAnchor)
                 }
                 Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(palette.secondaryInk)
             }
             .padding(.horizontal, 10)
-            .frame(minHeight: 36)
+            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
             .background(
                 ZStack {
                     Capsule()

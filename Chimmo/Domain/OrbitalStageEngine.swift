@@ -2447,6 +2447,7 @@ public enum StorybookAffordanceMetrics {
     }
 
     public static let compactToolMinHitDimension: CGFloat = 40.0
+    public static let compactPillMinimumScaleFactor: CGFloat = 0.75
 
     public static func validatedHitTarget(
         visualWidth: CGFloat,

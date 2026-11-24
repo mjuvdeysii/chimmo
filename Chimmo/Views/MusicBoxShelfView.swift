@@ -291,7 +291,7 @@ public struct MusicBoxShelfView: View {
                             )
                         )
                     Image(systemName: searchActive ? "xmark" : "magnifyingglass")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.footnote.weight(.bold))
                         .foregroundStyle(searchActive ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.primaryInk)
                 }
                 .frame(width: 40, height: 40)
@@ -305,7 +305,7 @@ public struct MusicBoxShelfView: View {
     private var boutiqueInlineSearchBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 12, weight: .bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(palette.secondaryInk)
 
             TextField("搜索曲名", text: $searchText)
@@ -353,7 +353,7 @@ public struct MusicBoxShelfView: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: 11.5, weight: .bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(isSelected ? palette.homeAnchor : palette.secondaryInk)
 
                 Text(title)
@@ -362,7 +362,7 @@ public struct MusicBoxShelfView: View {
                     .lineLimit(1)
 
                 Text(countText)
-                    .font(.system(size: 10.5, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.system(.caption2, design: .rounded).weight(.bold).monospacedDigit())
                     .foregroundStyle(isSelected ? palette.homeAnchor : palette.secondaryInk)
             }
             .frame(maxWidth: .infinity)
@@ -403,10 +403,11 @@ public struct MusicBoxShelfView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: badge.iconName)
-                                    .font(.system(size: 11, weight: .bold))
+                                    .font(.caption2.weight(.bold))
                                 Text(badge.shortLabel)
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .font(.system(.caption2, design: .rounded).weight(.heavy))
                                     .lineLimit(1)
+                                    .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                             }
                             .padding(.horizontal, 10)
                             .frame(height: 34)
@@ -456,7 +457,7 @@ public struct MusicBoxShelfView: View {
                                 )
 
                             Image(systemName: mode.iconName)
-                                .font(.system(size: 13, weight: .bold))
+                                .font(.footnote.weight(.bold))
                                 .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : aurora)
                         }
                         .frame(
@@ -476,9 +477,11 @@ public struct MusicBoxShelfView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.counterclockwise")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.caption2.weight(.bold))
                             Text("重置")
-                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                .lineLimit(1)
+                                .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                         }
                         .padding(.horizontal, 10)
                         .frame(height: 34)
@@ -714,9 +717,10 @@ public struct MusicBoxShelfView: View {
                     }
 
                     Text("\(entryVoice.label) · \(entry.document.notes.count)音")
-                        .font(.system(size: 10.5, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(.system(.caption2, design: .rounded).weight(.semibold).monospacedDigit())
                         .foregroundStyle(palette.secondaryInk)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
 
                 MiniMelodySparkline(
@@ -739,7 +743,9 @@ public struct MusicBoxShelfView: View {
                             Image(systemName: "pencil.line")
                                 .font(.caption.weight(.bold))
                             Text("打开编辑")
-                                .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                                .font(.system(.caption, design: .rounded).weight(.heavy))
+                                .lineLimit(1)
+                                .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                         }
                         .padding(.horizontal, 13)
                         .frame(height: 34)
@@ -754,7 +760,8 @@ public struct MusicBoxShelfView: View {
                             }
                         )
                         .foregroundStyle(palette.primaryInk)
-                        .contentShape(Capsule())
+                        .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("在创作区打开编辑 \(entry.document.title)")
@@ -807,6 +814,11 @@ public struct MusicBoxShelfView: View {
                                 }
                             )
                             .contentShape(Capsule())
+                            .frame(
+                                minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                            )
+                            .contentShape(Rectangle())
                     }
                     .accessibilityLabel("管理作品 \(entry.document.title)")
                 }
@@ -987,8 +999,10 @@ public struct MusicBoxShelfView: View {
                         }
 
                         Text("\(voice.label) · \(spec.notes.count)音")
-                            .font(.system(size: 10.5, weight: .semibold, design: .rounded).monospacedDigit())
+                            .font(.system(.caption2, design: .rounded).weight(.semibold).monospacedDigit())
                             .foregroundStyle(palette.secondaryInk)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
 
                     MiniMelodySparkline(
@@ -1011,7 +1025,9 @@ public struct MusicBoxShelfView: View {
                                 Image(systemName: "play.fill")
                                     .font(.caption2.weight(.bold))
                                 Text("欣赏")
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                             }
                             .padding(.horizontal, 11)
                             .frame(height: 34)
@@ -1026,7 +1042,8 @@ public struct MusicBoxShelfView: View {
                                 }
                             )
                             .foregroundStyle(palette.primaryInk)
-                            .contentShape(Capsule())
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("在欣赏区播放 \(spec.title)")
@@ -1039,7 +1056,9 @@ public struct MusicBoxShelfView: View {
                                 Image(systemName: "sparkles")
                                     .font(.caption2.weight(.bold))
                                 Text("跟灯")
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                             }
                             .padding(.horizontal, 11)
                             .frame(height: 34)
@@ -1054,7 +1073,8 @@ public struct MusicBoxShelfView: View {
                                 }
                             )
                             .foregroundStyle(palette.primaryInk)
-                            .contentShape(Capsule())
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("跟灯弹 \(spec.title)")
@@ -1068,7 +1088,9 @@ public struct MusicBoxShelfView: View {
                                     Image(systemName: "wand.and.stars")
                                         .font(.caption2.weight(.bold))
                                     Text("改编")
-                                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                        .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(StorybookAffordanceMetrics.compactPillMinimumScaleFactor)
                                 }
                                 .padding(.horizontal, 11)
                                 .frame(height: 34)
@@ -1083,7 +1105,8 @@ public struct MusicBoxShelfView: View {
                                     }
                                 )
                                 .foregroundStyle(palette.primaryInk)
-                                .contentShape(Capsule())
+                                .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("改编 \(spec.title)")
@@ -1108,7 +1131,11 @@ public struct MusicBoxShelfView: View {
                                             .overlay(Capsule().strokeBorder(modeColor, lineWidth: 1.5))
                                     }
                                 )
-                                .contentShape(Capsule())
+                                .frame(
+                                    minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                    minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                                )
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("套用 \(spec.title) 风格")

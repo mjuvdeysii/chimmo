@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.53.0 - 2026-11-24
+- Round 46 (100% App-Wide Dynamic Type UI Completion & Final >= 40pt Button Hit-Target Closure):
+  - Added `StorybookAffordanceMetrics.compactPillMinimumScaleFactor` (`0.75`) in `OrbitalStageEngine.swift`.
+  - Upgraded 17 UI label and button glyph font sites in `OrbitalStageView.swift` and 15 UI label/button/card sites in `MusicBoxShelfView.swift` to semantic Dynamic Type styles (`.footnote`, `.caption`, `.caption2` with `.lineLimit(1)` and minimum scale factors), preserving only 5 intentional fixed-geometry instrument/cover micro-glyphs app-wide.
+  - Expanded remaining `< 40pt` interactive hit targets in `OrbitalStageView` (`modeReliefPillSwitcher`, `activeFeaturesOverlay`), `MusicBoxShelfView` (`打开编辑`, `管理作品 ...`, `欣赏`, `跟灯`, `改编`, `套用风格`), `SoundPaletteBoxSheet` (appearance switcher, groove pills, character audition buttons), and `NightLampTactileSheet` (captured bead scroll strip `44pt`) to `>= 40pt` (`compactToolMinHitDimension`) with explicit `.contentShape(...)`.
+  - Added `testCreativeAlchemyRound46DynamicTypeAndZeroSub40ptHitTargets` in `ChimmoTests/SpecimenIntegrityTests.swift`.
+
 ## 0.52.0 - 2026-11-24
 - Round 45 (100% Reduce Motion Compliance + Active-Space Hardware Keyboard Studio + Dynamic Type Scaling):
   - Completed app-wide Reduce Motion gating by adding `@Environment(\.accessibilityReduceMotion)` to `AmbientPaperBackdrop` (night/day transition) and guarding `.symbolEffect(.bounce, value: vm.lastSavedPulse)` behind a `@ViewBuilder` `saveStatusIcon(needsSave:)` helper in `CreateStudioView`.

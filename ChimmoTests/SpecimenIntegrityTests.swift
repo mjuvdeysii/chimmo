@@ -3308,4 +3308,58 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
         XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound46DynamicTypeAndZeroSub40ptHitTargets() throws {
+        // 1. 全端触控最小尺寸与紧凑胶囊缩放比例契约
+        XCTAssertEqual(StorybookAffordanceMetrics.compactToolMinHitDimension, 40.0, accuracy: 0.001)
+        XCTAssertEqual(StorybookAffordanceMetrics.compactPillMinimumScaleFactor, 0.75, accuracy: 0.001)
+        XCTAssertTrue((0.5...0.9).contains(StorybookAffordanceMetrics.compactPillMinimumScaleFactor))
+
+        let hitTarget = StorybookAffordanceMetrics.validatedHitTarget(
+            visualWidth: 34.0,
+            visualHeight: 32.0,
+            minimum: StorybookAffordanceMetrics.compactToolMinHitDimension
+        )
+        XCTAssertEqual(hitTarget.width, 40.0, accuracy: 0.001)
+        XCTAssertEqual(hitTarget.height, 40.0, accuracy: 0.001)
+
+        // 2. 日夜与无障碍 Dynamic Type 核心工作区与抽屉视图实例化回归
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r46_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: dayPalette,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: nightPalette,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+    }
 }

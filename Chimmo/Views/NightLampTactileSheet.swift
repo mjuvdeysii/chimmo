@@ -430,7 +430,7 @@ public struct NightLampTactileSheet: View {
             }
             .padding(.vertical, 4)
         }
-        .frame(height: 38)
+        .frame(height: 44)
     }
 
     private var bottomControls: some View {

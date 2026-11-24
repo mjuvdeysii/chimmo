@@ -128,6 +128,10 @@ public struct SoundPaletteBoxSheet: View {
                                     ? (palette.isNight ? Color(hex: 0x0E142C) : .white)
                                     : palette.secondaryInk
                             )
+                            .frame(
+                                minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
+                                minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
+                            )
                             .contentShape(Capsule())
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
@@ -625,7 +629,8 @@ public struct SoundPaletteBoxSheet: View {
                                         )
                                 }
                             )
-                            .contentShape(Capsule())
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("节奏\(label)")
@@ -754,7 +759,8 @@ public struct SoundPaletteBoxSheet: View {
                                 }
                             )
                             .foregroundStyle(palette.primaryInk)
-                            .contentShape(Capsule())
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("试听小羊咩主旋律音色")
@@ -875,7 +881,8 @@ public struct SoundPaletteBoxSheet: View {
                                 }
                             )
                             .foregroundStyle(palette.primaryInk)
-                            .contentShape(Capsule())
+                            .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("试听小牛哞低音伴奏")
