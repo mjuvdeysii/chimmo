@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.51.0 - 2026-11-24
+- Round 44 (Complete 28-Specimen Interactive Storybook Coverage):
+  - Populated curated `GuidedStoryMoment` chapter scripts across all 17 remaining classic and original specimens in `SpecimenLibrary` (`schubertSerenade`, `bachCelloSuite1Prelude`, `bachInventionDialogue`, `pachelbelCanonGround`, `mozartTwinkleVariation`, `debussyClairDeLune`, `debussyFlaxenHair`, `satieGymnopedieSeed`, `beethovenMoonlight1`, `beethovenEliseResolve`, `teaHousePentatonic`, `tinkiResolution`, `rainyChromaticWalk`, `midnightCoastCityPop`, `bittersweetDaylight`, `teardropSlashBass`, `stardustCounterpoint`), achieving 28/28 Showcase storybook chapter flip availability.
+  - Added exhaustive `testCreativeAlchemyRound44All28SpecimensHaveStorybookChapters` validating monotonic timestamps, bounds, non-empty Kids' Book copy, zero Emoji, `StorybookGuidedMomentKinematics.chapterNavigation` + `chipModel` consistency, and `StudioViewModel` switching across every single specimen in `SpecimenLibrary.all`.
+
 ## 0.50.0 - 2026-11-24
 - Round 43 (ADA Craft & Tactile Creation Polish):
   - Activated pitch-stepping controls (`shiftSelectedBeadPitch(delta: -1 / +1)`) in `CreateStudioView.compactCreationBeatBar`, backed by pure engine helper `CreateBeatAdjustmentDescriptor` (pentatonic-safe bounds, digit/member/duration badge using borderless `StorybookQuietTag`, VoiceOver `accessibilityAdjustableAction`, and >= 40pt hit targets).

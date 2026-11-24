@@ -203,6 +203,11 @@ public enum SpecimenLibrary {
             (5, 0, 0.5), (6, 0, 0.5), (5, 0, 0.5), (1, 1, 1.5), (5, 0, 1.25),
             (4, 0, 0.5), (5, 0, 0.5), (4, 0, 0.5), (6, 0, 1.5), (4, 0, 1.25),
             (3, 0, 1.0), (5, 0, 1.0), (4, 0, 0.75), (3, 0, 0.75), (2, 0, 1.0), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "窗下回转", caption: "5-6-5 三个轻快音刚一打转，立刻扬上高音 1↑ 望向夜窗。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.27, badge: "小调回声", caption: "4-5-4 再往 6·钵莫送出一步，微酸小调让夜风更加柔和。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.55, badge: "渐落归宁", caption: "3→5 再随 4-3-2-1 缓缓走低，安静收在窗前月色里。")
         ]
     )
 
@@ -288,6 +293,11 @@ public enum SpecimenLibrary {
             (1, 1, 0.6), (5, 0, 0.6), (3, 0, 0.6), (5, 0, 0.6),
             (1, 0, 0.6), (6, 0, 0.6), (4, 0, 0.6), (3, 0, 0.6),
             (4, 0, 0.6), (6, 0, 0.6), (5, 0, 0.6), (1, 1, 1.8)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "大跳波浪", caption: "1→5→1↑ 在一把大提琴上画出宽阔浪峰，低音顺便托起高音旋律。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.44, badge: "暗潮回折", caption: "跃向 6·钵莫怀抱后轻轻滑回 3·拍咯，音色悄然转暖。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.67, badge: "扬帆登顶", caption: "沿 4-6-5 蓄力推向尾音高音 1↑，单声部也能听出山谷回响。")
         ]
     )
 
@@ -305,6 +315,11 @@ public enum SpecimenLibrary {
             (2, 0, 0.6), (3, 0, 0.6), (1, 0, 1.2),
             (5, 0, 0.6), (6, 0, 0.6), (7, 0, 0.6), (1, 1, 0.6),
             (6, 0, 0.6), (7, 0, 0.6), (5, 0, 1.8)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "乐高起步", caption: "1-2-3-4-2-3-1 七颗小积木在陶诺家门口搭出第一句轻快主题。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.47, badge: "属音攀高", caption: "把整套 5-6-7-1↑ 积木抬高五度原样复刻，像云朵回应山风。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.78, badge: "亮声落定", caption: "尾音停在 5·壳咯远望处，保留巴赫式的清醒对话空间。")
         ]
     )
 
@@ -322,6 +337,11 @@ public enum SpecimenLibrary {
             (3, 0, 1.5), (2, 0, 1.5), (1, 0, 1.5), (7, -1, 1.5),
             (6, -1, 1.5), (5, -1, 1.5), (6, -1, 1.5), (7, -1, 1.5),
             (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "下行阶梯", caption: "3→2→1→7↓ 像沿着阳光照亮的石阶一步步往下漫步。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.41, badge: "黄金兜底", caption: "触底 6↓ 与 5↓ 后再折返 6↓-7↓，正是三百年流行金曲的共通骨架。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.78, badge: "归家定音", caption: "经过 7↓ 轻踮脚尖，最终稳稳落回 1·陶诺家中。")
         ]
     )
 
@@ -339,6 +359,11 @@ public enum SpecimenLibrary {
             (6, 0, 1.0), (6, 0, 1.0), (5, 0, 2.0),
             (4, 0, 1.0), (4, 0, 1.0), (3, 0, 1.0), (3, 0, 1.0),
             (2, 0, 1.0), (2, 0, 1.0), (1, 0, 2.0)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "五度眨眼", caption: "1·陶诺一下跃上 5·壳咯，就像夜空里第一颗闪烁的星星。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.25, badge: "六级仰望", caption: "6·钵莫向上轻探一格再靠回 5·壳咯身旁，充满温柔张望。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.50, badge: "级进回家", caption: "4-4-3-3-2-2-1 沿着彩色阶梯一步步稳稳走回陶诺的家里。")
         ]
     )
 
@@ -382,6 +407,11 @@ public enum SpecimenLibrary {
         steps: [
             (1, 1, 1.75), (6, 0, 1.75), (5, 0, 1.0), (4, 0, 1.0), (5, 0, 1.5),
             (3, 0, 1.5), (2, 0, 1.0), (3, 0, 1.0), (2, 0, 1.25), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "月雾初落", caption: "高音 1↑ 与 6·钵莫缓步垂落，没有急躁节拍，像月光融进水雾。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.49, badge: "轻涟摇曳", caption: "3·拍咯与 2·豆叩轻换脚步，把湖面涟漪一圈圈往远处推开。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.78, badge: "入水静谧", caption: "末音轻停 1·陶诺家中，整片夜空如镜面般温柔静止。")
         ]
     )
 
@@ -399,6 +429,11 @@ public enum SpecimenLibrary {
             (6, 0, 1.5), (3, 0, 1.0), (2, 0, 1.0), (1, 0, 1.5),
             (2, 0, 1.0), (3, 0, 1.0), (6, 0, 1.5), (5, 0, 1.25),
             (3, 0, 1.0), (2, 0, 1.0), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "五声晨光", caption: "6→3→2→1 起步没有半分沉重感，宛如朝阳照亮金色麦田。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.35, badge: "微风扬发", caption: "再由 2-3 轻抬到 6·钵莫与 5·壳咯，留住清晨轻盈呼吸。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.68, badge: "暖阳落怀", caption: "3→2→1 缓慢落定，画面暖融融地融入草坡光线里。")
         ]
     )
 
@@ -416,6 +451,11 @@ public enum SpecimenLibrary {
             (3, 0, 1.5), (5, 0, 1.5), (4, 0, 1.5), (3, 0, 1.5),
             (2, 0, 1.5), (1, 0, 1.5), (2, 0, 1.5), (3, 0, 1.5),
             (6, -1, 2.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "三拍留白", caption: "3-5-4-3 拖出绵长圆舞弧线，让音符之间的空气自己唱歌。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.35, badge: "轻步巡游", caption: "2-1-2-3 随三拍子缓慢踱行，不慌不忙走出极简留白之美。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.70, badge: "深谷回响", caption: "低音 6↓ 深深停顿两拍半再回 1·陶诺，余韵比声响更久。")
         ]
     )
 
@@ -433,6 +473,11 @@ public enum SpecimenLibrary {
             (5, 0, 1.75), (5, 0, 0.75), (5, 0, 2.0),
             (6, 0, 1.75), (6, 0, 1.75),
             (5, 0, 1.25), (4, 0, 1.25), (3, 0, 1.5), (2, 0, 1.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "同音独白", caption: "连续三声 5·壳咯克制不动，全靠底下小调水波悄悄推进情绪。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.28, badge: "沉吟微叹", caption: "悄悄推向 6·钵莫驻足回望，仿佛月夜窗前的无声轻叹。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.50, badge: "五级归巢", caption: "5-4-3-2-1 随夜色一口气滑落，稳稳落回小调中心。")
         ]
     )
 
@@ -451,6 +496,11 @@ public enum SpecimenLibrary {
             (5, 0, 0.6), (2, 0, 0.6), (4, 0, 0.6), (3, 0, 0.6), (1, 0, 1.6),
             (3, -1, 0.6), (6, -1, 0.6), (1, 0, 0.6), (2, 0, 1.6),
             (3, 0, 0.6), (2, 0, 0.6), (1, 0, 2.0)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "灵巧摇摆", caption: "高处 5 与 4 连续轻巧碰面摇摆，像手指在黑键边缘跳舞。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.49, badge: "分解托举", caption: "从低处 3↓-6↓-1 一路向上托起，把小调悬念翻出温柔回响。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.75, badge: "轻落收拍", caption: "3-2-1 紧凑收住尾音，利落又充满古典戏剧魅力。")
         ]
     )
 
@@ -489,6 +539,11 @@ public enum SpecimenLibrary {
             (5, 0, 1.5), (6, 0, 1.0), (1, 1, 2.0),
             (6, 0, 1.0), (5, 0, 1.0), (3, 0, 1.5), (2, 0, 1.5),
             (1, 0, 1.5), (2, 0, 1.0), (3, 0, 1.5), (5, 0, 1.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "登坡望远", caption: "5-6 借微风一口气跃上高音 1↑，五声音阶清澈如洗。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.26, badge: "林间滑步", caption: "沿着 6-5-3-2 五声草坡轻盈滑落，零半音冲突最松弛。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.54, badge: "归回草坡", caption: "1-2-3-5 绕出一圈暖阳弧线，安稳落回草坡原点。")
         ]
     )
 
@@ -505,6 +560,11 @@ public enum SpecimenLibrary {
             (1, 0, 1.5), (3, 0, 1.0), (5, 0, 1.5),
             (4, 0, 1.5), (3, 0, 1.5),
             (6, 0, 1.5), (7, 0, 2.25), (1, 1, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "三和弦站台", caption: "1-3-5 稳稳立在起跑线，声音像风筝还握在手里。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.30, badge: "微步过渡", caption: "4 跳 3 轻晃一下重心，悄悄为最后的升空蓄力。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.53, badge: "导音飞升", caption: "7·叮尖踮起脚尖拉紧半音弦，下一刻冲上高音 1↑ 瞬间释怀！")
         ]
     )
 
@@ -521,6 +581,11 @@ public enum SpecimenLibrary {
             (1, 0, 1.25), (2, 0, 0.75), (3, 0, 2.0),
             (5, 0, 1.25), (4, 0, 0.75), (3, 0, 1.5), (2, 0, 1.0),
             (6, -1, 1.5), (7, -1, 1.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "雨檐落座", caption: "1-2 轻踩进降半音的小调 3·拍咯，细雨落在街道石板上。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.29, badge: "湿润下行", caption: "5-4-3-2 带着清透水色缓缓下滑，小调光晕慢慢晕开。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.61, badge: "屋檐亮灯", caption: "经过低音 6↓ 与 7↓ 折回 1·陶诺，窗内正好亮起暖灯。")
         ]
     )
 
@@ -537,6 +602,11 @@ public enum SpecimenLibrary {
             (2, 0, 1.0), (4, 0, 1.0), (6, 0, 1.5), (5, 0, 1.5),
             (7, 0, 1.0), (2, 1, 1.0), (1, 1, 1.5), (3, 0, 1.5),
             (2, 0, 1.0), (5, 0, 1.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "夜风起步", caption: "2-4-6-5 从容划出斜线起步，立刻带出夜间海岸律动。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.33, badge: "高台拐弯", caption: "跃过 7-2↑-1↑ 霓虹色彩拐点，海面波光随和弦晃开。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.67, badge: "二五一归位", caption: "经典的 2→5→1 丝滑转弯稳稳刹停回陶诺港湾。")
         ]
     )
 
@@ -553,6 +623,11 @@ public enum SpecimenLibrary {
             (1, 0, 1.0), (2, 0, 1.0), (3, 0, 1.5), (5, 0, 1.5),
             (6, 0, 1.0), (5, 0, 1.0), (3, 0, 1.5), (2, 0, 1.5),
             (3, 0, 1.0), (5, 0, 1.0), (6, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "晴日行进", caption: "1-2-3-5 明亮启程，就像午后踩在太阳晒暖的街道上。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.34, badge: "回望驻足", caption: "6-5-3-2 放慢脚步回头张望，甜味里带着一点青春怀旧。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.69, badge: "停在六级", caption: "结尾特意不回 1·陶诺，轻轻停在 6·钵莫怀里留下余韵。")
         ]
     )
 
@@ -569,6 +644,11 @@ public enum SpecimenLibrary {
             (5, 0, 1.5), (3, 0, 1.5), (5, 0, 1.0), (7, 0, 1.5),
             (5, 0, 1.5), (6, 0, 1.5), (4, 0, 1.5), (3, 0, 1.5),
             (2, 0, 1.5), (5, 0, 1.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "高处轻旋", caption: "上方 5-3-5-7 轻轻盘旋停驻，仿佛雨前静止的暖云。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.32, badge: "楼梯下沉", caption: "5-6-4-3 配上底下逐格下沉的斜杠和弦，心事逐渐变深。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.68, badge: "归于平静", caption: "经过 2→5 短暂托起后，安稳落回 1·陶诺终点。")
         ]
     )
 
@@ -586,6 +666,11 @@ public enum SpecimenLibrary {
             (1, 0, 1.0), (2, 0, 1.0), (3, 0, 1.5),
             (6, 0, 1.0), (5, 0, 1.0), (4, 0, 1.0), (3, 0, 1.5),
             (2, 0, 1.5), (1, 0, 2.5)
+        ],
+        guided: [
+            GuidedStoryMoment(id: 0, timeFraction: 0.0, badge: "高空发问", caption: "1↑-7-5 先从高八度轻声抛出一句清亮问候。"),
+            GuidedStoryMoment(id: 1, timeFraction: 0.23, badge: "中音回应", caption: "低八度的 1-2-3 紧接着温柔接话，唱出空间问答感。"),
+            GuidedStoryMoment(id: 2, timeFraction: 0.45, badge: "携手合鸣", caption: "6-5-4-3 并肩下落后经 2→1 会合，像星空与草地对谈。")
         ]
     )
 

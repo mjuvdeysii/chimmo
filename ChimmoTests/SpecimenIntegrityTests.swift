@@ -3219,4 +3219,47 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
         XCTAssertNotNil(CharacterSoundTestView(palette: dayPalette, scaleMode: .wistfulMinor, cradleEnabled: true))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound44All28SpecimensHaveStorybookChapters() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r44_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let allSpecimens = SpecimenLibrary.all
+        XCTAssertEqual(allSpecimens.count, 28)
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+
+        for spec in allSpecimens {
+            let moments = try XCTUnwrap(spec.guidedMoments, "曲目《\(spec.title)》应配备绘本分幕角标")
+            XCTAssertGreaterThanOrEqual(moments.count, 2, "曲目《\(spec.title)》至少包含 2 幕故事")
+
+            var prevFraction = -0.1
+            for (idx, moment) in moments.enumerated() {
+                XCTAssertEqual(moment.id, idx)
+                XCTAssertGreaterThanOrEqual(moment.timeFraction, 0.0)
+                XCTAssertLessThan(moment.timeFraction, 1.0)
+                XCTAssertGreaterThan(moment.timeFraction, prevFraction)
+                prevFraction = moment.timeFraction
+                XCTAssertFalse(moment.badge.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                XCTAssertFalse(moment.caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                let nav = try XCTUnwrap(StorybookGuidedMomentKinematics.chapterNavigation(for: moment, in: spec))
+                XCTAssertEqual(nav.currentIndex, idx)
+                XCTAssertEqual(nav.totalCount, moments.count)
+                XCTAssertEqual(nav.canStepPrevious, idx > 0)
+                XCTAssertEqual(nav.canStepNext, idx + 1 < moments.count)
+
+                let chip = StorybookGuidedMomentKinematics.chipModel(moment: moment, document: spec)
+                XCTAssertNotNil(chip)
+            }
+
+            vm.openSpecimen(spec, autoPlay: false)
+            XCTAssertEqual(vm.activeGuidedMoment?.id, 0)
+            vm.stepGuidedMoment(delta: 1)
+            XCTAssertEqual(vm.activeGuidedMoment?.id, 1)
+            vm.stopPlayback()
+        }
+    }
 }
