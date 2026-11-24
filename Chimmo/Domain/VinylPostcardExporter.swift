@@ -435,7 +435,8 @@ public struct VinylPostcardCanvasView: View {
 
             let gs = orbR * 1.1
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
-            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(.white.opacity(0.95)), style: FillStyle(eoFill: true))
+            let glyphInk = lane.barForegroundColor(isNight: snapshot.isNight)
+            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(glyphInk.opacity(0.94)), style: FillStyle(eoFill: true))
         }
 
         // 3.5 巴赫影子银月对位（如果已开启）
@@ -686,14 +687,16 @@ public struct VinylPostcardCanvasView: View {
         }
 
         for item in pts {
-            let col = XylophoneLane.lane(at: item.laneIdx).barColor(isNight: snapshot.isNight)
+            let lane = XylophoneLane.lane(at: item.laneIdx)
+            let col = lane.barColor(isNight: snapshot.isNight)
             let orbR: CGFloat = 8.4
             let orbRect = CGRect(x: item.pt.x - orbR, y: item.pt.y - orbR, width: orbR * 2, height: orbR * 2)
             ctx.fill(Path(ellipseIn: orbRect), with: .color(col))
             ctx.stroke(Path(ellipseIn: orbRect), with: .color(palette.primaryInk.opacity(snapshot.isNight ? 0.42 : 0.28)), lineWidth: 1.2)
             let gs = orbR * 1.1
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
-            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(.white.opacity(0.95)), style: FillStyle(eoFill: true))
+            let glyphInk = lane.barForegroundColor(isNight: snapshot.isNight)
+            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(glyphInk.opacity(0.94)), style: FillStyle(eoFill: true))
         }
     }
 
@@ -786,7 +789,8 @@ public struct VinylPostcardCanvasView: View {
             }
             ctx.fill(Path(ellipseIn: CGRect(x: pt.x - starR, y: pt.y - starR, width: starR * 2, height: starR * 2)), with: .color(col.opacity(active ? 0.96 : 0.58)))
             let gs = starR * 1.05
-            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: laneIdx).path(in: CGRect(x: pt.x - gs * 0.5, y: pt.y - gs * 0.5, width: gs, height: gs)), with: .color(.white.opacity(0.95)), style: FillStyle(eoFill: true))
+            let glyphInk = XylophoneLane.lane(at: laneIdx).barForegroundColor(isNight: snapshot.isNight)
+            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: laneIdx).path(in: CGRect(x: pt.x - gs * 0.5, y: pt.y - gs * 0.5, width: gs, height: gs)), with: .color(glyphInk.opacity(0.94)), style: FillStyle(eoFill: true))
         }
 
         // 5. 中央扁平卡通利萨如星核 / 空盘呼吸导引环

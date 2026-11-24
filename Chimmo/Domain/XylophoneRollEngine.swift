@@ -27,6 +27,15 @@ public struct XylophoneLane: Identifiable, Equatable, Sendable {
         Color(hex: isNight ? nightHex : dayHex)
     }
 
+    /// 木琴彩条与音珠内嵌符号的统一窑墨前景色（日光 8 键均 >= 4.65:1 AA，夜灯 8 键均 >= 7.17:1 AAA）
+    public func barForegroundHex(isNight: Bool) -> UInt32 {
+        isNight ? 0x0E1430 : 0x1C1D19
+    }
+
+    public func barForegroundColor(isNight: Bool) -> Color {
+        Color(hex: barForegroundHex(isNight: isNight))
+    }
+
     /// 自下而上的 8 根标准蒙氏彩虹木琴条（0 = 最低 1·陶诺，7 = 最高 1↑·陶诺）
     public static let allLanes: [XylophoneLane] = [
         XylophoneLane(index: 0, degree: 1, octaveOffset: 0, digitLabel: "1",  solfege: "Do",  chineseName: "陶诺", isPentatonicSafe: true,  barWidthRatio: 1.00, dayHex: 0xE8534A, nightHex: 0xFF7B72),
@@ -34,8 +43,8 @@ public struct XylophoneLane: Identifiable, Equatable, Sendable {
         XylophoneLane(index: 2, degree: 3, octaveOffset: 0, digitLabel: "3",  solfege: "Mi",  chineseName: "拍咯", isPentatonicSafe: true,  barWidthRatio: 0.88, dayHex: 0xEBB31A, nightHex: 0xFFD43B),
         XylophoneLane(index: 3, degree: 4, octaveOffset: 0, digitLabel: "4",  solfege: "Fa",  chineseName: "呜嘟", isPentatonicSafe: false, barWidthRatio: 0.82, dayHex: 0x40B865, nightHex: 0x69DB7C),
         XylophoneLane(index: 4, degree: 5, octaveOffset: 0, digitLabel: "5",  solfege: "Sol", chineseName: "壳咯", isPentatonicSafe: true,  barWidthRatio: 0.77, dayHex: 0x15A6AE, nightHex: 0x4FD8CB),
-        XylophoneLane(index: 5, degree: 6, octaveOffset: 0, digitLabel: "6",  solfege: "La",  chineseName: "钵莫", isPentatonicSafe: true,  barWidthRatio: 0.72, dayHex: 0x4C74EB, nightHex: 0x74C0FC),
-        XylophoneLane(index: 6, degree: 7, octaveOffset: 0, digitLabel: "7",  solfege: "Si",  chineseName: "叮尖", isPentatonicSafe: false, barWidthRatio: 0.67, dayHex: 0x8F67EB, nightHex: 0xB197FC),
+        XylophoneLane(index: 5, degree: 6, octaveOffset: 0, digitLabel: "6",  solfege: "La",  chineseName: "钵莫", isPentatonicSafe: true,  barWidthRatio: 0.72, dayHex: 0x5C84F0, nightHex: 0x74C0FC),
+        XylophoneLane(index: 6, degree: 7, octaveOffset: 0, digitLabel: "7",  solfege: "Si",  chineseName: "叮尖", isPentatonicSafe: false, barWidthRatio: 0.67, dayHex: 0x9973F0, nightHex: 0xB197FC),
         XylophoneLane(index: 7, degree: 1, octaveOffset: 1, digitLabel: "1↑", solfege: "Do↑", chineseName: "高陶", isPentatonicSafe: true,  barWidthRatio: 0.62, dayHex: 0xF05E7E, nightHex: 0xFF8FA3)
     ]
 

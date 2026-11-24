@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.68.0 - 2026-11-25
+- 全 8 音阶彩键与舞台音珠窑墨 WCAG AA/AAA 对比度升级：在 [XylophoneRollEngine.swift](Chimmo/Domain/XylophoneRollEngine.swift) 新增单源 `barForegroundHex(isNight:)` / `barForegroundColor(isNight:)` 方法，并将日光 `6 La`（`0x5C84F0`）与 `7 Si`（`0x9973F0`）窑彩微调至全 8 键对比 `#1C1D19` 均达 `>= 4.65:1`（AA）、夜灯全 8 键对比 `#0E1430` 均达 `>= 7.17:1`（AAA）。
+- 全舞台音珠图腾、彩键唱名与导图明信片同步落地窑墨前景色：全面更新 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 音乐盒花环、流光河谷、星环舞台与底部 `StageChoirKeyboardBar` 音阶图腾/数字/延音刻度前景，以及 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 三套导出渲染图腾，彻底解决亮橙/明黄/薄荷夜彩底面叠白字难以辨识的痛点。
+- 捕梦工坊夜间录音按键对比度与页签热区修复：在 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 中将 `isRec == true` 录制圆钮前景接入 `palette.contrastInkOnAccent`（修复夜灯 `0xF08A6C` 叠白字仅 `2.45:1` 问题至 `7.37:1`），同步更新 `SeedPitchFaderColumn` 推子图腾前景色并将顶部模式按钮命中区贴合 `RoundedRectangle(cornerRadius: 12)`。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound61EightLaneKilnInkWCAGAndHumRecordingContrast`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.67.0 - 2026-11-25
 - 四幕彩色和声条 WCAG AA >= 4.5:1 窑彩升级与命中边界对齐：在 [TheoryLensEngine.swift](Chimmo/Domain/TheoryLensEngine.swift) 为 `DiatonicChord` 新增 `colorHex(isNight:)` 单源十六进制函数并将日光 I–vi 色值全面校准为 >= 4.5:1 可读窑彩（对纯白高亮前景与 `#FBF7F0` 棉纸均满足 AA），夜灯六色对 `#0E1430` 与 `#19213F` 亦保持 >= 5.88:1；同步更新 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) `StageHarmonyRibbonView` 激活前景色至 `palette.contrastInkOnAccent` 并将小牛伴奏、和弦分幕与开启伴奏胶囊全面切至 `.contentShape(Capsule())`。
 - 声调盒、步进键与筛选条精准触控边界纯化：清理 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 示波窗（`RoundedRectangle(cornerRadius: 12)`）、双主角试听（`Circle()`）、七小只按钮（`RoundedRectangle(cornerRadius: 12)`）及重复覆盖胶囊的 `"试听"` 热区定义；同步将 [CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 单拍步进按钮与 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 分类/重置筛选胶囊贴合各自视觉圆角边界。

@@ -1237,7 +1237,8 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             let glyphSize = orbR * 1.15
             let glyphRect = CGRect(x: item.pt.x - glyphSize * 0.5, y: item.pt.y - glyphSize * 0.5, width: glyphSize, height: glyphSize)
             let glyphPath = PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: glyphRect)
-            ctx.fill(glyphPath, with: .color(.white.opacity(0.96)), style: FillStyle(eoFill: true))
+            let glyphInk = XylophoneLane.lane(at: item.laneIdx).barForegroundColor(isNight: palette.isNight)
+            ctx.fill(glyphPath, with: .color(glyphInk.opacity(0.94)), style: FillStyle(eoFill: true))
         }
 
         // 5.8 巴赫影子月亮对位副音珠（在主旋律留白处轻声对话，呈半透明银蓝新月浮在内偏轨道）
@@ -1795,7 +1796,8 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
 
             let gs = orbR * 1.15
             let gRect = CGRect(x: item.pt.x - gs * 0.5, y: item.pt.y - gs * 0.5, width: gs, height: gs)
-            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(.white.opacity(0.96)), style: FillStyle(eoFill: true))
+            let glyphInk = XylophoneLane.lane(at: item.laneIdx).barForegroundColor(isNight: palette.isNight)
+            ctx.fill(PitchGlyphShape.glyph(forLaneIndex: item.laneIdx).path(in: gRect), with: .color(glyphInk.opacity(0.94)), style: FillStyle(eoFill: true))
         }
 
         // 3.5 巴赫影子月亮对位副音珠（浮在山河主珠下方轻声回响）
@@ -2166,14 +2168,15 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             // 色盲几何图腾 + 清晰唱名数字双排刻画在星辰中心
             let gSize = starR * 0.72
             let gRect = CGRect(x: pt.x - gSize * 0.5, y: pt.y - starR * 0.44 - gSize * 0.25, width: gSize, height: gSize)
+            let starInk = lane.barForegroundColor(isNight: palette.isNight)
             ctx.fill(
                 PitchGlyphShape.glyph(forLaneIndex: laneIdx).path(in: gRect),
-                with: .color(.white.opacity(isMuted ? 0.45 : 0.96)),
+                with: .color(starInk.opacity(isMuted ? 0.45 : 0.96)),
                 style: FillStyle(eoFill: true)
             )
             let digitTxt = Text(lane.digitLabel)
                 .font(.system(size: starR > 19 ? 11 : 9.5, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(isMuted ? 0.5 : 0.98))
+                .foregroundStyle(starInk.opacity(isMuted ? 0.5 : 0.98))
             ctx.draw(digitTxt, at: CGPoint(x: pt.x, y: pt.y + starR * 0.42), anchor: .center)
         }
 
@@ -2636,6 +2639,7 @@ internal struct StageChoirKeyboardBar: View {
                         let baseH = CGFloat(66 - lane.index * 2)
                         let barH = isMuted ? max(38, baseH - 6) : baseH
                         let col = lane.barColor(isNight: palette.isNight)
+                        let keyInk = lane.barForegroundColor(isNight: palette.isNight)
                         let keyBorder: Color = (isFollowTarget || hint != nil)
                             ? palette.nightLampGold
                             : (isSympathetic ? Color.white.opacity(0.82) : Color.white.opacity(palette.isNight ? 0.14 : 0.45))
@@ -2653,11 +2657,11 @@ internal struct StageChoirKeyboardBar: View {
 
                             PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
                                 .frame(width: 10.5, height: 10.5)
-                                .foregroundStyle(.white.opacity(0.96))
+                                .foregroundStyle(keyInk.opacity(0.92))
 
                             Text(lane.digitLabel)
                                 .font(.system(size: 11.5, weight: .heavy, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(keyInk)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
                         }
@@ -2710,13 +2714,13 @@ internal struct StageChoirKeyboardBar: View {
                             ZStack(alignment: .bottom) {
                                 if struckRibbonLane == lane.index && ribbonMercuryLevel > 0.05 {
                                     Capsule()
-                                        .fill(Color.white.opacity(0.78))
+                                        .fill(keyInk.opacity(0.72))
                                         .frame(width: 5, height: max(8, barH * CGFloat(ribbonMercuryLevel) * 0.60))
                                         .padding(.bottom, 4)
                                 }
                                 if isChordResonant {
                                     Capsule()
-                                        .fill(Color.white.opacity(palette.isNight ? 0.72 : 0.88))
+                                        .fill(keyInk.opacity(palette.isNight ? 0.70 : 0.68))
                                         .frame(width: 14, height: 3.0)
                                         .padding(.bottom, 3)
                                 }

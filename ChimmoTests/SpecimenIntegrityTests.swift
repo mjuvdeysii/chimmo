@@ -3977,4 +3977,71 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         )
     }
+
+    @MainActor
+    func testCreativeAlchemyRound61EightLaneKilnInkWCAGAndHumRecordingContrast() throws {
+        func relativeLuminance(_ hex: UInt32) -> Double {
+            func linearize(_ component: UInt32) -> Double {
+                let srgb = Double(component) / 255.0
+                return srgb <= 0.03928 ? (srgb / 12.92) : pow((srgb + 0.055) / 1.055, 2.4)
+            }
+            let r = linearize((hex >> 16) & 0xFF)
+            let g = linearize((hex >> 8) & 0xFF)
+            let b = linearize(hex & 0xFF)
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+
+        func contrastRatio(_ a: UInt32, _ b: UInt32) -> Double {
+            let l1 = relativeLuminance(a)
+            let l2 = relativeLuminance(b)
+            return (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
+        }
+
+        for lane in XylophoneLane.allLanes {
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(lane.dayHex, lane.barForegroundHex(isNight: false)),
+                4.5,
+                "日光第 \(lane.digitLabel) 键对比窑墨前景需满足 WCAG AA >= 4.5:1"
+            )
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(lane.nightHex, lane.barForegroundHex(isNight: true)),
+                7.0,
+                "夜灯第 \(lane.digitLabel) 键对比深靛前景需满足 WCAG AAA >= 7.0:1"
+            )
+        }
+
+        XCTAssertGreaterThanOrEqual(contrastRatio(0xF08A6C, 0x0E1430), 7.0)
+        XCTAssertGreaterThanOrEqual(contrastRatio(0xC4513A, 0xFFFFFF), 4.5)
+
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r61_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        XCTAssertNotNil(
+            StageChoirKeyboardBar(
+                vm: vm,
+                palette: day,
+                reduceMotion: false,
+                showsSmartHints: false,
+                onWakeTimeline: {},
+                onKeyStrike: { _, _, _ in }
+            )
+        )
+        XCTAssertNotNil(
+            StageChoirKeyboardBar(
+                vm: vm,
+                palette: night,
+                reduceMotion: true,
+                showsSmartHints: true,
+                onWakeTimeline: {},
+                onKeyStrike: { _, _, _ in }
+            )
+        )
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: day, initialTab: 1))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: night, initialTab: 1))
+    }
 }

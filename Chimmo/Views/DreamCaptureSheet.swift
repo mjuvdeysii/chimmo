@@ -193,7 +193,7 @@ public struct DreamCaptureSheet: View {
                     }
                 }
             )
-            .contentShape(Capsule())
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
         .accessibilityLabel(title)
@@ -778,6 +778,7 @@ public struct DreamCaptureSheet: View {
                         }
                     } label: {
                         let micFill = isRec ? palette.melodyTerracotta : palette.prominentFill
+                        let micInk: Color = isRec ? palette.contrastInkOnAccent : .white
                         ZStack {
                             Circle()
                                 .fill(micFill)
@@ -794,7 +795,7 @@ public struct DreamCaptureSheet: View {
 
                             Image(systemName: isRec ? "stop.fill" : "mic.fill")
                                 .font(.title2.weight(.bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(micInk)
                         }
                         .contentShape(Circle())
                     }
@@ -1482,7 +1483,7 @@ private struct SeedPitchFaderColumn: View {
                         .overlay(
                             PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
                                 .frame(width: 9.5, height: 9.5)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(lane.barForegroundColor(isNight: palette.isNight))
                         )
                         .overlay(
                             Circle().strokeBorder(Color.white.opacity(0.75), lineWidth: 1.2)
