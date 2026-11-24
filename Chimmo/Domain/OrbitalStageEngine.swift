@@ -918,6 +918,17 @@ public enum NightLampPhraseHelper {
         guard let last = beads.last else { return 0.0 }
         return max(0.6, last.rawOnset + last.rawDuration + 0.25)
     }
+
+    public static func normalizedDurationRatio(for duration: Double) -> Double {
+        guard duration.isFinite else { return 0.25 }
+        let clamped = max(0.28, min(1.85, duration))
+        return (clamped - 0.28) / (1.85 - 0.28)
+    }
+
+    public static func chipVisualWidth(forDuration duration: Double) -> CGFloat {
+        let ratio = normalizedDurationRatio(for: duration)
+        return 46.0 + CGFloat(ratio) * 52.0
+    }
 }
 
 /// 星环星辰命中偏心距力学映射：正中星心奏出饱满清亮共鸣，掠过星缘发出温柔轻声余韵。
@@ -1271,5 +1282,73 @@ public enum AcousticSignatureGeometry {
                 PatternDot(x: 0.80, y: 0.76, radiusScale: 0.96)
             ]
         }
+    }
+}
+
+/// 「写旋律 · 更多」扩写双曲线对比预览几何（左半原形虚线 vs 右半变形彩色实线）。
+public enum MotifMorphPreviewGeometry {
+    public struct PreviewCurves: Equatable, Sendable {
+        public let seedPoints: [Double]
+        public let morphedPoints: [Double]
+
+        public init(seedPoints: [Double], morphedPoints: [Double]) {
+            self.seedPoints = seedPoints
+            self.morphedPoints = morphedPoints
+        }
+    }
+
+    public static func curves(for operation: MotifGrowthOperation) -> PreviewCurves {
+        switch operation {
+        case .climbSequence:
+            return PreviewCurves(
+                seedPoints: [0.20, 0.44, 0.32],
+                morphedPoints: [0.46, 0.76, 0.62, 0.88]
+            )
+        case .waterMirror:
+            return PreviewCurves(
+                seedPoints: [0.24, 0.72, 0.52],
+                morphedPoints: [0.76, 0.28, 0.48, 0.22]
+            )
+        case .tearfulSuspension:
+            return PreviewCurves(
+                seedPoints: [0.30, 0.62, 0.82],
+                morphedPoints: [0.64, 0.64, 0.42, 0.20]
+            )
+        case .fullFourPhrasePoem:
+            return PreviewCurves(
+                seedPoints: [0.22, 0.50, 0.36],
+                morphedPoints: [0.48, 0.76, 0.58, 0.86, 0.44, 0.24]
+            )
+        }
+    }
+}
+
+/// 开头三音直拖彩色音高推子映射（将垂直手势归一化高度映射到 -3...+3 变奏级数与音高轨道色）。
+public enum SeedPitchFaderMapper {
+    public static func shift(forNormalizedTopToBottomY normY: Double) -> Int {
+        guard normY.isFinite else { return 0 }
+        let clamped = max(0.0, min(1.0, normY))
+        let value = Int(((1.0 - clamped) * 6.0 - 3.0).rounded())
+        return max(-3, min(3, value))
+    }
+
+    public static func normalizedFillHeight(forShift shift: Int) -> Double {
+        let clamped = max(-3, min(3, shift))
+        return 0.14 + (Double(clamped + 3) / 6.0) * 0.86
+    }
+
+    public static func resolvedLaneIndex(document: MelodyDocument, noteIndex: Int, shift: Int) -> Int {
+        let safeIdx = max(0, min(2, noteIndex))
+        let defaultDegrees = [1, 3, 5]
+        let sourceNotes = document.notes.isEmpty ? SpecimenLibrary.saintSaensTheSwan.notes : document.notes
+        let (baseDeg, baseOct): (Int, Int) = sourceNotes.indices.contains(safeIdx)
+            ? (sourceNotes[safeIdx].degree, sourceNotes[safeIdx].octaveOffset)
+            : (defaultDegrees[safeIdx], 0)
+        let linear = baseOct * 7 + (baseDeg - 1) + max(-3, min(3, shift))
+        let clamped = max(-3, min(8, linear))
+        let newOct = Int(floor(Double(clamped) / 7.0))
+        let newDeg = max(1, min(7, clamped - newOct * 7 + 1))
+        let safeOct = max(-1, min(1, newOct))
+        return XylophoneLane.laneIndex(degree: newDeg, octaveOffset: safeOct)
     }
 }

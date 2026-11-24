@@ -419,6 +419,12 @@ public struct AboutSheetView: View {
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
+                                    .overlay(alignment: .topTrailing) {
+                                        Image(systemName: "speaker.wave.2.fill")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(active ? skyColor : palette.secondaryInk.opacity(0.55))
+                                            .padding(8)
+                                    }
                                     .background(
                                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                                             .fill(palette.cardSurface)
@@ -434,12 +440,13 @@ public struct AboutSheetView: View {
                             }
                         }
 
-                        VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
                             Text("咩哞 · Chimmo")
                                 .font(.headline.weight(.bold))
                                 .foregroundStyle(palette.primaryInk)
-                            Text("轻点咩或哞试听，不用五线谱也能把旋律记下来。")
-                                .font(.caption)
+                            Spacer()
+                            Text("离线声学音乐盒")
+                                .font(.caption2.weight(.semibold))
                                 .foregroundStyle(palette.secondaryInk)
                         }
                     }

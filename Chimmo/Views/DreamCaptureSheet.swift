@@ -679,84 +679,37 @@ public struct DreamCaptureSheet: View {
                 .buttonStyle(.plain)
             }
 
-            // 扩写旋律 2×2 精简瓷砖
+            // 扩写旋律 2×2 双曲线可视变形卡片（左半虚线原曲 vs 右半彩色生长曲线）
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(MotifGrowthOperation.allCases) { op in
                     Button {
                         vm.growCurrentWithOrigami(op)
                         dismiss()
                     } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: op.iconName)
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(palette.homeAnchor)
-                            Text(shortMotifLabel(op))
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(palette.primaryInk)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 13)
-                        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
+                        MotifMorphPreviewCard(
+                            operation: op,
+                            shortTitle: shortMotifLabel(op),
+                            palette: palette
+                        )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(op.label)
+                    .accessibilityHint(op.philosophyNote)
                 }
             }
 
-            // 开头三音变奏高度条（纯视觉高度表达音高偏移）
+            // 开头三音直拖彩色陶瓷音高推子（单指上下滑动实时耳返试听）
             VStack(spacing: 10) {
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { idx in
-                        let shift = seedShifts[idx]
-                        let norm = Double(shift + 3) / 6.0
-                        VStack(spacing: 8) {
-                            ZStack(alignment: .bottom) {
-                                Capsule()
-                                    .fill(palette.shelfSurface)
-                                    .frame(width: 10, height: 34)
-                                Capsule()
-                                    .fill(shift == 0 ? palette.secondaryInk.opacity(0.55) : palette.homeAnchor)
-                                    .frame(width: 10, height: CGFloat(10.0 + norm * 24.0))
-                            }
-                            .animation(.spring(response: 0.22, dampingFraction: 0.72), value: shift)
-
-                            HStack(spacing: 8) {
-                                Button {
-                                    let next = max(-3, seedShifts[idx] - 1)
-                                    seedShifts[idx] = next
-                                    vm.previewSeedShift(index: idx, shift: next)
-                                } label: {
-                                    Image(systemName: "minus")
-                                        .font(.caption2.weight(.bold))
-                                        .frame(width: 24, height: 24)
-                                        .background(Circle().fill(palette.shelfSurface))
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("第 \(idx + 1) 音降低")
-
-                                Text(shift == 0 ? "0" : (shift > 0 ? "+\(shift)" : "\(shift)"))
-                                    .font(.caption.weight(.heavy).monospacedDigit())
-                                    .foregroundStyle(shift == 0 ? palette.primaryInk : palette.homeAnchor)
-                                    .frame(minWidth: 20)
-
-                                Button {
-                                    let next = min(3, seedShifts[idx] + 1)
-                                    seedShifts[idx] = next
-                                    vm.previewSeedShift(index: idx, shift: next)
-                                } label: {
-                                    Image(systemName: "plus")
-                                        .font(.caption2.weight(.bold))
-                                        .frame(width: 24, height: 24)
-                                        .background(Circle().fill(palette.shelfSurface))
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("第 \(idx + 1) 音升高")
-                            }
+                        SeedPitchFaderColumn(
+                            index: idx,
+                            shift: $seedShifts[idx],
+                            document: vm.document,
+                            palette: palette
+                        ) { nextShift in
+                            vm.previewSeedShift(index: idx, shift: nextShift)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
                     }
                 }
 
@@ -811,6 +764,191 @@ private struct DreamMiniHillShape: View {
                 else { p.addLine(to: CGPoint(x: x, y: y)) }
             }
             ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+        }
+    }
+}
+
+private struct MotifMorphPreviewCard: View {
+    let operation: MotifGrowthOperation
+    let shortTitle: String
+    let palette: ChimmoPalette
+
+    var body: some View {
+        let curves = MotifMorphPreviewGeometry.curves(for: operation)
+        VStack(spacing: 7) {
+            Canvas { ctx, size in
+                let padX: CGFloat = 8
+                let padY: CGFloat = 5
+                let w = max(1, size.width - padX * 2)
+                let h = max(1, size.height - padY * 2)
+
+                let seedW = w * 0.34
+                let morphStartX = padX + w * 0.44
+                let morphW = w * 0.56
+
+                var seedPath = Path()
+                for (i, val) in curves.seedPoints.enumerated() {
+                    let tx = curves.seedPoints.count > 1 ? CGFloat(i) / CGFloat(curves.seedPoints.count - 1) : 0.5
+                    let px = padX + tx * seedW
+                    let py = padY + CGFloat(1.0 - val) * h
+                    if i == 0 { seedPath.move(to: CGPoint(x: px, y: py)) } else { seedPath.addLine(to: CGPoint(x: px, y: py)) }
+                }
+                ctx.stroke(
+                    seedPath,
+                    with: .color(palette.secondaryInk.opacity(0.48)),
+                    style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round, dash: [3, 3])
+                )
+
+                var morphPath = Path()
+                var endPt: CGPoint? = nil
+                for (i, val) in curves.morphedPoints.enumerated() {
+                    let tx = curves.morphedPoints.count > 1 ? CGFloat(i) / CGFloat(curves.morphedPoints.count - 1) : 0.5
+                    let px = morphStartX + tx * morphW
+                    let py = padY + CGFloat(1.0 - val) * h
+                    let pt = CGPoint(x: px, y: py)
+                    if i == 0 { morphPath.move(to: pt) } else { morphPath.addLine(to: pt) }
+                    endPt = pt
+                }
+                ctx.stroke(
+                    morphPath,
+                    with: .color(palette.homeAnchor),
+                    style: StrokeStyle(lineWidth: 2.1, lineCap: .round, lineJoin: .round)
+                )
+
+                if let tip = endPt {
+                    ctx.fill(
+                        Path(ellipseIn: CGRect(x: tip.x - 2.6, y: tip.y - 2.6, width: 5.2, height: 5.2)),
+                        with: .color(palette.nightLampGold)
+                    )
+                }
+            }
+            .frame(height: 28)
+            .accessibilityHidden(true)
+
+            Text(shortTitle)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(palette.primaryInk)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(palette.cardSurface))
+    }
+}
+
+private struct SeedPitchFaderColumn: View {
+    let index: Int
+    @Binding var shift: Int
+    let document: MelodyDocument
+    let palette: ChimmoPalette
+    let onChangedShift: (Int) -> Void
+
+    var body: some View {
+        let laneIdx = SeedPitchFaderMapper.resolvedLaneIndex(document: document, noteIndex: index, shift: shift)
+        let lane = XylophoneLane.lane(at: laneIdx)
+        let laneCol = lane.barColor(isNight: palette.isNight)
+        let normLevel = CGFloat(Double(shift + 3) / 6.0)
+        let shiftText = shift == 0 ? "0" : (shift > 0 ? "+\(shift)" : "\(shift)")
+
+        VStack(spacing: 6) {
+            GeometryReader { geo in
+                let trackH = max(44, geo.size.height - 16)
+                let centerX = geo.size.width * 0.5
+                let thumbY: CGFloat = 8 + (1.0 - normLevel) * trackH
+                let fillH = max(12, CGFloat(SeedPitchFaderMapper.normalizedFillHeight(forShift: shift)) * trackH)
+
+                ZStack {
+                    // 中央归零参考刻度线
+                    Capsule()
+                        .fill(palette.divider)
+                        .frame(width: 28, height: 1.5)
+                        .position(x: centerX, y: 8 + trackH * 0.5)
+
+                    // 轨道底槽与彩色填充条
+                    Capsule()
+                        .fill(palette.shelfSurface)
+                        .frame(width: 10, height: trackH)
+                        .position(x: centerX, y: 8 + trackH * 0.5)
+
+                    Capsule()
+                        .fill(laneCol.opacity(shift == 0 ? 0.50 : 0.85))
+                        .frame(width: 10, height: fillH)
+                        .position(x: centerX, y: 8 + trackH - fillH * 0.5)
+
+                    // 7 档侧边细微刻点
+                    VStack(spacing: 0) {
+                        ForEach(0..<7, id: \.self) { step in
+                            Circle()
+                                .fill(step == 3 ? palette.secondaryInk.opacity(0.60) : palette.secondaryInk.opacity(0.24))
+                                .frame(width: step == 3 ? 3.2 : 2.0, height: step == 3 ? 3.2 : 2.0)
+                            if step < 6 { Spacer(minLength: 0) }
+                        }
+                    }
+                    .frame(height: trackH)
+                    .position(x: centerX - 14, y: 8 + trackH * 0.5)
+
+                    // 彩色窑陶滑动帽 + 色盲几何图腾
+                    Circle()
+                        .fill(laneCol)
+                        .frame(width: 22, height: 22)
+                        .overlay(
+                            PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
+                                .frame(width: 9.5, height: 9.5)
+                                .foregroundStyle(.white)
+                        )
+                        .overlay(Circle().strokeBorder(.white.opacity(0.65), lineWidth: 1.0))
+                        .shadow(color: laneCol.opacity(0.35), radius: 4, y: 1.5)
+                        .position(x: centerX, y: thumbY)
+                }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { val in
+                            let normY = Double((val.location.y - 8) / max(1, trackH))
+                            let nextShift = SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: normY)
+                            if nextShift != shift {
+                                shift = nextShift
+                                onChangedShift(nextShift)
+                            }
+                        }
+                )
+            }
+            .frame(height: 86)
+
+            Text(shiftText)
+                .font(.caption2.weight(.heavy).monospacedDigit())
+                .foregroundStyle(shift == 0 ? palette.secondaryInk : laneCol)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                .fill(palette.cardSurface)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .strokeBorder(shift == 0 ? Color.clear : laneCol.opacity(0.45), lineWidth: 1.2)
+                )
+        )
+        .accessibilityElement()
+        .accessibilityLabel("第 \(index + 1) 音变奏")
+        .accessibilityValue("\(shiftText)，\(lane.digitLabel) \(lane.solfege)")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment:
+                let next = min(3, shift + 1)
+                if next != shift {
+                    shift = next
+                    onChangedShift(next)
+                }
+            case .decrement:
+                let next = max(-3, shift - 1)
+                if next != shift {
+                    shift = next
+                    onChangedShift(next)
+                }
+            @unknown default:
+                break
+            }
         }
     }
 }

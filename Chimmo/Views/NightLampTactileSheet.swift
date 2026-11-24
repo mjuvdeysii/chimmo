@@ -61,6 +61,15 @@ public struct NightLampTactileSheet: View {
                 size: 38
             )
 
+            ChimmoDuoBadgeView(
+                isNight: true,
+                accentColor: Color(hex: 0xFFB84D),
+                melodyActive: currentHoverLane != nil || auditioningIndex != nil,
+                cowAwake: vm.cradleEnabled
+            )
+            .frame(width: 28, height: 18)
+            .opacity(0.68)
+
             Spacer()
 
             Button {
@@ -277,18 +286,26 @@ public struct NightLampTactileSheet: View {
                         let chipStroke = isAuditioning
                             ? Color(hex: 0xFFB84D)
                             : lane.barColor(isNight: true).opacity(0.65)
+                        let chipWidth = NightLampPhraseHelper.chipVisualWidth(forDuration: bead.rawDuration)
+                        let durRatio = NightLampPhraseHelper.normalizedDurationRatio(for: bead.rawDuration)
                         Button {
                             stopAudition()
                             previewCapturedBead(bead, index: idx)
                         } label: {
-                            HStack(spacing: 5) {
-                                PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
-                                    .frame(width: 9, height: 9)
-                                Text(lane.digitLabel)
-                                    .font(.caption.weight(.heavy).monospacedDigit())
+                            VStack(spacing: 2.5) {
+                                HStack(spacing: 5) {
+                                    PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
+                                        .frame(width: 9, height: 9)
+                                    Text(lane.digitLabel)
+                                        .font(.caption.weight(.heavy).monospacedDigit())
+                                }
+                                Capsule()
+                                    .fill(chipStroke.opacity(0.85))
+                                    .frame(width: max(12, chipWidth * 0.56 * CGFloat(0.35 + durRatio * 0.65)), height: 2.2)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .frame(minWidth: chipWidth)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
                             .background(Capsule().fill(chipFill))
                             .overlay(
                                 Capsule().strokeBorder(chipStroke, lineWidth: isAuditioning ? 1.8 : 1.0)

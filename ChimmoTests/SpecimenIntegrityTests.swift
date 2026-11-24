@@ -1601,4 +1601,61 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertGreaterThan(dayPNG?.count ?? 0, 1024)
         XCTAssertGreaterThan(nightPNG?.count ?? 0, 1024)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound23MorphPreviewFaderAndDurationStrip() {
+        // 1. 旋律扩写双曲线对比预览几何校验
+        for op in MotifGrowthOperation.allCases {
+            let curves = MotifMorphPreviewGeometry.curves(for: op)
+            XCTAssertFalse(curves.seedPoints.isEmpty)
+            XCTAssertFalse(curves.morphedPoints.isEmpty)
+            XCTAssertTrue(curves.seedPoints.allSatisfy { (0.0...1.0).contains($0) })
+            XCTAssertTrue(curves.morphedPoints.allSatisfy { (0.0...1.0).contains($0) })
+        }
+
+        // 2. 开头三音彩色音高推子直拖映射与边界防护
+        XCTAssertEqual(SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: 0.0), 3)
+        XCTAssertEqual(SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: 0.5), 0)
+        XCTAssertEqual(SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: 1.0), -3)
+        XCTAssertEqual(SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: .nan), 0)
+        XCTAssertEqual(SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: -5.0), 3)
+        XCTAssertEqual(SeedPitchFaderMapper.shift(forNormalizedTopToBottomY: 5.0), -3)
+
+        let lowFill = SeedPitchFaderMapper.normalizedFillHeight(forShift: -3)
+        let midFill = SeedPitchFaderMapper.normalizedFillHeight(forShift: 0)
+        let highFill = SeedPitchFaderMapper.normalizedFillHeight(forShift: 3)
+        XCTAssertLessThan(lowFill, midFill)
+        XCTAssertLessThan(midFill, highFill)
+
+        let emptyDoc = MelodyDocument(title: "空", subtitle: "", notes: [])
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        for idx in 0..<3 {
+            for shift in -3...3 {
+                let emptyLane = SeedPitchFaderMapper.resolvedLaneIndex(document: emptyDoc, noteIndex: idx, shift: shift)
+                let swanLane = SeedPitchFaderMapper.resolvedLaneIndex(document: swan, noteIndex: idx, shift: shift)
+                XCTAssertTrue((0...7).contains(emptyLane))
+                XCTAssertTrue((0...7).contains(swanLane))
+            }
+        }
+
+        // 3. 闭眼滑音颗粒时值视觉宽度比例与 NaN 防护
+        let shortRatio = NightLampPhraseHelper.normalizedDurationRatio(for: 0.28)
+        let longRatio = NightLampPhraseHelper.normalizedDurationRatio(for: 1.85)
+        let nanRatio = NightLampPhraseHelper.normalizedDurationRatio(for: .nan)
+        XCTAssertEqual(shortRatio, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(longRatio, 1.0, accuracy: 1e-6)
+        XCTAssertTrue(nanRatio.isFinite)
+
+        let shortWidth = NightLampPhraseHelper.chipVisualWidth(forDuration: 0.28)
+        let longWidth = NightLampPhraseHelper.chipVisualWidth(forDuration: 1.85)
+        XCTAssertEqual(shortWidth, 46.0, accuracy: 1e-4)
+        XCTAssertEqual(longWidth, 98.0, accuracy: 1e-4)
+        XCTAssertLessThan(shortWidth, longWidth)
+
+        // 4. 主舞台双子问候和音零 Toast 联动
+        let vm = StudioViewModel()
+        vm.auditionDuoGreeting()
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

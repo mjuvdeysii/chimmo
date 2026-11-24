@@ -20,6 +20,8 @@ public struct OrbitalStageView: View {
     @State private var renameDraft: String = ""
     @State private var rippleWakeActive: Bool = false
     @State private var rippleWakeTask: Task<Void, Never>? = nil
+    @State private var duoGreetingPulse: Bool = false
+    @State private var duoGreetingTask: Task<Void, Never>? = nil
 
     // 手势交互态（仅局部瞬态，绝不触发重排版死循环）
     @State private var discInteractionMode: DiscDragMode = .none
@@ -94,7 +96,7 @@ public struct OrbitalStageView: View {
                     accentTint: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
                 )
 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     topStageHeader
                         .padding(.horizontal, 14)
 
@@ -114,11 +116,35 @@ public struct OrbitalStageView: View {
                         .padding(.horizontal, 14)
                         .padding(.bottom, 6)
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
             }
-            .navigationTitle("咩哞")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Button {
+                        vm.auditionDuoGreeting()
+                        duoGreetingPulse = true
+                        duoGreetingTask?.cancel()
+                        duoGreetingTask = Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 520_000_000)
+                            if !Task.isCancelled {
+                                duoGreetingPulse = false
+                            }
+                        }
+                    } label: {
+                        ChimmoDuoBadgeView(
+                            isNight: palette.isNight,
+                            accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
+                            melodyActive: !vm.activeLaneIndices.isEmpty || duoGreetingPulse,
+                            cowAwake: vm.cradleEnabled
+                        )
+                        .frame(width: 38, height: 24)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("咩哞双子问候")
+                    .accessibilityHint("轻点试听小羊与小牛和音")
+                }
                 ToolbarItemGroup(placement: .topBarLeading) {
                     if vm.canUndo {
                         Button {
@@ -233,13 +259,9 @@ public struct OrbitalStageView: View {
                 showRenameAlert = true
             } label: {
                 HStack(spacing: 7) {
-                    ChimmoDuoBadgeView(
-                        isNight: palette.isNight,
-                        accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
-                        melodyActive: !vm.activeLaneIndices.isEmpty,
-                        cowAwake: vm.cradleEnabled
-                    )
-                    .frame(width: 28, height: 18)
+                    Circle()
+                        .fill(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
+                        .frame(width: 8, height: 8)
 
                     Text(vm.document.title)
                         .font(.subheadline.weight(.bold))
@@ -2197,6 +2219,20 @@ public struct OrbitalStageView: View {
                     .background(Capsule().fill(lane.barColor(isNight: palette.isNight)))
                     .foregroundStyle(.white)
                     .accessibilityHidden(true)
+
+                    if let bead = selectedBead {
+                        let durFrac = max(0.18, min(1.0, NightLampPhraseHelper.normalizedDurationRatio(for: bead.rawDuration)))
+                        let laneCol = lane.barColor(isNight: palette.isNight)
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(palette.shelfSurface)
+                                .frame(width: 28, height: 5)
+                            Capsule()
+                                .fill(laneCol.opacity(0.88))
+                                .frame(width: 28 * CGFloat(durFrac), height: 5)
+                        }
+                        .accessibilityHidden(true)
+                    }
                 }
 
                 Button {

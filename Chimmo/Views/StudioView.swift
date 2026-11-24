@@ -205,6 +205,23 @@ public final class StudioViewModel: ObservableObject {
         }
     }
 
+    public func auditionDuoGreeting() {
+        synth.ensureRunning()
+        previewArpeggioTask?.cancel()
+        let mode = document.scaleMode
+        let rootMIDI = document.rootMIDI
+        let sheepHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: 5, octaveOffset: 0)
+        let cowHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: 1, octaveOffset: -1)
+        let sheepTimbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.42)
+        synth.playNote(frequency: sheepHz, velocity: 0.48, decay: 0.90, brightness: 0.96, timbre: sheepTimbre, pan: -0.16)
+        previewArpeggioTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 110_000_000)
+            guard let self, !Task.isCancelled else { return }
+            self.synth.playNote(frequency: cowHz, velocity: 0.50, decay: 1.25, brightness: 0.86, timbre: .warmBass, pan: 0.16)
+        }
+    }
+
     public func previewHumReference(degree: Int) {
         let safeDeg = max(1, min(7, degree))
         synth.ensureRunning()
