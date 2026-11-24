@@ -4356,4 +4356,49 @@ final class SpecimenIntegrityTests: XCTestCase {
             XCTAssertNotNil(ChimmoVinylButtonStyle(palette: p, prominent: true, large: false))
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound68OpenMotionV16AccessibilityShowcaseSync() throws {
+        func relativeLuminance(_ hex: UInt32) -> Double {
+            func linearize(_ component: UInt32) -> Double {
+                let srgb = Double(component) / 255.0
+                return srgb <= 0.03928 ? (srgb / 12.92) : pow((srgb + 0.055) / 1.055, 2.4)
+            }
+            let r = linearize((hex >> 16) & 0xFF)
+            let g = linearize((hex >> 8) & 0xFF)
+            let b = linearize(hex & 0xFF)
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+
+        func contrastRatio(_ a: UInt32, _ b: UInt32) -> Double {
+            let l1 = relativeLuminance(a)
+            let l2 = relativeLuminance(b)
+            return (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
+        }
+
+        XCTAssertEqual(ChimmoMember.allCases.count, 7)
+        for member in ChimmoMember.allCases {
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(member.nightGlowHex, 0x0E1430),
+                6.5,
+                "\(member.chineseName) 网页夜间光环 --glow 与 iOS 正典对比度需 >= 6.5:1"
+            )
+        }
+
+        XCTAssertEqual(StorybookStageTimelinePolicy.minimumInterval(reduceMotion: true), 1.0 / 15.0, accuracy: 1e-9)
+        XCTAssertFalse(StorybookSurfaceClarityPolicy.showsSpecularSheen(reduceTransparency: true, increasedContrast: false))
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r68_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        let req = VinylPostcardRequest(document: vm.document)
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            XCTAssertNotNil(SettingsView(vm: vm, palette: p, onOpenSharePostcard: {}))
+            XCTAssertNotNil(VinylPostcardShareSheet(palette: p, request: req))
+            XCTAssertNotNil(OrbitalStageView(vm: vm, palette: p, onOpenAbout: {}))
+        }
+    }
 }

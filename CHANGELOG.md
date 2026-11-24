@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.75.0 - 2026-11-25
+- OpenMotion Design Studio 互动官网模块化重构（`v14`–`v16`）与全维度无障碍能力同源同步 [docs/index.html](docs/index.html)：将官网源码规范拆分为 `styles.css`、`app.js` 与 `index.html` 后经 OpenMotion 导出内联单文件独立 HTML（`105,905 bytes`）并完成整页 PNG（`1,136,041 bytes`）视觉抽检与 `node --check` 语法零报错校验。
+- 网页端新增与端内严格对称的两项视觉无障碍交互控件及语义规范：`#toggleCalmBtn`（「减弱动态 · 15Hz」，同步监听 `prefers-reduced-motion: reduce` 与 `data-reduce-motion`）、`#toggleClarityBtn`（「高清晰边线」，同步 `prefers-contrast: more` 与 `data-high-clarity` 实底加粗描边）；补齐夜间 `--glow-1..7`（对应正典 `ChimmoMember.nightGlowHex` `#FF7582..#FFD94A`）、全 4 组 `.sb-chip` 选项 `aria-pressed` 读屏选中态以及 `v0.75.0` 全站文案与目录特性同步。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound68OpenMotionV16AccessibilityShowcaseSync`，核验七小只夜间荧光对比 `#0E1430` 均达 `>= 6.5:1`、`15 Hz` 减动与高清晰表面策略同源一致性以及昼夜双态主视图构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.74.0 - 2026-11-25
 - 全系统「减弱透明度（Reduce Transparency）」与「增强对比度（Increase Contrast）」表面清晰度闭环：在 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift) 新增单源策略 `StorybookSurfaceClarityPolicy`，并为 `ChimmoEditorialPill`、`ChimmoWoodResonatorTray`、`ChimmoKilnPillButtonSurface`、`StorybookQuietCardSurface`、`StorybookQuietTag`、`ChimmoAtelierCardModifier` 与 `ChimmoVinylButtonStyle` 全量接入 `@Environment(\.accessibilityReduceTransparency)` 与 `@Environment(\.colorSchemeContrast)`；在系统开启减弱透明度或增强对比度时自动收起装饰高光玻璃层与低对比度半透明色洗，铺实棉纸/夜纸底面并分级强化轮廓描边宽度与不透明度。
 - 主题层语义动态字体清零收官：将 `ChimmoEditorialPill` 与 `StorybookQuietTag` 中的最后 3 处非画布固定字号（`10 / 10.5 / 11pt`）全面升级为 `.system(.caption2, design: .rounded).weight(.bold)`（配 `.lineLimit(1).minimumScaleFactor(0.75)`），达成 `Chimmo/Views/` 与 `Chimmo/Theme/` 全目录实时界面固定字号零残余。

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>咩哞 · Chimmo — 轻哼成曲，七声和鸣</title>
-  <style>
+    <style data-inlined="styles.css">
 :root{
   --bg: #FBF7F0;
   --paper: #FFFFFF;
@@ -43,6 +43,13 @@
   --xylo-5: #15A6AE;
   --xylo-6: #5C84F0;
   --xylo-7: #9973F0;
+  --glow-1: #F25563;
+  --glow-2: #F08030;
+  --glow-3: #E6AD1A;
+  --glow-4: #24AD70;
+  --glow-5: #179BA3;
+  --glow-6: #527EE8;
+  --glow-7: #8E6BE6;
 }
 html[data-theme="night"]{
   --bg: #0E1430;
@@ -82,6 +89,13 @@ html[data-theme="night"]{
   --xylo-5: #4FD8CB;
   --xylo-6: #74C0FC;
   --xylo-7: #B197FC;
+  --glow-1: #FF7582;
+  --glow-2: #FFA959;
+  --glow-3: #FF74A6;
+  --glow-4: #38E4B7;
+  --glow-5: #5CB3FF;
+  --glow-6: #A98BFF;
+  --glow-7: #FFD94A;
 }
 *{ box-sizing: border-box; }
 body{
@@ -488,6 +502,18 @@ a:hover{ text-decoration: underline; }
   .sheep-body-anim, .cow-body-anim, .eye-blink, .eye-blink-delay, .sleep-arc-1, .sleep-arc-2, .fig-idle-even, .fig-idle-odd{ animation: none !important; }
   .sound-hill, .hill-mini-mie, .mini-buddy-badge, .lever-knob, .triad-pill, .lamp-ridge-btn{ transition: none !important; }
 }
+html[data-reduce-motion="true"] .sheep-body-anim, html[data-reduce-motion="true"] .cow-body-anim, html[data-reduce-motion="true"] .eye-blink, html[data-reduce-motion="true"] .eye-blink-delay, html[data-reduce-motion="true"] .sleep-arc-1, html[data-reduce-motion="true"] .sleep-arc-2, html[data-reduce-motion="true"] .fig-idle-even, html[data-reduce-motion="true"] .fig-idle-odd{ animation: none !important; }
+html[data-reduce-motion="true"] .sound-hill, html[data-reduce-motion="true"] .hill-mini-mie, html[data-reduce-motion="true"] .mini-buddy-badge, html[data-reduce-motion="true"] .lever-knob, html[data-reduce-motion="true"] .triad-pill, html[data-reduce-motion="true"] .lamp-ridge-btn, html[data-reduce-motion="true"] .figure-svg, html[data-reduce-motion="true"] .pill-btn, html[data-reduce-motion="true"] .mascot-card, html[data-reduce-motion="true"] .peeking-page, html[data-reduce-motion="true"] .sleeve-cover{ transition: none !important; }
+html[data-high-clarity="true"]{
+  --border: rgba(28, 29, 25, 0.34);
+  --border-strong: rgba(28, 29, 25, 0.56);
+}
+html[data-theme="night"][data-high-clarity="true"]{
+  --border: rgba(242, 226, 196, 0.36);
+  --border-strong: rgba(255, 181, 71, 0.62);
+}
+html[data-high-clarity="true"] .hero, html[data-high-clarity="true"] .mascot-card, html[data-high-clarity="true"] .kiln-xylo-box, html[data-high-clarity="true"] .vinyl-boutique-card, html[data-high-clarity="true"] .soundbox-card, html[data-high-clarity="true"] .vu-meter-card, html[data-high-clarity="true"] .feature-card, html[data-high-clarity="true"] .pill-btn{ border-width: 1.6px; }
+html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
 @media (max-width: 740px){
   .hero-head{ padding-right: 0; }
   .hero-sun-badge{ width: 48px; height: 48px; top: 10px; right: 10px; opacity: 0.85; }
@@ -514,7 +540,7 @@ a:hover{ text-decoration: underline; }
       </svg>
     </div>
     <span class="brand-title">咩哞 · CHIMMO</span>
-    <span class="brand-ver">v0.69.0</span>
+    <span class="brand-ver">v0.75.0</span>
   </div>
   <div class="controls">
     <button id="toggleMouBtn" class="pill-btn" type="button" aria-pressed="true">
@@ -526,6 +552,12 @@ a:hover{ text-decoration: underline; }
         <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
       </svg>
       <span id="themeLabel">切换夜灯</span>
+    </button>
+    <button id="toggleCalmBtn" class="pill-btn" type="button" aria-pressed="false" aria-label="切换减弱动态效果与 15Hz 平稳进度模式">
+      <span id="calmLabel">减弱动态 · 15Hz</span>
+    </button>
+    <button id="toggleClarityBtn" class="pill-btn" type="button" aria-pressed="false" aria-label="切换减弱透明度与增强对比度高清晰边线">
+      <span id="clarityLabel">高清晰边线</span>
     </button>
   </div>
 </header>
@@ -734,9 +766,9 @@ a:hover{ text-decoration: underline; }
     </div>
     <p class="bench-sub" style="margin:0;line-height:1.5">全宽绘本山坡、极简音乐盒花环与八角星环三种无黑边画境，融合日光与夜灯对位月蓝（#2E7DB2 / #7EC8E3）高对比导出。</p>
     <div class="sb-controls-row" id="postcardModeButtons" role="group" aria-label="明信片画境模式">
-      <button class="sb-chip active" type="button" data-pmode="river">绘本山坡</button>
-      <button class="sb-chip" type="button" data-pmode="disc">音乐盒花环</button>
-      <button class="sb-chip" type="button" data-pmode="nebula">八角星环</button>
+      <button class="sb-chip active" type="button" data-pmode="river" aria-pressed="true">绘本山坡</button>
+      <button class="sb-chip" type="button" data-pmode="disc" aria-pressed="false">音乐盒花环</button>
+      <button class="sb-chip" type="button" data-pmode="nebula" aria-pressed="false">八角星环</button>
     </div>
   </div>
 </section>
@@ -775,15 +807,15 @@ a:hover{ text-decoration: underline; }
       </div>
     </div>
     <div class="sb-controls-row" id="voiceButtons" role="group" aria-label="主旋律音色选择">
-      <button class="sb-chip active" type="button" data-voice="piano">毛毡钢琴</button>
-      <button class="sb-chip" type="button" data-voice="harp">液态竖琴</button>
-      <button class="sb-chip" type="button" data-voice="cello">歌唱大提琴</button>
-      <button class="sb-chip" type="button" data-voice="celesta">晶透钢片琴</button>
+      <button class="sb-chip active" type="button" data-voice="piano" aria-pressed="true">毛毡钢琴</button>
+      <button class="sb-chip" type="button" data-voice="harp" aria-pressed="false">液态竖琴</button>
+      <button class="sb-chip" type="button" data-voice="cello" aria-pressed="false">歌唱大提琴</button>
+      <button class="sb-chip" type="button" data-voice="celesta" aria-pressed="false">晶透钢片琴</button>
     </div>
     <div class="sb-controls-row" id="moodButtons" role="group" aria-label="极光调式色彩">
-      <button class="sb-chip active" type="button" data-mood="major">暖阳大调</button>
-      <button class="sb-chip" type="button" data-mood="minor">微酸小调</button>
-      <button class="sb-chip" type="button" data-mood="pentatonic">东方五声</button>
+      <button class="sb-chip active" type="button" data-mood="major" aria-pressed="true">暖阳大调</button>
+      <button class="sb-chip" type="button" data-mood="minor" aria-pressed="false">微酸小调</button>
+      <button class="sb-chip" type="button" data-mood="pentatonic" aria-pressed="false">东方五声</button>
     </div>
     <div class="lever-row">
       <button id="leverPentaBtn" class="lever-btn" type="button" aria-pressed="true">
@@ -835,7 +867,7 @@ a:hover{ text-decoration: underline; }
 <section class="icon-story-bench" aria-label="1-3-5 三态应用图标与绘本分幕故事角标展示">
   <div class="icon-triptych-card">
     <div class="bench-label">
-      <span>极简提纯 1-3-5 应用图标（v0.69.0 · 29pt 高辨识）</span>
+      <span>极简提纯 1-3-5 应用图标（v0.75.0 · 29pt 高辨识）</span>
       <span class="bench-sub">单层草坡三态</span>
     </div>
     <div class="icon-triptych-row">
@@ -910,9 +942,9 @@ a:hover{ text-decoration: underline; }
       <span class="bench-sub" id="storyProgressLabel">1/3 · 陶诺领唱</span>
     </div>
     <div class="sb-controls-row" id="storyMomentButtons" role="group" aria-label="天鹅故事分幕">
-      <button class="sb-chip active" type="button" data-story="0">1 · 天鹅入水</button>
-      <button class="sb-chip" type="button" data-story="1">2 · 扬颈远望</button>
-      <button class="sb-chip" type="button" data-story="2">3 · 湖面归宁</button>
+      <button class="sb-chip active" type="button" data-story="0" aria-pressed="true">1 · 天鹅入水</button>
+      <button class="sb-chip" type="button" data-story="1" aria-pressed="false">2 · 扬颈远望</button>
+      <button class="sb-chip" type="button" data-story="2" aria-pressed="false">3 · 湖面归宁</button>
     </div>
     <div class="story-whisper-box">
       <div class="story-whisper-head">
@@ -933,7 +965,7 @@ a:hover{ text-decoration: underline; }
 
 <section class="spaces-bench" aria-label="聆听、创作、曲本与工坊四标签纯血空间闭环体验">
   <div class="bench-label">
-    <span>v0.69.0 四标签纯血叙事空间闭环（聆听 · 创作 · 曲本 · 工坊）</span>
+    <span>v0.75.0 四标签纯血叙事空间闭环（聆听 · 创作 · 曲本 · 工坊）</span>
     <span class="bench-sub" id="spaceMetaReadout">独立快照零串台</span>
   </div>
   <div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
@@ -1019,7 +1051,7 @@ a:hover{ text-decoration: underline; }
       </div>
       <div class="draft-dock">
         <span class="bench-sub">外观 / 舞美模式 / 触觉联动实时持久化保存 · 无空置导出开关</span>
-        <span class="bench-sub" style="color:var(--celadon);font-weight:800">100% 离线语义 Token 已闭环</span>
+        <span class="bench-sub" style="color:var(--celadon);font-weight:800">100% 离线语义 Token × 减弱透明对比度已闭环</span>
       </div>
     </div>
   </div>
@@ -1043,7 +1075,7 @@ a:hover{ text-decoration: underline; }
       </svg>
     </div>
     <h2>8 音阶窑墨高对比与夜灯直触</h2>
-    <p>全 8 音阶彩键与和声条达到 WCAG AA/AAA 窑墨对比度，结合动态字体与闭眼夜灯 1↑·Do↑ 三珠余韵，日夜同样清晰护眼。</p>
+    <p>全 8 音阶彩键与夜间七小只夜光（nightGlowHex）同步导演短片 v20，均达 WCAG AA/AAA 窑墨对比度，配闭眼夜灯 1↑·Do↑ 三珠余韵清晰护眼。</p>
   </article>
   <article class="feature-card">
     <div class="feature-chip" aria-hidden="true">
@@ -1053,7 +1085,7 @@ a:hover{ text-decoration: underline; }
       </svg>
     </div>
     <h2>100% 本机离线与全格式导出</h2>
-    <p>端侧 SwiftF0 离线音高捕捉与用户偏好持久化零联网、零广告，支持无硬框绘本明信片 PNG、WAV 与标准 MIDI 导出。</p>
+    <p>端侧 SwiftF0 离线音高捕捉兼顾减弱动态 15Hz 平稳进度、减弱透明度与增强对比度实底边线及 VoiceOver 选中播报，支持无硬框明信片 PNG、WAV 与 MIDI 导出。</p>
   </article>
 </section>
 
@@ -1069,7 +1101,7 @@ a:hover{ text-decoration: underline; }
 </footer>
 </div>
 
-<script>
+<script data-inlined="app.js">
 (function () {
   const members = [
     { deg: 1, name: "陶诺", sol: "Do",  role: "家", color: "var(--xylo-1)", dark: "#8F1D28", tilt: 0,    hz: 261.63, shape: "taono" },
@@ -1234,7 +1266,7 @@ a:hover{ text-decoration: underline; }
       <svg class="figure-svg" viewBox="0 0 60 66" aria-hidden="true">
         <ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(35,27,21,0.16)"/>
         <g class="${animClass}" transform="rotate(${m.tilt} 30 58)">
-          <circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="${m.color}" stroke-width="2.2" opacity="0"/>
+          <circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="var(--glow-${m.deg})" stroke-width="2.4" opacity="0"/>
           <ellipse cx="24" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
           <ellipse cx="36" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>
           ${detail}
@@ -1394,7 +1426,7 @@ a:hover{ text-decoration: underline; }
   document.querySelectorAll("#voiceButtons .sb-chip").forEach((btn) => {
     btn.addEventListener("click", () => {
       currentVoice = btn.dataset.voice;
-      document.querySelectorAll("#voiceButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll("#voiceButtons .sb-chip").forEach((b) => { const on = b === btn; b.classList.toggle("active", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
       renderOscilloscope();
       const v = voiceSpecs[currentVoice];
       playTone(v.hz, 0.72, 0, 0.14, v.waveType === "sawtooth" ? "triangle" : v.waveType, v.deg);
@@ -1404,7 +1436,7 @@ a:hover{ text-decoration: underline; }
   document.querySelectorAll("#moodButtons .sb-chip").forEach((btn) => {
     btn.addEventListener("click", () => {
       currentMood = btn.dataset.mood;
-      document.querySelectorAll("#moodButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll("#moodButtons .sb-chip").forEach((b) => { const on = b === btn; b.classList.toggle("active", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
       const m = moodSpecs[currentMood];
       triad3Btn.classList.remove("mood-happy", "mood-soft");
       triad3Btn.classList.add(m.plokkoClass);
@@ -1459,7 +1491,9 @@ a:hover{ text-decoration: underline; }
     currentStoryIdx = Math.max(0, Math.min(storyMoments.length - 1, idx));
     const m = storyMoments[currentStoryIdx];
     document.querySelectorAll("#storyMomentButtons .sb-chip").forEach((b) => {
-      b.classList.toggle("active", Number(b.dataset.story) === currentStoryIdx);
+      const on = Number(b.dataset.story) === currentStoryIdx;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
     });
     storyBadge.textContent = `${currentStoryIdx + 1}/${storyMoments.length} · ${m.badge}`;
     storyTitle.textContent = m.title;
@@ -1510,17 +1544,19 @@ a:hover{ text-decoration: underline; }
   const spaceMeta = document.getElementById("spaceMetaReadout");
   const spaceDesc = document.getElementById("spacePanelDesc");
 
+  let activeSpaceKey = "showcase";
   function switchSpaceTab(spaceKey, silent) {
-    const sp = spaceSpecs[spaceKey] || spaceSpecs.showcase;
+    activeSpaceKey = spaceSpecs[spaceKey] ? spaceKey : "showcase";
+    const sp = spaceSpecs[activeSpaceKey];
     document.querySelectorAll(".space-tab-btn").forEach((b) => {
-      b.setAttribute("aria-selected", b.dataset.space === spaceKey ? "true" : "false");
+      b.setAttribute("aria-selected", b.dataset.space === activeSpaceKey ? "true" : "false");
     });
     document.querySelectorAll("#spaceStagePanel .space-pane").forEach((p) => {
-      p.classList.toggle("active", p.dataset.pane === spaceKey);
+      p.classList.toggle("active", p.dataset.pane === activeSpaceKey);
     });
     spaceTitle.textContent = sp.title;
     spaceStatus.textContent = sp.status;
-    spaceMeta.textContent = sp.meta;
+    spaceMeta.textContent = document.documentElement.dataset.reduceMotion === "true" ? "减弱动态 · 15Hz 平滑进度" : sp.meta;
     spaceDesc.textContent = sp.desc;
     if (!silent) playTone(392.00, 0.36, 0, 0.12, "sine", 5);
   }
@@ -1685,7 +1721,7 @@ a:hover{ text-decoration: underline; }
 
   document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll("#postcardModeButtons .sb-chip").forEach((b) => { const on = b === btn; b.classList.toggle("active", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
       renderPostcardArt(btn.dataset.pmode);
       const chord = btn.dataset.pmode === "disc" ? [[261.63, 1], [329.63, 3]] : (btn.dataset.pmode === "river" ? [[329.63, 3], [392.00, 5]] : [[293.66, 2], [440.00, 6]]);
       playTone(chord[0][0], 0.45, 0, 0.13, "triangle", chord[0][1]);
@@ -1762,6 +1798,40 @@ a:hover{ text-decoration: underline; }
     isNight = !isNight;
     applyTheme();
   });
+
+  const toggleCalmBtn = document.getElementById("toggleCalmBtn");
+  const calmLabel = document.getElementById("calmLabel");
+  let isCalmMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function applyCalmMotion() {
+    document.documentElement.dataset.reduceMotion = isCalmMotion ? "true" : "false";
+    if (toggleCalmBtn) toggleCalmBtn.setAttribute("aria-pressed", isCalmMotion ? "true" : "false");
+    if (calmLabel) calmLabel.textContent = isCalmMotion ? "减弱动态 · 15Hz 已开" : "减弱动态 · 15Hz";
+    const sp = spaceSpecs[activeSpaceKey] || spaceSpecs.showcase;
+    if (spaceMeta) spaceMeta.textContent = isCalmMotion ? "减弱动态 · 15Hz 平滑进度" : sp.meta;
+  }
+  applyCalmMotion();
+  if (toggleCalmBtn) {
+    toggleCalmBtn.addEventListener("click", () => {
+      isCalmMotion = !isCalmMotion;
+      applyCalmMotion();
+    });
+  }
+
+  const toggleClarityBtn = document.getElementById("toggleClarityBtn");
+  const clarityLabel = document.getElementById("clarityLabel");
+  let isHighClarity = !!(window.matchMedia && window.matchMedia("(prefers-contrast: more)").matches);
+  function applyHighClarity() {
+    document.documentElement.dataset.highClarity = isHighClarity ? "true" : "false";
+    if (toggleClarityBtn) toggleClarityBtn.setAttribute("aria-pressed", isHighClarity ? "true" : "false");
+    if (clarityLabel) clarityLabel.textContent = isHighClarity ? "高清晰 · 已开" : "高清晰边线";
+  }
+  applyHighClarity();
+  if (toggleClarityBtn) {
+    toggleClarityBtn.addEventListener("click", () => {
+      isHighClarity = !isHighClarity;
+      applyHighClarity();
+    });
+  }
 })();
 </script>
 </body>
