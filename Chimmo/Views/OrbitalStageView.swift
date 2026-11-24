@@ -971,7 +971,7 @@ public struct OrbitalStageView: View {
             }
         }
 
-        // 2. 实体窑陶 / 深夜黑胶转盘盘面 + 顶部工作室柔光高光 + 22 道同心微音槽 + 12 刻度旋转锚点
+        // 2. 扁平卡通绘本唱盘盘面 + 22 道同心微音槽 + 清晰暖墨描边（零渐变与立体高光）
         let platterRect = CGRect(
             x: m.center.x - m.platterRadius,
             y: m.center.y - m.platterRadius,
@@ -981,39 +981,16 @@ public struct OrbitalStageView: View {
         let shadowRect = platterRect.offsetBy(dx: 0, dy: 6)
         ctx.fill(
             Path(ellipseIn: shadowRect),
-            with: .color(Color.black.opacity(palette.isNight ? 0.44 : 0.10))
+            with: .color(palette.cartoonShadow)
         )
 
-        let discGrad = Gradient(colors: palette.isNight
-            ? [Color(hex: 0x222D61), Color(hex: 0x131A3C)]
-            : [Color(hex: 0xFFFFFF), Color(hex: 0xF1E8D9)]
-        )
+        let platterFill = palette.isNight ? Color(hex: 0x18234E) : palette.cardSurface
         ctx.fill(
             Path(ellipseIn: platterRect),
-            with: .radialGradient(
-                discGrad,
-                center: CGPoint(x: m.center.x - m.platterRadius * 0.24, y: m.center.y - m.platterRadius * 0.28),
-                startRadius: 8,
-                endRadius: m.platterRadius * 1.18
-            )
+            with: .color(platterFill)
         )
 
-        // 顶部柔和光泽穹顶高光
-        let sheenGrad = Gradient(colors: [
-            Color.white.opacity(palette.isNight ? 0.08 : 0.55),
-            .clear
-        ])
-        ctx.fill(
-            Path(ellipseIn: platterRect),
-            with: .radialGradient(
-                sheenGrad,
-                center: CGPoint(x: m.center.x - m.platterRadius * 0.35, y: m.center.y - m.platterRadius * 0.40),
-                startRadius: 2,
-                endRadius: m.platterRadius * 0.95
-            )
-        )
-
-        // 22 道细微同心声学刻槽，打造黑胶与手工陶盘质感
+        // 22 道细微同心声学刻槽
         let grooveStart = m.innerRadius * 0.94
         let grooveEnd = m.outerRadius * 1.04
         for g in 0..<22 {
@@ -1021,17 +998,16 @@ public struct OrbitalStageView: View {
             let gRect = CGRect(x: m.center.x - gr, y: m.center.y - gr, width: gr * 2, height: gr * 2)
             ctx.stroke(
                 Path(ellipseIn: gRect),
-                with: .color((palette.isNight ? Color.white : Color(hex: 0x6B5237)).opacity(0.055)),
+                with: .color((palette.isNight ? Color.white : Color(hex: 0x6B5237)).opacity(0.06)),
                 lineWidth: 0.65
             )
         }
 
-        // 外缘桦木 / 烟熏胡桃木框与内倒角阴影
-        let innerBevelRect = platterRect.insetBy(dx: 3.0, dy: 3.0)
+        // 外缘漫画粗暖墨描边
         ctx.stroke(
-            Path(ellipseIn: innerBevelRect),
-            with: .color(Color.black.opacity(palette.isNight ? 0.28 : 0.06)),
-            lineWidth: 1.5
+            Path(ellipseIn: platterRect),
+            with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.78 : 0.88)),
+            lineWidth: 2.8
         )
         let rimColor = palette.isNight ? Color(hex: 0x524036).opacity(0.75) : Color(hex: 0xD2B48C).opacity(0.85)
         ctx.stroke(Path(ellipseIn: platterRect), with: .color(rimColor), lineWidth: 3.4)
@@ -1360,23 +1336,20 @@ public struct OrbitalStageView: View {
         widthScale: CGFloat = 1.0,
         extraEnergy: Double = 0.0
     ) {
-        let c0 = XylophoneLane.lane(at: fromLane).barColor(isNight: palette.isNight)
         let c1 = XylophoneLane.lane(at: toLane).barColor(isNight: palette.isNight)
         let style = IntervalSilkStyle.metrics(fromLane: fromLane, toLane: toLane, isNight: palette.isNight)
         if style.glowWidth > 0 {
             let glowOp = min(0.55, style.glowOpacity + extraEnergy * 0.14)
-            let glowGrad = Gradient(colors: [c0.opacity(glowOp), c1.opacity(glowOp)])
             ctx.stroke(
                 path,
-                with: .linearGradient(glowGrad, startPoint: startPt, endPoint: endPt),
+                with: .color(c1.opacity(glowOp)),
                 style: StrokeStyle(lineWidth: style.glowWidth * widthScale + CGFloat(extraEnergy) * 2.5, lineCap: .round)
             )
         }
         let coreOp = min(1.0, style.coreOpacity + extraEnergy * 0.20)
-        let coreGrad = Gradient(colors: [c0.opacity(coreOp), c1.opacity(coreOp)])
         ctx.stroke(
             path,
-            with: .linearGradient(coreGrad, startPoint: startPt, endPoint: endPt),
+            with: .color(c1.opacity(coreOp)),
             style: StrokeStyle(lineWidth: style.coreWidth * widthScale, lineCap: .round)
         )
     }
@@ -1502,15 +1475,15 @@ public struct OrbitalStageView: View {
         }
 
         let hubRect = CGRect(x: center.x - hubRadius, y: center.y - hubRadius, width: hubRadius * 2, height: hubRadius * 2)
-        let hubGrad = Gradient(colors: palette.isNight
-            ? [Color(hex: 0xFFB84D).opacity(0.32), Color(hex: 0x242F63)]
-            : [Color(hex: 0xFFE3A3).opacity(0.65), Color(hex: 0xF5E7CE)]
-        )
         ctx.fill(
             Path(ellipseIn: hubRect),
-            with: .radialGradient(hubGrad, center: center, startRadius: 2, endRadius: hubRadius)
+            with: .color(palette.storybookButter)
         )
-        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.nightLampGold.opacity(0.55)), lineWidth: 1.5)
+        ctx.stroke(
+            Path(ellipseIn: hubRect),
+            with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.80 : 0.88)),
+            lineWidth: 1.8
+        )
 
         // 利萨如实时波纹花（随声压实时呼吸）
         drawLissajousWave(ctx: &ctx, center: center, amplitude: hubRadius * 0.56, mediaNow: mediaNow, acoustic: acoustic)
@@ -1745,13 +1718,9 @@ public struct OrbitalStageView: View {
             mountainFill.addLine(to: CGPoint(x: pts.first!.pt.x, y: size.height))
             mountainFill.closeSubpath()
 
-            let grad = Gradient(colors: [
-                palette.homeAnchor.opacity(palette.isNight ? 0.24 : 0.18),
-                palette.homeAnchor.opacity(0.02)
-            ])
             ctx.fill(
                 mountainFill,
-                with: .linearGradient(grad, startPoint: CGPoint(x: 0, y: lay.padV), endPoint: CGPoint(x: 0, y: size.height))
+                with: .color(palette.homeAnchor.opacity(palette.isNight ? 0.14 : 0.11))
             )
             if acoustic.rmsEnergy > 0.01 {
                 ctx.stroke(
@@ -1823,28 +1792,18 @@ public struct OrbitalStageView: View {
 
             let tailW = max(14.0, CGFloat(dur) * lay.pxPerSec * 0.85)
             let tailCenterY = item.pt.y
-            let tailStart = CGPoint(x: item.pt.x, y: tailCenterY)
-            let tailEnd = CGPoint(x: item.pt.x + tailW, y: tailCenterY)
             if isSingingNow {
                 let glowRect = CGRect(x: item.pt.x, y: tailCenterY - 5.5, width: tailW, height: 11.0)
                 ctx.fill(
                     Path(roundedRect: glowRect, cornerRadius: 5.5),
-                    with: .linearGradient(
-                        Gradient(colors: [col.opacity(0.34), .clear]),
-                        startPoint: tailStart,
-                        endPoint: tailEnd
-                    )
+                    with: .color(col.opacity(0.24))
                 )
             }
             let tailH: CGFloat = isSingingNow ? 6.8 : 5.4
             let tailRect = CGRect(x: item.pt.x, y: tailCenterY - tailH * 0.5, width: tailW, height: tailH)
             ctx.fill(
                 Path(roundedRect: tailRect, cornerRadius: tailH * 0.5),
-                with: .linearGradient(
-                    Gradient(colors: [col.opacity(isSingingNow ? 0.88 : 0.62), col.opacity(0.08)]),
-                    startPoint: tailStart,
-                    endPoint: tailEnd
-                )
+                with: .color(col.opacity(isSingingNow ? 0.78 : 0.45))
             )
 
             let orbR: CGFloat = (isSingingNow || isFollowCur) ? 12.5 : (isSelected ? 11.5 : 9.6)
@@ -1962,12 +1921,7 @@ public struct OrbitalStageView: View {
             }
             return vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
         }()
-        let nebulaGrad = Gradient(colors: [
-            activeChordColor.opacity((palette.isNight ? 0.24 : 0.14) + acoustic.rmsEnergy * 0.14),
-            activeChordColor.opacity(0.03),
-            Color.clear
-        ])
-        let auraExpandR = nm.ringRadius * (1.38 + CGFloat(acoustic.warmthEnergy) * 0.16)
+        let auraExpandR = nm.ringRadius * (1.28 + CGFloat(acoustic.warmthEnergy) * 0.14)
         ctx.fill(
             Path(ellipseIn: CGRect(
                 x: nm.center.x - auraExpandR,
@@ -1975,7 +1929,7 @@ public struct OrbitalStageView: View {
                 width: auraExpandR * 2,
                 height: auraExpandR * 2
             )),
-            with: .radialGradient(nebulaGrad, center: nm.center, startRadius: 6, endRadius: auraExpandR)
+            with: .color(activeChordColor.opacity((palette.isNight ? 0.14 : 0.09) + acoustic.rmsEnergy * 0.08))
         )
 
         // 2. 外圈星轨与 8 条谐振星弦辐条
@@ -2050,15 +2004,15 @@ public struct OrbitalStageView: View {
             width: nm.hubRadius * 2,
             height: nm.hubRadius * 2
         )
-        let hubBg = Gradient(colors: palette.isNight
-            ? [Color(hex: 0xFFB84D).opacity(0.24), Color(hex: 0x1D2754)]
-            : [Color(hex: 0xFFE6AC).opacity(0.60), Color(hex: 0xF7ECDA)]
-        )
         ctx.fill(
             Path(ellipseIn: hubRect),
-            with: .radialGradient(hubBg, center: nm.center, startRadius: 4, endRadius: nm.hubRadius)
+            with: .color(palette.storybookButter)
         )
-        ctx.stroke(Path(ellipseIn: hubRect), with: .color(palette.nightLampGold.opacity(0.50)), lineWidth: 1.5)
+        ctx.stroke(
+            Path(ellipseIn: hubRect),
+            with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.80 : 0.88)),
+            lineWidth: 1.8
+        )
         drawLissajousWave(
             ctx: &ctx,
             center: nm.center,

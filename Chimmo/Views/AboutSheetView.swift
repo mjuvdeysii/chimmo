@@ -477,229 +477,280 @@ public struct AboutSheetView: View {
         let skyColor = currentDocument.scaleMode.skyAuroraColor(isNight: palette.isNight)
 
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // 交互式「咩 × 哞」双子声学剧场 + 七只窑陶音阶合唱矮木架
-                    TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
-                        let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
-                        let sheepGaze: Double = {
-                            if let deg = focusedMemberDegree { return Double(deg - 4) / 3.0 }
-                            return auditioningDuo == .mou ? 0.65 : 0.0
-                        }()
-                        let cowGaze: Double = {
-                            if let deg = focusedMemberDegree { return Double(deg - 4) / 3.0 }
-                            return auditioningDuo == .mie ? -0.65 : 0.0
-                        }()
+            ZStack {
+                AmbientPaperBackdrop(
+                    palette: palette,
+                    accentTint: skyColor
+                )
 
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 10) {
-                                ForEach(ChimmoDuoCharacter.allCases) { character in
-                                    let active = auditioningDuo == character
-                                    Button {
-                                        triggerDuoAudition(character)
-                                    } label: {
-                                        VStack(spacing: 8) {
-                                            Group {
-                                                if character == .mie {
-                                                    ChimmoSheepView(
-                                                        isNight: palette.isNight,
-                                                        accentColor: skyColor,
-                                                        isSinging: active,
-                                                        phaseTime: phaseTime,
-                                                        gazeBias: sheepGaze
-                                                    )
-                                                } else {
-                                                    ChimmoCowView(
-                                                        isNight: palette.isNight,
-                                                        accentColor: skyColor,
-                                                        isAwake: true,
-                                                        isPlaying: active,
-                                                        phaseTime: phaseTime,
-                                                        gazeBias: cowGaze
-                                                    )
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        // 扁平卡通「咩 × 哞」双子声学剧场 + 七只音阶小偶草原合唱舞台
+                        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+                            let phaseTime = reduceMotion ? 0.0 : CACurrentMediaTime()
+                            let sheepGaze: Double = {
+                                if let deg = focusedMemberDegree { return Double(deg - 4) / 3.0 }
+                                return auditioningDuo == .mou ? 0.65 : 0.0
+                            }()
+                            let cowGaze: Double = {
+                                if let deg = focusedMemberDegree { return Double(deg - 4) / 3.0 }
+                                return auditioningDuo == .mie ? -0.65 : 0.0
+                            }()
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                StorybookScallopDivider(
+                                    color: palette.cartoonOutline.opacity(palette.isNight ? 0.48 : 0.34),
+                                    stepWidth: 16
+                                )
+                                .frame(height: 6)
+
+                                HStack(spacing: 10) {
+                                    ForEach(ChimmoDuoCharacter.allCases) { character in
+                                        let active = auditioningDuo == character
+                                        Button {
+                                            triggerDuoAudition(character)
+                                        } label: {
+                                            VStack(spacing: 8) {
+                                                Group {
+                                                    if character == .mie {
+                                                        ChimmoSheepView(
+                                                            isNight: palette.isNight,
+                                                            accentColor: skyColor,
+                                                            isSinging: active,
+                                                            phaseTime: phaseTime,
+                                                            gazeBias: sheepGaze
+                                                        )
+                                                    } else {
+                                                        ChimmoCowView(
+                                                            isNight: palette.isNight,
+                                                            accentColor: skyColor,
+                                                            isAwake: true,
+                                                            isPlaying: active,
+                                                            phaseTime: phaseTime,
+                                                            gazeBias: cowGaze
+                                                        )
+                                                    }
+                                                }
+                                                .frame(width: 68, height: 56)
+
+                                                HStack(spacing: 4) {
+                                                    Text(character.chineseName)
+                                                        .font(.subheadline.weight(.heavy))
+                                                        .foregroundStyle(palette.primaryInk)
+                                                    Text("· \(character.roleShort)")
+                                                        .font(.caption.weight(.bold))
+                                                        .foregroundStyle(palette.secondaryInk)
                                                 }
                                             }
-                                            .frame(width: 68, height: 56)
-
-                                            HStack(spacing: 4) {
-                                                Text(character.chineseName)
-                                                    .font(.subheadline.weight(.bold))
-                                                    .foregroundStyle(palette.primaryInk)
-                                                Text("· \(character.roleShort)")
-                                                    .font(.caption.weight(.medium))
-                                                    .foregroundStyle(palette.secondaryInk)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 10)
+                                            .overlay(alignment: .topTrailing) {
+                                                Image(systemName: "speaker.wave.2.fill")
+                                                    .font(.system(size: 10, weight: .bold))
+                                                    .foregroundStyle(active ? skyColor : palette.secondaryInk.opacity(0.75))
+                                                    .padding(8)
                                             }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .overlay(alignment: .topTrailing) {
-                                            Image(systemName: "speaker.wave.2.fill")
-                                                .font(.system(size: 10, weight: .bold))
-                                                .foregroundStyle(active ? skyColor : palette.secondaryInk.opacity(0.55))
-                                                .padding(8)
-                                        }
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(palette.cardSurface)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                        .strokeBorder(active ? skyColor : Color.clear, lineWidth: 1.5)
+                                            .background(
+                                                ChimmoKilnPillButtonSurface(
+                                                    palette: palette,
+                                                    accent: skyColor,
+                                                    isActive: active,
+                                                    cornerRadius: 16
                                                 )
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel(character.accessibilityLabel)
-                                    .accessibilityHint("轻点试听专属声部")
-                                }
-                            }
-
-                            GeometryReader { geo in
-                                let itemW = max(1.0, geo.size.width / 7.0)
-                                let figScale = min(0.92, max(0.66, itemW / 50.0))
-                                ZStack(alignment: .bottom) {
-                                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                        .fill(palette.isNight ? Color(hex: 0x3D3248) : Color(hex: 0xDECBB3))
-                                        .frame(height: 6)
-                                        .padding(.horizontal, 6)
-                                        .offset(y: -4)
-
-                                    HStack(spacing: 0) {
-                                        ForEach(ChimmoMember.allCases) { member in
-                                            let isSinging = focusedMemberDegree == member.degree
-                                            let memberCol = palette.isNight ? member.nightGlowColor : member.bodyColor
-                                            Button {
-                                                triggerMemberAudition(member)
-                                            } label: {
-                                                VStack(spacing: 1) {
-                                                    ChimmoFigureView(
-                                                        member: member,
-                                                        isNight: palette.isNight,
-                                                        isMinor: currentDocument.scaleMode.isMinorFlavored,
-                                                        isSinging: isSinging,
-                                                        focusedDegree: focusedMemberDegree,
-                                                        time: phaseTime,
-                                                        listeningTilt: 0
-                                                    )
-                                                    .scaleEffect(figScale, anchor: .bottom)
-                                                    .frame(width: itemW, height: 52)
-
-                                                    Circle()
-                                                        .fill(memberCol.opacity(isSinging ? 1.0 : 0.72))
-                                                        .frame(width: 5, height: 5)
-                                                }
-                                                .frame(width: itemW, height: 64, alignment: .bottom)
-                                                .contentShape(Rectangle())
-                                            }
-                                            .buttonStyle(.plain)
-                                            .accessibilityLabel("\(member.degree) \(member.chineseName) \(member.solfege)")
-                                            .accessibilityHint("轻点试听音级")
-                                            .accessibilityAction {
-                                                triggerMemberAudition(member)
-                                            }
+                                            )
                                         }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel(character.accessibilityLabel)
+                                        .accessibilityHint("轻点试听专属声部")
                                     }
-                                    .contentShape(Rectangle())
-                                    .simultaneousGesture(
-                                        DragGesture(minimumDistance: 6)
-                                            .onChanged { val in
-                                                guard abs(val.translation.width) >= abs(val.translation.height) else { return }
-                                                let idx = max(0, min(6, Int(floor((val.location.x / max(1.0, geo.size.width)) * 7.0))))
-                                                let member = ChimmoMember.from(degree: idx + 1)
-                                                if lastSweptDegree != member.degree {
-                                                    lastSweptDegree = member.degree
+                                }
+
+                                GeometryReader { geo in
+                                    let itemW = max(1.0, geo.size.width / 7.0)
+                                    let figScale = min(0.92, max(0.66, itemW / 50.0))
+                                    ZStack(alignment: .bottom) {
+                                        Capsule()
+                                            .fill(palette.storybookHillFront)
+                                            .overlay(Capsule().strokeBorder(palette.cartoonOutline, lineWidth: 1.6))
+                                            .frame(height: 10)
+                                            .padding(.horizontal, 6)
+                                            .offset(y: -3)
+
+                                        HStack(spacing: 0) {
+                                            ForEach(ChimmoMember.allCases) { member in
+                                                let isSinging = focusedMemberDegree == member.degree
+                                                let memberCol = palette.isNight ? member.nightGlowColor : member.bodyColor
+                                                Button {
+                                                    triggerMemberAudition(member)
+                                                } label: {
+                                                    VStack(spacing: 1) {
+                                                        ChimmoFigureView(
+                                                            member: member,
+                                                            isNight: palette.isNight,
+                                                            isMinor: currentDocument.scaleMode.isMinorFlavored,
+                                                            isSinging: isSinging,
+                                                            focusedDegree: focusedMemberDegree,
+                                                            time: phaseTime,
+                                                            listeningTilt: 0
+                                                        )
+                                                        .scaleEffect(figScale, anchor: .bottom)
+                                                        .frame(width: itemW, height: 52)
+
+                                                        Circle()
+                                                            .fill(memberCol.opacity(isSinging ? 1.0 : 0.85))
+                                                            .overlay(Circle().strokeBorder(palette.cartoonOutline, lineWidth: 1.0))
+                                                            .frame(width: 6, height: 6)
+                                                    }
+                                                    .frame(width: itemW, height: 64, alignment: .bottom)
+                                                    .contentShape(Rectangle())
+                                                }
+                                                .buttonStyle(.plain)
+                                                .accessibilityLabel("\(member.degree) \(member.chineseName) \(member.solfege)")
+                                                .accessibilityHint("轻点试听音级")
+                                                .accessibilityAction {
                                                     triggerMemberAudition(member)
                                                 }
                                             }
-                                            .onEnded { _ in
-                                                lastSweptDegree = nil
-                                            }
+                                        }
+                                        .contentShape(Rectangle())
+                                        .simultaneousGesture(
+                                            DragGesture(minimumDistance: 6)
+                                                .onChanged { val in
+                                                    guard abs(val.translation.width) >= abs(val.translation.height) else { return }
+                                                    let idx = max(0, min(6, Int(floor((val.location.x / max(1.0, geo.size.width)) * 7.0))))
+                                                    let member = ChimmoMember.from(degree: idx + 1)
+                                                    if lastSweptDegree != member.degree {
+                                                        lastSweptDegree = member.degree
+                                                        triggerMemberAudition(member)
+                                                    }
+                                                }
+                                                .onEnded { _ in
+                                                    lastSweptDegree = nil
+                                                }
+                                        )
+                                    }
+                                }
+                                .frame(height: 66)
+
+                                HStack(spacing: 8) {
+                                    Text("咩哞 · Chimmo")
+                                        .font(.headline.weight(.heavy))
+                                        .foregroundStyle(palette.primaryInk)
+                                    Spacer()
+                                    Text("离线声学绘本音乐盒")
+                                        .font(.caption2.weight(.bold))
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .fill(palette.cartoonShadow)
+                                        .offset(y: 3.5)
+                                    StorybookCartoonSceneBackground(
+                                        palette: palette,
+                                        accentTint: skyColor,
+                                        hillHeightRatio: 0.34,
+                                        showsSkyMotifs: true
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                    ChimmoBrassFrameAccent(
+                                        palette: palette,
+                                        cornerRadius: 22,
+                                        showCornerPins: true
                                     )
                                 }
-                            }
-                            .frame(height: 66)
-
-                            HStack(spacing: 8) {
-                                Text("咩哞 · Chimmo")
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(palette.primaryInk)
-                                Spacer()
-                                Text("离线声学音乐盒")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(palette.secondaryInk)
-                            }
+                            )
                         }
-                        .padding(14)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(palette.shelfSurface))
-                    }
 
-                    if let onShare = onOpenSharePostcard {
-                        Button(action: onShare) {
-                            HStack(spacing: 10) {
-                                ChimmoCraftMark(
-                                    .vinylSeal,
-                                    color: palette.isNight ? Color(hex: 0x0E142C) : .white
-                                )
-                                .frame(width: 18, height: 18)
+                        if let onShare = onOpenSharePostcard {
+                            Button(action: onShare) {
+                                HStack(spacing: 10) {
+                                    ChimmoCraftMark(
+                                        .vinylSeal,
+                                        color: palette.isNight ? Color(hex: 0x0E142C) : .white
+                                    )
+                                    .frame(width: 18, height: 18)
 
-                                Text("分享当前作品")
-                                    .font(.subheadline.weight(.bold))
+                                    Text("分享当前作品")
+                                        .font(.subheadline.weight(.heavy))
 
-                                Spacer()
+                                    Spacer()
 
-                                HStack(spacing: 6) {
-                                    Image(systemName: "photo")
-                                    Image(systemName: "waveform")
-                                    Image(systemName: "pianokeys")
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "photo")
+                                        Image(systemName: "waveform")
+                                        Image(systemName: "pianokeys")
+                                    }
+                                    .font(.caption2.weight(.bold))
+                                    .opacity(0.90)
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.heavy))
                                 }
-                                .font(.caption2.weight(.semibold))
-                                .opacity(0.85)
-
-                                Image(systemName: "chevron.right")
-                                    .font(.caption.weight(.bold))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 13)
+                                .background(
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .fill(palette.cartoonShadow)
+                                            .offset(y: 3)
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .fill(palette.homeAnchor)
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .strokeBorder(palette.cartoonOutline, lineWidth: 2.0)
+                                    }
+                                )
+                                .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 13)
-                            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.homeAnchor))
-                            .foregroundStyle(palette.isNight ? Color(hex: 0x0E142C) : .white)
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    // 隐私承诺与可折叠开源/版权说明（100% 保留合规文本但不视觉刷屏）
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "lock.shield.fill")
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(palette.homeAnchor)
-                            Text("100% 本机离线 · 零联网 · 零广告")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(palette.primaryInk)
+                            .buttonStyle(.plain)
                         }
 
-                        Divider().overlay(palette.divider)
-
-                        DisclosureGroup("隐私与开源版权说明", isExpanded: $showLegalDetails) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("100% 本机离线运行：无需登录、不联网、无广告、不上传任何录音。")
-                                    .font(.caption)
-                                    .foregroundStyle(palette.secondaryInk)
-                                Text("• 动态规划音符切分算法移植自开源项目 SwiftF0 (lars76/swift-f0, MIT License)。\n• 内置 20 首古典名曲（圣桑《天鹅》、李斯特《爱之梦》《安慰曲》《钟》、巴赫《前奏曲》《G弦上的咏叹调》《小步舞曲》《大提琴组曲》、柴可夫斯基《天鹅湖》、德彪西、肖邦、德沃夏克、萨蒂、贝多芬、舒伯特、帕赫贝尔、莫扎特等）均为作者逝世逾百年的全球公有领域乐谱独立编配。\n• 内置 8 首夏日治愈与现代技法曲目均为本项目 100% 原创，不含任何受版权保护的现代影视/流行作品旋律。")
-                                    .font(.caption)
-                                    .foregroundStyle(palette.secondaryInk)
+                        // 隐私承诺与可折叠开源/版权说明（100% 保留合规文本但不视觉刷屏）
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "lock.shield.fill")
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(palette.homeAnchor)
+                                Text("100% 本机离线 · 零联网 · 零广告")
+                                    .font(.subheadline.weight(.heavy))
+                                    .foregroundStyle(palette.primaryInk)
                             }
-                            .padding(.top, 8)
+
+                            StorybookScallopDivider(
+                                color: palette.cartoonOutline.opacity(palette.isNight ? 0.35 : 0.25),
+                                stepWidth: 14
+                            )
+                            .frame(height: 5)
+
+                            DisclosureGroup("隐私与开源版权说明", isExpanded: $showLegalDetails) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("100% 本机离线运行：无需登录、不联网、无广告、不上传任何录音。")
+                                        .font(.caption)
+                                        .foregroundStyle(palette.secondaryInk)
+                                    Text("• 动态规划音符切分算法移植自开源项目 SwiftF0 (lars76/swift-f0, MIT License)。\n• 内置 20 首古典名曲（圣桑《天鹅》、李斯特《爱之梦》《安慰曲》《钟》、巴赫《前奏曲》《G弦上的咏叹调》《小步舞曲》《大提琴组曲》、柴可夫斯基《天鹅湖》、德彪西、肖邦、德沃夏克、萨蒂、贝多芬、舒伯特、帕赫贝尔、莫扎特等）均为作者逝世逾百年的全球公有领域乐谱独立编配。\n• 内置 8 首夏日治愈与现代技法曲目均为本项目 100% 原创，不含任何受版权保护的现代影视/流行作品旋律。")
+                                        .font(.caption)
+                                        .foregroundStyle(palette.secondaryInk)
+                                }
+                                .padding(.top, 8)
+                            }
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(palette.primaryInk)
                         }
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(palette.primaryInk)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            ChimmoKilnPillButtonSurface(
+                                palette: palette,
+                                cornerRadius: 18
+                            )
+                        )
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
+                    .padding(14)
                 }
-                .padding(16)
             }
-            .background(palette.paper.ignoresSafeArea())
             .navigationTitle("关于咩哞")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

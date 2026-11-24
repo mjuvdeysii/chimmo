@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.42.0 - 2026-11-24
+- **零拟物零渐变最终收口 × 星夜绘本盲操台 × OpenMotion 短片七小只 Solo v12（Zero-Gradient Flat Cartoon Kids' Book Edition v0.42.0）**：
+  - **夜灯绘本舞台（`NightLampTactileSheet` & `StorybookNightLampInclusivityKinematics`）**：全面废除夜灯画布背景、闲置提示条与触控光斑中的全部 `LinearGradient` / `RadialGradient`，重构为深靛蓝 `#0B112B` 星月夜丘童书舞台；修复盲操与音珠试听冷启动静音隐患，在 `previewTactileLane(_:)` 与 `previewCapturedBead(_:index:)` 中补全 `vm.synth.ensureRunning()`，新增无障碍撤销转子操作 `.accessibilityAction(named: "撤销上一音")` 与实时声名状态朗读 `accessibilityCanvasValue`；同步兼容系统「减弱动态效果」分档直控圈径，并保留实时悬停音位对应的 `ChimmoCartoonKeyBuddyView` 陪唱小偶；
+  - **全仓库零渐变零模糊阴影历史性里程碑（`OrbitalStageView` & `AboutSheetView`）**：彻底清零 `OrbitalStageView` Canvas 绘制路径中最后 10 处圆盘高光、`LinearGradient` 彩虹虹膜与星河光晕渐变，全部重绘为高饱和柔粉彩平涂胶片圆盘、奶酥奶油中枢轴与清晰暖墨 `#231B15` 卡通描边；重构 `AboutSheetView` 首屏为扁平童书画框舞台卡片 + 七小只足下扁平草坡舞台，全面对齐零拟物零无意义留白铁律；
+  - **OpenMotion 导演短片 v12 七小只个体化演出（`compositions/s2-choir.html`）**：遵循 OpenMotion 技能工作流升级 `s2-choir`（`versionNumber: 12`），为陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫、叮尖编排 7 段独立器官微动与轮唱光环，完成 `lint-project.mjs`（0 error / 0 warning）、MP4 音频 `volumedetect`（-17.0 dB / -2.6 dB）与 6 帧抽检门禁；
+  - **单测补强（`SpecimenIntegrityTests`）**：新增 `testCreativeAlchemyRound35NightLampStarryInclusivityAndSoloAudio`，覆盖星空锚点边界、减弱动态光环分档、VoiceOver 摘要文案及夜灯音段提交状态；通过本机无模拟器 `xcodebuild build-for-testing`（0 error、0 warning）及全库零渐变/零模糊阴影/零 Emoji 静态扫描。
+
 ## 0.41.0 - 2026-11-24
 - **黑胶唱片工坊与离线明信片全面扁平卡通绘本化 × OpenMotion 官网 v7（Flat Cartoon Kids' Book Edition v0.41.0）**：
   - [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 与 [ChimmoDesignLanguage.swift](Chimmo/Theme/ChimmoDesignLanguage.swift)：新增纯值域引擎 `StorybookPostcardAndShelfKinematics`（曲目主角小偶选取 `heroMember(for:)`、封套贴纸位移 `sleevePlacement(...)` 与太阳光线生成器 `radialRaySegments(...)`），以及全域复用的零渐变童书风景图层 `StorybookCartoonSceneBackground`（日光太阳射线 / 夜灯新月纸星、单一闭合墨线纸艺云朵、双层手绘草坡）；

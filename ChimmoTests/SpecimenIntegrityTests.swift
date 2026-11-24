@@ -2518,4 +2518,66 @@ final class SpecimenIntegrityTests: XCTestCase {
         }
         XCTAssertNotNil(VinylPostcardExporter.renderPNGData(document: emptyDoc, isNight: false, visualMode: .orbitalDisc))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound35NightLampStarryInclusivityAndSoloAudio() {
+        // 1. 星空锚点境界条件（非正数清空，常规 5 颗，上限 8 颗且全数落于画布安全区间内）
+        XCTAssertTrue(StorybookNightLampInclusivityKinematics.starPositions(count: 0).isEmpty)
+        XCTAssertTrue(StorybookNightLampInclusivityKinematics.starPositions(count: -3).isEmpty)
+        XCTAssertEqual(StorybookNightLampInclusivityKinematics.starPositions(count: 5).count, 5)
+        let eightStars = StorybookNightLampInclusivityKinematics.starPositions(count: 8)
+        let cappedStars = StorybookNightLampInclusivityKinematics.starPositions(count: 20)
+        XCTAssertEqual(eightStars.count, 8)
+        XCTAssertEqual(cappedStars.count, 8)
+        for star in cappedStars {
+            XCTAssertGreaterThan(star.xFraction, 0)
+            XCTAssertLessThan(star.xFraction, 1)
+            XCTAssertGreaterThan(star.yFraction, 0)
+            XCTAssertLessThan(star.yFraction, 1)
+            XCTAssertGreaterThan(star.radius, 0)
+        }
+
+        // 2. 「减弱动态效果」分档圈径边界与非法时长防御
+        XCTAssertEqual(StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 0, heldSeconds: 0.0, reduceMotion: true), 54, accuracy: 1e-6)
+        XCTAssertEqual(StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 3, heldSeconds: 2.0, reduceMotion: true), 102, accuracy: 1e-6)
+        XCTAssertEqual(StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: -1, heldSeconds: 0.0, reduceMotion: true), 54, accuracy: 1e-6)
+        XCTAssertEqual(StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 99, heldSeconds: 0.0, reduceMotion: true), 102, accuracy: 1e-6)
+
+        let d0 = StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 0, heldSeconds: 0.0, reduceMotion: false)
+        let d1 = StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 1, heldSeconds: 0.5, reduceMotion: false)
+        let d2 = StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 2, heldSeconds: 1.0, reduceMotion: false)
+        let d3 = StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 3, heldSeconds: 2.0, reduceMotion: false)
+        XCTAssertGreaterThan(d3, d0)
+        XCTAssertLessThanOrEqual(d0, d1)
+        XCTAssertLessThanOrEqual(d1, d2)
+        XCTAssertLessThanOrEqual(d2, d3)
+
+        for weirdSeconds in [Double.nan, Double.infinity, -1.0] {
+            let safeDiameter = StorybookNightLampInclusivityKinematics.haloDiameter(sustainTier: 1, heldSeconds: weirdSeconds, reduceMotion: false)
+            XCTAssertTrue(safeDiameter.isFinite)
+            XCTAssertGreaterThan(safeDiameter, 0)
+        }
+
+        // 3. VoiceOver 实时星夜画布朗读状态摘要与负值防护
+        let thirdMember = ChimmoMember.from(degree: 3)
+        let summary3 = StorybookNightLampInclusivityKinematics.accessibilityCanvasValue(currentMember: thirdMember, capturedCount: 3)
+        XCTAssertTrue(summary3.contains(thirdMember.voiceOverSummary))
+        XCTAssertTrue(summary3.contains("已录 3 音"))
+        let clampedSummary = StorybookNightLampInclusivityKinematics.accessibilityCanvasValue(currentMember: thirdMember, capturedCount: -5)
+        XCTAssertTrue(clampedSummary.contains("已录 0 音"))
+
+        // 4. 夜灯哼唱/触控短语写入状态流转与零 Toast 契约
+        let vm = StudioViewModel()
+        let beads = [
+            NoteBead(degree: 1, rawOnset: 0.0, rawDuration: 0.5),
+            NoteBead(degree: 5, rawOnset: 0.6, rawDuration: 0.5)
+        ]
+        vm.applyNightLampPhrase(beads, pentatonicSafe: true)
+        XCTAssertEqual(vm.document.notes.count, 2)
+        XCTAssertTrue(vm.pentatonicSafe)
+        XCTAssertNil(vm.statusToast)
+
+        let sheet = NightLampTactileSheet(vm: vm)
+        XCTAssertNotNil(sheet)
+    }
 }

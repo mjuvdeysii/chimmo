@@ -53,33 +53,73 @@ public struct NightLampTactileSheet: View {
     }
 
     private var topBar: some View {
-        HStack(spacing: 10) {
+        let activeMember: ChimmoMember = {
+            if let lane = currentHoverLane {
+                return XylophoneLane.lane(at: lane).member
+            }
+            if let last = capturedBeads.last {
+                return ChimmoMember.from(degree: last.degree)
+            }
+            return .udo
+        }()
+
+        return HStack(spacing: 10) {
             ChimmoCraftBadge(
                 .nightLampHalo,
-                accent: Color(hex: 0xFFB84D),
-                surface: Color(hex: 0x131B36),
+                accent: Color(hex: 0xFFB94E),
+                surface: Color(hex: 0x162048),
                 size: 38
             )
 
             LivingChimmoDuoBadgeView(
                 isNight: true,
-                accentColor: Color(hex: 0xFFB84D),
+                accentColor: Color(hex: 0xFFB94E),
                 melodyActive: currentHoverLane != nil || auditioningIndex != nil,
                 cowAwake: vm.cradleEnabled
             )
-            .frame(width: 28, height: 18)
-            .opacity(0.68)
+            .frame(width: 34, height: 22)
+
+            HStack(spacing: 6) {
+                ChimmoCartoonKeyBuddyView(
+                    member: activeMember,
+                    outlineColor: Color(hex: 0xFFB94E),
+                    isSinging: currentHoverLane != nil || auditioningIndex != nil,
+                    isMinor: vm.document.scaleMode.isMinorFlavored
+                )
+                .frame(width: 22, height: 18)
+
+                Text(localPentatonicSafe ? "五音夜灯" : "八音夜灯")
+                    .font(.system(size: 11.5, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color(hex: 0xF5ECDD))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(Color(hex: 0x162048))
+                    .overlay(
+                        Capsule().strokeBorder(Color(hex: 0xFFB94E).opacity(0.68), lineWidth: 1.6)
+                    )
+            )
 
             Spacer()
 
             Button {
                 dismiss()
             } label: {
-                Image(systemName: "xmark")
-                    .font(.subheadline.weight(.bold))
-                    .frame(width: 34, height: 34)
-                    .background(Circle().fill(Color(hex: 0x192140)))
-                    .foregroundStyle(Color(hex: 0xF4EBDD))
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0x03050F))
+                        .frame(width: 36, height: 36)
+                        .offset(y: 2.5)
+                    Circle()
+                        .fill(Color(hex: 0x1D2856))
+                        .frame(width: 36, height: 36)
+                        .overlay(Circle().strokeBorder(Color(hex: 0xFFB94E).opacity(0.75), lineWidth: 1.8))
+                    Image(systemName: "xmark")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundStyle(Color(hex: 0xF5ECDD))
+                }
             }
             .buttonStyle(.plain)
             .accessibilityLabel("关闭")
@@ -88,23 +128,65 @@ public struct NightLampTactileSheet: View {
 
     private var tactilePad: some View {
         let allowed = XylophoneLane.allowedIndices(pentatonicSafe: localPentatonicSafe)
+        let currentPos = max(0, min(allowed.count - 1, voiceOverLanePos))
+        let focusedMember = XylophoneLane.lane(at: allowed[currentPos]).member
 
         return GeometryReader { geo in
             ZStack {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(hex: 0x0C1229), Color(hex: 0x111938)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .strokeBorder(Color(hex: 0xFFB84D).opacity(0.24), lineWidth: 1.2)
-                    )
+                    .fill(Color(hex: 0x0B112B))
 
-                // 低刺激磁吸音脊线：夜晚柔和不刺眼，依然可供睁眼余光或色盲图腾定位
+                // 扁平卡通夜空星月 + 低对比双层夜山坡（OLED 友好低刺激背景，零渐变）
+                Canvas { ctx, size in
+                    let w = max(1, size.width)
+                    let h = max(1, size.height)
+                    let goldInk = Color(hex: 0xFFB94E)
+
+                    for star in StorybookNightLampInclusivityKinematics.starPositions(count: 8) {
+                        let sx = star.xFraction * w
+                        let sy = star.yFraction * h
+                        ctx.fill(
+                            Path(ellipseIn: CGRect(x: sx - star.radius, y: sy - star.radius, width: star.radius * 2, height: star.radius * 2)),
+                            with: .color(goldInk.opacity(0.32))
+                        )
+                    }
+
+                    let mr: CGFloat = 13.0
+                    let mx = w - 34.0
+                    let my: CGFloat = 34.0
+                    var moon = Path()
+                    let mTop = CGPoint(x: mx + mr * 0.3, y: my - mr * 0.85)
+                    let mBot = CGPoint(x: mx + mr * 0.3, y: my + mr * 0.85)
+                    moon.move(to: mTop)
+                    moon.addCurve(to: mBot, control1: CGPoint(x: mx - mr * 1.05, y: my - mr * 0.48), control2: CGPoint(x: mx - mr * 1.05, y: my + mr * 0.48))
+                    moon.addCurve(to: mTop, control1: CGPoint(x: mx - mr * 0.22, y: my + mr * 0.36), control2: CGPoint(x: mx - mr * 0.22, y: my - mr * 0.36))
+                    moon.closeSubpath()
+                    ctx.fill(moon, with: .color(goldInk.opacity(0.45)))
+
+                    let backProfile = StorybookIllustrationLayout.rollingHillProfile(sampleCount: 14, amplitude: 0.20, phaseShift: 0.4)
+                    if let first = backProfile.first {
+                        let baseTop = h * 0.84
+                        var hill = Path()
+                        hill.move(to: CGPoint(x: 0, y: h))
+                        hill.addLine(to: CGPoint(x: CGFloat(first.xFraction) * w, y: baseTop + CGFloat(first.yFraction - 0.5) * 32))
+                        for i in 1..<backProfile.count {
+                            let p0 = CGPoint(x: CGFloat(backProfile[i - 1].xFraction) * w, y: baseTop + CGFloat(backProfile[i - 1].yFraction - 0.5) * 32)
+                            let p1 = CGPoint(x: CGFloat(backProfile[i].xFraction) * w, y: baseTop + CGFloat(backProfile[i].yFraction - 0.5) * 32)
+                            hill.addQuadCurve(to: CGPoint(x: (p0.x + p1.x) * 0.5, y: (p0.y + p1.y) * 0.5), control: p0)
+                        }
+                        hill.addLine(to: CGPoint(x: w, y: h))
+                        hill.closeSubpath()
+                        ctx.fill(hill, with: .color(Color(hex: 0x121A3D)))
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .allowsHitTesting(false)
+
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .strokeBorder(Color(hex: 0xFFB94E).opacity(0.68), lineWidth: 2.0)
+                    .allowsHitTesting(false)
+
+                // 低刺激磁吸音脊线：夜晚柔和不刺眼，供余光、摸音与色盲图腾定位
                 ForEach(allowed, id: \.self) { laneIdx in
                     let lane = XylophoneLane.lane(at: laneIdx)
                     let normY = TactileFieldMapper.magneticDetentNormalizedY(
@@ -115,80 +197,76 @@ public struct NightLampTactileSheet: View {
                     let usable = max(1.0, geo.size.height - pad * 2.0)
                     let yPos = pad + CGFloat(1.0 - normY) * usable
                     let isHover = currentHoverLane == laneIdx
-                    let ridgeCol = isHover ? Color(hex: 0xFFB84D) : lane.barColor(isNight: true).opacity(0.45)
+                    let ridgeCol = isHover ? Color(hex: 0xFFB94E) : lane.barColor(isNight: true).opacity(0.55)
 
                     HStack(spacing: 8) {
                         Capsule()
-                            .fill(ridgeCol.opacity(isHover ? 0.90 : 0.25))
-                            .frame(height: isHover ? 3.5 : 1.5)
+                            .fill(ridgeCol.opacity(isHover ? 0.96 : 0.30))
+                            .frame(height: isHover ? 4.0 : 1.8)
 
                         HStack(spacing: 4) {
                             PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIdx))
-                                .frame(width: isHover ? 11 : 9, height: isHover ? 11 : 9)
-                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.72))
+                                .frame(width: isHover ? 12 : 9, height: isHover ? 12 : 9)
+                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.78))
 
                             Text(lane.digitLabel)
-                                .font(.system(size: isHover ? 13 : 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.72))
+                                .font(.system(size: isHover ? 14 : 10.5, weight: .heavy, design: .rounded))
+                                .foregroundStyle(ridgeCol.opacity(isHover ? 1.0 : 0.78))
                         }
-                        .frame(width: 44, alignment: .trailing)
+                        .frame(width: 46, alignment: .trailing)
                     }
                     .padding(.horizontal, 18)
                     .position(x: geo.size.width * 0.5, y: yPos)
                 }
 
-                // 跟随指尖的暖琥珀夜灯光晕与呼吸延音光圈（随停留时间分拍扩张，零文字反馈时长）
+                // 跟随指尖的扁平卡通暖琥珀星光同心环（零模糊渐变）
                 if let pt = touchPoint {
-                    let hoverColor = currentHoverLane.map { XylophoneLane.lane(at: $0).barColor(isNight: true) } ?? Color(hex: 0xFFB84D)
+                    let hoverColor = currentHoverLane.map { XylophoneLane.lane(at: $0).barColor(isNight: true) } ?? Color(hex: 0xFFB94E)
                     let heldSeconds = max(0.0, CACurrentMediaTime() - touchStartTime)
-                    let sustainStage = TactileSustainStage.stage(forHeldSeconds: heldSeconds)
-                    let activeScale = max(sustainStage.haloScale, sustainTier >= 3 ? 1.78 : (sustainTier == 2 ? 1.50 : (sustainTier == 1 ? 1.24 : 1.0)))
+                    let beaconDiameter = StorybookNightLampInclusivityKinematics.haloDiameter(
+                        sustainTier: sustainTier,
+                        heldSeconds: heldSeconds,
+                        reduceMotion: reduceMotion
+                    )
 
                     ZStack {
                         Circle()
-                            .fill(
-                                RadialGradient(
-                                    colors: [hoverColor.opacity(0.44), Color(hex: 0xFFB84D).opacity(0.16), .clear],
-                                    center: .center,
-                                    startRadius: 6,
-                                    endRadius: 95
-                                )
-                            )
-                            .frame(width: 190, height: 190)
-                            .scaleEffect(activeScale)
+                            .fill(hoverColor.opacity(0.24))
+                            .frame(width: beaconDiameter * 1.45, height: beaconDiameter * 1.45)
+
+                        Circle()
+                            .fill(hoverColor)
+                            .overlay(Circle().strokeBorder(Color(hex: 0x0A0F24), lineWidth: 2.2))
+                            .frame(width: 24, height: 24)
 
                         if sustainTier >= 1 {
                             ForEach(1...min(3, sustainTier), id: \.self) { ringTier in
-                                let ringDiameter: CGFloat = 56.0 + CGFloat(ringTier) * 28.0
+                                let ringDiameter: CGFloat = 46.0 + CGFloat(ringTier) * 26.0
                                 Circle()
                                     .strokeBorder(
-                                        Color(hex: 0xFFB84D).opacity(ringTier == sustainTier ? 0.56 : 0.28),
-                                        lineWidth: ringTier == 3 ? 1.6 : 1.1
+                                        Color(hex: 0xFFB94E).opacity(ringTier == sustainTier ? 0.88 : 0.42),
+                                        lineWidth: ringTier == 3 ? 2.2 : 1.5
                                     )
                                     .frame(width: ringDiameter, height: ringDiameter)
                             }
                         }
                     }
-                    .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.78), value: sustainTier)
+                    .animation(reduceMotion ? nil : .spring(response: 0.26, dampingFraction: 0.78), value: sustainTier)
                     .position(pt)
                     .allowsHitTesting(false)
                 } else {
                     VStack(spacing: 10) {
                         Circle()
-                            .fill(Color(hex: 0xFFB84D).opacity(0.60))
-                            .frame(width: 7, height: 7)
+                            .fill(Color(hex: 0xFFB94E))
+                            .overlay(Circle().strokeBorder(Color(hex: 0x0A0F24), lineWidth: 1.5))
+                            .frame(width: 10, height: 10)
                         Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(hex: 0xFFB84D).opacity(0.18), Color(hex: 0xFFB84D).opacity(0.55), Color(hex: 0xFFB84D).opacity(0.18)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(width: 3, height: 52)
+                            .fill(Color(hex: 0xFFB94E).opacity(0.55))
+                            .frame(width: 4, height: 52)
                         Circle()
-                            .fill(Color(hex: 0xFFB84D).opacity(0.60))
-                            .frame(width: 7, height: 7)
+                            .fill(Color(hex: 0x53DFCF))
+                            .overlay(Circle().strokeBorder(Color(hex: 0x0A0F24), lineWidth: 1.5))
+                            .frame(width: 10, height: 10)
                     }
                     .allowsHitTesting(false)
                 }
@@ -234,8 +312,13 @@ public struct NightLampTactileSheet: View {
                     }
             )
             .accessibilityElement()
-            .accessibilityLabel("闭眼滑音画布，已录下 \(capturedBeads.count) 个音")
-            .accessibilityValue(XylophoneLane.lane(at: allowed[max(0, min(allowed.count - 1, voiceOverLanePos))]).member.voiceOverSummary)
+            .accessibilityLabel("闭眼滑音夜灯画布")
+            .accessibilityValue(
+                StorybookNightLampInclusivityKinematics.accessibilityCanvasValue(
+                    currentMember: focusedMember,
+                    capturedCount: capturedBeads.count
+                )
+            )
             .accessibilityHint("上下轻扫切换音高预览，使用转子记录短音或长音，也可以单指滑动停留松手落音")
             .accessibilityAdjustableAction { direction in
                 let maxIdx = max(0, allowed.count - 1)
@@ -263,6 +346,12 @@ public struct NightLampTactileSheet: View {
             .accessibilityAction(named: "试听已录旋律") {
                 toggleAudition()
             }
+            .accessibilityAction(named: "撤销上一音") {
+                guard !capturedBeads.isEmpty else { return }
+                stopAudition()
+                capturedBeads.removeLast()
+                AcousticHapticsEngine.shared.playScrubTick()
+            }
         }
         .frame(maxHeight: .infinity)
     }
@@ -271,10 +360,20 @@ public struct NightLampTactileSheet: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 if capturedBeads.isEmpty {
-                    Rectangle()
-                        .fill(Color(hex: 0x222B4E).opacity(0.55))
-                        .frame(width: 140, height: 1.5)
-                        .padding(.horizontal, 8)
+                    HStack(spacing: 8) {
+                        ForEach(0..<3, id: \.self) { dot in
+                            Circle()
+                                .fill(Color(hex: 0xFFB94E).opacity(dot == 1 ? 0.55 : 0.30))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule()
+                            .fill(Color(hex: 0x162048))
+                            .overlay(Capsule().strokeBorder(Color(hex: 0xFFB94E).opacity(0.35), lineWidth: 1.4))
+                    )
                 } else {
                     ForEach(Array(capturedBeads.enumerated()), id: \.element.id) { idx, bead in
                         let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
@@ -342,11 +441,19 @@ public struct NightLampTactileSheet: View {
                 capturedBeads.removeLast()
                 AcousticHapticsEngine.shared.playScrubTick()
             } label: {
-                Image(systemName: "arrow.uturn.backward")
-                    .font(.subheadline.weight(.bold))
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color(hex: 0x192140)))
-                    .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x5B6482) : Color(hex: 0xF4EBDD))
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0x03050F))
+                        .frame(width: 44, height: 44)
+                        .offset(y: 2.5)
+                    Circle()
+                        .fill(Color(hex: 0x162048))
+                        .frame(width: 44, height: 44)
+                        .overlay(Circle().strokeBorder(Color(hex: 0xFFB94E).opacity(capturedBeads.isEmpty ? 0.28 : 0.72), lineWidth: 1.8))
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x5B6482) : Color(hex: 0xF5ECDD))
+                }
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(.plain)
@@ -355,17 +462,23 @@ public struct NightLampTactileSheet: View {
             Button {
                 toggleAudition()
             } label: {
-                Image(systemName: auditioningIndex != nil ? "stop.fill" : "play.fill")
-                    .font(.subheadline.weight(.bold))
-                    .frame(width: 44, height: 44)
-                    .background(
-                        Circle().fill(auditioningIndex != nil ? Color(hex: 0xFFB84D) : Color(hex: 0x192140))
-                    )
-                    .foregroundStyle(
-                        capturedBeads.isEmpty
-                            ? Color(hex: 0x5B6482)
-                            : (auditioningIndex != nil ? Color(hex: 0x0E142C) : Color(hex: 0xFFB84D))
-                    )
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0x03050F))
+                        .frame(width: 44, height: 44)
+                        .offset(y: 2.5)
+                    Circle()
+                        .fill(auditioningIndex != nil ? Color(hex: 0xFFB94E) : Color(hex: 0x162048))
+                        .frame(width: 44, height: 44)
+                        .overlay(Circle().strokeBorder(Color(hex: 0xFFB94E).opacity(capturedBeads.isEmpty ? 0.28 : 0.85), lineWidth: 1.8))
+                    Image(systemName: auditioningIndex != nil ? "stop.fill" : "play.fill")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(
+                            capturedBeads.isEmpty
+                                ? Color(hex: 0x5B6482)
+                                : (auditioningIndex != nil ? Color(hex: 0x0E142C) : Color(hex: 0xFFB94E))
+                        )
+                }
             }
             .disabled(capturedBeads.isEmpty)
             .buttonStyle(.plain)
@@ -378,16 +491,26 @@ public struct NightLampTactileSheet: View {
                 HStack(spacing: 5) {
                     ChimmoCraftMark(
                         .pentatonicArc,
-                        color: localPentatonicSafe ? Color(hex: 0x69DB7C) : Color(hex: 0xF4EBDD)
+                        color: localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xF5ECDD)
                     )
                     .frame(width: 15, height: 15)
                     Text(localPentatonicSafe ? "5" : "8")
-                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .font(.subheadline.weight(.heavy).monospacedDigit())
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 48)
-                .background(Capsule().fill(localPentatonicSafe ? Color(hex: 0x2F9E44).opacity(0.25) : Color(hex: 0x192140)))
-                .foregroundStyle(localPentatonicSafe ? Color(hex: 0x69DB7C) : Color(hex: 0xF4EBDD))
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(Color(hex: 0x03050F))
+                            .offset(y: 2.5)
+                        Capsule()
+                            .fill(localPentatonicSafe ? Color(hex: 0x162C46) : Color(hex: 0x162048))
+                        Capsule()
+                            .strokeBorder(localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xFFB94E).opacity(0.65), lineWidth: 1.8)
+                    }
+                )
+                .foregroundStyle(localPentatonicSafe ? Color(hex: 0x53DFCF) : Color(hex: 0xF5ECDD))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(localPentatonicSafe ? "五音模式" : "八音模式")
@@ -402,7 +525,7 @@ public struct NightLampTactileSheet: View {
             } label: {
                 HStack(spacing: 7) {
                     Image(systemName: "checkmark")
-                        .font(.subheadline.weight(.bold))
+                        .font(.subheadline.weight(.heavy))
                     if !capturedBeads.isEmpty {
                         Text("\(capturedBeads.count)")
                             .font(.subheadline.weight(.heavy).monospacedDigit())
@@ -411,7 +534,15 @@ public struct NightLampTactileSheet: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
-                    Capsule().fill(capturedBeads.isEmpty ? Color(hex: 0x242C4A) : Color(hex: 0xFFB84D))
+                    ZStack {
+                        Capsule()
+                            .fill(Color(hex: 0x03050F))
+                            .offset(y: 3)
+                        Capsule()
+                            .fill(capturedBeads.isEmpty ? Color(hex: 0x1D2856) : Color(hex: 0xFFB94E))
+                        Capsule()
+                            .strokeBorder(Color(hex: 0xFFB94E).opacity(capturedBeads.isEmpty ? 0.32 : 1.0), lineWidth: 2.0)
+                    }
                 )
                 .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x0E142C))
             }
@@ -422,6 +553,7 @@ public struct NightLampTactileSheet: View {
     }
 
     private func previewTactileLane(_ laneIndex: Int) {
+        vm.synth.ensureRunning()
         let lane = XylophoneLane.lane(at: laneIndex)
         let member = lane.member
         AcousticHapticsEngine.shared.playPitchTouch(
@@ -466,6 +598,7 @@ public struct NightLampTactileSheet: View {
     }
 
     private func previewCapturedBead(_ bead: NoteBead, index: Int) {
+        vm.synth.ensureRunning()
         let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
         let lane = XylophoneLane.lane(at: laneIdx)
         AcousticHapticsEngine.shared.playPlaybackNotePulse(

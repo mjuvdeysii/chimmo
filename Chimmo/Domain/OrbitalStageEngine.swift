@@ -2112,5 +2112,58 @@ public enum StorybookPostcardAndShelfKinematics {
     }
 }
 
+/// 闭眼夜灯星空绘本无障碍与触觉反馈纯值运动学（100% 纯函数、零渐变、尊重减弱动态效果与 VoiceOver 转子）。
+public enum StorybookNightLampInclusivityKinematics {
+    public struct StarAnchor: Equatable, Sendable {
+        public let xFraction: CGFloat
+        public let yFraction: CGFloat
+        public let radius: CGFloat
+
+        public init(xFraction: CGFloat, yFraction: CGFloat, radius: CGFloat) {
+            self.xFraction = xFraction
+            self.yFraction = yFraction
+            self.radius = radius
+        }
+    }
+
+    public static func starPositions(count: Int = 8) -> [StarAnchor] {
+        let presets: [StarAnchor] = [
+            StarAnchor(xFraction: 0.14, yFraction: 0.14, radius: 2.6),
+            StarAnchor(xFraction: 0.30, yFraction: 0.22, radius: 1.8),
+            StarAnchor(xFraction: 0.52, yFraction: 0.12, radius: 2.2),
+            StarAnchor(xFraction: 0.72, yFraction: 0.18, radius: 1.9),
+            StarAnchor(xFraction: 0.20, yFraction: 0.42, radius: 1.7),
+            StarAnchor(xFraction: 0.64, yFraction: 0.48, radius: 2.1),
+            StarAnchor(xFraction: 0.38, yFraction: 0.70, radius: 1.8),
+            StarAnchor(xFraction: 0.78, yFraction: 0.68, radius: 2.4)
+        ]
+        guard count > 0 else { return [] }
+        return Array(presets.prefix(min(count, presets.count)))
+    }
+
+    public static func haloDiameter(
+        sustainTier: Int,
+        heldSeconds: Double,
+        reduceMotion: Bool
+    ) -> CGFloat {
+        let clampedTier = max(0, min(3, sustainTier))
+        if reduceMotion {
+            return CGFloat(54 + clampedTier * 16)
+        }
+        let safeHeld = heldSeconds.isFinite ? max(0.0, heldSeconds) : 0.0
+        let sustainStage = TactileSustainStage.stage(forHeldSeconds: safeHeld)
+        let tierScale: CGFloat = clampedTier >= 3 ? 1.62 : (clampedTier == 2 ? 1.40 : (clampedTier == 1 ? 1.20 : 1.0))
+        return 62.0 * max(sustainStage.haloScale, tierScale)
+    }
+
+    public static func accessibilityCanvasValue(
+        currentMember: ChimmoMember,
+        capturedCount: Int
+    ) -> String {
+        let safeCount = max(0, capturedCount)
+        return "\(currentMember.voiceOverSummary)，已录 \(safeCount) 音"
+    }
+}
+
 
 
