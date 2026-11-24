@@ -30,6 +30,7 @@ public struct OrbitalStageView: View {
     @State private var scrubAnchorAngle: Double = 0
     @State private var scrubAnchorTime: Double = 0
     @State private var lastDragAngle: Double = 0
+    @State private var lastBeadTimeGridBucket: Int? = nil
 
     @State private var manualRiverScrollX: CGFloat = 0
     @State private var riverStartScrollX: CGFloat = 0
@@ -281,104 +282,37 @@ public struct OrbitalStageView: View {
 
         return GeometryReader { geo in
             ZStack {
-                TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: !shouldRunCanvasTimeline)) { _ in
-                    let mediaNow = CACurrentMediaTime()
-                    let _ = scrubTick
-                    Canvas { ctx, size in
-                        switch vm.visualMode {
-                        case .orbitalDisc:
-                            drawOrbitalDiscCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
-                        case .flowingRiver:
-                            drawFlowingRiverCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
-                        case .resonanceNebula:
-                            drawResonanceNebulaCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
-                        }
-                    }
-                }
-                .accessibilityElement()
-                .accessibilityLabel(vm.stageAccessibilitySummary)
-                .accessibilityAdjustableAction { direction in
-                    switch direction {
-                    case .increment:
-                        if selectedBeatIndex == nil, let first = vm.document.notes.first {
-                            vm.selectBead(first.id, playContext: true)
-                        } else {
-                            vm.stepSelectedBeat(delta: 1)
-                        }
-                    case .decrement:
-                        if selectedBeatIndex == nil, let first = vm.document.notes.first {
-                            vm.selectBead(first.id, playContext: true)
-                        } else {
-                            vm.stepSelectedBeat(delta: -1)
-                        }
-                    @unknown default:
-                        break
-                    }
-                }
-                .accessibilityAction(named: vm.isPlaying ? "暂停" : "播放") {
-                    vm.togglePlayback()
-                }
-                .accessibilityAction(named: "试听开头") {
-                    vm.previewOpeningPhrase()
-                }
-                .accessibilityAction(named: "跳到下一句") {
-                    vm.stepPhrase(delta: 1)
-                }
-                .accessibilityAction(named: "跳到上一句") {
-                    vm.stepPhrase(delta: -1)
-                }
-                .accessibilityAction(named: "升高一音") {
-                    vm.shiftSelectedBeadPitch(delta: 1)
-                }
-                .accessibilityAction(named: "降低一音") {
-                    vm.shiftSelectedBeadPitch(delta: -1)
-                }
-                .accessibilityAction(named: "延长当前拍") {
-                    if vm.selectedBeadID == nil {
-                        vm.selectedBeadID = vm.document.notes.first?.id
-                    }
-                    vm.adjustSelectedBeadDuration(delta: 0.22)
-                }
-                .accessibilityAction(named: "缩短当前拍") {
-                    if vm.selectedBeadID == nil {
-                        vm.selectedBeadID = vm.document.notes.first?.id
-                    }
-                    vm.adjustSelectedBeadDuration(delta: -0.18)
-                }
-                .accessibilityAction(named: "插入一拍") {
-                    vm.insertBeatAfterSelected()
-                }
-                .accessibilityAction(named: "删除当前拍") {
-                    vm.deleteSelectedBead()
-                }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { val in
-                            if !isActivelyDraggingStage {
-                                isActivelyDraggingStage = true
+                stageInteractiveCanvas
+                    .modifier(StagePlaybackNavigationActions(vm: vm))
+                    .modifier(StageBeatEditActions(vm: vm))
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { val in
+                                if !isActivelyDraggingStage {
+                                    isActivelyDraggingStage = true
+                                }
+                                switch vm.visualMode {
+                                case .orbitalDisc:
+                                    handleOrbitalDragChanged(val, in: geo.size)
+                                case .flowingRiver:
+                                    handleRiverDragChanged(val, in: geo.size)
+                                case .resonanceNebula:
+                                    handleNebulaDragChanged(val, in: geo.size)
+                                }
                             }
-                            switch vm.visualMode {
-                            case .orbitalDisc:
-                                handleOrbitalDragChanged(val, in: geo.size)
-                            case .flowingRiver:
-                                handleRiverDragChanged(val, in: geo.size)
-                            case .resonanceNebula:
-                                handleNebulaDragChanged(val, in: geo.size)
+                            .onEnded { val in
+                                isActivelyDraggingStage = false
+                                switch vm.visualMode {
+                                case .orbitalDisc:
+                                    handleOrbitalDragEnded(val, in: geo.size)
+                                case .flowingRiver:
+                                    handleRiverDragEnded(val, in: geo.size)
+                                case .resonanceNebula:
+                                    handleNebulaDragEnded(val, in: geo.size)
+                                }
                             }
-                        }
-                        .onEnded { val in
-                            isActivelyDraggingStage = false
-                            switch vm.visualMode {
-                            case .orbitalDisc:
-                                handleOrbitalDragEnded(val, in: geo.size)
-                            case .flowingRiver:
-                                handleRiverDragEnded(val, in: geo.size)
-                            case .resonanceNebula:
-                                handleNebulaDragEnded(val, in: geo.size)
-                            }
-                        }
-                )
+                    )
 
                 // 顶部极简声学状态标（无文字堆砌；展示伴唱、倍速、音区移调与律动状态，及麦克风异常提示）
                 VStack {
@@ -417,6 +351,43 @@ public struct OrbitalStageView: View {
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: vm.activeChordSpanID)
         }
         .frame(minHeight: 255, maxHeight: .infinity)
+    }
+
+    private var stageInteractiveCanvas: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: !shouldRunCanvasTimeline)) { _ in
+            let mediaNow = CACurrentMediaTime()
+            let _ = scrubTick
+            Canvas { ctx, size in
+                switch vm.visualMode {
+                case .orbitalDisc:
+                    drawOrbitalDiscCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
+                case .flowingRiver:
+                    drawFlowingRiverCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
+                case .resonanceNebula:
+                    drawResonanceNebulaCanvas(ctx: &ctx, size: size, mediaNow: mediaNow)
+                }
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel(vm.stageAccessibilitySummary)
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment:
+                if selectedBeatIndex == nil, let first = vm.document.notes.first {
+                    vm.selectBead(first.id, playContext: true)
+                } else {
+                    vm.stepSelectedBeat(delta: 1)
+                }
+            case .decrement:
+                if selectedBeatIndex == nil, let first = vm.document.notes.first {
+                    vm.selectBead(first.id, playContext: true)
+                } else {
+                    vm.stepSelectedBeat(delta: -1)
+                }
+            @unknown default:
+                break
+            }
+        }
     }
 
     private var activeFeaturesOverlay: some View {
@@ -1888,7 +1859,15 @@ public struct OrbitalStageView: View {
             if dAng < -Double.pi { dAng += 2 * Double.pi }
             if abs(dAng) > 0.06 {
                 let dt = (dAng / (2.0 * Double.pi)) * total
-                vm.updateBeatTiming(beadID: beadID, newOnset: max(0.08, dragStartOnset + dt))
+                let snapped = BeatTimingNudgeHelper.dragGridSnapOnset(
+                    rawOnset: dragStartOnset + dt,
+                    grooveStrength: vm.document.grooveStrength
+                )
+                if lastBeadTimeGridBucket != snapped.gridBucket {
+                    lastBeadTimeGridBucket = snapped.gridBucket
+                    AcousticHapticsEngine.shared.playScrubTick()
+                }
+                vm.updateBeatTiming(beadID: beadID, newOnset: snapped.onset)
             }
 
         case .scrub:
@@ -1943,6 +1922,7 @@ public struct OrbitalStageView: View {
         case .bead(let beadID):
             draggingBeadID = nil
             dragDidPushUndo = false
+            lastBeadTimeGridBucket = nil
             if let curIdx = vm.document.notes.firstIndex(where: { $0.id == beadID }) {
                 vm.playContextEcho(upToIndex: curIdx)
             }
@@ -2048,7 +2028,15 @@ public struct OrbitalStageView: View {
 
             let dx = val.location.x - dragStartPoint.x
             if abs(dx) > 10 {
-                vm.updateBeatTiming(beadID: beadID, newOnset: max(0.08, dragStartOnset + Double(dx / lay.pxPerSec)))
+                let snapped = BeatTimingNudgeHelper.dragGridSnapOnset(
+                    rawOnset: dragStartOnset + Double(dx / lay.pxPerSec),
+                    grooveStrength: vm.document.grooveStrength
+                )
+                if lastBeadTimeGridBucket != snapped.gridBucket {
+                    lastBeadTimeGridBucket = snapped.gridBucket
+                    AcousticHapticsEngine.shared.playScrubTick()
+                }
+                vm.updateBeatTiming(beadID: beadID, newOnset: snapped.onset)
             }
 
         case .scrub:
@@ -2076,6 +2064,7 @@ public struct OrbitalStageView: View {
         case .bead(let beadID):
             draggingBeadID = nil
             dragDidPushUndo = false
+            lastBeadTimeGridBucket = nil
             if let idx = vm.document.notes.firstIndex(where: { $0.id == beadID }) {
                 vm.playContextEcho(upToIndex: idx)
             }
@@ -2236,6 +2225,32 @@ public struct OrbitalStageView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("延长音符")
+
+                Button {
+                    vm.nudgeSelectedBeadTiming(delta: -0.10)
+                } label: {
+                    Image(systemName: "arrow.left.to.line")
+                        .font(.caption.weight(.bold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(palette.shelfSurface))
+                        .foregroundStyle(palette.primaryInk)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("提前一格")
+
+                Button {
+                    vm.nudgeSelectedBeadTiming(delta: 0.10)
+                } label: {
+                    Image(systemName: "arrow.right.to.line")
+                        .font(.caption.weight(.bold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(palette.shelfSurface))
+                        .foregroundStyle(palette.primaryInk)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("延后一格")
 
                 Button {
                     vm.insertBeatAfterSelected()
@@ -2848,5 +2863,67 @@ private struct MoodAndSoundSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+private struct StagePlaybackNavigationActions: ViewModifier {
+    @ObservedObject var vm: StudioViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityAction(named: vm.isPlaying ? "暂停" : "播放") {
+                vm.togglePlayback()
+            }
+            .accessibilityAction(named: "试听开头") {
+                vm.previewOpeningPhrase()
+            }
+            .accessibilityAction(named: "跳到下一句") {
+                vm.stepPhrase(delta: 1)
+            }
+            .accessibilityAction(named: "跳到上一句") {
+                vm.stepPhrase(delta: -1)
+            }
+            .accessibilityAction(named: "升高一音") {
+                vm.shiftSelectedBeadPitch(delta: 1)
+            }
+            .accessibilityAction(named: "降低一音") {
+                vm.shiftSelectedBeadPitch(delta: -1)
+            }
+    }
+}
+
+private struct StageBeatEditActions: ViewModifier {
+    @ObservedObject var vm: StudioViewModel
+
+    private func ensureSelectedBeat() {
+        if vm.selectedBeadID == nil {
+            vm.selectedBeadID = vm.document.notes.first?.id
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityAction(named: "延长当前拍") {
+                ensureSelectedBeat()
+                vm.adjustSelectedBeadDuration(delta: 0.22)
+            }
+            .accessibilityAction(named: "缩短当前拍") {
+                ensureSelectedBeat()
+                vm.adjustSelectedBeadDuration(delta: -0.18)
+            }
+            .accessibilityAction(named: "提前微调") {
+                ensureSelectedBeat()
+                vm.nudgeSelectedBeadTiming(delta: -0.10)
+            }
+            .accessibilityAction(named: "延后微调") {
+                ensureSelectedBeat()
+                vm.nudgeSelectedBeadTiming(delta: 0.10)
+            }
+            .accessibilityAction(named: "插入一拍") {
+                vm.insertBeatAfterSelected()
+            }
+            .accessibilityAction(named: "删除当前拍") {
+                vm.deleteSelectedBead()
+            }
     }
 }

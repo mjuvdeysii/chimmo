@@ -21,6 +21,7 @@ public struct MusicBoxShelfView: View {
     @State private var selectedSegment: Int = 1 // 默认也可在我的唱片(0)与28首名曲(1)间秒切；有保存作品自动先看0
     @State private var selectedCategory: String = "全部"
     @State private var selectedMoodFilter: ScaleMode? = nil
+    @State private var searchText: String = ""
     @State private var playingEntryID: UUID? = nil
     @State private var inlinePlayStart: Double = 0
     @State private var inlinePlayTask: Task<Void, Never>? = nil
@@ -60,10 +61,21 @@ public struct MusicBoxShelfView: View {
     }
 
     private var filteredSpecimens: [MelodyDocument] {
-        SpecimenLibrary.all.filter { spec in
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return SpecimenLibrary.all.filter { spec in
             let catOK = (selectedCategory == "全部") || (spec.specimenCategory == selectedCategory)
             let moodOK = (selectedMoodFilter == nil) || (spec.scaleMode == selectedMoodFilter)
-            return catOK && moodOK
+            let searchOK = query.isEmpty || spec.title.localizedCaseInsensitiveContains(query)
+            return catOK && moodOK && searchOK
+        }
+    }
+
+    private var filteredSavedEntries: [SavedMelodyEntry] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return notebook.entries.filter { entry in
+            let moodOK = (selectedMoodFilter == nil) || (entry.document.scaleMode == selectedMoodFilter)
+            let searchOK = query.isEmpty || entry.document.title.localizedCaseInsensitiveContains(query)
+            return moodOK && searchOK
         }
     }
 
@@ -111,31 +123,33 @@ public struct MusicBoxShelfView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
 
-                    if selectedSegment == 1 {
+                    if selectedSegment == 1 || !notebook.entries.isEmpty {
                         VStack(spacing: 7) {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(SpecimenLibrary.categories, id: \.self) { cat in
-                                        let active = selectedCategory == cat
-                                        Button {
-                                            selectedCategory = cat
-                                            if cat != "全部",
-                                               let mood = selectedMoodFilter,
-                                               !SpecimenLibrary.all.contains(where: { $0.specimenCategory == cat && $0.scaleMode == mood }) {
-                                                selectedMoodFilter = nil
+                            if selectedSegment == 1 {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(SpecimenLibrary.categories, id: \.self) { cat in
+                                            let active = selectedCategory == cat
+                                            Button {
+                                                selectedCategory = cat
+                                                if cat != "全部",
+                                                   let mood = selectedMoodFilter,
+                                                   !SpecimenLibrary.all.contains(where: { $0.specimenCategory == cat && $0.scaleMode == mood }) {
+                                                    selectedMoodFilter = nil
+                                                }
+                                            } label: {
+                                                Text(cat)
+                                                    .font(.caption.weight(active ? .bold : .medium))
+                                                    .padding(.horizontal, 12)
+                                                    .padding(.vertical, 6)
+                                                    .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                                                    .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
                                             }
-                                        } label: {
-                                            Text(cat)
-                                                .font(.caption.weight(active ? .bold : .medium))
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 6)
-                                                .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                                .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                                            .buttonStyle(.plain)
                                         }
-                                        .buttonStyle(.plain)
                                     }
+                                    .padding(.horizontal, 16)
                                 }
-                                .padding(.horizontal, 16)
                             }
 
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -177,7 +191,11 @@ public struct MusicBoxShelfView: View {
                             if selectedSegment == 0 {
                                 mySavedDiscsSection
                             } else {
-                                masterpieceDiscsSection
+                                if filteredSpecimens.isEmpty {
+                                    filteredEmptyPlaceholder
+                                } else {
+                                    masterpieceDiscsSection
+                                }
                             }
                         }
                         .padding(16)
@@ -186,6 +204,7 @@ public struct MusicBoxShelfView: View {
             }
             .navigationTitle("曲库")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "搜索曲名")
             .onDisappear { stopInlinePlay() }
             .alert("作品名称", isPresented: $showRenameAlert) {
                 TextField("", text: $renameDraftText)
@@ -240,17 +259,47 @@ public struct MusicBoxShelfView: View {
                     .fill(palette.cardSurface)
                     .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.2 : 0.05), radius: 12, y: 4)
             )
+        } else if filteredSavedEntries.isEmpty {
+            filteredEmptyPlaceholder
         } else {
-            ForEach(Array(notebook.entries.enumerated()), id: \.element.id) { idx, entry in
+            ForEach(Array(filteredSavedEntries.enumerated()), id: \.element.id) { idx, entry in
                 savedDiscCard(entry: entry, index: idx)
             }
         }
+    }
+
+    private var filteredEmptyPlaceholder: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "magnifyingglass")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(palette.secondaryInk)
+            Text("暂无匹配曲目")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(palette.secondaryInk)
+            Button {
+                searchText = ""
+                selectedCategory = "全部"
+                selectedMoodFilter = nil
+                AcousticHapticsEngine.shared.playScrubTick()
+            } label: {
+                Text("重置筛选")
+                    .font(.caption.weight(.bold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Capsule().fill(palette.cardSurface))
+                    .foregroundStyle(palette.homeAnchor)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 36)
+        .frame(maxWidth: .infinity)
     }
 
     private func savedDiscCard(entry: SavedMelodyEntry, index: Int) -> some View {
         let isPlayingThis = playingEntryID == entry.id
         let dateStr = entry.updatedAt.formatted(date: .abbreviated, time: .shortened)
         let entryModeColor = entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let entryVoice = entry.document.preferredVoice ?? .singingCello
 
         return HStack(spacing: 14) {
             ZStack {
@@ -293,6 +342,13 @@ public struct MusicBoxShelfView: View {
                         .font(.caption2)
                         .foregroundStyle(palette.secondaryInk)
                         .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text("\(entryVoice.label) · \(entry.document.notes.count) 音")
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(palette.shelfSurface))
+                        .foregroundStyle(palette.secondaryInk)
                 }
 
                 Button {

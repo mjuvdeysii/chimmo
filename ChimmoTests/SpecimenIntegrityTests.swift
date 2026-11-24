@@ -1455,4 +1455,70 @@ final class SpecimenIntegrityTests: XCTestCase {
         )
         XCTAssertGreaterThan(pngData?.count ?? 0, 1000)
     }
+
+    @MainActor
+    func testCreativeAlchemyRound21MicroTimingNudgeAndShelfSearch() {
+        // 1. 节拍微调防越界避让与 120ms 网格磁吸验证
+        let notes: [NoteBead] = [
+            NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.20, rawDuration: 0.35),
+            NoteBead(degree: 3, octaveOffset: 0, rawOnset: 0.65, rawDuration: 0.40),
+            NoteBead(degree: 5, octaveOffset: 0, rawOnset: 1.15, rawDuration: 0.45)
+        ]
+        // 向前大力微调不得越过前一拍 + 0.09s
+        let clampedEarlier = BeatTimingNudgeHelper.nudgedOnset(
+            notes: notes,
+            targetIndex: 1,
+            rawDelta: -2.0,
+            grooveStrength: 0.0
+        )
+        XCTAssertEqual(clampedEarlier, 0.29, accuracy: 1e-6)
+
+        // 向后大力微调不得越过下一拍 - 0.09s
+        let clampedLater = BeatTimingNudgeHelper.nudgedOnset(
+            notes: notes,
+            targetIndex: 1,
+            rawDelta: 3.0,
+            grooveStrength: 0.0
+        )
+        XCTAssertEqual(clampedLater, 1.06, accuracy: 1e-6)
+
+        // 整齐律动模式下触发 0.12s 网格对齐且保持邻拍间距
+        let snappedNudge = BeatTimingNudgeHelper.nudgedOnset(
+            notes: notes,
+            targetIndex: 1,
+            rawDelta: 0.09,
+            grooveStrength: 0.9
+        )
+        XCTAssertEqual(snappedNudge, 0.72, accuracy: 1e-6)
+
+        // 2. 拖拽混合网格与 NaN 防护
+        let freeSnap = BeatTimingNudgeHelper.dragGridSnapOnset(rawOnset: 0.53, grooveStrength: 0.0)
+        XCTAssertEqual(freeSnap.onset, 0.53, accuracy: 1e-6)
+        let lockedSnap = BeatTimingNudgeHelper.dragGridSnapOnset(rawOnset: 0.53, grooveStrength: 0.85)
+        XCTAssertEqual(lockedSnap.gridBucket, 4) // 4 * 0.12 = 0.48
+        XCTAssertLessThan(abs(lockedSnap.onset - 0.48), abs(0.53 - 0.48))
+
+        let nanSnap = BeatTimingNudgeHelper.dragGridSnapOnset(rawOnset: .nan, grooveStrength: .nan)
+        XCTAssertFalse(nanSnap.onset.isNaN)
+
+        // 3. StudioViewModel 选中拍微调闭环与零 Toast 契约
+        let vm = StudioViewModel()
+        guard vm.document.notes.count >= 3 else {
+            XCTFail("默认样本需至少含 3 个音符")
+            return
+        }
+        let targetID = vm.document.notes[1].id
+        let origOnset = vm.document.notes[1].rawOnset
+        vm.selectBead(targetID, playContext: false)
+        vm.nudgeSelectedBeadTiming(delta: 0.08)
+        XCTAssertNil(vm.statusToast)
+        XCTAssertTrue(vm.canUndo)
+        XCTAssertFalse(vm.document.isSpecimen)
+        let movedOnset = vm.document.notes.first(where: { $0.id == targetID })?.rawOnset ?? 0
+        XCTAssertGreaterThan(movedOnset, origOnset)
+        XCTAssertGreaterThanOrEqual(movedOnset, vm.document.notes[0].rawOnset + 0.089)
+        vm.undo()
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+    }
 }

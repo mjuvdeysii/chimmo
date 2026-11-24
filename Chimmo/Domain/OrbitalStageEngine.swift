@@ -1078,3 +1078,44 @@ public enum RhythmDrumAccentMapper {
         }
     }
 }
+
+/// 音符微调磁吸与安全避让计算器：支持逐拍前后微调不撞音，开启律动后拖拽顺滑吸附 120ms 节拍刻度。
+public enum BeatTimingNudgeHelper {
+    public static func nudgedOnset(
+        notes: [NoteBead],
+        targetIndex: Int,
+        rawDelta: Double,
+        grooveStrength: Double
+    ) -> Double {
+        guard notes.indices.contains(targetIndex) else { return 0.08 }
+        let sorted = notes.enumerated().sorted { $0.element.rawOnset < $1.element.rawOnset }
+        let sortedPos = sorted.firstIndex(where: { $0.offset == targetIndex }) ?? 0
+        let current = sorted[sortedPos].element.rawOnset
+        let safeDelta = rawDelta.isFinite ? rawDelta : 0.0
+        let baseMin = sortedPos > 0 ? sorted[sortedPos - 1].element.rawOnset + 0.09 : 0.08
+        let lowerBound = max(0.08, baseMin)
+        let upperBound = sortedPos + 1 < sorted.count ? max(lowerBound, sorted[sortedPos + 1].element.rawOnset - 0.09) : 600.0
+        var candidate = max(lowerBound, min(upperBound, current + safeDelta))
+        if grooveStrength.isFinite && grooveStrength > 0.35 && abs(safeDelta) > 0.001 {
+            let snapped = (candidate / 0.12).rounded() * 0.12
+            if snapped >= lowerBound && snapped <= upperBound && abs(snapped - current) >= 0.04 {
+                candidate = snapped
+            }
+        }
+        return candidate
+    }
+
+    public static func dragGridSnapOnset(
+        rawOnset: Double,
+        grooveStrength: Double,
+        gridStep: Double = 0.12
+    ) -> (onset: Double, gridBucket: Int) {
+        let safeOnset = max(0.08, rawOnset.isFinite ? rawOnset : 0.08)
+        let step = max(0.06, gridStep.isFinite ? gridStep : 0.12)
+        let nearestBucket = Int((safeOnset / step).rounded())
+        let snapped = max(0.08, Double(nearestBucket) * step)
+        let alpha = (grooveStrength.isFinite && grooveStrength > 0.25) ? min(0.85, grooveStrength) : 0.0
+        let blended = safeOnset * (1.0 - alpha) + snapped * alpha
+        return (blended, nearestBucket)
+    }
+}

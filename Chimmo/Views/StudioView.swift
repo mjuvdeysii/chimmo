@@ -1328,6 +1328,33 @@ public final class StudioViewModel: ObservableObject {
         playContextEcho(upToIndex: idx)
     }
 
+    public func nudgeSelectedBeadTiming(delta: Double) {
+        guard let targetID = selectedBeadID,
+              let idx = document.notes.firstIndex(where: { $0.id == targetID }) else { return }
+        stopPlayback()
+        pushUndo()
+        if document.isSpecimen {
+            document.isSpecimen = false
+            document.title = "\(document.title) · 我的改写"
+        }
+        let nextOnset = BeatTimingNudgeHelper.nudgedOnset(
+            notes: document.notes,
+            targetIndex: idx,
+            rawDelta: delta,
+            grooveStrength: document.grooveStrength
+        )
+        document.notes[idx].rawOnset = nextOnset
+        if document.notes[idx].quantizedOnset != nil {
+            document.notes[idx].quantizedOnset = nextOnset
+        }
+        clock.updateTotalDuration(document.totalDuration)
+        let displayT = document.notes[idx].displayOnset(grooveStrength: document.grooveStrength)
+        updateContextMetrics(at: displayT)
+        updateHarmonyDescriptor(for: document.notes[idx].degree, at: displayT)
+        AcousticHapticsEngine.shared.playScrubTick()
+        playContextEcho(upToIndex: idx)
+    }
+
     public func deleteSelectedBead() {
         guard let targetID = selectedBeadID,
               let idx = document.notes.firstIndex(where: { $0.id == targetID }) else { return }
