@@ -467,7 +467,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.76.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.77.0"
     }
 
     private var appBuild: String {
@@ -536,6 +536,7 @@ public struct AboutSheetView: View {
 
                     if let url = URL(string: "https://mjuvdeysii.github.io/chimmo/") {
                         Link("官方网站", destination: url)
+                            .accessibilityHint("在浏览器中打开")
                     }
                 }
             }

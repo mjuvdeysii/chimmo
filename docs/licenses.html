@@ -41,6 +41,20 @@
         --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
       }
     }
+    @media (prefers-contrast: more) {
+      :root {
+        --border: rgba(28, 29, 25, 0.34);
+        --border-strong: rgba(28, 29, 25, 0.56);
+      }
+      .hero-banner, .card, .back-bar, .brand-pill { border-width: 1.6px; }
+      a.home-btn { border-color: var(--outline); }
+    }
+    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
+      :root {
+        --border: rgba(242, 226, 196, 0.36);
+        --border-strong: rgba(255, 181, 71, 0.62);
+      }
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -128,6 +142,8 @@
     .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
     a { color: var(--accent); text-decoration: none; font-weight: 800; }
     a:hover { text-decoration: underline; }
+    a:focus-visible { outline: 2px solid var(--prominent); outline-offset: 2px; border-radius: 6px; }
+    a.home-btn:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
   </style>
 </head>
 <body>
@@ -137,19 +153,19 @@
         <span class="brand-pill">
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="17.5" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.6"/>
+            <circle cx="17.5" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.6"/>
             <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
             <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
           </svg>
           <span>OPEN SOURCE ACKNOWLEDGMENTS</span>
         </span>
-        <h1>开源许可与致谢</h1>
-        <p class="meta">本机离线声学引擎与开源社区致谢说明</p>
+        <h1>开源许可与曲目鸣谢</h1>
+        <p class="meta">本机离线声学引擎、开源社区与内置 28 首曲库版权边界说明</p>
       </div>
     </header>
 
     <section class="card">
-      <h2>SwiftF0 (MIT License)</h2>
+      <h2>1. SwiftF0 (MIT License)</h2>
       <p>本项目中的动态规划音符切分算法（<code>SwiftF0NoteSegmenter.swift</code>）参考并移植自 <a href="https://github.com/lars76/swift-f0">lars76/swift-f0</a>。</p>
       <pre>MIT License
 
@@ -164,6 +180,12 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.</pre>
+    </section>
+
+    <section class="card">
+      <h2>2. 内置曲库与版权边界</h2>
+      <p>内置 20 首古典名曲（圣桑《天鹅》、李斯特、巴赫、柴可夫斯基、德彪西、肖邦、德沃夏克、萨蒂、贝多芬、舒伯特、帕赫贝尔、莫扎特等）均为作者逝世逾百年的全球公有领域乐谱独立编配。</p>
+      <p style="margin-bottom:0;">内置 8 首夏日治愈与现代技法曲目均为本项目 100% 原创，不含任何受版权保护的现代影视或流行作品旋律。</p>
     </section>
 
     <footer class="back-bar">

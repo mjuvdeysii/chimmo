@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.76.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.77.0"
     }
 
     private var appBuild: String {
@@ -629,7 +629,7 @@ public struct ChimmoLegalDocumentView: View {
     private var privacySections: some View {
         Section {
             LabeledContent("生效日期", value: "2026 年 11 月 21 日")
-            LabeledContent("最近修订", value: "2026 年 11 月 24 日")
+            LabeledContent("最近修订", value: "2026 年 11 月 25 日")
         }
 
         Section("1. 核心原则：不联网、不收集任何数据") {
@@ -650,9 +650,11 @@ public struct ChimmoLegalDocumentView: View {
         Section("在线文档与支持") {
             if let url = URL(string: "https://mjuvdeysii.github.io/chimmo/privacy.html") {
                 Link("查看网页版隐私政策", destination: url)
+                    .accessibilityHint("在浏览器中打开")
             }
             if let issuesURL = URL(string: "https://github.com/mjuvdeysii/chimmo/issues") {
                 Link("GitHub Issues 联系开发者", destination: issuesURL)
+                    .accessibilityHint("在浏览器中打开")
             }
         }
     }
@@ -681,6 +683,7 @@ public struct ChimmoLegalDocumentView: View {
         Section("在线文档") {
             if let url = URL(string: "https://mjuvdeysii.github.io/chimmo/terms.html") {
                 Link("查看网页版使用条款", destination: url)
+                    .accessibilityHint("在浏览器中打开")
             }
         }
     }
@@ -717,6 +720,7 @@ The above copyright notice and this permission notice shall be included in all c
         Section("在线文档") {
             if let url = URL(string: "https://mjuvdeysii.github.io/chimmo/licenses.html") {
                 Link("查看网页版开源许可", destination: url)
+                    .accessibilityHint("在浏览器中打开")
             }
         }
     }

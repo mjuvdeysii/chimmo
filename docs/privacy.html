@@ -41,6 +41,20 @@
         --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
       }
     }
+    @media (prefers-contrast: more) {
+      :root {
+        --border: rgba(28, 29, 25, 0.34);
+        --border-strong: rgba(28, 29, 25, 0.56);
+      }
+      .hero-banner, .card, .back-bar, .brand-pill { border-width: 1.6px; }
+      a.home-btn { border-color: var(--outline); }
+    }
+    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
+      :root {
+        --border: rgba(242, 226, 196, 0.36);
+        --border-strong: rgba(255, 181, 71, 0.62);
+      }
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -118,6 +132,8 @@
     .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
     .nav-links a { color: var(--accent); text-decoration: none; }
     .nav-links a:hover { text-decoration: underline; }
+    a:focus-visible { outline: 2px solid var(--prominent); outline-offset: 2px; border-radius: 6px; }
+    a.home-btn:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
   </style>
 </head>
 <body>
@@ -127,14 +143,14 @@
         <span class="brand-pill">
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="17.5" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.6"/>
+            <circle cx="17.5" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.6"/>
             <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
             <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
           </svg>
           <span>CHIMMO PRIVACY CHARTER</span>
         </span>
         <h1>咩哞（Chimmo）隐私政策</h1>
-        <p class="meta">生效日期：2026 年 11 月 21 日 · 最近修订：2026 年 11 月 24 日</p>
+        <p class="meta">生效日期：2026 年 11 月 21 日 · 最近修订：2026 年 11 月 25 日</p>
       </div>
       <svg width="86" height="56" viewBox="0 0 86 56" aria-hidden="true">
         <path d="M4 44 Q24 30 44 41 T82 37 L82 54 L4 54 Z" fill="var(--mint)" stroke="var(--outline)" stroke-width="2"/>
@@ -142,7 +158,7 @@
         <circle cx="27" cy="28" r="1.8" fill="#231B15"/>
         <circle cx="33" cy="28" r="1.8" fill="#231B15"/>
         <circle cx="29" cy="34" r="3" fill="#FFE49E" stroke="#231B15" stroke-width="1.4"/>
-        <circle cx="56" cy="32" r="10" fill="#228BE6" stroke="var(--outline)" stroke-width="2.2"/>
+        <circle cx="56" cy="32" r="10" fill="#2E7DB2" stroke="var(--outline)" stroke-width="2.2"/>
         <circle cx="65" cy="29" r="5" fill="#0F4C8A" stroke="var(--outline)" stroke-width="1.8"/>
         <circle cx="53" cy="30" r="1.7" fill="#231B15"/>
         <circle cx="59" cy="30" r="1.7" fill="#231B15"/>
@@ -156,7 +172,7 @@
 
     <section class="card">
       <h2>2. 麦克风权限的使用</h2>
-      <p>当您使用「轻哼捉珠」功能时，应用会向 iOS 系统请求麦克风访问权限。您哼唱的音频信号<strong>仅在设备本机内存中实时转换为音高与音珠</strong>，从不上传、不外发，也不会用于任何云端训练或个人身份识别。您随时可以在 iOS「设置 › 隐私与安全性 › 麦克风」中撤回该权限，撤回后仍可正常点按七只咩哞或观赏内置编曲标本。</p>
+      <p>当您使用「哼唱捉珠」功能时，应用会向 iOS 系统请求麦克风访问权限。您哼唱的音频信号<strong>仅在设备本机内存中实时转换为音高与音珠</strong>，从不上传、不外发，也不会用于任何云端训练或个人身份识别。您随时可以在 iOS「设置 › 隐私与安全性 › 麦克风」中撤回该权限，撤回后仍可正常点按七只咩哞与使用其余离线创作与赏析功能。</p>
     </section>
 
     <section class="card">

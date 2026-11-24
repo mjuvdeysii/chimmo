@@ -4439,4 +4439,32 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         }
     }
+
+    @MainActor
+    func testCreativeAlchemyRound70LegalWebParityAndAllExternalLinkHints() throws {
+        XCTAssertEqual(ChimmoLegalDocumentView.LegalDocumentKind.allCases, [.privacy, .terms, .licenses])
+        for kind in ChimmoLegalDocumentView.LegalDocumentKind.allCases {
+            XCTAssertFalse(kind.navigationTitle.isEmpty)
+            XCTAssertNotNil(ChimmoLegalDocumentView(kind: kind))
+        }
+
+        XCTAssertEqual(SpecimenLibrary.all.count, 28)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r70_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        for p in [ChimmoPalette(isNight: false), ChimmoPalette(isNight: true)] {
+            XCTAssertNotNil(SettingsView(vm: vm, palette: p, onOpenSharePostcard: {}))
+            XCTAssertNotNil(
+                AboutSheetView(
+                    palette: p,
+                    currentDocument: vm.document,
+                    cradleEnabled: vm.cradleEnabled
+                )
+            )
+        }
+    }
 }

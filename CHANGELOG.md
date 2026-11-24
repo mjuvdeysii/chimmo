@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.77.0 - 2026-11-25
+- 站内全量外部 `Link` 无障碍提示收口与法务文档同步：为 [SettingsView.swift](Chimmo/Views/SettingsView.swift) `ChimmoLegalDocumentView` 中全部 4 处外部链接（「查看网页版隐私政策」、「GitHub Issues 联系开发者」、「查看网页版使用条款」、「查看网页版开源许可」）以及 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)「官方网站」链接补齐 `.accessibilityHint("在浏览器中打开")`（并将法务页面最近修订日期同步至 `2026 年 11 月 25 日`），全面消灭 title-first 形式 `Link` 遗漏提示的问题。
+- 三份在线法务绘本页同源升级至正典与高清晰可读性：全面更新 [docs/privacy.html](docs/privacy.html)、[docs/terms.html](docs/terms.html) 与 [docs/licenses.html](docs/licenses.html)，将徽标与角色小偶陈旧 `#228BE6` 替换为正典银月蓝 `#2E7DB2`；补齐日夜双态 `@media (prefers-contrast: more)` 高清晰描边与 `:focus-visible` 键盘焦点环；对齐 `哼唱捉珠`、`PNG 卡片、WAV 音频与标准 MIDI 作品`、`小羊咩、小牛哞` 及第 2 节 `内置曲库与版权边界` 文案。
+- 静态守门升级与回归校验：将外链静态检查扩展覆盖全部 `Link(` 形式并达成零遗漏，新增 `@MainActor` 单测 `testCreativeAlchemyRound70LegalWebParityAndAllExternalLinkHints`，核验三类法务视图、28 首曲库及日夜双态设置/关于视图构造，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.76.0 - 2026-11-25
 - VoiceOver 标题转盘（Heading Rotor）全域地标闭环：在 [SettingsView.swift](Chimmo/Views/SettingsView.swift)（「咩哞 · Chimmo」卡片首标题与「外观」）、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)（「声音调色盒」、「主旋律音色」与「和声与伴奏」）以及 [AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift) 品牌标题补齐 `.accessibilityAddTraits(.isHeader)`，方便读屏用户通过标题转盘快速直达各核心区块。
 - 曲库命中边界与无障碍操作提示增强：将 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 中 `shelfTabButton` 的点击热区由 `Capsule()` 精确对齐为视觉圆角一致的 `RoundedRectangle(cornerRadius: 12, style: .continuous)`；为 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift) 折纸工坊三枚入口按键（「闭眼滑音」、「跟灯弹」、「新画布」）与 [NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 调式切换/写入按钮补齐语义化 `.accessibilityHint`。

@@ -41,6 +41,20 @@
         --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
       }
     }
+    @media (prefers-contrast: more) {
+      :root {
+        --border: rgba(28, 29, 25, 0.34);
+        --border-strong: rgba(28, 29, 25, 0.56);
+      }
+      .hero-banner, .card, .back-bar, .brand-pill { border-width: 1.6px; }
+      a.home-btn { border-color: var(--outline); }
+    }
+    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
+      :root {
+        --border: rgba(242, 226, 196, 0.36);
+        --border-strong: rgba(255, 181, 71, 0.62);
+      }
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -112,6 +126,8 @@
     .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
     a { color: var(--accent); text-decoration: none; font-weight: 800; }
     a:hover { text-decoration: underline; }
+    a:focus-visible { outline: 2px solid var(--prominent); outline-offset: 2px; border-radius: 6px; }
+    a.home-btn:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
   </style>
 </head>
 <body>
@@ -120,24 +136,24 @@
       <span class="brand-pill">
         <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
-          <circle cx="17.5" cy="14" r="4.2" fill="#228BE6" stroke="#231B15" stroke-width="1.6"/>
+          <circle cx="17.5" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.6"/>
           <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
           <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
         </svg>
         <span>CHIMMO TERMS OF USE</span>
       </span>
       <h1>咩哞（Chimmo）使用条款</h1>
-      <p class="meta">生效日期：2026 年 11 月 21 日</p>
+      <p class="meta">生效日期：2026 年 11 月 21 日 · 最近修订：2026 年 11 月 25 日</p>
     </header>
 
     <section class="card">
       <h2>1. 创作归属</h2>
-      <p>您使用咩哞（Chimmo）自行哼唱、点按或编排并导出的原创旋律与 MIDI 作品，其著作权完全归您本人所有。</p>
+      <p>您使用咩哞（Chimmo）自行哼唱、点按或编排并导出的原创旋律、PNG 卡片、WAV 音频与标准 MIDI 作品，其著作权完全归您本人所有。</p>
     </section>
 
     <section class="card">
       <h2>2. 应用与 IP 权利</h2>
-      <p>应用内的「咩哞七小只（陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫、叮尖）」角色造型、视觉设计、文案与原创代码受著作权保护。</p>
+      <p>应用内的「咩哞七小只（陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫、叮尖）」以及小羊咩、小牛哞角色造型、视觉设计、文案与原创代码受著作权保护。</p>
     </section>
 
     <section class="card">
