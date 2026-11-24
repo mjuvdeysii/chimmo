@@ -112,7 +112,7 @@ public struct NightLampTactileSheet: View {
                         .frame(width: 36, height: 36)
                         .offset(y: 2.5)
                     Circle()
-                        .fill(Color(hex: 0x1D2856))
+                        .fill(Color(hex: 0x212A4C))
                         .frame(width: 36, height: 36)
                         .overlay(Circle().strokeBorder(Color(hex: 0xFFB547).opacity(0.75), lineWidth: 1.8))
                     Image(systemName: "xmark")
@@ -477,7 +477,7 @@ public struct NightLampTactileSheet: View {
                         .foregroundStyle(
                             capturedBeads.isEmpty
                                 ? Color(hex: 0x5B6482)
-                                : (auditioningIndex != nil ? Color(hex: 0x0E142C) : Color(hex: 0xFFB547))
+                                : (auditioningIndex != nil ? Color(hex: 0x0E1430) : Color(hex: 0xFFB547))
                         )
                 }
                 .contentShape(Circle())
@@ -540,12 +540,12 @@ public struct NightLampTactileSheet: View {
                             .fill(Color(hex: 0x03050F))
                             .offset(y: 3)
                         Capsule()
-                            .fill(capturedBeads.isEmpty ? Color(hex: 0x1D2856) : Color(hex: 0xFFB547))
+                            .fill(capturedBeads.isEmpty ? Color(hex: 0x212A4C) : Color(hex: 0xFFB547))
                         Capsule()
                             .strokeBorder(Color(hex: 0xFFB547).opacity(capturedBeads.isEmpty ? 0.32 : 1.0), lineWidth: 2.0)
                     }
                 )
-                .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x0E142C))
+                .foregroundStyle(capturedBeads.isEmpty ? Color(hex: 0x7E87A3) : Color(hex: 0x0E1430))
                 .contentShape(Capsule())
             }
             .disabled(capturedBeads.isEmpty)

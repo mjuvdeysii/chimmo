@@ -910,8 +910,8 @@ public struct DreamCaptureSheet: View {
 
                     ctx.stroke(
                         path,
-                        with: .color(palette.cartoonOutline.opacity(0.85)),
-                        style: StrokeStyle(lineWidth: 6.5, lineCap: .round, lineJoin: .round)
+                        with: .color(palette.homeAnchor.opacity(0.22)),
+                        style: StrokeStyle(lineWidth: 7.0, lineCap: .round, lineJoin: .round)
                     )
                     ctx.stroke(
                         path,
@@ -922,7 +922,7 @@ public struct DreamCaptureSheet: View {
                     if let tip = pts.last {
                         let tipRect = CGRect(x: tip.x - 5.0, y: tip.y - 5.0, width: 10, height: 10)
                         ctx.fill(Path(ellipseIn: tipRect), with: .color(palette.nightLampGold))
-                        ctx.stroke(Path(ellipseIn: tipRect), with: .color(palette.cartoonOutline), lineWidth: 1.4)
+                        ctx.stroke(Path(ellipseIn: tipRect), with: .color(palette.primaryInk.opacity(0.32)), lineWidth: 1.2)
                     }
                 }
             } else {
@@ -934,7 +934,7 @@ public struct DreamCaptureSheet: View {
                             : CGFloat(10.0 + weight * 10.0)
                         Capsule()
                             .fill((isRec ? palette.melodyTerracotta : palette.homeAnchor).opacity(isRec ? 0.95 : 0.55))
-                            .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.70), lineWidth: 1.0))
+                            .overlay(Capsule().strokeBorder(palette.divider, lineWidth: 0.9))
                             .frame(width: 6, height: h)
                             .animation(reduceMotion ? nil : .spring(response: 0.16, dampingFraction: 0.7), value: h)
                     }
@@ -966,26 +966,24 @@ public struct DreamCaptureSheet: View {
                     VStack(spacing: 8) {
                         ChimmoCraftBadge(
                             .nightLampHalo,
-                            accent: Color(hex: 0xFFB94E),
-                            surface: Color(hex: 0x1B244B),
+                            accent: Color(hex: 0xFFB547),
+                            surface: Color(hex: 0x19213F),
                             size: 38
                         )
                         Text("闭眼滑音")
                             .font(.system(.caption, design: .rounded).weight(.heavy))
-                            .foregroundStyle(Color(hex: 0xF5ECDD))
+                            .foregroundStyle(Color(hex: 0xF2E2C4))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Color(hex: 0x040714).opacity(0.72))
-                                .offset(x: 0, y: 2.5)
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Color(hex: 0x0E142C))
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .strokeBorder(Color(hex: 0xFFB94E), lineWidth: 2.0)
-                        }
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color(hex: 0x0E1430))
+                            .shadow(color: Color.black.opacity(0.32), radius: 5, y: 2.5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .strokeBorder(Color(hex: 0xFFB547).opacity(0.55), lineWidth: 1.2)
+                            )
                     )
                     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }

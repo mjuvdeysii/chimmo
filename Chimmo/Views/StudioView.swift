@@ -2513,7 +2513,7 @@ public final class StudioViewModel: ObservableObject {
     }
 }
 
-/// 咩哞：三标签商业级分层架构（「欣赏」引导舞台 / 「创作」独立编曲工坊 / 「设置」原生规范页面）。
+/// 咩哞：四标签纯血叙事工坊架构（「聆听」绘本舞台 / 「创作」自由工坊 / 「曲本」离线乐谱库 / 「工坊」声学与外观设定）。
 public struct StudioView: View {
     @StateObject private var vm = StudioViewModel()
     @Environment(\.colorScheme) private var systemScheme

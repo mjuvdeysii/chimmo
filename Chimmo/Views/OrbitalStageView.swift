@@ -464,7 +464,7 @@ public struct OrbitalStageView: View {
                                 .strokeBorder(Color.white.opacity(palette.isNight ? 0.16 : 0.35), lineWidth: 1.0)
                         )
                 )
-                .foregroundStyle(isFollow && !palette.isNight ? palette.primaryInk : (isFollow ? Color(hex: 0x0E142C) : .white))
+                .foregroundStyle(isFollow && !palette.isNight ? palette.primaryInk : (isFollow ? Color(hex: 0x0E1430) : .white))
                 .contentShape(Capsule())
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
@@ -645,16 +645,20 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                         modeReliefPillSwitcher
                     }
                     if let errorMsg = vm.statusToast {
-                        Text(errorMsg)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(palette.melodyTerracotta)
-                            )
-                            .transition(.opacity)
+                        HStack(spacing: 5) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption2.weight(.bold))
+                            Text(errorMsg)
+                                .font(.caption2.weight(.semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(palette.prominentFill)
+                        )
+                        .transition(.opacity)
                     }
                     Spacer()
                 }
@@ -959,30 +963,29 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             }
         }
 
-        // 2. 极简扁平卡通童书音乐盒花环底盘（零黑胶刻槽、零节拍外圈刻度、单层暖墨描边）
+        // 2. 窑纸软胶童书音乐盒花环底盘（零黑胶刻槽、零节拍外圈刻度、柔和接触光影）
         let platterRect = CGRect(
             x: m.center.x - m.platterRadius,
             y: m.center.y - m.platterRadius,
             width: m.platterRadius * 2,
             height: m.platterRadius * 2
         )
-        let shadowRect = platterRect.offsetBy(dx: 0, dy: 4.5)
+        let shadowRect = platterRect.offsetBy(dx: 0, dy: 3.0)
         ctx.fill(
             Path(ellipseIn: shadowRect),
-            with: .color(palette.cartoonShadow)
+            with: .color(palette.isNight ? Color.black.opacity(0.28) : Color(hex: 0x7A5230).opacity(0.09))
         )
 
-        let platterFill = palette.isNight ? Color(hex: 0x18234E) : palette.cardSurface
         ctx.fill(
             Path(ellipseIn: platterRect),
-            with: .color(platterFill)
+            with: .color(palette.cardSurface)
         )
 
-        // 单层外缘暖墨描边 + 轻声响起微暖金呼吸
+        // 柔和发丝级外缘描边 + 轻声响起微暖金呼吸
         ctx.stroke(
             Path(ellipseIn: platterRect),
-            with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.78 : 0.88)),
-            lineWidth: 2.4
+            with: .color(palette.isNight ? palette.nightLampGold.opacity(0.28) : palette.primaryInk.opacity(0.14)),
+            lineWidth: 1.4
         )
         if acoustic.rmsEnergy > 0.01 {
             ctx.stroke(
@@ -1451,10 +1454,10 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             ctx.fill(playTri, with: .color(palette.nightLampGold.opacity(0.32)))
         }
 
-        // 中心卡通暖金轴心点
+        // 中心软胶暖金轴心点
         let pinRect = CGRect(x: center.x - 4.5, y: center.y - 4.5, width: 9.0, height: 9.0)
         ctx.fill(Path(ellipseIn: pinRect), with: .color(palette.nightLampGold))
-        ctx.stroke(Path(ellipseIn: pinRect), with: .color(palette.cartoonOutline.opacity(0.88)), lineWidth: 1.4)
+        ctx.stroke(Path(ellipseIn: pinRect), with: .color(palette.primaryInk.opacity(palette.isNight ? 0.45 : 0.35)), lineWidth: 1.2)
     }
 
     private func drawRipplesOnDisc(ctx: inout GraphicsContext, metrics: OrbitalMetrics, discRot: Double, needleAngle: Double, mediaNow: Double) {
@@ -1831,7 +1834,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         }
         starCap.closeSubpath()
         ctx.fill(starCap, with: .color(palette.nightLampGold))
-        ctx.stroke(starCap, with: .color(palette.cartoonOutline.opacity(palette.isNight ? 0.82 : 0.90)), lineWidth: 1.5)
+        ctx.stroke(starCap, with: .color(palette.primaryInk.opacity(palette.isNight ? 0.45 : 0.35)), lineWidth: 1.2)
 
         for ev in vm.rippleBus.activeEvents(at: mediaNow) {
             let age = mediaNow - ev.birthMediaTime

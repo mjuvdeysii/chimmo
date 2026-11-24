@@ -419,7 +419,7 @@ public struct SoundPaletteBoxSheet: View {
             HStack(spacing: 8) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(palette.isNight ? Color(hex: 0x0E142C) : palette.storybookButter.opacity(0.48))
+                        .fill(palette.isNight ? Color(hex: 0x0E1430) : palette.storybookButter.opacity(0.48))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
                                 .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.22 : 0.14), lineWidth: 1.0)
@@ -451,7 +451,7 @@ public struct SoundPaletteBoxSheet: View {
                             .frame(width: 6.5, height: 6.5)
                             .overlay(
                                 Circle()
-                                    .strokeBorder(palette.cartoonOutline.opacity(0.80), lineWidth: 1.0)
+                                    .strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.16), lineWidth: 1.0)
                             )
                     }
 
@@ -497,7 +497,7 @@ public struct SoundPaletteBoxSheet: View {
                                 .fill(selected ? skyCol : palette.cardSurface)
                                 .frame(width: 6, height: 6)
                                 .overlay(
-                                    Circle().strokeBorder(palette.cartoonOutline.opacity(0.75), lineWidth: 1.0)
+                                    Circle().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.16), lineWidth: 1.0)
                                 )
 
                             Image(systemName: mode.iconName)
@@ -507,7 +507,7 @@ public struct SoundPaletteBoxSheet: View {
                             Capsule()
                                 .fill(skyCol.opacity(selected ? 1.0 : 0.60))
                                 .frame(height: 4.5)
-                                .overlay(Capsule().strokeBorder(palette.cartoonOutline.opacity(0.55), lineWidth: 0.9))
+                                .overlay(Capsule().strokeBorder(palette.primaryInk.opacity(palette.isNight ? 0.24 : 0.16), lineWidth: 1.0))
                                 .padding(.horizontal, 6)
 
                             Text(mode.shortSkyLabel)
@@ -886,7 +886,7 @@ public struct SoundPaletteBoxSheet: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                         ForEach(AccompanimentTexture.allCases) { tex in
                             let active = vm.cradleEnabled && vm.accompanimentTexture == tex
-                            let fgColor = active ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : palette.primaryInk
+                            let fgColor = active ? (palette.isNight ? Color(hex: 0x0E1430) : .white) : palette.primaryInk
                             let dotColor = active ? fgColor : palette.bassRibbon
                             let dots = AcousticSignatureGeometry.accompanimentPatternDots(for: tex)
                             let activeDot = (auditionTexture == tex && sweep != nil)

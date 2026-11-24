@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.57.0 - 2026-11-25
+- 里程碑 50 主舞台与全视图纯化：彻底清零 `Chimmo/Views/` 全部 12 份视图中的 `cartoonShadow`（消除音乐盒花环旧投影砖块、`0x18234E` 残色及 `2.4pt` 粗黑描边），并将主舞台错误横幅升级为 `Capsule` + 高对比 `prominentFill` 白字胶囊。
+- 遗留夜灯六进制全面消杀：将 [DreamCaptureSheet.swift](Chimmo/Views/DreamCaptureSheet.swift)、[NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift)、[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift)、[OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) 与 [ChimmoFigureView.swift](Chimmo/Views/ChimmoFigureView.swift) 剩余旧暗色/暖金 hex 全面同步至 `ChimmoPalette` 正典体系，柔化轻哼示波与筛选空态细框，并更新 [StudioView.swift](Chimmo/Views/StudioView.swift) 四标签架构注释。
+- 回归校验：新增 `testCreativeAlchemyRound50ZeroCartoonShadowAndFullOttoNightCohesion` 校验三态画布视窗与全弹窗双态协同，保持全局零 Emoji 与零模拟器编译全绿。
+
 ## 0.56.0 - 2026-11-24
 - 全生态《摸索台灯》同宇宙统一：通过 OpenMotion Design Studio 升级官网交互绘本（`v11`，同步至 `docs/index.html`）及三大法务页面（`docs/privacy.html`、`docs/terms.html`、`docs/licenses.html`）至「轻哼成曲，七声和鸣」四标签（聆听 / 创作 / 曲本 / 工坊）窑纸软胶语系；通过 OpenMotion Director 升级 12 秒声学短片至 `v16` 并完成音画技术与多帧检查。
 - 闭眼夜灯同源对齐：[NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 保留 `#070B1A` OLED 暗幕以呵护夜间盲操体验，将夜灯强调色、卡片底色与月白字色全面同步至 `ChimmoPalette(isNight: true)`（`0xFFB547` / `0x19213F` / `0xF2E2C4`）。

@@ -338,7 +338,7 @@ public struct MusicBoxShelfView: View {
                 .fill(palette.cardSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.36 : 0.28), lineWidth: 1.2)
+                        .strokeBorder(palette.divider, lineWidth: 1.0)
                 )
         )
         .accessibilityLabel("搜索曲库作品")
@@ -455,7 +455,7 @@ public struct MusicBoxShelfView: View {
 
                         Image(systemName: mode.iconName)
                             .font(.footnote.weight(.bold))
-                            .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E142C) : .white) : aurora)
+                            .foregroundStyle(isSel ? (palette.isNight ? Color(hex: 0x0E1430) : .white) : aurora)
                     }
                     .frame(
                         width: StorybookAffordanceMetrics.compactToolMinHitDimension,
@@ -578,7 +578,7 @@ public struct MusicBoxShelfView: View {
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .strokeBorder(palette.cartoonOutline.opacity(palette.isNight ? 0.24 : 0.18), lineWidth: 1.2)
+                        .strokeBorder(palette.divider, lineWidth: 1.0)
                 }
             )
         } else if filteredSavedEntries.isEmpty {
@@ -1324,7 +1324,7 @@ private struct StorybookSongbookCoverThumb: View {
                     .overlay(
                         Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(isPlaying ? (palette.isNight ? Color(hex: 0x0E142C) : palette.primaryInk) : palette.homeAnchor)
+                            .foregroundStyle(isPlaying ? (palette.isNight ? Color(hex: 0x0E1430) : palette.primaryInk) : palette.homeAnchor)
                     )
                     .offset(x: 52, y: 48)
             }

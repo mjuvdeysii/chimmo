@@ -3487,4 +3487,30 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(CreateStudioView(vm: vm, palette: nightPalette))
         XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound50ZeroCartoonShadowAndFullOttoNightCohesion() throws {
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+        XCTAssertNotEqual(dayPalette.paper, nightPalette.paper)
+        XCTAssertNotEqual(dayPalette.prominentFill, nightPalette.prominentFill)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r50_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.plantCreationStarter(.sunnyMeadow)
+
+        for mode in StageVisualMode.allCases {
+            vm.visualMode = mode
+            XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+            XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        }
+
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(DreamCaptureSheet(vm: vm, palette: nightPalette, initialTab: 1))
+    }
 }

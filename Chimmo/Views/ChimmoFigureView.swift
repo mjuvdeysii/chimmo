@@ -227,7 +227,7 @@ public struct ChimmoFigureView: View {
                         .frame(width: isSinging ? 20 : 16, height: isSinging ? 20 : 16)
                 }
                 Circle()
-                    .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFB94E))
+                    .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFB547))
                     .frame(width: 6.2, height: 6.2)
             }
             .offset(x: -3, y: 11)
@@ -294,7 +294,7 @@ public struct ChimmoFigureView: View {
                 .offset(y: 6)
 
             Circle()
-                .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFB94E))
+                .fill(isNight || isSinging ? member.nightGlowColor : Color(hex: 0xFFB547))
                 .overlay(Circle().stroke(inkContour, lineWidth: 0.9))
                 .frame(width: isSinging ? 6.0 : 5.0, height: isSinging ? 6.0 : 5.0)
                 .offset(y: -3.5)
