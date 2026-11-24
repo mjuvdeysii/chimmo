@@ -3730,4 +3730,42 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNotNil(SettingsView(vm: vm2, palette: dayPalette))
         XCTAssertNotNil(SettingsView(vm: vm2, palette: nightPalette))
     }
+
+    @MainActor
+    func testCreativeAlchemyRound56SemanticTokenClosureAndZeroRawHexSettingsNightLamp() throws {
+        let dayPalette = ChimmoPalette(isNight: false)
+        let nightPalette = ChimmoPalette(isNight: true)
+
+        XCTAssertNotEqual(dayPalette.counterpointMoon, nightPalette.counterpointMoon)
+        XCTAssertNotEqual(nightPalette.nightLampBackdrop, nightPalette.nightLampPadSurface)
+        XCTAssertNotEqual(nightPalette.nightLampPadSurface, nightPalette.nightLampHillSurface)
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r56_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.plantCreationStarter(.sunnyMeadow)
+        vm.toggleShadowCounterpoint()
+
+        for night in [false, true] {
+            let data = VinylPostcardExporter.renderPNGData(
+                document: vm.document,
+                shadowEnabled: true,
+                isNight: night,
+                visualMode: .orbitalDisc,
+                includeJianpuStrip: true
+            )
+            XCTAssertNotNil(data)
+        }
+
+        XCTAssertNotNil(NightLampTactileSheet(vm: vm))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SettingsView(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: dayPalette))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: nightPalette))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: dayPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+        XCTAssertNotNil(OrbitalStageView(vm: vm, palette: nightPalette, onOpenAbout: {}, onOpenSharePostcard: {}))
+    }
 }

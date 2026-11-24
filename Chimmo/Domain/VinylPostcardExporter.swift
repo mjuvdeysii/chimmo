@@ -263,7 +263,7 @@ public struct VinylPostcardCanvasView: View {
                                     Text(RootTranspositionHelper.compactLabel(forRootMIDI: snapshot.rootMIDI))
                                 }
                                 if snapshot.shadowEnabled {
-                                    ChimmoCraftMark(.counterpointMoons, color: Color(hex: 0x4EA8DE))
+                                    ChimmoCraftMark(.counterpointMoons, color: palette.counterpointMoon)
                                         .frame(width: 13, height: 13)
                                 }
                                 Spacer()
@@ -453,7 +453,7 @@ public struct VinylPostcardCanvasView: View {
                 crescent.addCurve(to: botTip, control1: CGPoint(x: sPt.x - cr * 1.05, y: sPt.y - cr * 0.55), control2: CGPoint(x: sPt.x - cr * 1.05, y: sPt.y + cr * 0.55))
                 crescent.addCurve(to: topTip, control1: CGPoint(x: sPt.x - cr * 0.20, y: sPt.y + cr * 0.42), control2: CGPoint(x: sPt.x - cr * 0.20, y: sPt.y - cr * 0.42))
                 crescent.closeSubpath()
-                ctx.fill(crescent, with: .color(Color(hex: 0x7EC8E3).opacity(0.86)))
+                ctx.fill(crescent, with: .color(palette.counterpointMoon.opacity(0.86)))
             }
         }
 
@@ -681,7 +681,7 @@ public struct VinylPostcardCanvasView: View {
                 crescent.addCurve(to: botTip, control1: CGPoint(x: sx - cr * 1.05, y: sy - cr * 0.55), control2: CGPoint(x: sx - cr * 1.05, y: sy + cr * 0.55))
                 crescent.addCurve(to: topTip, control1: CGPoint(x: sx - cr * 0.20, y: sy + cr * 0.42), control2: CGPoint(x: sx - cr * 0.20, y: sy - cr * 0.42))
                 crescent.closeSubpath()
-                ctx.fill(crescent, with: .color(Color(hex: 0x7EC8E3).opacity(0.85)))
+                ctx.fill(crescent, with: .color(palette.counterpointMoon.opacity(0.85)))
             }
         }
 

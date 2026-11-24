@@ -845,7 +845,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
         } label: {
             HStack(spacing: 6) {
                 if vm.shadowCounterpointEnabled {
-                    ChimmoCraftMark(.counterpointMoons, color: Color(hex: 0x4EA8DE))
+                    ChimmoCraftMark(.counterpointMoons, color: palette.counterpointMoon)
                         .frame(width: 12, height: 12)
                 }
                 if abs(vm.playbackRate - 1.0) > 0.01 {
@@ -1258,14 +1258,14 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 tether.addLine(to: sPt)
                 ctx.stroke(
                     tether,
-                    with: .color(Color(hex: 0x7EC8E3).opacity(isShadowSinging ? 0.34 : 0.10)),
+                    with: .color(palette.counterpointMoon.opacity(isShadowSinging ? 0.34 : 0.10)),
                     style: StrokeStyle(lineWidth: 0.9, dash: [2, 3])
                 )
                 drawCrescentMoonOrb(
                     ctx: &ctx,
                     center: sPt,
                     radius: isShadowSinging ? 9.5 : 7.4,
-                    color: Color(hex: 0x7EC8E3),
+                    color: palette.counterpointMoon,
                     isGlowing: isShadowSinging
                 )
             }
@@ -1479,7 +1479,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             let rOrbit = OrbitalGeometry.orbitRadius(laneIndex: ev.laneIndex, innerRadius: metrics.innerRadius, outerRadius: metrics.outerRadius)
             let ang = vm.isPlaying ? needleAngle : (-Double.pi / 2.0 + OrbitalGeometry.noteBaseAngle(onset: ev.onset, totalDuration: max(0.5, vm.document.totalDuration)) + discRot)
             let pt = CGPoint(x: metrics.center.x + CGFloat(cos(ang)) * rOrbit, y: metrics.center.y + CGFloat(sin(ang)) * rOrbit)
-            let col = Color(hex: ev.colorHex)
+            let col = ev.isShadow ? palette.counterpointMoon : Color(hex: ev.colorHex)
 
             let dynScale: CGFloat = ev.isShadow ? 1.0 : CGFloat(0.72 + ev.intensity * 0.56)
             for ring in 0..<2 {
@@ -1813,7 +1813,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                     ctx: &ctx,
                     center: CGPoint(x: sx, y: sy),
                     radius: isShadowSinging ? 8.8 : 6.8,
-                    color: Color(hex: 0x7EC8E3),
+                    color: palette.counterpointMoon,
                     isGlowing: isShadowSinging
                 )
             }
@@ -1852,7 +1852,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             let prog = max(0, min(1, age / 0.85))
             let y = lay.padV + (CGFloat(7 - ev.laneIndex) + 0.5) * lay.rowH + (ev.isShadow ? 10.0 : 0.0)
             let x = vm.isPlaying ? lay.anchorX : FlowingRiverGeometry.screenX(onset: ev.onset, scrollX: scrollX, anchorX: lay.anchorX, pxPerSecond: lay.pxPerSec)
-            let col = Color(hex: ev.colorHex)
+            let col = ev.isShadow ? palette.counterpointMoon : Color(hex: ev.colorHex)
             let dynScale: CGFloat = ev.isShadow ? 1.0 : CGFloat(0.72 + ev.intensity * 0.56)
             let r = (ev.isShadow ? 6.0 : 8.0) + CGFloat(prog) * (ev.isShadow ? 22.0 : 34.0 * dynScale)
             ctx.stroke(
@@ -2049,14 +2049,14 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
                 )
                 ctx.stroke(
                     duetArc,
-                    with: .color(Color(hex: 0x7EC8E3).opacity(fade * 0.85)),
+                    with: .color(palette.counterpointMoon.opacity(fade * 0.85)),
                     style: StrokeStyle(lineWidth: 2.8, lineCap: .round)
                 )
                 drawCrescentMoonOrb(
                     ctx: &ctx,
                     center: shadowPt,
                     radius: 10.5,
-                    color: Color(hex: 0x7EC8E3),
+                    color: palette.counterpointMoon,
                     isGlowing: true
                 )
             }
@@ -2092,7 +2092,7 @@ internal struct StageCanvasPanel<EmptyOverlay: View>: View {
             let age = mediaNow - ev.birthMediaTime
             let prog = max(0.0, min(1.0, age / 0.85))
             let pt = ConstellationGeometry.starPoint(laneIndex: ev.laneIndex, center: nm.center, radius: nm.ringRadius)
-            let col = Color(hex: ev.colorHex)
+            let col = ev.isShadow ? palette.counterpointMoon : Color(hex: ev.colorHex)
             let dynScale: CGFloat = ev.isShadow ? 1.0 : CGFloat(0.72 + ev.intensity * 0.56)
             let rr = 18.0 + CGFloat(prog) * (ev.isShadow ? 24.0 : 34.0 * dynScale)
             ctx.stroke(

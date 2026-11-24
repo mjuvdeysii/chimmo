@@ -2384,7 +2384,7 @@ public final class StudioViewModel: ObservableObject {
                         laneIndex: sLaneIdx,
                         degree: shadow.degree,
                         onset: shadow.onset,
-                        colorHex: 0x7EC8E3,
+                        colorHex: ChimmoPalette.counterpointMoonHex(isNight: self.appearance == .nightLamp),
                         isShadow: true
                     )
                     let sHz = self.document.scaleMode.frequencyHz(

@@ -36,7 +36,7 @@ public struct NightLampTactileSheet: View {
 
     public var body: some View {
         ZStack {
-            Color(hex: 0x070B1A).ignoresSafeArea()
+            nightPalette.nightLampBackdrop.ignoresSafeArea()
 
             VStack(spacing: 14) {
                 topBar
@@ -162,13 +162,13 @@ public struct NightLampTactileSheet: View {
         return GeometryReader { geo in
             ZStack {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color(hex: 0x0B112B))
+                    .fill(nightPalette.nightLampPadSurface)
 
                 // 扁平卡通夜空星月 + 低对比双层夜山坡（OLED 友好低刺激背景，零渐变）
                 Canvas { ctx, size in
                     let w = max(1, size.width)
                     let h = max(1, size.height)
-                    let goldInk = Color(hex: 0xFFB547)
+                    let goldInk = nightPalette.nightLampGold
 
                     for star in StorybookNightLampInclusivityKinematics.starPositions(count: 8) {
                         let sx = star.xFraction * w
@@ -204,7 +204,7 @@ public struct NightLampTactileSheet: View {
                         }
                         hill.addLine(to: CGPoint(x: w, y: h))
                         hill.closeSubpath()
-                        ctx.fill(hill, with: .color(Color(hex: 0x121A3D)))
+                        ctx.fill(hill, with: .color(nightPalette.nightLampHillSurface))
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
@@ -225,7 +225,7 @@ public struct NightLampTactileSheet: View {
                     let usable = max(1.0, geo.size.height - pad * 2.0)
                     let yPos = pad + CGFloat(1.0 - normY) * usable
                     let isHover = currentHoverLane == laneIdx
-                    let ridgeCol = isHover ? Color(hex: 0xFFB547) : lane.barColor(isNight: true).opacity(0.55)
+                    let ridgeCol = isHover ? nightPalette.nightLampGold : lane.barColor(isNight: true).opacity(0.55)
 
                     HStack(spacing: 8) {
                         Capsule()
@@ -249,7 +249,7 @@ public struct NightLampTactileSheet: View {
 
                 // 跟随指尖的扁平卡通暖琥珀星光同心环（零模糊渐变）
                 if let pt = touchPoint {
-                    let hoverColor = currentHoverLane.map { XylophoneLane.lane(at: $0).barColor(isNight: true) } ?? Color(hex: 0xFFB547)
+                    let hoverColor = currentHoverLane.map { XylophoneLane.lane(at: $0).barColor(isNight: true) } ?? nightPalette.nightLampGold
                     let heldSeconds = max(0.0, CACurrentMediaTime() - touchStartTime)
                     let beaconDiameter = StorybookNightLampInclusivityKinematics.haloDiameter(
                         sustainTier: sustainTier,

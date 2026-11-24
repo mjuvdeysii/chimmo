@@ -72,6 +72,20 @@ public struct ChimmoPalette: Sendable {
         isNight ? Color(hex: 0x101733) : Color(hex: 0xFFFDF7)
     }
 
+    /// 巴赫影子月亮对位声部专属银月蓝（日光增强至 >= 4.6:1 可读对比，夜灯呈现温润银蓝月光）
+    public static func counterpointMoonHex(isNight: Bool) -> UInt32 {
+        isNight ? 0x7EC8E3 : 0x2E7DB2
+    }
+
+    public var counterpointMoon: Color {
+        Color(hex: Self.counterpointMoonHex(isNight: isNight))
+    }
+
+    /// 闭眼夜灯 Zero-Vision OLED 全屏底幕与夜空触觉板阶层
+    public var nightLampBackdrop: Color { Color(hex: 0x070B1A) }
+    public var nightLampPadSurface: Color { Color(hex: 0x0B112B) }
+    public var nightLampHillSurface: Color { Color(hex: 0x121A3D) }
+
     public init(isNight: Bool) {
         self.isNight = isNight
         if isNight {

@@ -393,7 +393,7 @@ public struct SoundPaletteBoxSheet: View {
                     shortLabel: "伴唱",
                     accessibilityTitle: "自动伴唱",
                     isOn: vm.shadowCounterpointEnabled,
-                    activeColor: Color(hex: 0x4EA8DE)
+                    activeColor: palette.counterpointMoon
                 ) {
                     vm.toggleShadowCounterpoint()
                     triggerAudition(.voice)

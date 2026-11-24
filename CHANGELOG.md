@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.63.0 - 2026-11-25
+- 语义色板单一数据源与日光银月对比度修复：在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `counterpointMoon`（日光强化至 `#2E7DB2` 以达到 >= 4.6:1 可读对比、夜灯保持 `#7EC8E3`）及 `nightLampBackdrop` / `nightLampPadSurface` / `nightLampHillSurface` 三层夜灯 OLED 语义色，全面替换 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)、[SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 与 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 中 9 处散落 `0x4EA8DE` / `0x7EC8E3` 硬编码。
+- 工坊与闭眼夜灯零原始十六进制净澈收官：[SettingsView.swift](Chimmo/Views/SettingsView.swift) 全部外观预览小窗与品牌印记徽章改用 `ChimmoPalette` 双态实例化，[NightLampTactileSheet.swift](Chimmo/Views/NightLampTactileSheet.swift) 与 [SettingsView.swift](Chimmo/Views/SettingsView.swift) 达成全文件 `Color(hex:` 零残余。
+- 回归校验：新增 `testCreativeAlchemyRound56SemanticTokenClosureAndZeroRawHexSettingsNightLamp`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.62.0 - 2026-11-25
 - 商业级离线偏好持久化闭环：[StudioView.swift](Chimmo/Views/StudioView.swift) `StudioViewModel` 新增可注入 `UserDefaults` 离线存储（`StudioView` 正式启用 `.standard`，测试默认传 `nil` 隔离），跨启动持久记住用户所选「外观显示（自动 / 日光 / 夜灯）」、「舞台默认视图（山坡 / 花环 / 星环）」与「节拍触感反馈」开关状态。
 - 工坊细节与主舞台语义底面对齐：在 [ChimmoTheme.swift](Chimmo/Theme/ChimmoTheme.swift) 新增 `stageBoardSurface` 语义底面色并接入 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift)（清零 `0x101733` 硬编码）；[SettingsView.swift](Chimmo/Views/SettingsView.swift) 将五音/震动开关改经 `togglePentatonicSafe()` / `toggleMusicHaptics()` 统一输出触觉反馈，导出行动态显示当前作品名称并在空画布态柔和禁用，同时等高对齐「仅本机离线 / 开源与曲目鸣谢」双列卡片。

@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.62.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.63.0"
     }
 
     private var appBuild: String {
@@ -215,6 +215,8 @@ public struct SettingsView: View {
     }
 
     private func appearanceSwatchTile(for pref: AppearancePreference, active: Bool) -> some View {
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
         let shape = RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
         return ZStack(alignment: .bottom) {
             Group {
@@ -240,12 +242,12 @@ public struct SettingsView: View {
                     .font(.caption2.weight(.bold))
                     .lineLimit(1)
             }
-            .foregroundStyle(pref == .nightLamp ? Color(hex: 0xF2E2C4) : (pref == .daylight ? Color(hex: 0x1C1D19) : palette.primaryInk))
+            .foregroundStyle(pref == .nightLamp ? night.primaryInk : (pref == .daylight ? day.primaryInk : palette.primaryInk))
             .padding(.horizontal, 9)
             .padding(.vertical, 3.5)
             .background(
                 Capsule()
-                    .fill((pref == .nightLamp ? Color(hex: 0x19213F) : (pref == .daylight ? Color(hex: 0xFFFFFF) : palette.cardSurface)).opacity(0.92))
+                    .fill((pref == .nightLamp ? night.cardSurface : (pref == .daylight ? day.cardSurface : palette.cardSurface)).opacity(0.92))
             )
             .padding(.bottom, 7)
 
@@ -269,28 +271,30 @@ public struct SettingsView: View {
     }
 
     private var daySwatchCanvas: some View {
-        ZStack(alignment: .bottom) {
-            Color(hex: 0xFBF7F0)
+        let day = ChimmoPalette(isNight: false)
+        return ZStack(alignment: .bottom) {
+            day.paper
             Circle()
-                .fill(Color(hex: 0xC4513A).opacity(0.22))
+                .fill(day.homeAnchor.opacity(0.22))
                 .frame(width: 24, height: 24)
                 .offset(x: 18, y: -28)
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(hex: 0xE5ECE5))
+                .fill(day.storybookHillFront)
                 .frame(height: 18)
                 .offset(y: 4)
         }
     }
 
     private var nightSwatchCanvas: some View {
-        ZStack(alignment: .topTrailing) {
-            Color(hex: 0x0E1430)
+        let night = ChimmoPalette(isNight: true)
+        return ZStack(alignment: .topTrailing) {
+            night.paper
             Circle()
-                .fill(Color(hex: 0xFFB547).opacity(0.32))
+                .fill(night.nightLampGold.opacity(0.32))
                 .frame(width: 34, height: 34)
                 .offset(x: 8, y: -8)
             Circle()
-                .fill(Color(hex: 0xFFB547))
+                .fill(night.nightLampGold)
                 .frame(width: 6, height: 6)
                 .padding(.top, 10)
                 .padding(.trailing, 12)
@@ -912,11 +916,11 @@ private struct SettingsBrandMarkView: View {
         let p = ChimmoPalette(isNight: isNight)
         ZStack {
             RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
-                .fill(isNight ? Color(hex: 0x161E3B) : Color(hex: 0xFBF7F0))
+                .fill(isNight ? p.woodTrayBottom : p.paper)
                 .overlay(
                     RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)
                         .strokeBorder(
-                            isNight ? Color(hex: 0xFFB547).opacity(0.28) : Color(hex: 0xC4513A).opacity(0.20),
+                            (isNight ? p.nightLampGold : p.homeAnchor).opacity(isNight ? 0.28 : 0.20),
                             lineWidth: 1.0
                         )
                 )
