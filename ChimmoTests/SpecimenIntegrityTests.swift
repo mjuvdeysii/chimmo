@@ -2033,4 +2033,47 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound28VinylBoutiqueKinematicsAndDuplicateNaming() throws {
+        // 1. VinylBoutiqueKinematics 封套滑动露出与黄铜唱臂角度状态机
+        let idle = VinylBoutiqueKinematics.state(isPlaying: false, reduceMotion: false)
+        XCTAssertEqual(idle.discPeekOffsetX, 20.0, accuracy: 0.0001)
+        XCTAssertEqual(idle.tonearmAngleDeg, -8.0, accuracy: 0.0001)
+        XCTAssertFalse(idle.turntableActive)
+
+        let playing = VinylBoutiqueKinematics.state(isPlaying: true, reduceMotion: false)
+        XCTAssertGreaterThan(playing.discPeekOffsetX, idle.discPeekOffsetX)
+        XCTAssertEqual(playing.tonearmAngleDeg, 20.0, accuracy: 0.0001)
+        XCTAssertTrue(playing.turntableActive)
+
+        let reduced = VinylBoutiqueKinematics.state(isPlaying: true, reduceMotion: true)
+        XCTAssertGreaterThan(reduced.discPeekOffsetX, idle.discPeekOffsetX)
+        XCTAssertLessThan(reduced.discPeekOffsetX, playing.discPeekOffsetX)
+        XCTAssertTrue(reduced.turntableActive)
+
+        // 2. MelodyNotebookStore.duplicate 保留首份"副本"且连续复制不重名
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("chimmo_r28_\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let store = MelodyNotebookStore(directory: tempDir)
+        let baseDoc = MelodyDocument(
+            title: "琥珀圆舞曲",
+            scaleMode: .brightMajor,
+            notes: [NoteBead(degree: 1, octaveOffset: 0, rawOnset: 0.1, rawDuration: 0.4)]
+        )
+        let saved = store.save(document: baseDoc, chordPreset: .autoMatch, chordOverrides: [:], summaryNote: "")
+        let firstCopy = try XCTUnwrap(store.duplicate(id: saved.id))
+        XCTAssertEqual(firstCopy.document.title, "琥珀圆舞曲 副本")
+
+        let secondCopy = try XCTUnwrap(store.duplicate(id: saved.id))
+        XCTAssertEqual(secondCopy.document.title, "琥珀圆舞曲 副本 2")
+
+        let thirdCopyFromCopy = try XCTUnwrap(store.duplicate(id: firstCopy.id))
+        XCTAssertEqual(thirdCopyFromCopy.document.title, "琥珀圆舞曲 副本 3")
+
+        let distinctTitles = Set(store.entries.map(\.document.title))
+        XCTAssertEqual(distinctTitles.count, 4)
+    }
 }

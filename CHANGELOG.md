@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.35.0 - 2026-11-24
+- **曲库黑胶精品店与展示工坊重构（Boutique Vinyl Cabinet & Design Studio v0.35.0）**：
+  - 彻底移除系统默认分段控件与平白列表卡片，重构 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 为窑陶 × 蜂蜡桦木 × 拉丝黄铜黑胶唱片工坊：
+    - 顶栏集成 `ChimmoCraftBadge(.vinylSeal)`、响应式「咩 × 哞」活体双子与内嵌窑陶搜曲槽，取消原生导航栏割裂感；
+    - 新增实体木纹/黄铜双槽唱片切换轨（「我的黑胶」与「名曲殿堂」）及四角铆钉黑胶筛选木柜（`ChimmoKilnPillButtonSurface` 分类瓷块与五色极光调式亮盘，附一键重置键）；
+    - 新增 `VinylBoutiqueSleeveThumb` 实景唱片封套缩略件（含封脊色带、四幕色码、中心几何音徽、通过 `VinylBoutiqueKinematics` 滑动半露的旋转黑胶唱片及黄铜机械唱臂落针动画）。
+  - 升级 OpenMotion Design Studio 互动绘本首页并同步导出至 [docs/index.html](docs/index.html)（`v0.35.0`），接入暖窑象牙宣纸纹理、蜂蜡桦木框、交互式 3D 木琴五音琴块与黑胶落针试听样片。
+- **修复与稳定性增强（Fix）**：
+  - 修复曲库切换分段、筛出在播曲目或打开分享抽屉时后台试听音频残留未停播的问题，自动调用 `stopInlinePlay()`；
+  - 补全名曲卡片主舞台在播对勾徽章的无障碍语义标注，并将 `MiniOrbitalDiscPreview` 进度外弧接入 `StageTransportRingMapper.loopProgress` 周期循环；
+  - 修复 `MelodyNotebookStore.duplicate` 重复复制同一首已带 `"副本"` 作品时产生重名碰撞的问题，保留首份 `"xxx 副本"` 命名兼容性的同时为连续副本自动递补序号。
+- **引擎与单元测试（Engine & Tests）**：
+  - 在 [OrbitalStageEngine.swift](Chimmo/Domain/OrbitalStageEngine.swift) 新增 `VinylBoutiqueKinematics` 纯值运动学状态机；
+  - 在 [SpecimenIntegrityTests.swift](ChimmoTests/SpecimenIntegrityTests.swift) 新增 `testCreativeAlchemyRound28VinylBoutiqueKinematicsAndDuplicateNaming`。
+
 ## 0.34.0 - 2026-11-24
 - **建筑级主舞台视觉与材质重构（Global Materials & Stage Instrument Redesign）**：
   - 升级全局 `ChimmoPalette` 与启动纸色资产：将日光底盘重构为暖窑象牙宣纸（`#F4EDE0`）、蜂蜡桦木与拉丝黄铜，夜灯重构为深夜天鹅绒靛蓝（`#0E142C`）、烟熏胡桃木与暖钨丝琥珀，并扩充 `woodTrayTop`、`woodTrayBottom`、`brassHairline`、`glazeHighlight`、`recessShadow` 物理材质原语；

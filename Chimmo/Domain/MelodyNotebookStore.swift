@@ -143,7 +143,23 @@ public final class MelodyNotebookStore: ObservableObject {
         }
         let now = Date()
         let srcDoc = source.document
-        let copyTitle = srcDoc.title.hasSuffix("副本") ? srcDoc.title : "\(srcDoc.title) 副本"
+        let trimmedBase = srcDoc.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rootBase: String = {
+            if let range = trimmedBase.range(of: " 副本(?: \\d+)?$", options: .regularExpression) {
+                return String(trimmedBase[..<range.lowerBound])
+            }
+            return trimmedBase.isEmpty ? "我的作品" : trimmedBase
+        }()
+        let firstCandidate = "\(rootBase) 副本"
+        let existingTitles = Set(entries.map(\.document.title))
+        var copyTitle = firstCandidate
+        if existingTitles.contains(copyTitle) {
+            var suffix = 2
+            while existingTitles.contains("\(firstCandidate) \(suffix)") {
+                suffix += 1
+            }
+            copyTitle = "\(firstCandidate) \(suffix)"
+        }
         let copiedDoc = MelodyDocument(
             id: UUID(),
             title: copyTitle,

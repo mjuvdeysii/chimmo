@@ -6,47 +6,53 @@
   <title>咩哞 · Chimmo — 把脑海里的旋律唱出来、看得见</title>
   <style>
     :root {
-      --bg: #F7F3EA;
-      --paper: #FBF8F1;
-      --card: #FFFFFF;
-      --shelf: #EFE8DA;
-      --wood: #DECBB3;
-      --wood-edge: #C7B093;
-      --ink: #1C1D19;
-      --sub: #5E5F66;
-      --accent: #0B7D74;
-      --accent-soft: rgba(11, 125, 116, 0.12);
-      --gold: #D99E32;
-      --gold-soft: rgba(217, 158, 50, 0.16);
-      --terra: #C4513A;
-      --border: rgba(28, 29, 25, 0.09);
-      --shadow: 0 12px 32px rgba(28, 29, 25, 0.07);
+      --bg: #F4EDE0;
+      --paper: #FBF7EE;
+      --card: #FBF7EE;
+      --shelf: #E7DEC9;
+      --wood: #DFCFAF;
+      --wood-edge: #C7B08A;
+      --brass: #C88F2D;
+      --ink: #1E1B16;
+      --sub: #635B4F;
+      --accent: #0E766E;
+      --accent-soft: rgba(14, 118, 110, 0.13);
+      --gold: #C88F2D;
+      --gold-soft: rgba(200, 143, 45, 0.18);
+      --terra: #E64B58;
+      --border: rgba(200, 143, 45, 0.24);
+      --recess: rgba(58, 46, 30, 0.12);
+      --shadow: 0 14px 34px rgba(58, 46, 30, 0.09);
     }
     html[data-theme="night"] {
-      --bg: #1B2245;
-      --paper: #161C3B;
-      --card: #242E5C;
-      --shelf: #202952;
-      --wood: #3D3248;
-      --wood-edge: #564663;
-      --ink: #F4EBDD;
-      --sub: #AEB4CC;
-      --accent: #4FD8CB;
-      --accent-soft: rgba(79, 216, 203, 0.16);
-      --gold: #FFB84D;
-      --gold-soft: rgba(255, 184, 77, 0.18);
-      --terra: #FF7A7E;
-      --border: rgba(244, 235, 221, 0.12);
-      --shadow: 0 16px 38px rgba(7, 10, 26, 0.42);
+      --bg: #0E142C;
+      --paper: #172042;
+      --card: #1D274E;
+      --shelf: #172042;
+      --wood: #22294A;
+      --wood-edge: #131934;
+      --brass: #E5AA4A;
+      --ink: #F5ECDD;
+      --sub: #A7B0CE;
+      --accent: #53DFCF;
+      --accent-soft: rgba(83, 223, 207, 0.16);
+      --gold: #FFB94E;
+      --gold-soft: rgba(255, 185, 78, 0.18);
+      --terra: #FF7B82;
+      --border: rgba(229, 170, 74, 0.26);
+      --recess: rgba(0, 0, 0, 0.42);
+      --shadow: 0 18px 42px rgba(5, 8, 22, 0.48);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 28px 18px 48px;
-      background:
+      background-color: var(--bg);
+      background-image:
         radial-gradient(circle at 18% 8%, var(--gold-soft), transparent 44%),
         radial-gradient(circle at 86% 18%, var(--accent-soft), transparent 42%),
-        var(--bg);
+        radial-gradient(rgba(94, 71, 42, 0.045) 1px, transparent 1px);
+      background-size: auto, auto, 24px 24px;
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
       line-height: 1.6;
@@ -69,28 +75,32 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      padding: 6px 12px 6px 8px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--card), var(--shelf));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
     }
     .brand-seal {
-      width: 34px;
-      height: 34px;
-      border-radius: 11px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
       background: var(--card);
       border: 1px solid var(--border);
       display: grid;
       place-items: center;
-      box-shadow: var(--shadow);
     }
     .brand-title {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.06em;
     }
     .brand-ver {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
-      background: var(--accent-soft);
-      padding: 3px 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--brass);
+      background: var(--gold-soft);
+      padding: 2px 8px;
       border-radius: 999px;
     }
     .controls {
@@ -102,33 +112,41 @@
     .pill-btn {
       appearance: none;
       border: 1px solid var(--border);
-      background: var(--card);
+      background: linear-gradient(180deg, var(--card), var(--shelf));
       color: var(--ink);
       border-radius: 999px;
-      padding: 7px 13px;
+      padding: 7px 14px;
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      box-shadow: 0 4px 12px var(--recess);
       transition: transform 0.16s ease, border-color 0.2s ease, background-color 0.2s ease;
     }
-    .pill-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+    .pill-btn:hover { transform: translateY(-1px); border-color: var(--brass); }
     .pill-btn[aria-pressed="true"] {
       background: var(--accent);
       color: #FFFFFF;
       border-color: var(--accent);
     }
     html[data-theme="night"] .pill-btn[aria-pressed="true"] {
-      color: #151B36;
+      color: #0E142C;
     }
     .hero {
+      position: relative;
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      border: 1.5px solid var(--brass);
+      border-radius: 30px;
+      padding: 6px;
+      box-shadow: var(--shadow);
+    }
+    .hero-cavity {
       background: var(--paper);
       border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 26px 24px 22px;
-      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 24px 22px 20px;
       display: grid;
       gap: 18px;
     }
@@ -158,7 +176,7 @@
     }
     .mascot-card {
       position: relative;
-      background: var(--card);
+      background: linear-gradient(180deg, var(--card), var(--shelf));
       border: 1.5px solid var(--border);
       border-radius: 22px;
       padding: 16px 14px 14px;
@@ -170,7 +188,7 @@
       transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
       user-select: none;
     }
-    .mascot-card:hover { transform: translateY(-2px); border-color: var(--gold); }
+    .mascot-card:hover { transform: translateY(-2px); border-color: var(--brass); }
     .mascot-card.singing {
       border-color: var(--accent);
       box-shadow: 0 0 0 4px var(--accent-soft);
@@ -183,7 +201,7 @@
     }
     .mascot-name {
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0;
     }
     .mascot-role {
@@ -195,10 +213,11 @@
       position: absolute;
       top: 12px;
       right: 12px;
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 999px;
       background: var(--shelf);
+      border: 1px solid var(--border);
       display: grid;
       place-items: center;
       color: var(--sub);
@@ -208,12 +227,13 @@
       background: var(--accent-soft);
     }
     .choir-shelf {
-      background: var(--shelf);
-      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      border: 1.2px solid var(--brass);
       border-radius: 22px;
-      padding: 18px 14px 14px;
+      padding: 16px 14px 14px;
       display: grid;
       gap: 10px;
+      box-shadow: inset 0 2px 8px var(--recess);
     }
     .choir-header {
       display: flex;
@@ -221,11 +241,14 @@
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
-      padding: 0 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: var(--paper);
+      border: 1px solid var(--border);
     }
     .choir-title {
       font-size: 13.5px;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0;
     }
     .choir-hint {
@@ -244,8 +267,8 @@
       bottom: 8px;
       height: 10px;
       border-radius: 999px;
-      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      background: linear-gradient(180deg, var(--brass), rgba(145, 96, 28, 0.85));
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
     }
     .choir-grid {
       position: relative;
@@ -289,16 +312,135 @@
     }
     .figure-name {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* Interactive 3D Kiln Xylophone & Boutique Vinyl Sleeve Demo (v0.35.0) */
+    .workshop-bench {
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      border: 1.2px solid var(--brass);
+      border-radius: 24px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+      box-shadow: var(--shadow);
+    }
+    .kiln-xylo-box {
+      background: var(--paper);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .bench-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      font-weight: 800;
       color: var(--sub);
     }
+    .xylo-keys {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      align-items: end;
+      padding: 10px 8px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, var(--wood), var(--wood-edge));
+      box-shadow: inset 0 2px 6px var(--recess);
+    }
+    .xylo-key {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-bottom: 5px solid rgba(0, 0, 0, 0.28);
+      border-radius: 11px;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      display: grid;
+      justify-items: center;
+      align-content: space-between;
+      padding: 6px 4px;
+      transition: transform 0.14s ease, border-bottom-width 0.14s ease;
+    }
+    .xylo-key:active, .xylo-key.struck {
+      transform: translateY(3px);
+      border-bottom-width: 2px;
+    }
+    .rivet {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: #E8C57B;
+    }
+    .vinyl-boutique-card {
+      background: var(--paper);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+    .sleeve-wrap {
+      position: relative;
+      width: 96px;
+      height: 74px;
+      flex: 0 0 96px;
+    }
+    .peeking-disc {
+      position: absolute;
+      left: 24px;
+      top: 5px;
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      background: radial-gradient(circle, var(--gold) 0 18%, var(--paper) 19% 25%, #232A4B 26% 100%);
+      border: 1.5px solid var(--brass);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .vinyl-boutique-card.spinning .peeking-disc {
+      transform: translateX(8px) rotate(160deg);
+    }
+    .sleeve-cover {
+      position: absolute;
+      left: 0;
+      top: 3px;
+      width: 62px;
+      height: 68px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--card), var(--shelf));
+      border: 1px solid var(--brass);
+      box-shadow: 2px 3px 8px var(--recess);
+      display: grid;
+      place-items: center;
+    }
+    .tonearm-svg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transform-origin: 86px 9px;
+      transform: rotate(-8deg);
+      transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .vinyl-boutique-card.spinning .tonearm-svg {
+      transform: rotate(20deg);
+    }
+
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
     }
     .feature-card {
-      background: var(--card);
+      background: linear-gradient(180deg, var(--card), var(--shelf));
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 18px;
@@ -313,6 +455,7 @@
       border-radius: 10px;
       background: var(--accent-soft);
       color: var(--accent);
+      border: 1px solid var(--border);
       display: grid;
       place-items: center;
     }
@@ -345,11 +488,10 @@
     a {
       color: var(--accent);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
     }
     a:hover { text-decoration: underline; }
 
-    /* Kiln Ceramic Living Kinematics */
     @keyframes breatheSheep {
       0%, 100% { transform: translateY(0px) scaleY(1); }
       50% { transform: translateY(-2.4px) scaleY(1.022); }
@@ -386,9 +528,8 @@
         animation: none !important;
       }
     }
-    @media (max-width: 720px) {
-      .duo-stage { grid-template-columns: 1fr; }
-      .cards-grid { grid-template-columns: 1fr; }
+    @media (max-width: 740px) {
+      .duo-stage, .workshop-bench, .cards-grid { grid-template-columns: 1fr; }
       .choir-grid { gap: 3px; }
       .figure-name { font-size: 10px; }
     }
@@ -406,7 +547,7 @@
           </svg>
         </div>
         <span class="brand-title">咩哞 · CHIMMO</span>
-        <span class="brand-ver">v0.32.0</span>
+        <span class="brand-ver">v0.35.0</span>
       </div>
 
       <div class="controls">
@@ -424,108 +565,147 @@
     </header>
 
     <section class="hero">
-      <div class="hero-head">
-        <div>
-          <h1>把脑海里的旋律唱出来、看得见</h1>
-          <p class="lead">iOS 原生声学音乐盒与零乐理旋律创作器物。点按下方窑陶声学伙伴即可试听真实音高、呼吸与和声对话。</p>
+      <div class="hero-cavity">
+        <div class="hero-head">
+          <div>
+            <h1>把脑海里的旋律唱出来、看得见</h1>
+            <p class="lead">暖窑象牙宣纸 × 蜂蜡桦木 × 拉丝黄铜高定乐器体验。点按下方窑陶声学伙伴与木琴琴块，实时试听真实音高、呼吸与和声对话。</p>
+          </div>
         </div>
-      </div>
 
-      <div class="duo-stage">
-        <button id="mieCard" class="mascot-card" type="button" aria-label="小羊咩，点击试听高音主旋律">
-          <span class="wave-badge" aria-hidden="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-              <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <div class="duo-stage">
+          <button id="mieCard" class="mascot-card" type="button" aria-label="小羊咩，点击试听高音主旋律">
+            <span class="wave-badge" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+                <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+              <ellipse cx="56" cy="83" rx="28" ry="5" fill="rgba(0,0,0,0.12)"/>
+              <g class="sheep-body-anim">
+                <g id="mieWaves" opacity="0">
+                  <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                </g>
+                <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
+                <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
+                <circle cx="43" cy="48" r="18" fill="#FFFBF3"/>
+                <circle cx="69" cy="48" r="18" fill="#FFFBF3"/>
+                <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFBF3"/>
+                <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFBF3" stroke="#C8BCAC" stroke-width="1"/>
+                <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4"/>
+                <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#C88F2D" stroke-width="3.6" stroke-linecap="round"/>
+                <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#C88F2D" stroke-width="3.6" stroke-linecap="round"/>
+                <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
+                <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
+                <g id="mieOpenEyes" class="eye-blink">
+                  <circle class="pupil" cx="48" cy="48" r="3.4" fill="#1C1D19"/>
+                  <circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+                  <circle class="pupil" cx="64" cy="48" r="3.4" fill="#1C1D19"/>
+                  <circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
+                </g>
+                <g id="mieSingEyes" opacity="0">
+                  <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
+                </g>
+                <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
+                <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
+              </g>
             </svg>
-          </span>
-          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-            <ellipse cx="56" cy="83" rx="28" ry="5" fill="rgba(0,0,0,0.12)"/>
-            <g class="sheep-body-anim">
-              <g id="mieWaves" opacity="0">
-                <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-                <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
-              <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#B8AD9E" stroke-width="1.2"/>
-              <circle cx="43" cy="48" r="18" fill="#FFFBF3"/>
-              <circle cx="69" cy="48" r="18" fill="#FFFBF3"/>
-              <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFBF3"/>
-              <ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFBF3" stroke="#C8BCAC" stroke-width="1"/>
-              <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4"/>
-              <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#D99E32" stroke-width="3.6" stroke-linecap="round"/>
-              <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#D99E32" stroke-width="3.6" stroke-linecap="round"/>
-              <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
-              <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.4"/>
-              <g id="mieOpenEyes" class="eye-blink">
-                <circle class="pupil" cx="48" cy="48" r="3.4" fill="#1C1D19"/>
-                <circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-                <circle class="pupil" cx="64" cy="48" r="3.4" fill="#1C1D19"/>
-                <circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-              </g>
-              <g id="mieSingEyes" opacity="0">
-                <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
-                <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#1C1D19" stroke-width="2.2" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
-              <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42"/>
-            </g>
-          </svg>
-          <p class="mascot-name">咩 · Mie（云朵小羊）</p>
-          <p class="mascot-role">高音主旋律 · 哼唱侧耳倾听</p>
-        </button>
+            <p class="mascot-name">咩 · Mie（云朵小羊）</p>
+            <p class="mascot-role">高音主旋律 · 舞台左下角声部领唱</p>
+          </button>
 
-        <button id="mouCard" class="mascot-card" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
-          <span class="wave-badge" aria-hidden="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-              <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <button id="mouCard" class="mascot-card" type="button" aria-label="小牛哞，点击试听低音和声伴奏">
+            <span class="wave-badge" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+                <path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a8.5 8.5 0 0 1 0 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
+              <ellipse cx="56" cy="83" rx="31" ry="5" fill="rgba(0,0,0,0.14)"/>
+              <g class="cow-body-anim">
+                <g id="mouSleepArcs" opacity="0">
+                  <path class="sleep-arc-1" d="M77 25 Q81 21 85 25" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
+                  <path class="sleep-arc-2" d="M84 19 Q89 14 94 19" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round"/>
+                </g>
+                <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
+                <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
+                <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
+                <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
+                <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
+                <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD"/>
+                <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+                <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
+                <g id="mouOpenEyes" class="eye-blink-delay">
+                  <circle class="pupil" cx="46" cy="44" r="3.4" fill="#1C1D19"/>
+                  <circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+                  <circle class="pupil" cx="66" cy="44" r="3.4" fill="#1C1D19"/>
+                  <circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
+                </g>
+                <g id="mouSleepEyes" opacity="0">
+                  <path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
+                  <path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
+                </g>
+                <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23"/>
+                <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23"/>
+              </g>
             </svg>
-          </span>
-          <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-            <ellipse cx="56" cy="83" rx="31" ry="5" fill="rgba(0,0,0,0.14)"/>
-            <g class="cow-body-anim">
-              <g id="mouSleepArcs" opacity="0">
-                <path class="sleep-arc-1" d="M77 25 Q81 21 85 25" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round"/>
-                <path class="sleep-arc-2" d="M84 19 Q89 14 94 19" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
-              <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
-              <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#694235" stroke-width="1.2"/>
-              <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
-              <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#B98532" stroke-width="1.2"/>
-              <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD"/>
-              <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-              <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-              <g id="mouOpenEyes" class="eye-blink-delay">
-                <circle class="pupil" cx="46" cy="44" r="3.4" fill="#1C1D19"/>
-                <circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-                <circle class="pupil" cx="66" cy="44" r="3.4" fill="#1C1D19"/>
-                <circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-              </g>
-              <g id="mouSleepEyes" opacity="0">
-                <path d="M42.5 44 Q46 47.5 49.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
-                <path d="M62.5 44 Q66 47.5 69.5 44" fill="none" stroke="#EFE7DC" stroke-width="2.1" stroke-linecap="round"/>
-              </g>
-              <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23"/>
-              <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23"/>
-            </g>
-          </svg>
-          <p class="mascot-name">哞 · Mou（可可小牛）</p>
-          <p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
-        </button>
+            <p class="mascot-name">哞 · Mou（可可小牛）</p>
+            <p class="mascot-role" id="mouRoleText">低音根音 · 睁眼四幕和声护航</p>
+          </button>
+        </div>
+
+        <div class="choir-shelf">
+          <div class="choir-header">
+            <p class="choir-title">咩哞七小只合唱木架（调内 1–7 音级）</p>
+            <p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
+          </div>
+          <div class="shelf-stage">
+            <div class="choir-grid" id="choirGrid"></div>
+            <div class="wood-plank" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="workshop-bench" aria-label="蜂蜡桦木琴盒与黑胶精品封套体验">
+      <div class="kiln-xylo-box">
+        <div class="bench-label">
+          <span>3D 窑陶木琴共鸣箱（五音安心守护）</span>
+          <span>点按试音</span>
+        </div>
+        <div class="xylo-keys" id="xyloKeys">
+          <button class="xylo-key" type="button" data-hz="261.63" style="height:76px;background:#E8534A"><span class="rivet"></span><span>1 Do</span><span class="rivet"></span></button>
+          <button class="xylo-key" type="button" data-hz="293.66" style="height:70px;background:#F58A2C"><span class="rivet"></span><span>2 Re</span><span class="rivet"></span></button>
+          <button class="xylo-key" type="button" data-hz="329.63" style="height:64px;background:#EBB31A"><span class="rivet"></span><span>3 Mi</span><span class="rivet"></span></button>
+          <button class="xylo-key" type="button" data-hz="392.00" style="height:58px;background:#15A6AE"><span class="rivet"></span><span>5 Sol</span><span class="rivet"></span></button>
+          <button class="xylo-key" type="button" data-hz="440.00" style="height:52px;background:#4C74EB"><span class="rivet"></span><span>6 La</span><span class="rivet"></span></button>
+        </div>
       </div>
 
-      <div class="choir-shelf">
-        <div class="choir-header">
-          <p class="choir-title">咩哞七小只合唱架（调内 1–7 音级）</p>
-          <p class="choir-hint" id="choirStatus">点按任意小偶试听音级并唤醒眼神跟随</p>
+      <button id="vinylBoutiqueCard" class="vinyl-boutique-card" type="button" aria-label="试听黑胶唱片工坊封套唱盘">
+        <div class="sleeve-wrap" aria-hidden="true">
+          <div class="peeking-disc"></div>
+          <div class="sleeve-cover">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="var(--accent)" stroke-width="1.6"/>
+              <circle cx="12" cy="12" r="3.2" fill="var(--gold)"/>
+            </svg>
+          </div>
+          <svg class="tonearm-svg" width="96" height="74" viewBox="0 0 96 74">
+            <line x1="86" y1="9" x2="74" y2="33" stroke="var(--brass)" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="86" cy="9" r="3.5" fill="var(--brass)"/>
+            <circle cx="74" cy="33" r="2.5" fill="var(--gold)"/>
+          </svg>
         </div>
-        <div class="shelf-stage">
-          <div class="choir-grid" id="choirGrid"></div>
-          <div class="wood-plank" aria-hidden="true"></div>
+        <div style="text-align:left">
+          <div style="font-size:15px;font-weight:800">天鹅湖畔 · 黑胶工坊封套</div>
+          <div id="vinylStatusText" style="font-size:12.5px;color:var(--sub);margin-top:4px">轻点唱片滑出封套，黄铜唱臂自动落针试听</div>
         </div>
-      </div>
+      </button>
     </section>
 
     <section class="cards-grid">
@@ -536,8 +716,8 @@
             <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
           </svg>
         </div>
-        <h2>星盘 · 山河 · 星云三态画境</h2>
-        <p>单指手摇黑胶星盘搓盘、随光束流淌的旋律山河，以及按压即可微揉弦的星座星云。</p>
+        <h2>木框黄铜共鸣腔与星盘三态</h2>
+        <p>单指手摇黑胶星盘搓盘、随光束流淌的旋律山河，以及四角双子声部守护的星座星云。</p>
       </article>
 
       <article class="feature-card">
@@ -546,8 +726,8 @@
             <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>零乐理捕梦创作工坊</h2>
-        <p>支持轻敲手鼓定节拍、单指画坡线即划即响、相对哼唱捉珠与闭眼夜间触觉滑音录曲。</p>
+        <h2>零乐理捕梦与音高实时联动</h2>
+        <p>轻敲木鼓定拍、单指画山坡即划即响且小羊同步侧耳跟唱、支持轻哼与闭眼夜灯滑音。</p>
       </article>
 
       <article class="feature-card">
@@ -557,8 +737,8 @@
             <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>28 首离线曲库与高清导出</h2>
-        <p>内置 20 首公版古典与 8 首原创治愈曲目；100% 离线导出高清 PNG 明信片、立体声 WAV 与多轨 MIDI。</p>
+        <h2>28 首黑胶唱片馆与离线导出</h2>
+        <p>木纹陈列架收纳 20 首公版古典与 8 首原创曲目，纯本机离线导出明信片、WAV 与 MIDI。</p>
       </article>
     </section>
 
@@ -590,6 +770,7 @@
       let mouAwake = true;
       let activeDegree = null;
       let clearTimer = null;
+      let vinylTimer = null;
 
       function ensureAudio() {
         const AC = window.AudioContext || window.webkitAudioContext;
@@ -759,6 +940,34 @@
           }
         }, 720);
       }
+
+      document.querySelectorAll("#xyloKeys .xylo-key").forEach((keyEl) => {
+        keyEl.addEventListener("click", () => {
+          const hz = Number(keyEl.dataset.hz) || 261.63;
+          playTone(hz, 0.85, 0, 0.16, "sine");
+          keyEl.classList.add("struck");
+          setTimeout(() => keyEl.classList.remove("struck"), 180);
+        });
+      });
+
+      const vinylCard = document.getElementById("vinylBoutiqueCard");
+      const vinylStatus = document.getElementById("vinylStatusText");
+      vinylCard.addEventListener("click", () => {
+        vinylCard.classList.toggle("spinning");
+        clearTimeout(vinylTimer);
+        if (vinylCard.classList.contains("spinning")) {
+          vinylStatus.textContent = "唱针已落入沟槽 · 正在演奏五音精选片段";
+          [261.63, 329.63, 392.00, 440.00, 392.00].forEach((hz, i) => {
+            playTone(hz, 0.6, i * 0.22, 0.14, "triangle");
+          });
+          vinylTimer = setTimeout(() => {
+            vinylCard.classList.remove("spinning");
+            vinylStatus.textContent = "轻点唱片滑出封套，黄铜唱臂自动落针试听";
+          }, 1500);
+        } else {
+          vinylStatus.textContent = "轻点唱片滑出封套，黄铜唱臂自动落针试听";
+        }
+      });
 
       const mieCard = document.getElementById("mieCard");
       const mouCard = document.getElementById("mouCard");

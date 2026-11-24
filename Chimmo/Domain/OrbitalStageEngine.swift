@@ -1580,3 +1580,33 @@ public enum StageTransportRingMapper {
     }
 }
 
+/// 曲库黑胶精品陈列柜封套滑出与黄铜唱臂落针运动学（100% 纯函数、严格尊重减弱动态效果）。
+public enum VinylBoutiqueKinematics {
+    public struct TonearmState: Equatable, Sendable {
+        public let discPeekOffsetX: CGFloat
+        public let tonearmAngleDeg: Double
+        public let turntableActive: Bool
+
+        public init(discPeekOffsetX: CGFloat, tonearmAngleDeg: Double, turntableActive: Bool) {
+            self.discPeekOffsetX = discPeekOffsetX
+            self.tonearmAngleDeg = tonearmAngleDeg
+            self.turntableActive = turntableActive
+        }
+    }
+
+    public static func state(isPlaying: Bool, reduceMotion: Bool) -> TonearmState {
+        if isPlaying {
+            return TonearmState(
+                discPeekOffsetX: reduceMotion ? 22.0 : 28.0,
+                tonearmAngleDeg: 20.0,
+                turntableActive: true
+            )
+        }
+        return TonearmState(
+            discPeekOffsetX: 20.0,
+            tonearmAngleDeg: -8.0,
+            turntableActive: false
+        )
+    }
+}
+
