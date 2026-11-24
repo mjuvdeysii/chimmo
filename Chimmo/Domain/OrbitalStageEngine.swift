@@ -1119,3 +1119,157 @@ public enum BeatTimingNudgeHelper {
         return (blended, nearestBucket)
     }
 }
+
+/// 曲库卡片与预览使用的微型旋律走势采样器（把任意长度乐曲压缩为平滑有序的归一化轮廓采样点）。
+public enum MelodySparklineMapper {
+    public struct SparklineSample: Equatable, Sendable {
+        public let xNorm: Double
+        public let yNorm: Double
+        public let laneIndex: Int
+
+        public init(xNorm: Double, yNorm: Double, laneIndex: Int) {
+            self.xNorm = xNorm
+            self.yNorm = yNorm
+            self.laneIndex = laneIndex
+        }
+    }
+
+    public static func samples(for document: MelodyDocument, maxPoints: Int = 24) -> [SparklineSample] {
+        guard !document.notes.isEmpty else { return [] }
+        let safeCap = max(4, min(64, maxPoints))
+        let groove = document.grooveStrength.isFinite ? max(0.0, min(1.0, document.grooveStrength)) : 0.0
+        let sorted = document.notes.sorted {
+            $0.displayOnset(grooveStrength: groove) < $1.displayOnset(grooveStrength: groove)
+        }
+
+        let picked: [NoteBead]
+        if sorted.count <= safeCap {
+            picked = sorted
+        } else {
+            var indices: [Int] = []
+            indices.reserveCapacity(safeCap)
+            for i in 0..<safeCap {
+                let frac = Double(i) / Double(safeCap - 1)
+                let idx = max(0, min(sorted.count - 1, Int((frac * Double(sorted.count - 1)).rounded())))
+                if indices.last != idx {
+                    indices.append(idx)
+                }
+            }
+            if indices.last != sorted.count - 1 {
+                indices.append(sorted.count - 1)
+            }
+            picked = indices.map { sorted[$0] }
+        }
+
+        if picked.count == 1 {
+            let bead = picked[0]
+            let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+            let yNorm = max(0.0, min(1.0, Double(laneIdx) / 7.0))
+            return [SparklineSample(xNorm: 0.5, yNorm: yNorm, laneIndex: laneIdx)]
+        }
+
+        let firstOnset = picked.first!.displayOnset(grooveStrength: groove)
+        let lastOnset = picked.last!.displayOnset(grooveStrength: groove)
+        let span = (lastOnset.isFinite && firstOnset.isFinite && (lastOnset - firstOnset) > 0.02)
+            ? (lastOnset - firstOnset)
+            : nil
+
+        return picked.enumerated().map { idx, bead in
+            let laneIdx = XylophoneLane.laneIndex(degree: bead.degree, octaveOffset: bead.octaveOffset)
+            let yNorm = max(0.0, min(1.0, Double(laneIdx) / 7.0))
+            let rawX: Double
+            if let span {
+                let t = bead.displayOnset(grooveStrength: groove)
+                rawX = t.isFinite ? (t - firstOnset) / span : Double(idx) / Double(picked.count - 1)
+            } else {
+                rawX = Double(idx) / Double(picked.count - 1)
+            }
+            let clampedX = rawX.isFinite ? max(0.0, min(1.0, rawX)) : 0.0
+            return SparklineSample(xNorm: clampedX, yNorm: yNorm, laneIndex: laneIdx)
+        }
+    }
+}
+
+/// 声音调色台的声学可视化图谱：把「咩 · 主旋律音色」画成真实物理包络波形，把「哞 · 伴奏织体」画成节奏音点矩阵。
+public enum AcousticSignatureGeometry {
+    public struct PatternDot: Equatable, Sendable {
+        public let x: Double
+        public let y: Double
+        public let radiusScale: Double
+
+        public init(x: Double, y: Double, radiusScale: Double) {
+            self.x = x
+            self.y = y
+            self.radiusScale = radiusScale
+        }
+    }
+
+    public static func voiceEnvelopePoints(for voice: MelodyVoice) -> [Double] {
+        switch voice {
+        case .singingCello:
+            // 弓弦渐入 + 饱满持续 + 柔和双频揉弦波动
+            return [0.08, 0.24, 0.52, 0.78, 0.90, 0.84, 0.92, 0.83, 0.90, 0.80, 0.86, 0.74, 0.64, 0.50, 0.36, 0.22, 0.12]
+        case .concertPiano:
+            // 毛毡木槌瞬态峰 + 自然木质共鸣平滑衰变
+            return [0.16, 0.96, 0.90, 0.78, 0.68, 0.59, 0.51, 0.44, 0.38, 0.33, 0.28, 0.24, 0.20, 0.17, 0.14, 0.11, 0.09]
+        case .liquidHarp:
+            // 清澈拨弦锐利起音 + 清透谐波涟漪落音
+            return [0.18, 0.98, 0.74, 0.56, 0.60, 0.44, 0.36, 0.38, 0.28, 0.23, 0.24, 0.18, 0.15, 0.13, 0.10, 0.08, 0.06]
+        case .celestaGlass:
+            // 八音盒金属音栓晶透双峰闪光脉冲
+            return [0.22, 1.00, 0.62, 0.40, 0.58, 0.36, 0.24, 0.34, 0.20, 0.15, 0.19, 0.12, 0.10, 0.09, 0.07, 0.06, 0.05]
+        }
+    }
+
+    public static func accompanimentPatternDots(for texture: AccompanimentTexture) -> [PatternDot] {
+        switch texture {
+        case .swanRipple:
+            // 细腻上下波浪分解琶音
+            return [
+                PatternDot(x: 0.12, y: 0.22, radiusScale: 1.05),
+                PatternDot(x: 0.24, y: 0.46, radiusScale: 0.82),
+                PatternDot(x: 0.36, y: 0.74, radiusScale: 0.90),
+                PatternDot(x: 0.48, y: 0.50, radiusScale: 0.78),
+                PatternDot(x: 0.60, y: 0.26, radiusScale: 1.00),
+                PatternDot(x: 0.72, y: 0.52, radiusScale: 0.84),
+                PatternDot(x: 0.84, y: 0.78, radiusScale: 0.92),
+                PatternDot(x: 0.92, y: 0.56, radiusScale: 0.76)
+            ]
+        case .feltWaltz:
+            // 1 强低音落地 + 2/3 轻盈双和弦抬举（三拍圆舞）
+            return [
+                PatternDot(x: 0.15, y: 0.20, radiusScale: 1.18),
+                PatternDot(x: 0.32, y: 0.62, radiusScale: 0.82),
+                PatternDot(x: 0.32, y: 0.82, radiusScale: 0.74),
+                PatternDot(x: 0.46, y: 0.62, radiusScale: 0.80),
+                PatternDot(x: 0.46, y: 0.82, radiusScale: 0.72),
+                PatternDot(x: 0.64, y: 0.20, radiusScale: 1.12),
+                PatternDot(x: 0.80, y: 0.62, radiusScale: 0.82),
+                PatternDot(x: 0.80, y: 0.82, radiusScale: 0.74)
+            ]
+        case .summerGlass:
+            // 交错悬浮开放九度与高音微光点
+            return [
+                PatternDot(x: 0.16, y: 0.26, radiusScale: 0.95),
+                PatternDot(x: 0.30, y: 0.72, radiusScale: 0.88),
+                PatternDot(x: 0.44, y: 0.48, radiusScale: 0.92),
+                PatternDot(x: 0.58, y: 0.84, radiusScale: 1.04),
+                PatternDot(x: 0.72, y: 0.32, radiusScale: 0.90),
+                PatternDot(x: 0.86, y: 0.68, radiusScale: 0.86)
+            ]
+        case .pureChorale:
+            // 稳重齐整柱式三和弦竖列
+            return [
+                PatternDot(x: 0.24, y: 0.24, radiusScale: 1.00),
+                PatternDot(x: 0.24, y: 0.50, radiusScale: 0.96),
+                PatternDot(x: 0.24, y: 0.76, radiusScale: 0.96),
+                PatternDot(x: 0.52, y: 0.24, radiusScale: 1.00),
+                PatternDot(x: 0.52, y: 0.50, radiusScale: 0.96),
+                PatternDot(x: 0.52, y: 0.76, radiusScale: 0.96),
+                PatternDot(x: 0.80, y: 0.24, radiusScale: 1.00),
+                PatternDot(x: 0.80, y: 0.50, radiusScale: 0.96),
+                PatternDot(x: 0.80, y: 0.76, radiusScale: 0.96)
+            ]
+        }
+    }
+}

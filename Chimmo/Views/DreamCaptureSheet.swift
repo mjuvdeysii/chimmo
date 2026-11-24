@@ -392,35 +392,6 @@ public struct DreamCaptureSheet: View {
                     .accessibilityLabel(hill.label)
                 }
             }
-
-            // D. 闭眼滑音入口
-            Button {
-                showNightLampTheater = true
-            } label: {
-                HStack(spacing: 10) {
-                    ChimmoCraftBadge(
-                        .nightLampHalo,
-                        accent: Color(hex: 0xFFB84D),
-                        surface: Color(hex: 0x151D3B),
-                        size: 32
-                    )
-                    Text("闭眼滑音")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: 0xF4EBDD))
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color(hex: 0xFFB84D))
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(hex: 0x121A37)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color(hex: 0xFFB84D).opacity(0.35), lineWidth: 1.0)
-                )
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -429,8 +400,18 @@ public struct DreamCaptureSheet: View {
     private var forgivingHumSection: some View {
         let level = CGFloat(vm.capturePipeline.inputLevel)
         let isRec = vm.capturePipeline.isRecording
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        let earTilt = isRec ? min(1.0, max(-1.0, (Double(level) - 0.14) * 1.4)) : 0.0
 
-        return VStack(spacing: 22) {
+        return VStack(spacing: 18) {
+            ChimmoSheepView(
+                isNight: palette.isNight,
+                accentColor: skyColor,
+                isSinging: isRec && level > 0.06,
+                tiltProgress: earTilt
+            )
+            .frame(width: 56, height: 46)
+
             ZStack {
                 Circle()
                     .strokeBorder(
@@ -470,6 +451,11 @@ public struct DreamCaptureSheet: View {
 
             liveVocalPitchStage(isRec: isRec, level: level, trace: vm.capturePipeline.livePitchTrace)
 
+            HStack(spacing: 14) {
+                humReferenceBead(degree: 1, laneIndex: 0, voiceLabel: "试听主音 1 Do 定调")
+                humReferenceBead(degree: 5, laneIndex: 4, voiceLabel: "试听属音 5 Sol 定调")
+            }
+
             if !vm.capturePipeline.statusMessage.isEmpty {
                 Text(vm.capturePipeline.statusMessage)
                     .font(.caption2.weight(.semibold))
@@ -477,10 +463,36 @@ public struct DreamCaptureSheet: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(.vertical, 32)
+        .padding(.vertical, 26)
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(palette.cardSurface))
+    }
+
+    private func humReferenceBead(degree: Int, laneIndex: Int, voiceLabel: String) -> some View {
+        let lane = XylophoneLane.lane(at: laneIndex)
+        let col = lane.barColor(isNight: palette.isNight)
+        return Button {
+            vm.previewHumReference(degree: degree)
+        } label: {
+            HStack(spacing: 6) {
+                PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: laneIndex))
+                    .frame(width: 11, height: 11)
+                    .foregroundStyle(col)
+                Text(lane.digitLabel)
+                    .font(.caption.weight(.heavy).monospacedDigit())
+                    .foregroundStyle(palette.primaryInk)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(
+                Capsule()
+                    .fill(col.opacity(palette.isNight ? 0.18 : 0.12))
+                    .overlay(Capsule().strokeBorder(col.opacity(0.45), lineWidth: 1.0))
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(voiceLabel)
     }
 
     private func liveVocalPitchStage(isRec: Bool, level: CGFloat, trace: [Double]) -> some View {

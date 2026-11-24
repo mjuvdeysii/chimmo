@@ -1521,4 +1521,84 @@ final class SpecimenIntegrityTests: XCTestCase {
         XCTAssertNil(vm.statusToast)
         vm.stopPlayback()
     }
+
+    @MainActor
+    func testCreativeAlchemyRound22DuoIPConsoleAndSparkline() {
+        // 1. 「咩 × 哞」双子角色定义与零 Emoji 校验
+        XCTAssertEqual(ChimmoDuoCharacter.allCases.count, 2)
+        for ch in ChimmoDuoCharacter.allCases {
+            XCTAssertFalse(ch.chineseName.isEmpty)
+            XCTAssertFalse(ch.roleShort.isEmpty)
+            XCTAssertFalse(ch.accessibilityLabel.isEmpty)
+            for scalar in (ch.chineseName + ch.roleShort + ch.accessibilityLabel).unicodeScalars {
+                let v = scalar.value
+                let isEmoji = (0x1F000...0x1FAFF).contains(v) || (0x2600...0x27BF).contains(v) || (0xFE00...0xFE0F).contains(v)
+                XCTAssertFalse(isEmoji)
+            }
+        }
+
+        let activeState = ChimmoDuoCompanionState.compute(melodyActive: true, cowAwake: true, isPlaying: true, reduceMotion: false)
+        XCTAssertLessThan(activeState.sheepBouncePt, 0)
+        XCTAssertGreaterThan(activeState.sheepEarWiggleDeg, 0)
+        XCTAssertFalse(activeState.cowSleeping)
+        XCTAssertGreaterThan(activeState.cowGlowOpacity, 0.8)
+
+        let reducedState = ChimmoDuoCompanionState.compute(melodyActive: true, cowAwake: false, isPlaying: true, reduceMotion: true)
+        XCTAssertEqual(reducedState.sheepBouncePt, 0)
+        XCTAssertEqual(reducedState.sheepEarWiggleDeg, 0)
+        XCTAssertEqual(reducedState.cowBreathScale, 1.0, accuracy: 1e-6)
+        XCTAssertTrue(reducedState.cowSleeping)
+        XCTAssertEqual(reducedState.cowGlowOpacity, 0.0, accuracy: 1e-6)
+
+        // 2. 曲库微型旋律曲线采样器（空曲、单音、长曲限幅与边界保真）
+        let emptyDoc = MelodyDocument(title: "空", subtitle: "", notes: [])
+        XCTAssertTrue(MelodySparklineMapper.samples(for: emptyDoc).isEmpty)
+
+        let singleDoc = MelodyDocument(
+            title: "单音",
+            subtitle: "",
+            notes: [NoteBead(degree: 5, octaveOffset: 0, rawOnset: 0.4, rawDuration: 0.5)]
+        )
+        let singleSamples = MelodySparklineMapper.samples(for: singleDoc)
+        XCTAssertEqual(singleSamples.count, 1)
+        XCTAssertEqual(singleSamples[0].xNorm, 0.5, accuracy: 1e-6)
+        XCTAssertEqual(singleSamples[0].laneIndex, 4)
+
+        let swan = SpecimenLibrary.saintSaensTheSwan
+        let swanSamples = MelodySparklineMapper.samples(for: swan, maxPoints: 18)
+        XCTAssertLessThanOrEqual(swanSamples.count, 19)
+        XCTAssertGreaterThanOrEqual(swanSamples.count, 4)
+        XCTAssertEqual(swanSamples.first?.xNorm ?? -1, 0.0, accuracy: 1e-6)
+        XCTAssertEqual(swanSamples.last?.xNorm ?? -1, 1.0, accuracy: 1e-6)
+        XCTAssertTrue(swanSamples.allSatisfy { (0.0...1.0).contains($0.xNorm) && (0.0...1.0).contains($0.yNorm) })
+
+        // 3. 声音调色台声学包络波形与伴奏点阵图谱校验
+        for voice in MelodyVoice.allCases {
+            let env = AcousticSignatureGeometry.voiceEnvelopePoints(for: voice)
+            XCTAssertEqual(env.count, 17)
+            XCTAssertTrue(env.allSatisfy { (0.0...1.0).contains($0) })
+        }
+        for tex in AccompanimentTexture.allCases {
+            let dots = AcousticSignatureGeometry.accompanimentPatternDots(for: tex)
+            XCTAssertFalse(dots.isEmpty)
+            XCTAssertTrue(dots.allSatisfy { (0.0...1.0).contains($0.x) && (0.0...1.0).contains($0.y) && $0.radiusScale > 0.5 })
+        }
+
+        // 4. 空曲库直达创作、双子试听与哼唱定调音珠零 Toast 联动
+        let vm = StudioViewModel()
+        vm.triggerNewCreationFromShelf()
+        XCTAssertTrue(vm.requestOpenDreamSheet)
+        vm.auditionDuoCharacter(.mie)
+        vm.auditionDuoCharacter(.mou)
+        vm.previewHumReference(degree: 1)
+        vm.previewHumReference(degree: 5)
+        XCTAssertNil(vm.statusToast)
+        vm.stopPlayback()
+
+        // 5. 含双子印章的日光/夜灯明信片 PNG 渲染校验
+        let dayPNG = VinylPostcardExporter.renderPNGData(document: swan, shadowEnabled: true, isNight: false, visualMode: .orbitalDisc)
+        let nightPNG = VinylPostcardExporter.renderPNGData(document: swan, shadowEnabled: true, isNight: true, visualMode: .resonanceNebula)
+        XCTAssertGreaterThan(dayPNG?.count ?? 0, 1024)
+        XCTAssertGreaterThan(nightPNG?.count ?? 0, 1024)
+    }
 }

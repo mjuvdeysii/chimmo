@@ -130,8 +130,16 @@ public struct VinylPostcardCanvasView: View {
                 .padding(16)
 
             VStack(spacing: 16) {
-                // 顶部栏
+                // 顶部栏（嵌「咩 × 哞」双子印章 + 极简调式与音色角标）
                 HStack(spacing: 8) {
+                    ChimmoDuoBadgeView(
+                        isNight: snapshot.isNight,
+                        accentColor: skyColor,
+                        melodyActive: !snapshot.notes.isEmpty,
+                        cowAwake: true
+                    )
+                    .frame(width: 30, height: 20)
+
                     Text("咩哞 · CHIMMO")
                         .font(.system(size: 11, weight: .bold, design: .rounded))
                         .tracking(1.1)
@@ -192,21 +200,15 @@ public struct VinylPostcardCanvasView: View {
                     .background(Capsule().fill(palette.shelfSurface.opacity(snapshot.isNight ? 0.85 : 0.72)))
                 }
 
-                // 底部标题与说明
-                VStack(alignment: .leading, spacing: 8) {
+                // 底部极简画报标题与光学比例印记
+                VStack(alignment: .leading, spacing: 10) {
                     Text(snapshot.title)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(palette.primaryInk)
                         .lineLimit(2)
 
-                    Text(snapshot.headline)
-                        .font(.system(size: 13.5, weight: .medium, design: .rounded))
-                        .foregroundStyle(palette.secondaryInk)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    HStack(spacing: 8) {
-                        Label("\(snapshot.notes.count) 个音", systemImage: "music.note")
+                    HStack(spacing: 10) {
+                        Label("\(snapshot.notes.count)", systemImage: "music.note")
                         Text("·")
                         Text(String(format: "%.1fs", snapshot.totalDuration))
                         if snapshot.rootMIDI != 60 {
@@ -214,16 +216,15 @@ public struct VinylPostcardCanvasView: View {
                             Text(RootTranspositionHelper.compactLabel(forRootMIDI: snapshot.rootMIDI))
                         }
                         if snapshot.shadowEnabled {
-                            Text("·")
-                            Text("含伴唱")
+                            ChimmoCraftMark(.counterpointMoons, color: Color(hex: 0x4EA8DE))
+                                .frame(width: 13, height: 13)
                         }
                         Spacer()
-                        Text("离线生成")
-                            .foregroundStyle(palette.nightLampGold)
+                        ChimmoCraftMark(.vinylSeal, color: palette.nightLampGold.opacity(0.85))
+                            .frame(width: 16, height: 16)
                     }
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(palette.secondaryInk.opacity(0.88))
-                    .padding(.top, 4)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(palette.secondaryInk.opacity(0.90))
                 }
                 .padding(.horizontal, 34)
                 .padding(.bottom, 30)

@@ -152,36 +152,34 @@ public struct MusicBoxShelfView: View {
                                 }
                             }
 
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(ScaleMode.allCases) { mode in
-                                        let isSel = selectedMoodFilter == mode
-                                        let aurora = mode.skyAuroraColor(isNight: palette.isNight)
-                                        Button {
-                                            toggleMoodFilter(mode)
-                                        } label: {
-                                            HStack(spacing: 5) {
-                                                Circle()
-                                                    .fill(aurora)
-                                                    .frame(width: 8, height: 8)
-                                                Text(mode.shortSkyLabel)
-                                                    .font(.caption2.weight(isSel ? .bold : .medium))
-                                            }
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 5)
-                                            .background(Capsule().fill(isSel ? aurora.opacity(0.24) : palette.cardSurface))
-                                            .overlay(
-                                                Capsule().strokeBorder(isSel ? aurora : Color.clear, lineWidth: 1.2)
-                                            )
-                                            .foregroundStyle(isSel ? aurora : palette.secondaryInk)
+                            HStack(spacing: 12) {
+                                ForEach(ScaleMode.allCases) { mode in
+                                    let isSel = selectedMoodFilter == mode
+                                    let aurora = mode.skyAuroraColor(isNight: palette.isNight)
+                                    Button {
+                                        toggleMoodFilter(mode)
+                                    } label: {
+                                        ZStack {
+                                            Circle()
+                                                .fill(isSel ? aurora.opacity(0.26) : palette.cardSurface)
+                                                .frame(width: 34, height: 34)
+                                                .overlay(
+                                                    Circle().strokeBorder(isSel ? aurora : aurora.opacity(0.28), lineWidth: isSel ? 1.8 : 0.9)
+                                                )
+                                                .shadow(color: isSel ? aurora.opacity(0.42) : .clear, radius: 5, y: 1)
+
+                                            Image(systemName: mode.iconName)
+                                                .font(.system(size: 13.5, weight: .bold))
+                                                .foregroundStyle(aurora)
                                         }
-                                        .buttonStyle(.plain)
-                                        .accessibilityLabel("筛选\(mode.label)风格")
-                                        .accessibilityValue(isSel ? "已选中" : "")
                                     }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("筛选\(mode.label)风格")
+                                    .accessibilityValue(isSel ? "已选中" : "")
                                 }
-                                .padding(.horizontal, 16)
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 16)
                         }
                         .padding(.bottom, 8)
                     }
@@ -227,14 +225,13 @@ public struct MusicBoxShelfView: View {
     private var mySavedDiscsSection: some View {
         if notebook.entries.isEmpty {
             VStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(palette.shelfSurface)
-                        .frame(width: 72, height: 72)
-                    Image(systemName: "opticaldisc.fill")
-                        .font(.system(size: 36))
-                        .foregroundStyle(palette.homeAnchor)
-                }
+                ChimmoDuoBadgeView(
+                    isNight: palette.isNight,
+                    accentColor: palette.homeAnchor,
+                    melodyActive: false,
+                    cowAwake: true
+                )
+                .frame(width: 96, height: 64)
 
                 Text("暂无作品")
                     .font(.subheadline.weight(.bold))
@@ -270,9 +267,13 @@ public struct MusicBoxShelfView: View {
 
     private var filteredEmptyPlaceholder: some View {
         VStack(spacing: 14) {
-            Image(systemName: "magnifyingglass")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(palette.secondaryInk)
+            ChimmoDuoBadgeView(
+                isNight: palette.isNight,
+                accentColor: palette.secondaryInk,
+                melodyActive: false,
+                cowAwake: false
+            )
+            .frame(width: 72, height: 48)
             Text("暂无匹配曲目")
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(palette.secondaryInk)
@@ -297,7 +298,6 @@ public struct MusicBoxShelfView: View {
 
     private func savedDiscCard(entry: SavedMelodyEntry, index: Int) -> some View {
         let isPlayingThis = playingEntryID == entry.id
-        let dateStr = entry.updatedAt.formatted(date: .abbreviated, time: .shortened)
         let entryModeColor = entry.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
         let entryVoice = entry.document.preferredVoice ?? .singingCello
 
@@ -316,10 +316,10 @@ public struct MusicBoxShelfView: View {
 
                 Circle()
                     .fill(palette.cardSurface.opacity(0.88))
-                    .frame(width: 24, height: 24)
+                    .frame(width: 26, height: 26)
                     .overlay(
                         Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 10.5, weight: .bold))
                             .foregroundStyle(isPlayingThis ? palette.nightLampGold : palette.homeAnchor)
                     )
             }
@@ -333,59 +333,56 @@ public struct MusicBoxShelfView: View {
                 if isPlayingThis { stopInlinePlay() } else { playInline(entry) }
             }
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 7) {
                 HStack(spacing: 6) {
                     Circle()
                         .fill(entryModeColor)
                         .frame(width: 7, height: 7)
-                    Text(dateStr)
-                        .font(.caption2)
-                        .foregroundStyle(palette.secondaryInk)
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    Text("\(entryVoice.label) · \(entry.document.notes.count) 音")
-                        .font(.system(size: 9.5, weight: .semibold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(palette.shelfSurface))
-                        .foregroundStyle(palette.secondaryInk)
-                }
 
-                Button {
-                    renameTargetID = entry.id
-                    renameDraftText = entry.document.title
-                    showRenameAlert = true
-                } label: {
-                    Text(entry.document.title)
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                        .lineLimit(1)
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("轻点重命名作品")
-
-                HStack(spacing: 8) {
                     Button {
-                        if isPlayingThis { stopInlinePlay() } else { playInline(entry) }
+                        renameTargetID = entry.id
+                        renameDraftText = entry.document.title
+                        showRenameAlert = true
                     } label: {
-                        Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
-                            .font(.caption.weight(.bold))
-                            .frame(width: 34, height: 28)
-                            .background(Capsule().fill(isPlayingThis ? palette.nightLampGold : palette.homeAnchor))
-                            .foregroundStyle((isPlayingThis || palette.isNight) ? Color(hex: 0x1B2245) : .white)
+                        Text(entry.document.title)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(palette.primaryInk)
+                            .lineLimit(1)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(isPlayingThis ? "停止试听" : "试听")
+                    .accessibilityHint("轻点重命名作品")
 
+                    Spacer(minLength: 4)
+
+                    HStack(spacing: 3) {
+                        Image(systemName: entryVoice.iconName)
+                            .font(.system(size: 9.5, weight: .bold))
+                        Text("\(entry.document.notes.count)")
+                            .font(.system(size: 10, weight: .bold).monospacedDigit())
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(palette.shelfSurface))
+                    .foregroundStyle(palette.secondaryInk)
+                }
+
+                MiniMelodySparkline(
+                    document: entry.document,
+                    isNight: palette.isNight,
+                    isPlaying: isPlayingThis
+                )
+                .frame(height: 20)
+
+                HStack(spacing: 8) {
                     Button {
                         stopInlinePlay()
                         onLoadSavedToBoard(entry)
                     } label: {
                         Image(systemName: "record.circle")
                             .font(.caption.weight(.bold))
-                            .frame(width: 34, height: 28)
-                            .background(Capsule().fill(palette.shelfSurface))
-                            .foregroundStyle(palette.primaryInk)
+                            .frame(width: 36, height: 28)
+                            .background(Capsule().fill(palette.homeAnchor.opacity(0.14)))
+                            .foregroundStyle(palette.homeAnchor)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("在主舞台打开 \(entry.document.title)")
@@ -565,10 +562,10 @@ public struct MusicBoxShelfView: View {
 
                     Circle()
                         .fill(palette.cardSurface.opacity(0.88))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 26, height: 26)
                         .overlay(
                             Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 10.5, weight: .bold))
                                 .foregroundStyle(isPlayingThis ? palette.nightLampGold : palette.homeAnchor)
                         )
                 }
@@ -602,56 +599,48 @@ public struct MusicBoxShelfView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 7) {
                     HStack(spacing: 6) {
+                        Circle()
+                            .fill(modeColor)
+                            .frame(width: 6.5, height: 6.5)
+
                         Text(spec.title)
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(palette.primaryInk)
                             .lineLimit(1)
-                        Text(voice.label)
-                            .font(.system(size: 9.5, weight: .semibold))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(palette.shelfSurface))
-                            .foregroundStyle(palette.secondaryInk)
-                        Spacer()
+
+                        Spacer(minLength: 4)
+
                         if spec.id == currentDocumentID {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(palette.homeAnchor)
                         }
+
+                        Image(systemName: voice.iconName)
+                            .font(.system(size: 10, weight: .bold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(palette.shelfSurface))
+                            .foregroundStyle(palette.secondaryInk)
                     }
 
-                    HStack(spacing: 8) {
-                        Button {
-                            if isPlayingThis {
-                                stopInlinePlay()
-                            } else {
-                                playInlineDocument(
-                                    spec,
-                                    id: spec.id,
-                                    chordPreset: .autoMatch,
-                                    chordOverrides: [:],
-                                    texture: spec.preferredTexture
-                                )
-                            }
-                        } label: {
-                            Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
-                                .font(.caption.weight(.bold))
-                                .frame(width: 34, height: 28)
-                                .background(Capsule().fill(isPlayingThis ? palette.nightLampGold : palette.homeAnchor))
-                                .foregroundStyle((isPlayingThis || palette.isNight) ? Color(hex: 0x1B2245) : .white)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(isPlayingThis ? "停止试听" : "试听 \(spec.title)")
+                    MiniMelodySparkline(
+                        document: spec,
+                        isNight: palette.isNight,
+                        isPlaying: isPlayingThis
+                    )
+                    .frame(height: 20)
 
+                    HStack(spacing: 10) {
                         Button {
                             stopInlinePlay()
                             onPlayAlongSpecimen(spec)
                         } label: {
                             Image(systemName: "sparkles")
                                 .font(.caption.weight(.bold))
-                                .frame(width: 34, height: 28)
+                                .frame(width: 38, height: 28)
                                 .background(Capsule().fill(palette.nightLampGold.opacity(0.18)))
                                 .foregroundStyle(palette.nightLampGold)
                         }
@@ -664,7 +653,7 @@ public struct MusicBoxShelfView: View {
                         } label: {
                             Image(systemName: "record.circle")
                                 .font(.caption.weight(.bold))
-                                .frame(width: 34, height: 28)
+                                .frame(width: 38, height: 28)
                                 .background(Capsule().fill(palette.shelfSurface))
                                 .foregroundStyle(palette.primaryInk)
                         }
@@ -677,7 +666,7 @@ public struct MusicBoxShelfView: View {
                         } label: {
                             ChimmoCraftMark(.atmosphereHorizon, color: modeColor)
                                 .frame(width: 13, height: 13)
-                                .frame(width: 34, height: 28)
+                                .frame(width: 38, height: 28)
                                 .background(Capsule().fill(modeColor.opacity(0.14)))
                         }
                         .buttonStyle(.plain)
@@ -859,5 +848,68 @@ private struct MiniOrbitalDiscPreview: View {
                 }
             }
         }
+    }
+}
+
+/// 微型旋律高低走势彩线（在曲库卡片上直接看懂每首旋律的轮廓起伏，无需文字解释）。
+private struct MiniMelodySparkline: View {
+    let document: MelodyDocument
+    let isNight: Bool
+    let isPlaying: Bool
+    private let cachedSamples: [MelodySparklineMapper.SparklineSample]
+
+    init(document: MelodyDocument, isNight: Bool, isPlaying: Bool) {
+        self.document = document
+        self.isNight = isNight
+        self.isPlaying = isPlaying
+        self.cachedSamples = MelodySparklineMapper.samples(for: document, maxPoints: 22)
+    }
+
+    var body: some View {
+        Canvas { ctx, size in
+            guard !cachedSamples.isEmpty else { return }
+            let padX: CGFloat = 4
+            let padY: CGFloat = 3
+            let w = max(1, size.width - padX * 2)
+            let h = max(1, size.height - padY * 2)
+
+            let pts: [(pt: CGPoint, col: Color)] = cachedSamples.map { sample in
+                let px = padX + CGFloat(sample.xNorm) * w
+                let py = padY + (1.0 - CGFloat(sample.yNorm)) * h
+                let col = XylophoneLane.lane(at: sample.laneIndex).barColor(isNight: isNight)
+                return (CGPoint(x: px, y: py), col)
+            }
+
+            if pts.count > 1 {
+                for i in 1..<pts.count {
+                    let a = pts[i - 1]
+                    let b = pts[i]
+                    var seg = Path()
+                    seg.move(to: a.pt)
+                    seg.addLine(to: b.pt)
+                    ctx.stroke(
+                        seg,
+                        with: .linearGradient(
+                            Gradient(colors: [
+                                a.col.opacity(isPlaying ? 0.92 : 0.65),
+                                b.col.opacity(isPlaying ? 0.92 : 0.65)
+                            ]),
+                            startPoint: a.pt,
+                            endPoint: b.pt
+                        ),
+                        style: StrokeStyle(lineWidth: isPlaying ? 2.0 : 1.5, lineCap: .round)
+                    )
+                }
+            }
+
+            for item in pts {
+                let r: CGFloat = isPlaying ? 2.0 : 1.5
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: item.pt.x - r, y: item.pt.y - r, width: r * 2, height: r * 2)),
+                    with: .color(item.col.opacity(isPlaying ? 0.96 : 0.78))
+                )
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

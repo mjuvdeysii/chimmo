@@ -84,6 +84,7 @@ public final class StudioViewModel: ObservableObject {
     @Published public var followGlowIndex: Int = 0
     @Published public var smartHintActive: Bool = false
     @Published public var isTappingRhythm: Bool = false
+    @Published public var requestOpenDreamSheet: Bool = false
     @Published public var liveTapTimestamps: [TimeInterval] = []
     @Published public var isPlaying: Bool = false
     @Published public var playheadTime: Double? = nil
@@ -162,6 +163,67 @@ public final class StudioViewModel: ObservableObject {
         if musicHapticsEnabled {
             AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
         }
+    }
+
+    public func triggerNewCreationFromShelf() {
+        stopPlayback()
+        contextEchoTask?.cancel()
+        followGlowActive = false
+        requestOpenDreamSheet = true
+        AcousticHapticsEngine.shared.playBeatTap(isStrong: false)
+    }
+
+    public func auditionDuoCharacter(_ character: ChimmoDuoCharacter) {
+        synth.ensureRunning()
+        previewArpeggioTask?.cancel()
+        let mode = document.scaleMode
+        let rootMIDI = document.rootMIDI
+        switch character {
+        case .mie:
+            let timbre = FeltPianoSynth.Timbre.from(voice: melodyVoice)
+            let hzLow = mode.frequencyHz(rootMIDI: rootMIDI, degree: 5, octaveOffset: 0)
+            let hzHigh = mode.frequencyHz(rootMIDI: rootMIDI, degree: 1, octaveOffset: 1)
+            AcousticHapticsEngine.shared.playPitchTouch(laneIndex: 4, isHome: false, isTension: false)
+            synth.playNote(frequency: hzLow, velocity: 0.56, decay: 0.85, brightness: 0.98, timbre: timbre, pan: -0.14)
+            previewArpeggioTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 95_000_000)
+                guard let self, !Task.isCancelled else { return }
+                self.synth.playNote(frequency: hzHigh, velocity: 0.64, decay: 1.25, brightness: 1.04, timbre: timbre, pan: 0.16)
+            }
+        case .mou:
+            let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: 1, octaveOffset: -1)
+            AcousticHapticsEngine.shared.playBeatTap(isStrong: true)
+            synth.playNote(frequency: bassHz, velocity: 0.56, decay: 1.25, brightness: 0.86, timbre: .warmBass, pan: -0.10)
+            synth.playDiatonicChord(
+                rootMIDI: rootMIDI,
+                mode: mode,
+                chord: .I,
+                texture: accompanimentTexture,
+                spanDuration: 1.15,
+                intensity: 0.72
+            )
+        }
+    }
+
+    public func previewHumReference(degree: Int) {
+        let safeDeg = max(1, min(7, degree))
+        synth.ensureRunning()
+        let hz = document.scaleMode.frequencyHz(rootMIDI: document.rootMIDI, degree: safeDeg, octaveOffset: 0)
+        let laneIdx = XylophoneLane.laneIndex(degree: safeDeg, octaveOffset: 0)
+        let lane = XylophoneLane.lane(at: laneIdx)
+        AcousticHapticsEngine.shared.playPitchTouch(
+            laneIndex: laneIdx,
+            isHome: safeDeg == 1,
+            isTension: lane.member.isTensionDegree
+        )
+        synth.playNote(
+            frequency: hz,
+            velocity: 0.56,
+            decay: 1.25,
+            brightness: 0.94,
+            timbre: .liquidHarp,
+            pan: safeDeg == 1 ? -0.10 : 0.10
+        )
     }
 
     public func setPlaybackRate(_ rate: Double) {
@@ -1988,7 +2050,7 @@ public struct StudioView: View {
                     },
                     onStartNewTap: {
                         selectedTab = .board
-                        vm.startRhythmTap()
+                        vm.triggerNewCreationFromShelf()
                     },
                     onWillPlayInline: {
                         vm.stopPlayback()
@@ -2020,7 +2082,28 @@ public struct StudioView: View {
                 melodyVoice: vm.melodyVoice,
                 shadowEnabled: vm.shadowCounterpointEnabled,
                 playbackRate: vm.playbackRate,
-                visualMode: vm.visualMode
+                visualMode: vm.visualMode,
+                onAuditionDuo: { character in
+                    vm.auditionDuoCharacter(character)
+                },
+                onOpenSharePostcard: {
+                    let req = VinylPostcardRequest(
+                        document: vm.document,
+                        chordPreset: vm.chordPreset,
+                        chordOverrides: vm.chordOverrides,
+                        accompanimentTexture: vm.accompanimentTexture,
+                        melodyVoice: vm.melodyVoice,
+                        shadowEnabled: vm.shadowCounterpointEnabled,
+                        playbackRate: vm.playbackRate,
+                        headline: vm.currentInsight.headline,
+                        visualMode: vm.visualMode
+                    )
+                    showAbout = false
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 320_000_000)
+                        postcardTarget = req
+                    }
+                }
             )
         }
         .sheet(item: $postcardTarget) { req in

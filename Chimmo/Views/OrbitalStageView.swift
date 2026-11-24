@@ -197,6 +197,18 @@ public struct OrbitalStageView: View {
                 ribbonMercuryLevel = 0.0
                 vm.endStarVibrato()
             }
+            .onAppear {
+                if vm.requestOpenDreamSheet {
+                    showDreamSheet = true
+                    vm.requestOpenDreamSheet = false
+                }
+            }
+            .onChange(of: vm.requestOpenDreamSheet) { _, shouldOpen in
+                if shouldOpen {
+                    showDreamSheet = true
+                    vm.requestOpenDreamSheet = false
+                }
+            }
         }
     }
 
@@ -221,9 +233,13 @@ public struct OrbitalStageView: View {
                 showRenameAlert = true
             } label: {
                 HStack(spacing: 7) {
-                    Circle()
-                        .fill(vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight))
-                        .frame(width: 7, height: 7)
+                    ChimmoDuoBadgeView(
+                        isNight: palette.isNight,
+                        accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
+                        melodyActive: !vm.activeLaneIndices.isEmpty,
+                        cowAwake: vm.cradleEnabled
+                    )
+                    .frame(width: 28, height: 18)
 
                     Text(vm.document.title)
                         .font(.subheadline.weight(.bold))
@@ -313,6 +329,18 @@ public struct OrbitalStageView: View {
                                 }
                             }
                     )
+
+                if vm.document.notes.isEmpty {
+                    ChimmoDuoBadgeView(
+                        isNight: palette.isNight,
+                        accentColor: vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight),
+                        melodyActive: false,
+                        cowAwake: vm.cradleEnabled
+                    )
+                    .frame(width: 74, height: 48)
+                    .opacity(palette.isNight ? 0.36 : 0.30)
+                    .allowsHitTesting(false)
+                }
 
                 // 顶部极简声学状态标（无文字堆砌；展示伴唱、倍速、音区移调与律动状态，及麦克风异常提示）
                 VStack {
@@ -2147,21 +2175,36 @@ public struct OrbitalStageView: View {
         discInteractionMode = .none
     }
 
-    // MARK: - 3. Compact Floating Pure-Icon Selection Pill
+    // MARK: - 3. Compact Zero-Overflow Visual Selection Dock
 
     private var compactSelectionPill: some View {
         let idx = selectedBeatIndex ?? 0
         let total = vm.document.notes.count
+        let selectedBead = vm.document.notes.indices.contains(idx) ? vm.document.notes[idx] : nil
+        let selectedLane = selectedBead.map { XylophoneLane.lane(at: XylophoneLane.laneIndex(degree: $0.degree, octaveOffset: $0.octaveOffset)) }
 
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 7) {
+        return VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                if let lane = selectedLane {
+                    HStack(spacing: 4) {
+                        PitchGlyphVectorView(glyph: PitchGlyphShape.glyph(forLaneIndex: lane.index))
+                            .frame(width: 10, height: 10)
+                        Text(lane.digitLabel)
+                            .font(.caption2.weight(.heavy).monospacedDigit())
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(lane.barColor(isNight: palette.isNight)))
+                    .foregroundStyle(.white)
+                    .accessibilityHidden(true)
+                }
+
                 Button {
                     vm.stepSelectedBeat(delta: -1)
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(width: 30, height: 26)
                         .background(Capsule().fill(palette.shelfSurface))
                         .foregroundStyle(idx > 0 ? palette.primaryInk : palette.secondaryInk.opacity(0.35))
                 }
@@ -2172,14 +2215,14 @@ public struct OrbitalStageView: View {
                 Text("\(idx + 1)/\(total)")
                     .font(.caption2.weight(.bold).monospacedDigit())
                     .foregroundStyle(palette.primaryInk)
+                    .frame(minWidth: 32)
 
                 Button {
                     vm.stepSelectedBeat(delta: 1)
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(width: 30, height: 26)
                         .background(Capsule().fill(palette.shelfSurface))
                         .foregroundStyle(idx + 1 < total ? palette.homeAnchor : palette.secondaryInk.opacity(0.35))
                 }
@@ -2187,13 +2230,14 @@ public struct OrbitalStageView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("下一拍")
 
+                Spacer(minLength: 4)
+
                 Button {
                     vm.toggleSmartPitchHints()
                 } label: {
                     Image(systemName: "lightbulb.fill")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 6)
+                        .frame(width: 32, height: 26)
                         .background(Capsule().fill(vm.smartHintActive ? palette.nightLampGold : palette.nightLampGold.opacity(0.18)))
                         .foregroundStyle(vm.smartHintActive ? Color(hex: 0x1B2245) : palette.nightLampGold)
                 }
@@ -2201,12 +2245,26 @@ public struct OrbitalStageView: View {
                 .accessibilityLabel("推荐音高")
 
                 Button {
+                    vm.selectedBeadID = nil
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption2.weight(.bold))
+                        .frame(width: 26, height: 26)
+                        .background(Circle().fill(palette.shelfSurface))
+                        .foregroundStyle(palette.secondaryInk)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("取消选中当前音符")
+            }
+
+            HStack(spacing: 6) {
+                Button {
                     vm.adjustSelectedBeadDuration(delta: -0.18)
                 } label: {
                     Image(systemName: "minus.circle")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
                         .background(Capsule().fill(palette.shelfSurface))
                         .foregroundStyle(palette.primaryInk)
                 }
@@ -2218,8 +2276,8 @@ public struct OrbitalStageView: View {
                 } label: {
                     Image(systemName: "plus.circle")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
                         .background(Capsule().fill(palette.shelfSurface))
                         .foregroundStyle(palette.primaryInk)
                 }
@@ -2231,8 +2289,8 @@ public struct OrbitalStageView: View {
                 } label: {
                     Image(systemName: "arrow.left.to.line")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
                         .background(Capsule().fill(palette.shelfSurface))
                         .foregroundStyle(palette.primaryInk)
                 }
@@ -2244,8 +2302,8 @@ public struct OrbitalStageView: View {
                 } label: {
                     Image(systemName: "arrow.right.to.line")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
                         .background(Capsule().fill(palette.shelfSurface))
                         .foregroundStyle(palette.primaryInk)
                 }
@@ -2257,8 +2315,8 @@ public struct OrbitalStageView: View {
                 } label: {
                     Image(systemName: "plus.square.on.square")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
                         .background(Capsule().fill(palette.bassRibbon.opacity(0.18)))
                         .foregroundStyle(palette.bassRibbon)
                 }
@@ -2270,33 +2328,22 @@ public struct OrbitalStageView: View {
                 } label: {
                     Image(systemName: "trash")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
                         .background(Capsule().fill(palette.melodyTerracotta.opacity(0.15)))
                         .foregroundStyle(palette.melodyTerracotta)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("删除当前音符")
-
-                Button {
-                    vm.selectedBeadID = nil
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption2.weight(.bold))
-                        .padding(6)
-                        .foregroundStyle(palette.secondaryInk)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("取消选中当前音符")
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(
-                Capsule()
-                    .fill(palette.cardSurface)
-                    .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.20 : 0.06), radius: 8, y: 2)
-            )
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(palette.cardSurface)
+                .shadow(color: palette.primaryInk.opacity(palette.isNight ? 0.20 : 0.06), radius: 8, y: 2)
+        )
     }
 
     // MARK: - 4. Tactile 8-Key Montessori Rainbow Ribbon (Glissando + Colorblind Glyphs)
@@ -2577,7 +2624,7 @@ public struct OrbitalStageView: View {
     }
 }
 
-/// 声音先行、极致少字的声音、外观与辅助设置抽屉
+/// 「咩 × 哞」声学调色台（少字可视化控制台：雕塑开关垫 + 均分五色极光带 + 音色物理包络波形 + 伴奏点阵图谱）
 private struct MoodAndSoundSheet: View {
     @ObservedObject var vm: StudioViewModel
     let palette: ChimmoPalette
@@ -2595,261 +2642,13 @@ private struct MoodAndSoundSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // 0. 外观模式（纯图标）
-                    HStack(spacing: 8) {
-                        ForEach(AppearancePreference.allCases) { pref in
-                            let active = vm.appearance == pref
-                            Button {
-                                vm.appearance = pref
-                                AcousticHapticsEngine.shared.playScrubTick()
-                            } label: {
-                                Image(systemName: appearanceIcon(for: pref))
-                                    .font(.subheadline.weight(.bold))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                    .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(pref.label)
-                        }
-                    }
-                    .padding(6)
-                    .background(Capsule().fill(palette.shelfSurface.opacity(0.70)))
-
-                    // 1. 辅助开关（原生极简单行 Toggle，零解释副标题）
-                    VStack(spacing: 0) {
-                        Toggle(isOn: Binding(
-                            get: { vm.pentatonicSafe },
-                            set: { _ in vm.togglePentatonicSafe() }
-                        )) {
-                            HStack(spacing: 10) {
-                                ChimmoCraftMark(
-                                    .pentatonicArc,
-                                    color: vm.pentatonicSafe ? Color(hex: 0x2F9E44) : palette.secondaryInk
-                                )
-                                .frame(width: 18, height: 18)
-                                Text("五音模式")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(palette.primaryInk)
-                            }
-                        }
-                        .tint(Color(hex: 0x2F9E44))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 11)
-
-                        Divider().padding(.leading, 42)
-
-                        Toggle(isOn: Binding(
-                            get: { vm.shadowCounterpointEnabled },
-                            set: { _ in vm.toggleShadowCounterpoint() }
-                        )) {
-                            HStack(spacing: 10) {
-                                ChimmoCraftMark(
-                                    .counterpointMoons,
-                                    color: vm.shadowCounterpointEnabled ? Color(hex: 0x4EA8DE) : palette.secondaryInk
-                                )
-                                .frame(width: 18, height: 18)
-                                Text("自动伴唱")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(palette.primaryInk)
-                            }
-                        }
-                        .tint(Color(hex: 0x4EA8DE))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 11)
-
-                        Divider().padding(.leading, 42)
-
-                        Toggle(isOn: Binding(
-                            get: { vm.musicHapticsEnabled },
-                            set: { _ in vm.toggleMusicHaptics() }
-                        )) {
-                            HStack(spacing: 10) {
-                                ChimmoCraftMark(
-                                    .hapticPulse,
-                                    color: vm.musicHapticsEnabled ? palette.nightLampGold : palette.secondaryInk
-                                )
-                                .frame(width: 18, height: 18)
-                                Text("节拍震动")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(palette.primaryInk)
-                            }
-                        }
-                        .tint(palette.nightLampGold)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 11)
-                    }
-                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.cardSurface))
-
-                    // 播放速度（纯数字胶囊）
-                    HStack(spacing: 8) {
-                        ForEach([0.65, 0.85, 1.0, 1.25], id: \.self) { rate in
-                            let active = abs(vm.playbackRate - rate) < 0.04
-                            let label = rate == 1.0 ? "1×" : String(format: "%.2g×", rate)
-                            Button {
-                                vm.setPlaybackRate(rate)
-                            } label: {
-                                Text(label)
-                                    .font(.caption.weight(.bold).monospacedDigit())
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 9)
-                                    .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                    .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("播放速度 \(label)")
-                        }
-                    }
-                    .padding(6)
-                    .background(Capsule().fill(palette.shelfSurface.opacity(0.60)))
-
-                    // 律动贴合度（自由 ⇄ 整齐）与全曲音区重心（−5 … +5）双行胶囊
-                    VStack(spacing: 8) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "metronome")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(palette.secondaryInk)
-                                .frame(width: 22)
-                                .accessibilityHidden(true)
-
-                            ForEach([(0.0, "自由"), (0.5, "微稳"), (1.0, "整齐")], id: \.0) { val, label in
-                                let active = abs(vm.document.grooveStrength - val) < 0.25
-                                Button {
-                                    vm.setGrooveStrength(val)
-                                } label: {
-                                    Text(label)
-                                        .font(.caption.weight(.bold))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("节奏\(label)")
-                                .accessibilityValue(active ? "已选中" : "")
-                            }
-                        }
-
-                        HStack(spacing: 6) {
-                            Image(systemName: "tuningfork")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(palette.secondaryInk)
-                                .frame(width: 22)
-                                .accessibilityHidden(true)
-
-                            ForEach(RootTranspositionHelper.presetOffsets, id: \.self) { offset in
-                                let targetMIDI = 60 + offset
-                                let active = vm.document.rootMIDI == targetMIDI
-                                Button {
-                                    vm.setRootMIDI(targetMIDI)
-                                } label: {
-                                    Text(RootTranspositionHelper.compactLabel(forRootMIDI: targetMIDI))
-                                        .font(.caption.weight(.bold).monospacedDigit())
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("音区\(RootTranspositionHelper.accessibilityLabel(forRootMIDI: targetMIDI))")
-                                .accessibilityValue(active ? "已选中" : "")
-                            }
-                        }
-                    }
-                    .padding(6)
-                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface.opacity(0.60)))
-
-                    // 2. 情绪风格（5 格色光磁砖，点一下立刻响起特征琶音，靠耳朵选）
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 94), spacing: 8)], spacing: 8) {
-                        ForEach(ScaleMode.allCases) { mode in
-                            let selected = vm.document.scaleMode == mode
-                            let skyCol = mode.skyAuroraColor(isNight: palette.isNight)
-                            Button {
-                                vm.setScaleMode(mode)
-                            } label: {
-                                VStack(spacing: 7) {
-                                    Image(systemName: mode.iconName)
-                                        .font(.title3.weight(.semibold))
-                                        .foregroundStyle(skyCol)
-
-                                    Capsule()
-                                        .fill(skyCol.opacity(selected ? 0.95 : 0.45))
-                                        .frame(width: 28, height: 3.5)
-
-                                    Text(mode.label)
-                                        .font(.caption.weight(.bold))
-                                        .foregroundStyle(palette.primaryInk)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                        .fill(palette.cardSurface)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                                .strokeBorder(selected ? skyCol : Color.clear, lineWidth: 1.8)
-                                        )
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-
-                    // 3. 乐器音色（点一下立刻试音双音阶）
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("音色")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(palette.secondaryInk)
-
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(MelodyVoice.allCases) { v in
-                                let active = vm.melodyVoice == v
-                                Button {
-                                    vm.setMelodyVoice(v)
-                                } label: {
-                                    Label(v.label, systemImage: v.iconName)
-                                        .font(.caption.weight(.bold))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 11)
-                                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(active ? palette.homeAnchor : palette.cardSurface))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-
-                    // 4. 伴奏织体（点一下立刻播放和声试听）
-                    VStack(alignment: .leading, spacing: 8) {
-                        Toggle(isOn: Binding(
-                            get: { vm.cradleEnabled },
-                            set: { on in vm.setChordPreset(on ? .autoMatch : .off) }
-                        )) {
-                            Text("伴奏")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(palette.secondaryInk)
-                        }
-                        .tint(palette.bassRibbon)
-
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(AccompanimentTexture.allCases) { tex in
-                                let active = vm.cradleEnabled && vm.accompanimentTexture == tex
-                                Button {
-                                    vm.setAccompanimentTexture(tex)
-                                } label: {
-                                    Label(tex.label, systemImage: tex.iconName)
-                                        .font(.caption.weight(.bold))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 11)
-                                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(active ? palette.bassRibbon : palette.cardSurface))
-                                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
+                VStack(alignment: .leading, spacing: 14) {
+                    appearanceStrip
+                    ceramicToggleConsole
+                    auroraScaleModeStrip
+                    tempoGroovePitchConsole
+                    mieVoiceEnvelopeSection
+                    mouAccompanimentSection
                 }
                 .padding(16)
             }
@@ -2863,6 +2662,466 @@ private struct MoodAndSoundSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+
+    // 0. 昼夜外观（纯图标三态）
+    private var appearanceStrip: some View {
+        HStack(spacing: 8) {
+            ForEach(AppearancePreference.allCases) { pref in
+                let active = vm.appearance == pref
+                Button {
+                    vm.appearance = pref
+                    AcousticHapticsEngine.shared.playScrubTick()
+                } label: {
+                    Image(systemName: appearanceIcon(for: pref))
+                        .font(.subheadline.weight(.bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(pref.label)
+            }
+        }
+        .padding(5)
+        .background(Capsule().fill(palette.shelfSurface.opacity(0.70)))
+    }
+
+    // 1. 三枚雕塑陶瓷开关垫（取代系统 Toggle 长行列表）
+    private var ceramicToggleConsole: some View {
+        HStack(spacing: 8) {
+            ceramicPad(
+                symbol: .pentatonicArc,
+                shortLabel: "五音",
+                accessibilityTitle: "五音模式",
+                isOn: vm.pentatonicSafe,
+                activeColor: Color(hex: 0x2F9E44)
+            ) {
+                vm.togglePentatonicSafe()
+            }
+
+            ceramicPad(
+                symbol: .counterpointMoons,
+                shortLabel: "伴唱",
+                accessibilityTitle: "自动伴唱",
+                isOn: vm.shadowCounterpointEnabled,
+                activeColor: Color(hex: 0x4EA8DE)
+            ) {
+                vm.toggleShadowCounterpoint()
+            }
+
+            ceramicPad(
+                symbol: .hapticPulse,
+                shortLabel: "震动",
+                accessibilityTitle: "节拍震动",
+                isOn: vm.musicHapticsEnabled,
+                activeColor: palette.nightLampGold
+            ) {
+                vm.toggleMusicHaptics()
+            }
+        }
+    }
+
+    private func ceramicPad(
+        symbol: ChimmoCraftSymbol,
+        shortLabel: String,
+        accessibilityTitle: String,
+        isOn: Bool,
+        activeColor: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                HStack {
+                    Spacer()
+                    Circle()
+                        .fill(isOn ? activeColor : palette.secondaryInk.opacity(0.24))
+                        .frame(width: 6, height: 6)
+                }
+
+                ChimmoCraftMark(
+                    symbol,
+                    color: isOn ? activeColor : palette.secondaryInk
+                )
+                .frame(width: 22, height: 22)
+
+                Text(shortLabel)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(isOn ? palette.primaryInk : palette.secondaryInk)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isOn ? activeColor.opacity(palette.isNight ? 0.18 : 0.10) : palette.cardSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(isOn ? activeColor.opacity(0.65) : Color.clear, lineWidth: 1.4)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityTitle)
+        .accessibilityValue(isOn ? "已开启" : "已关闭")
+    }
+
+    // 2. 五色极光调式共鸣带（单行均分 5 列，消除 3+2 孤儿分裂）
+    private var auroraScaleModeStrip: some View {
+        HStack(spacing: 6) {
+            ForEach(ScaleMode.allCases) { mode in
+                let selected = vm.document.scaleMode == mode
+                let skyCol = mode.skyAuroraColor(isNight: palette.isNight)
+                Button {
+                    vm.setScaleMode(mode)
+                } label: {
+                    VStack(spacing: 5) {
+                        Image(systemName: mode.iconName)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(skyCol)
+
+                        Capsule()
+                            .fill(skyCol.opacity(selected ? 0.96 : 0.42))
+                            .frame(height: 3.5)
+                            .padding(.horizontal, 6)
+
+                        Text(mode.shortSkyLabel)
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(selected ? palette.primaryInk : palette.secondaryInk)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(selected ? skyCol.opacity(palette.isNight ? 0.16 : 0.10) : palette.cardSurface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(selected ? skyCol : Color.clear, lineWidth: 1.6)
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(mode.label)风格")
+                .accessibilityValue(selected ? "已选中" : "")
+            }
+        }
+    }
+
+    // 3. 倍速 × 节拍疏密点阵 × 音区高度标尺
+    private var tempoGroovePitchConsole: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                ChimmoCraftMark(.tempoDial, color: palette.secondaryInk)
+                    .frame(width: 15, height: 15)
+                    .frame(width: 22)
+                    .accessibilityHidden(true)
+
+                ForEach([0.65, 0.85, 1.0, 1.25], id: \.self) { rate in
+                    let active = abs(vm.playbackRate - rate) < 0.04
+                    let label = rate == 1.0 ? "1×" : String(format: "%.2g×", rate)
+                    Button {
+                        vm.setPlaybackRate(rate)
+                    } label: {
+                        Text(label)
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                            .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("播放速度 \(label)")
+                }
+            }
+
+            HStack(spacing: 6) {
+                Image(systemName: "metronome")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(palette.secondaryInk)
+                    .frame(width: 22)
+                    .accessibilityHidden(true)
+
+                ForEach([(0.0, "自由", 0), (0.5, "微稳", 1), (1.0, "整齐", 2)], id: \.0) { val, label, tier in
+                    let active = abs(vm.document.grooveStrength - val) < 0.25
+                    Button {
+                        vm.setGrooveStrength(val)
+                    } label: {
+                        GrooveDotPatternView(
+                            tier: tier,
+                            color: active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
+                        )
+                        .frame(height: 16)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("节奏\(label)")
+                    .accessibilityValue(active ? "已选中" : "")
+                }
+            }
+
+            HStack(spacing: 6) {
+                Image(systemName: "tuningfork")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(palette.secondaryInk)
+                    .frame(width: 22)
+                    .accessibilityHidden(true)
+
+                ForEach(Array(RootTranspositionHelper.presetOffsets.enumerated()), id: \.element) { idx, offset in
+                    let targetMIDI = 60 + offset
+                    let active = vm.document.rootMIDI == targetMIDI
+                    let barWidth = CGFloat(10 + idx * 3)
+                    Button {
+                        vm.setRootMIDI(targetMIDI)
+                    } label: {
+                        VStack(spacing: 3) {
+                            Text(RootTranspositionHelper.compactLabel(forRootMIDI: targetMIDI))
+                                .font(.caption2.weight(.bold).monospacedDigit())
+                            Capsule()
+                                .fill(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white).opacity(0.85) : palette.homeAnchor.opacity(0.45))
+                                .frame(width: barWidth, height: 2.5)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(active ? palette.homeAnchor : palette.cardSurface))
+                        .foregroundStyle(active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("音区\(RootTranspositionHelper.accessibilityLabel(forRootMIDI: targetMIDI))")
+                    .accessibilityValue(active ? "已选中" : "")
+                }
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(palette.shelfSurface.opacity(0.60)))
+    }
+
+    // 4. 「咩 · 音色」声学物理包络曲线区
+    private var mieVoiceEnvelopeSection: some View {
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Button {
+                    vm.auditionDuoCharacter(.mie)
+                } label: {
+                    ChimmoSheepView(
+                        isNight: palette.isNight,
+                        accentColor: skyColor,
+                        isSinging: true
+                    )
+                    .frame(width: 34, height: 28)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("小羊咩，试听主旋律")
+
+                Text("咩 · 音色")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(palette.secondaryInk)
+
+                Spacer()
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(MelodyVoice.allCases) { v in
+                    let active = vm.melodyVoice == v
+                    let fgColor = active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
+                    let waveColor = active ? fgColor : palette.homeAnchor
+                    Button {
+                        vm.setMelodyVoice(v)
+                    } label: {
+                        HStack(spacing: 8) {
+                            VoiceEnvelopeSparkView(
+                                points: AcousticSignatureGeometry.voiceEnvelopePoints(for: v),
+                                color: waveColor,
+                                filled: active
+                            )
+                            .frame(width: 44, height: 20)
+
+                            Text(v.label)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(fgColor)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(active ? palette.homeAnchor : palette.cardSurface)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(v.label)音色")
+                    .accessibilityValue(active ? "已选中" : "")
+                }
+            }
+        }
+    }
+
+    // 5. 「哞 · 伴奏」低音和声织体点阵区
+    private var mouAccompanimentSection: some View {
+        let skyColor = vm.document.scaleMode.skyAuroraColor(isNight: palette.isNight)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Button {
+                    if !vm.cradleEnabled {
+                        vm.setChordPreset(.autoMatch)
+                    }
+                    vm.auditionDuoCharacter(.mou)
+                } label: {
+                    ChimmoCowView(
+                        isNight: palette.isNight,
+                        accentColor: skyColor,
+                        isAwake: vm.cradleEnabled,
+                        isPlaying: vm.isPlaying
+                    )
+                    .frame(width: 34, height: 28)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("小牛哞，试听低音伴奏")
+
+                Toggle(isOn: Binding(
+                    get: { vm.cradleEnabled },
+                    set: { on in vm.setChordPreset(on ? .autoMatch : .off) }
+                )) {
+                    Text("哞 · 伴奏")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(palette.secondaryInk)
+                }
+                .tint(palette.bassRibbon)
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(AccompanimentTexture.allCases) { tex in
+                    let active = vm.cradleEnabled && vm.accompanimentTexture == tex
+                    let fgColor = active ? (palette.isNight ? Color(hex: 0x1B2245) : .white) : palette.primaryInk
+                    let dotColor = active ? fgColor : palette.bassRibbon
+                    Button {
+                        vm.setAccompanimentTexture(tex)
+                    } label: {
+                        HStack(spacing: 8) {
+                            AccompanimentDotPatternView(
+                                dots: AcousticSignatureGeometry.accompanimentPatternDots(for: tex),
+                                color: dotColor
+                            )
+                            .frame(width: 44, height: 20)
+
+                            Text(tex.label)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(fgColor)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(active ? palette.bassRibbon : palette.cardSurface)
+                        )
+                        .opacity(vm.cradleEnabled ? 1.0 : 0.56)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(tex.label)伴奏")
+                    .accessibilityValue(active ? "已选中" : "")
+                }
+            }
+        }
+    }
+}
+
+private struct GrooveDotPatternView: View {
+    let tier: Int
+    let color: Color
+
+    var body: some View {
+        Canvas { ctx, size in
+            let cy = size.height * 0.5
+            if tier >= 2 {
+                for frac in [0.16, 0.39, 0.61, 0.84] {
+                    let x = size.width * CGFloat(frac)
+                    var bar = Path()
+                    bar.move(to: CGPoint(x: x, y: 2))
+                    bar.addLine(to: CGPoint(x: x, y: size.height - 2))
+                    ctx.stroke(bar, with: .color(color.opacity(0.32)), lineWidth: 1.0)
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - 2.3, y: cy - 2.3, width: 4.6, height: 4.6)), with: .color(color))
+                }
+            } else if tier == 1 {
+                let pts: [(Double, Double)] = [(0.16, 0.42), (0.39, 0.58), (0.61, 0.44), (0.84, 0.56)]
+                for p in pts {
+                    let pt = CGPoint(x: size.width * CGFloat(p.0), y: size.height * CGFloat(p.1))
+                    ctx.fill(Path(ellipseIn: CGRect(x: pt.x - 2.2, y: pt.y - 2.2, width: 4.4, height: 4.4)), with: .color(color))
+                }
+            } else {
+                let pts: [(Double, Double)] = [(0.14, 0.72), (0.36, 0.28), (0.65, 0.75), (0.86, 0.34)]
+                for p in pts {
+                    let pt = CGPoint(x: size.width * CGFloat(p.0), y: size.height * CGFloat(p.1))
+                    ctx.fill(Path(ellipseIn: CGRect(x: pt.x - 2.2, y: pt.y - 2.2, width: 4.4, height: 4.4)), with: .color(color))
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+private struct VoiceEnvelopeSparkView: View {
+    let points: [Double]
+    let color: Color
+    let filled: Bool
+
+    var body: some View {
+        Canvas { ctx, size in
+            guard points.count > 1 else { return }
+            let padX: CGFloat = 2
+            let padY: CGFloat = 2
+            let w = max(1, size.width - padX * 2)
+            let h = max(1, size.height - padY * 2)
+
+            var line = Path()
+            var area = Path()
+            for (idx, v) in points.enumerated() {
+                let x = padX + (CGFloat(idx) / CGFloat(points.count - 1)) * w
+                let y = padY + (1.0 - CGFloat(max(0.0, min(1.0, v)))) * h
+                if idx == 0 {
+                    line.move(to: CGPoint(x: x, y: y))
+                    area.move(to: CGPoint(x: x, y: size.height - padY))
+                    area.addLine(to: CGPoint(x: x, y: y))
+                } else {
+                    line.addLine(to: CGPoint(x: x, y: y))
+                    area.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            area.addLine(to: CGPoint(x: size.width - padX, y: size.height - padY))
+            area.closeSubpath()
+
+            ctx.fill(area, with: .color(color.opacity(filled ? 0.24 : 0.14)))
+            ctx.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+private struct AccompanimentDotPatternView: View {
+    let dots: [AcousticSignatureGeometry.PatternDot]
+    let color: Color
+
+    var body: some View {
+        Canvas { ctx, size in
+            let padX: CGFloat = 4
+            let padY: CGFloat = 3
+            let w = max(1, size.width - padX * 2)
+            let h = max(1, size.height - padY * 2)
+            for dot in dots {
+                let px = padX + CGFloat(dot.x) * w
+                let py = padY + (1.0 - CGFloat(dot.y)) * h
+                let r = CGFloat(2.0 * dot.radiusScale)
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: px - r, y: py - r, width: r * 2, height: r * 2)),
+                    with: .color(color.opacity(0.92))
+                )
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
