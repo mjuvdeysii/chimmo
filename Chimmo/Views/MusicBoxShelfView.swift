@@ -35,6 +35,8 @@ public struct MusicBoxShelfView: View {
     @State private var renameDraftText: String = ""
     @State private var showRenameAlert: Bool = false
     @State private var isSearchExpanded: Bool = false
+    @State private var isEmptyShelfGreeting: Bool = false
+    @State private var emptyShelfGreetingTask: Task<Void, Never>? = nil
 
     public init(
         palette: ChimmoPalette,
@@ -424,7 +426,7 @@ public struct MusicBoxShelfView: View {
                         )
                         .foregroundStyle(active ? palette.primaryInk : palette.secondaryInk)
                         .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                        .contentShape(Rectangle())
+                        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                     .accessibilityLabel("分类 \(badge.rawCategory)")
@@ -495,7 +497,7 @@ public struct MusicBoxShelfView: View {
                     )
                     .foregroundStyle(palette.primaryInk)
                     .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                    .contentShape(Rectangle())
+                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("重置全部筛选")
@@ -510,48 +512,58 @@ public struct MusicBoxShelfView: View {
     private var mySavedDiscsSection: some View {
         if notebook.entries.isEmpty {
             VStack(spacing: 12) {
-                HStack(alignment: .bottom, spacing: 10) {
-                    ChimmoFigureView(
-                        member: .taono,
-                        isNight: palette.isNight,
-                        isMinor: false,
-                        isSinging: false,
-                        focusedDegree: 1,
-                        time: 0,
-                        listeningTilt: 0
-                    )
-                    .frame(width: 34, height: 42)
+                Button {
+                    triggerEmptyShelfGreeting()
+                } label: {
+                    HStack(alignment: .bottom, spacing: 10) {
+                        ChimmoFigureView(
+                            member: .taono,
+                            isNight: palette.isNight,
+                            isMinor: false,
+                            isSinging: isEmptyShelfGreeting,
+                            focusedDegree: 1,
+                            time: 0,
+                            listeningTilt: 0
+                        )
+                        .frame(width: 34, height: 42)
 
-                    LivingChimmoDuoBadgeView(
-                        isNight: palette.isNight,
-                        accentColor: palette.homeAnchor,
-                        melodyActive: false,
-                        cowAwake: true
-                    )
-                    .frame(width: 92, height: 60)
+                        LivingChimmoDuoBadgeView(
+                            isNight: palette.isNight,
+                            accentColor: palette.homeAnchor,
+                            melodyActive: isEmptyShelfGreeting,
+                            cowAwake: true
+                        )
+                        .frame(width: 92, height: 60)
 
-                    ChimmoFigureView(
-                        member: .plokko,
-                        isNight: palette.isNight,
-                        isMinor: false,
-                        isSinging: false,
-                        focusedDegree: nil,
-                        time: 0,
-                        listeningTilt: 0
-                    )
-                    .frame(width: 34, height: 42)
+                        ChimmoFigureView(
+                            member: .plokko,
+                            isNight: palette.isNight,
+                            isMinor: false,
+                            isSinging: isEmptyShelfGreeting,
+                            focusedDegree: nil,
+                            time: 0,
+                            listeningTilt: 0
+                        )
+                        .frame(width: 34, height: 42)
 
-                    ChimmoFigureView(
-                        member: .corllo,
-                        isNight: palette.isNight,
-                        isMinor: false,
-                        isSinging: false,
-                        focusedDegree: nil,
-                        time: 0,
-                        listeningTilt: 0
-                    )
-                    .frame(width: 34, height: 42)
+                        ChimmoFigureView(
+                            member: .corllo,
+                            isNight: palette.isNight,
+                            isMinor: false,
+                            isSinging: isEmptyShelfGreeting,
+                            focusedDegree: nil,
+                            time: 0,
+                            listeningTilt: 0
+                        )
+                        .frame(width: 34, height: 42)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .contentShape(Capsule())
                 }
+                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.8))
+                .accessibilityLabel("轻触陶诺、咩哞、噗咯与壳咯听迎宾三和弦")
+                .accessibilityHint("播放明亮大调一三五迎宾和弦")
 
                 Text("书架暂无曲本")
                     .font(.subheadline.weight(.heavy))
@@ -995,6 +1007,59 @@ public struct MusicBoxShelfView: View {
         inlinePlayTask?.cancel()
         inlinePlayTask = nil
         playingEntryID = nil
+        emptyShelfGreetingTask?.cancel()
+        emptyShelfGreetingTask = nil
+        isEmptyShelfGreeting = false
+    }
+
+    private func triggerEmptyShelfGreeting() {
+        stopInlinePlay()
+        onWillPlayInline()
+        synth.ensureRunning()
+        AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.42)
+        withAnimation(reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.68)) {
+            isEmptyShelfGreeting = true
+        }
+        let mode = ScaleMode.brightMajor
+        synth.playNote(
+            frequency: mode.frequencyHz(rootMIDI: 60, degree: 1, octaveOffset: 0),
+            velocity: 0.44,
+            decay: 0.95,
+            timbre: .celesta,
+            pan: -0.22
+        )
+        emptyShelfGreetingTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 90_000_000)
+            guard !Task.isCancelled else { return }
+            synth.playNote(
+                frequency: mode.frequencyHz(rootMIDI: 60, degree: 3, octaveOffset: 0),
+                velocity: 0.44,
+                decay: 0.95,
+                timbre: .celesta,
+                pan: 0.0
+            )
+            try? await Task.sleep(nanoseconds: 90_000_000)
+            guard !Task.isCancelled else { return }
+            synth.playNote(
+                frequency: mode.frequencyHz(rootMIDI: 60, degree: 5, octaveOffset: 0),
+                velocity: 0.44,
+                decay: 0.95,
+                timbre: .celesta,
+                pan: 0.22
+            )
+            synth.playNote(
+                frequency: mode.frequencyHz(rootMIDI: 60, degree: 1, octaveOffset: -1),
+                velocity: 0.44,
+                decay: 1.15,
+                timbre: .warmBass,
+                pan: 0.0
+            )
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.28)) {
+                isEmptyShelfGreeting = false
+            }
+        }
     }
 
     // MARK: - 2. 28 Playable Masterpiece Storybook Songbook Covers

@@ -268,7 +268,7 @@ public struct SoundPaletteBoxSheet: View {
                         )
                         .frame(height: 28)
                         .frame(maxWidth: .infinity, minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                        .contentShape(Rectangle())
+                        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
                     .accessibilityLabel("波形示波窗，轻点试听当前音色与双子合奏")
@@ -290,7 +290,7 @@ public struct SoundPaletteBoxSheet: View {
                                 minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                 minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                             )
-                            .contentShape(Rectangle())
+                            .contentShape(Circle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("小羊咩，试听高音主旋律")
@@ -319,7 +319,7 @@ public struct SoundPaletteBoxSheet: View {
                                     minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                     alignment: .bottom
                                 )
-                                .contentShape(Rectangle())
+                                .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("\(member.degree) \(member.chineseName) \(member.solfege)")
@@ -346,7 +346,7 @@ public struct SoundPaletteBoxSheet: View {
                                 minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                                 minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                             )
-                            .contentShape(Rectangle())
+                            .contentShape(Circle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("小牛哞，试听低音伴奏")
@@ -760,7 +760,6 @@ public struct SoundPaletteBoxSheet: View {
                             )
                             .foregroundStyle(palette.primaryInk)
                             .contentShape(Capsule())
-                            .contentShape(Rectangle())
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                         .accessibilityLabel("试听小羊咩主旋律音色")

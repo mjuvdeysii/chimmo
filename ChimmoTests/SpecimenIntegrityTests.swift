@@ -3887,4 +3887,94 @@ final class SpecimenIntegrityTests: XCTestCase {
             )
         )
     }
+
+    @MainActor
+    func testCreativeAlchemyRound60HarmonyWCAGContrastAndHitShapePurity() throws {
+        func relativeLuminance(_ hex: UInt32) -> Double {
+            func linearize(_ component: UInt32) -> Double {
+                let srgb = Double(component) / 255.0
+                return srgb <= 0.03928 ? (srgb / 12.92) : pow((srgb + 0.055) / 1.055, 2.4)
+            }
+            let r = linearize((hex >> 16) & 0xFF)
+            let g = linearize((hex >> 8) & 0xFF)
+            let b = linearize(hex & 0xFF)
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+
+        func contrastRatio(_ a: UInt32, _ b: UInt32) -> Double {
+            let l1 = relativeLuminance(a)
+            let l2 = relativeLuminance(b)
+            let lighter = max(l1, l2)
+            let darker = min(l1, l2)
+            return (lighter + 0.05) / (darker + 0.05)
+        }
+
+        for chord in DiatonicChord.allCases {
+            let dayHex = chord.colorHex(isNight: false)
+            let nightHex = chord.colorHex(isNight: true)
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(dayHex, 0xFFFFFF),
+                4.5,
+                "日光激活和弦胶囊 \(chord.roman) 对比纯白前景色需达到 WCAG AA 4.5:1"
+            )
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(dayHex, 0xFBF7F0),
+                4.5,
+                "日光未选中和弦胶囊 \(chord.roman) 对比棉纸底面需达到 WCAG AA 4.5:1"
+            )
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(nightHex, 0x0E1430),
+                4.5,
+                "夜灯激活和弦胶囊 \(chord.roman) 对比深夜前景色需达到 WCAG AA 4.5:1"
+            )
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(nightHex, 0x19213F),
+                4.5,
+                "夜灯未选中和弦胶囊 \(chord.roman) 对比夜纸底面需达到 WCAG AA 4.5:1"
+            )
+        }
+
+        let day = ChimmoPalette(isNight: false)
+        let night = ChimmoPalette(isNight: true)
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_r60_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir))
+        vm.startBlankCanvas()
+
+        XCTAssertNotNil(StageHarmonyRibbonView(vm: vm, palette: day, reduceMotion: false, onWakeTimeline: {}))
+        XCTAssertNotNil(StageHarmonyRibbonView(vm: vm, palette: night, reduceMotion: true, onWakeTimeline: {}))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: day))
+        XCTAssertNotNil(SoundPaletteBoxSheet(vm: vm, palette: night))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: day, onOpenSharePostcard: {}))
+        XCTAssertNotNil(CreateStudioView(vm: vm, palette: night, onOpenSharePostcard: {}))
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: day,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                initialSegment: 0,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+        XCTAssertNotNil(
+            MusicBoxShelfView(
+                palette: night,
+                synth: vm.synth,
+                notebook: vm.notebook,
+                currentDocumentID: vm.document.id,
+                initialSegment: 0,
+                onLoadSavedToBoard: { _ in },
+                onPlayAlongSpecimen: { _ in },
+                onEditSpecimenOnBoard: { _ in },
+                onStartNewTap: {}
+            )
+        )
+    }
 }

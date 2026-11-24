@@ -764,7 +764,7 @@ public struct CreateStudioView: View {
                     minWidth: StorybookAffordanceMetrics.compactToolMinHitDimension,
                     minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                 )
-                .contentShape(Rectangle())
+                .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .disabled(!enabled)
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))

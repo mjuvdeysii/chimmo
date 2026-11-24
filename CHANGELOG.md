@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.67.0 - 2026-11-25
+- 四幕彩色和声条 WCAG AA >= 4.5:1 窑彩升级与命中边界对齐：在 [TheoryLensEngine.swift](Chimmo/Domain/TheoryLensEngine.swift) 为 `DiatonicChord` 新增 `colorHex(isNight:)` 单源十六进制函数并将日光 I–vi 色值全面校准为 >= 4.5:1 可读窑彩（对纯白高亮前景与 `#FBF7F0` 棉纸均满足 AA），夜灯六色对 `#0E1430` 与 `#19213F` 亦保持 >= 5.88:1；同步更新 [OrbitalStageView.swift](Chimmo/Views/OrbitalStageView.swift) `StageHarmonyRibbonView` 激活前景色至 `palette.contrastInkOnAccent` 并将小牛伴奏、和弦分幕与开启伴奏胶囊全面切至 `.contentShape(Capsule())`。
+- 声调盒、步进键与筛选条精准触控边界纯化：清理 [SoundPaletteBoxSheet.swift](Chimmo/Views/SoundPaletteBoxSheet.swift) 示波窗（`RoundedRectangle(cornerRadius: 12)`）、双主角试听（`Circle()`）、七小只按钮（`RoundedRectangle(cornerRadius: 12)`）及重复覆盖胶囊的 `"试听"` 热区定义；同步将 [CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 单拍步进按钮与 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 分类/重置筛选胶囊贴合各自视觉圆角边界。
+- 空白书架四重奏灵动迎宾和弦：将 [MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 书架空态的陶诺、咩哞、噗咯与壳咯升级为无边框触控按钮，点按即以 `.celesta` 与 `.warmBass` 轻奏 `C` 大调 `1-3-5` 迎宾三和弦并触发 `reduceMotion` 门控合声动画，同时随内联停播与页面退出自动清理任务。
+- 回归校验：新增 `@MainActor` 单测 `testCreativeAlchemyRound60HarmonyWCAGContrastAndHitShapePurity` 自动校验全部 6 级和弦昼夜 4 组对比度 `>= 4.5`，保持全局零 Emoji 与无模拟器编译全绿。
+
 ## 0.66.0 - 2026-11-25
 - 创作空白舞台交互灵动升级与层叠解耦：[CreateStudioView.swift](Chimmo/Views/CreateStudioView.swift) 将空白画布底部的陶诺、咩哞与壳咯三重奏与“轻哼一段旋律 / 起音种子”从上下叠压解耦为单一有序纵列，并让主角三重奏成为可触碰的欢迎和弦按钮（点按触发 `auditionDuoGreeting()` 并激活三偶动态合声反馈，同时在 `.onDisappear` 严密回收异步计时任务，背景山坡保持穿透点击画布），严守零多余文案与零重边框降噪原则。
 - 曲本上下文菜单、VoiceOver 自定义动作与精确命中边界对齐：[MusicBoxShelfView.swift](Chimmo/Views/MusicBoxShelfView.swift) 为自创作品长按菜单与 VoiceOver 补齐「在聆听区播放 / 打开编辑 / 分享导出 / 重命名 / 复制副本 / 删除作品」全套动作，将管理圆按钮修正为 `34x34` 正圆配合柔和接触投影及 `40x40` `Circle()` 命中区；同时为典藏曲目卡补全长按菜单与条件化 VoiceOver 操作（仅在可改编时暴露「改编创作」），并将全部胶囊与圆形按钮的 `.contentShape(Rectangle())` 替换为精确匹配的 `Capsule()` / `Circle()`。

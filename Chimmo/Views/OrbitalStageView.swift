@@ -2843,7 +2843,7 @@ internal struct StageHarmonyRibbonView: View {
                     minWidth: 44,
                     minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                 )
-                .contentShape(Rectangle())
+                .contentShape(Capsule())
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
             .accessibilityLabel(vm.cradleEnabled ? "关闭小牛哞伴奏" : "开启小牛哞伴奏")
@@ -2889,11 +2889,11 @@ internal struct StageHarmonyRibbonView: View {
                                                 .opacity(0.72)
                                         } else if segW >= 36 {
                                             Circle()
-                                                .fill(isActive ? Color.white.opacity(0.85) : segCol.opacity(0.75))
+                                                .fill(isActive ? palette.contrastInkOnAccent.opacity(0.85) : segCol.opacity(0.75))
                                                 .frame(width: 3.5, height: 3.5)
                                         }
                                     }
-                                    .foregroundStyle(isActive ? .white : segCol)
+                                    .foregroundStyle(isActive ? palette.contrastInkOnAccent : segCol)
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
                                 .frame(width: segW, height: 34)
@@ -2901,7 +2901,7 @@ internal struct StageHarmonyRibbonView: View {
                                     minWidth: segW,
                                     minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension
                                 )
-                                .contentShape(Rectangle())
+                                .contentShape(Capsule())
                             }
                             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                             .accessibilityLabel("第 \(seg.spanID + 1) 幕和弦 \(seg.romanLabel) \(seg.chord.moodTitle)")
@@ -2935,7 +2935,7 @@ internal struct StageHarmonyRibbonView: View {
                         )
                     )
                     .frame(minHeight: StorybookAffordanceMetrics.compactToolMinHitDimension)
-                    .contentShape(Rectangle())
+                    .contentShape(Capsule())
                 }
                 .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.5))
                 .accessibilityLabel("开启智能和弦伴奏")

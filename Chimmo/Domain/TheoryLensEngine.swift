@@ -137,15 +137,19 @@ public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable
         }
     }
 
-    public func color(isNight: Bool) -> Color {
+    public func colorHex(isNight: Bool) -> UInt32 {
         switch self {
-        case .I: return isNight ? Color(hex: 0xFF7582) : Color(hex: 0xF25563)
-        case .ii: return isNight ? Color(hex: 0xFFA959) : Color(hex: 0xF7882F)
-        case .iii: return isNight ? Color(hex: 0xFF74A6) : Color(hex: 0xE64980)
-        case .IV: return isNight ? Color(hex: 0x38E4B7) : Color(hex: 0x12B886)
-        case .V: return isNight ? Color(hex: 0x5CB3FF) : Color(hex: 0x228BE6)
-        case .vi: return isNight ? Color(hex: 0xA98BFF) : Color(hex: 0x7950F2)
+        case .I: return isNight ? 0xFF7582 : 0xC93848
+        case .ii: return isNight ? 0xFFA959 : 0xB8560A
+        case .iii: return isNight ? 0xFF74A6 : 0xBE2E66
+        case .IV: return isNight ? 0x38E4B7 : 0x0E7E5D
+        case .V: return isNight ? 0x5CB3FF : 0x1B6EC2
+        case .vi: return isNight ? 0xA98BFF : 0x6941D6
         }
+    }
+
+    public func color(isNight: Bool) -> Color {
+        Color(hex: colorHex(isNight: isNight))
     }
 
     public func nextChord() -> DiatonicChord {
