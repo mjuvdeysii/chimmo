@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.0 - 2026-11-26
+- **V2.0 战略升维与主题重塑（「咩哞 · Mie & Mou」脑波共振场）**：彻底跳出旧版「音乐欣赏 + 旋律编曲」功能作业框架，对标 Headspace、Airbnb 与同宇宙姊妹作《摸索台灯 / Moss & Otto》，打造兼顾极简空气感视觉与即时感官爽点的 **100% 离线脑波共振与声触放松空间**（中英文定名「**咩哞 / Mie & Mou**」，保留 `app.chimmo` 与既有全部声学引擎及核心单测兼容）。
+- **离线实时脑波声场与颅内战栗引擎（Audio & Haptics Upgrade）**：
+  - 在 [FeltPianoSynth.swift](Chimmo/Audio/FeltPianoSynth.swift) 音频渲染线程内新增无锁零堆分配 `BrainwaveBedState`：支持左右耳独立高频差频载波（覆盖 `Delta 2.5 Hz / Theta 6.0 Hz / Alpha 10.0 Hz / Gamma 40.0 Hz`）、[HalfDuplexAudioRouter.swift](Chimmo/Audio/HalfDuplexAudioRouter.swift) 耳机连接检测自动在「纯双耳差频」与「外放温和等时脉动」之间切换、零堆分配 xorshift64* 棕红暖雨/粉红微风声床，以及 `triggerFrissonRelease` 长按蓄力松手即发的宽立体声纯五度/大三度/钢片琴「颅内战栗」和声瀑布与系统音频中断自动恢复。
+  - 在 [AcousticHapticsEngine.swift](Chimmo/Audio/AcousticHapticsEngine.swift) 新增四套定制脑波触觉：`playBrainwaveDetent`（频段磁吸刻度）、`playFrissonBuildTick`（蓄力升温微颤）、`playFrissonCascade`（冲击+双涟漪+0.42s 释然长呼）与低功耗节流 `playBrainwavePulse`。
+  - 在 [HumCapturePipeline.swift](Chimmo/Audio/HumCapturePipeline.swift) 新增 `stopAndExtractFundamentalHz()` 离线捕捉 3 秒轻哼自然基频，配合 [BrainwaveModels.swift](Chimmo/Domain/BrainwaveModels.swift) `ResonanceKinematics.foldHumFrequencyToCarrier` 八度折叠对齐人声舒适共振区（并在拒绝麦克风权限时提供 3 档预设人声基频零阻断回退）。
+- **Headspace × Airbnb × 摸索台灯同源 V2.0 四屏界面**：
+  - [ResonanceRootView.swift](Chimmo/Views/ResonanceRootView.swift) 与 [ChimmoApp.swift](Chimmo/ChimmoApp.swift) 上线全新「`今日 / 共振 / 探索 / 我的`」四标签入口，配防透遮蔽自适应底部悬浮迷你播放条与锁屏/后台音频智能启停；
+  - [TodayJourneyView.swift](Chimmo/Views/TodayJourneyView.swift) 呈现随早/午/晚/夜流转的弧形天幕、「最近 / 收藏」快捷抽屉、3 步纵向「今日脑波旅程」阶梯与今日精选推荐；
+  - [ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift) 打造 60fps/ReduceMotion 15Hz 活体共振球舞台（轻点播停 / 左右横滑连续调频 / 长按蓄力松手战栗 + 声床质地微调 + 轻哼同频浮层）；
+  - [ExploreResonanceView.swift](Chimmo/Views/ExploreResonanceView.swift) 呈现 2x2 脑波状态直达格、「闭眼夜灯」零光盲操精选横卡、将原 `SpecimenLibrary` 升维收纳为 8 首「颅内战栗 · 声波乐章胶囊」、12 套离线声景配方及完整 28 首典藏曲本弹窗入口；
+  - [ProfileSanctuaryView.swift](Chimmo/Views/ProfileSanctuaryView.swift) 呈现弧形天幕双子星身份卡、Airbnb 三项离线沉淀、反焦虑无说教陪伴语、双列角色/夜灯微卡、三态外观预览、声学偏好以及符合 Apple Guideline 1.4.1 规范的 [ChimmoAcousticSafetyView](Chimmo/Views/ProfileSanctuaryView.swift)（「声学安全与非医疗声明」）。
+- **TestFlight 外部公测与公测审核全链路落地**：
+  - 修复 [PrivacyInfo.xcprivacy](Chimmo/Resources/PrivacyInfo.xcprivacy) 补齐 `NSPrivacyAccessedAPICategoryUserDefaults` 理由码 `CA92.1`；更新 [Info.plist](Chimmo/Resources/Info.plist) 与 [InfoPlist.xcstrings](Chimmo/Resources/InfoPlist.xcstrings)（`UIBackgroundModes: audio`、`ITSAppUsesNonExemptEncryption: false`、`zh-Hans: 咩哞` / `en: Mie & Mou`、双语麦克风用途说明）；同步更新全端 [SettingsView.swift](Chimmo/Views/SettingsView.swift)、[AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)、[VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 与 [docs/privacy.html](docs/privacy.html)、[docs/terms.html](docs/terms.html)、[docs/licenses.html](docs/licenses.html)。
+  - 升级 [Tools/asc.py](Tools/asc.py)（新增 `prepare-public-beta`、`audit-beta-readiness`、双语 `betaAppLocalizations`/`betaBuildLocalizations`/`betaAppReviewDetails`、外部 `betaGroups` 与公开链接管理、`betaAppReviewSubmissions` 自动提交）、更新 [ios.yml](.github/workflows/ios.yml) 支持手动一键触发外部公测送审并产出 [TESTFLIGHT_PUBLIC_BETA.md](docs/TESTFLIGHT_PUBLIC_BETA.md)。
+  - 新增 [BrainwaveResonanceTests.swift](ChimmoTests/BrainwaveResonanceTests.swift) 全面校验 48kHz 离线双耳声场与 Frisson 瀑布遥测、运动学纯函数、离线统计持久化、`ResonanceViewModel` 全周期状态转换、V2.0 全部视图构造及 `PrivacyInfo`/`Info.plist` 合规断言。
+
 ## 0.81.0 - 2026-11-25
 - 正式确立中英文双语应用命名对齐同家族姊妹作《摸索台灯 / Moss & Otto》：简体中文定名「**咩哞琴盒**」，英文定名「**Mie & Mou**」（保留套装标识 `app.chimmo` 与七声小偶家族代号 `Chimmo` 不变）。新增 [InfoPlist.xcstrings](Chimmo/Resources/InfoPlist.xcstrings) 为 `CFBundleDisplayName`、`CFBundleName` 与 `NSMicrophoneUsageDescription` 提供 `zh-Hans` / `en` 双语原生本地化，并同步更新 [Info.plist](Chimmo/Resources/Info.plist)。
 - 全端内品牌文案、法务页与绘本明信片同步：更新 [SettingsView.swift](Chimmo/Views/SettingsView.swift)（「咩哞琴盒 · Mie & Mou」与隐私/条款正文及兜底版本号 `0.81.0`）、[AboutSheetView.swift](Chimmo/Views/AboutSheetView.swift)（「关于咩哞琴盒」与品牌标题及兜底版本号 `0.81.0`）以及 [VinylPostcardExporter.swift](Chimmo/Domain/VinylPostcardExporter.swift) 印章抬头（「咩哞琴盒 · MIE & MOU」）。

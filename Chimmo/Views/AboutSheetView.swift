@@ -467,7 +467,7 @@ public struct AboutSheetView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.81.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0.0"
     }
 
     private var appBuild: String {
@@ -479,16 +479,16 @@ public struct AboutSheetView: View {
             List {
                 Section {
                     HStack(spacing: 12) {
-                        Image(systemName: "music.note.house.fill")
+                        Image(systemName: "waveform.circle.fill")
                             .font(.title2.weight(.semibold))
                             .foregroundStyle(palette.homeAnchor)
                             .frame(width: 44, height: 44)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("咩哞琴盒 · Mie & Mou")
+                            Text("咩哞 · Mie & Mou")
                                 .font(.headline)
                                 .accessibilityAddTraits(.isHeader)
-                            Text("100% 本机离线声学音乐绘本")
+                            Text("100% 本机离线脑波共振与声触放松")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                             Text("版本 \(appVersion) (\(appBuild))")
@@ -541,7 +541,7 @@ public struct AboutSheetView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("关于咩哞琴盒")
+            .navigationTitle("关于咩哞")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

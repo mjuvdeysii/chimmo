@@ -4,7 +4,7 @@ import SwiftUI
 struct ChimmoApp: App {
     var body: some Scene {
         WindowGroup {
-            StudioView()
+            ResonanceRootView()
         }
     }
 }

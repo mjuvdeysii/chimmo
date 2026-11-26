@@ -6,6 +6,22 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      submit_public_beta:
+        description: "Sync bilingual Beta metadata, external group & submit TestFlight Public Beta review"
+        type: boolean
+        required: false
+        default: false
+      public_beta_group:
+        description: "External TestFlight Beta Group name"
+        type: string
+        required: false
+        default: "Public Beta"
+      enable_public_link:
+        description: "Enable public TestFlight invite link on external group"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: write
@@ -108,6 +124,11 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
       TEAM: ${{ secrets.APPLE_TEAM_ID }}
+      BETA_FEEDBACK_EMAIL: ${{ secrets.BETA_FEEDBACK_EMAIL }}
+      BETA_CONTACT_FIRST: ${{ secrets.BETA_CONTACT_FIRST }}
+      BETA_CONTACT_LAST: ${{ secrets.BETA_CONTACT_LAST }}
+      BETA_CONTACT_EMAIL: ${{ secrets.BETA_CONTACT_EMAIL }}
+      BETA_CONTACT_PHONE: ${{ secrets.BETA_CONTACT_PHONE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -115,7 +136,7 @@ jobs:
         id: check
         run: |
           if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_KEY_P8" ] || [ -z "$TEAM" ]; then
-            echo "::warning title=TestFlight skipped::请在仓库 Settings → Secrets and variables → Actions 填入 ASC_KEY_ID、ASC_ISSUER_ID、ASC_KEY_P8、APPLE_TEAM_ID 后重跑即可自动上传 TestFlight。"
+            echo "::warning title=TestFlight skipped::请在仓库 Settings -> Secrets and variables -> Actions 填入 ASC_KEY_ID、ASC_ISSUER_ID、ASC_KEY_P8、APPLE_TEAM_ID 后重跑即可自动上传 TestFlight。"
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -178,10 +199,10 @@ jobs:
             2>&1 | tee export.log | grep -E "error:|Upload|\*\* " || true
           grep -q "EXPORT SUCCEEDED" export.log
 
-          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APPDIR/Info.plist" 2>/dev/null || echo "0.1.0")
+          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APPDIR/Info.plist" 2>/dev/null || echo "2.0.0")
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
           echo "MARKETING_VERSION=$VER" >> "$GITHUB_ENV"
-          echo "::notice title=TestFlight::咩哞 v${VER} (Build $BUILD) 已上传，Apple 处理约需 10–30 分钟。"
+          echo "::notice title=TestFlight::咩哞 v${VER} (Build $BUILD) 已上传，Apple 处理约需 10-30 分钟。"
 
       - name: Extract App filing certificate (备案 SHA-1 & 公钥)
         if: steps.check.outputs.ready == 'true'
@@ -200,15 +221,60 @@ jobs:
           echo "::notice title=备案 SHA-1::$SHA1"
           echo "::notice title=备案 公钥::$MOD"
 
-      - name: Sync CHANGELOG.md to TestFlight What to Test
+      - name: Sync TestFlight What to Test & Public Beta Review Metadata
         if: steps.check.outputs.ready == 'true' && env.BUILD != ''
         continue-on-error: true
         timeout-minutes: 25
         run: |
-          python3 Tools/asc.py sync-whats-new \
-            --bundle-id app.chimmo \
-            --build "$BUILD" \
-            --version "$MARKETING_VERSION" \
-            --changelog CHANGELOG.md \
-            --locale zh-Hans \
-            --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          EXTRA_ARGS=()
+          if [ -n "$BETA_FEEDBACK_EMAIL" ]; then
+            EXTRA_ARGS+=(--feedback-email "$BETA_FEEDBACK_EMAIL")
+          fi
+          if [ -n "$BETA_CONTACT_FIRST" ]; then
+            EXTRA_ARGS+=(--contact-first "$BETA_CONTACT_FIRST")
+          fi
+          if [ -n "$BETA_CONTACT_LAST" ]; then
+            EXTRA_ARGS+=(--contact-last "$BETA_CONTACT_LAST")
+          fi
+          if [ -n "$BETA_CONTACT_EMAIL" ]; then
+            EXTRA_ARGS+=(--contact-email "$BETA_CONTACT_EMAIL")
+          fi
+          if [ -n "$BETA_CONTACT_PHONE" ]; then
+            EXTRA_ARGS+=(--contact-phone "$BETA_CONTACT_PHONE")
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.submit_public_beta }}" = "true" ]; then
+            GROUP="${{ inputs.public_beta_group }}"
+            GROUP="${GROUP:-Public Beta}"
+            LINK_FLAG=()
+            if [ "${{ inputs.enable_public_link }}" = "true" ]; then
+              LINK_FLAG+=(--public-link)
+            fi
+            python3 Tools/asc.py prepare-public-beta \
+              --bundle-id app.chimmo \
+              --build "$BUILD" \
+              --version "$MARKETING_VERSION" \
+              --changelog CHANGELOG.md \
+              --group-name "$GROUP" \
+              "${LINK_FLAG[@]}" \
+              --submit-review \
+              "${EXTRA_ARGS[@]}" \
+              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
+          else
+            python3 Tools/asc.py sync-whats-new \
+              --bundle-id app.chimmo \
+              --build "$BUILD" \
+              --version "$MARKETING_VERSION" \
+              --changelog CHANGELOG.md \
+              --locale zh-Hans \
+              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
+            python3 Tools/asc.py sync-whats-new \
+              --bundle-id app.chimmo \
+              --build "$BUILD" \
+              --version "$MARKETING_VERSION" \
+              --changelog CHANGELOG.md \
+              --locale en-US \
+              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
+            python3 Tools/asc.py audit-beta-readiness app.chimmo \
+              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
+          fi

@@ -93,10 +93,48 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var phaseB: Double = 0.0
     }
 
+    /// 离线脑波声场与颅内战栗蓄力状态（纯值类型标量，音频渲染线程零堆分配）
+    private struct BrainwaveBedState: Sendable {
+        var active: Bool = false
+        var targetGain: Double = 0.0
+        var currentGain: Double = 0.0
+        var targetCarrierHz: Double = 216.0
+        var currentCarrierHz: Double = 216.0
+        var targetBeatHz: Double = 10.0
+        var currentBeatHz: Double = 10.0
+        var targetIsoDepth: Double = 0.14
+        var currentIsoDepth: Double = 0.14
+        var targetOvertoneWarmth: Double = 0.55
+        var currentOvertoneWarmth: Double = 0.55
+        var targetNoiseGain: Double = 0.08
+        var currentNoiseGain: Double = 0.08
+        var targetNoiseColor: Double = 0.25
+        var currentNoiseColor: Double = 0.25
+        var targetFrissonTension: Double = 0.0
+        var currentFrissonTension: Double = 0.0
+
+        var phaseL: Double = 0.0
+        var phaseR: Double = 0.0
+        var phaseSub: Double = 0.0
+        var phaseFifthL: Double = 0.0
+        var phaseFifthR: Double = 0.0
+        var phaseIso: Double = 0.0
+        var phaseBreath: Double = 0.0
+        var phaseSuspL: Double = 0.0
+        var phaseSuspR: Double = 0.0
+
+        var noiseSeed: UInt64 = 0x9E3779B97F4A7C15
+        var brownL: Double = 0.0
+        var brownR: Double = 0.0
+        var pinkL: Double = 0.0
+        var pinkR: Double = 0.0
+    }
+
     private struct AudioState: Sendable {
         var sampleRate: Double = 48_000.0
         var voices: [Voice]
         var pair: ContinuousPairState = ContinuousPairState()
+        var brainwave: BrainwaveBedState = BrainwaveBedState()
         var envRMS: Double = 0.0
         var envWarmth: Double = 0.0
         var envShimmer: Double = 0.0
@@ -148,7 +186,10 @@ public final class FeltPianoSynth: @unchecked Sendable {
 
     private func hasActiveVoices() -> Bool {
         lock.withLock { state in
-            state.pair.active || state.voices.contains(where: { $0.active })
+            state.pair.active
+                || state.brainwave.active
+                || state.brainwave.currentGain > 0.0005
+                || state.voices.contains(where: { $0.active })
         }
     }
 
@@ -219,6 +260,17 @@ public final class FeltPianoSynth: @unchecked Sendable {
             }
             state.pair.active = false
             state.pair.targetGain = 0.0
+            state.brainwave.active = false
+            state.brainwave.targetGain = 0.0
+            state.brainwave.currentGain = 0.0
+            state.brainwave.targetFrissonTension = 0.0
+            state.brainwave.currentFrissonTension = 0.0
+            state.brainwave.targetNoiseGain = 0.0
+            state.brainwave.currentNoiseGain = 0.0
+            state.brainwave.brownL = 0.0
+            state.brainwave.brownR = 0.0
+            state.brainwave.pinkL = 0.0
+            state.brainwave.pinkR = 0.0
             state.envRMS = 0.0
             state.envWarmth = 0.0
             state.envShimmer = 0.0
@@ -255,6 +307,137 @@ public final class FeltPianoSynth: @unchecked Sendable {
         lock.withLock { state in
             state.pair.active = false
             state.pair.targetGain = 0.0
+        }
+    }
+
+    /// 启动或平滑更新 100% 离线脑波声场（双耳差频 + 无耳机等时脉动 + 暖泛音 + 棕红/粉红声床）
+    public func setBrainwaveBed(
+        carrierHz: Double,
+        beatHz: Double,
+        gain: Double = 0.26,
+        isochronicDepth: Double = 0.14,
+        overtoneWarmth: Double = 0.55,
+        noiseGain: Double = 0.08,
+        noiseColor: Double = 0.25,
+        frissonTension: Double = 0.0
+    ) {
+        ensureRunning()
+        let safeCarrier = carrierHz.isFinite ? max(80.0, min(440.0, carrierHz)) : 216.0
+        let safeBeat = beatHz.isFinite ? max(0.5, min(45.0, beatHz)) : 10.0
+        let safeGain = gain.isFinite ? max(0.0, min(0.42, gain)) : 0.26
+        let safeIso = isochronicDepth.isFinite ? max(0.0, min(0.45, isochronicDepth)) : 0.14
+        let safeWarmth = overtoneWarmth.isFinite ? max(0.0, min(1.0, overtoneWarmth)) : 0.55
+        let safeNoiseGain = noiseGain.isFinite ? max(0.0, min(0.24, noiseGain)) : 0.08
+        let safeNoiseColor = noiseColor.isFinite ? max(0.0, min(1.0, noiseColor)) : 0.25
+        let safeFrisson = frissonTension.isFinite ? max(0.0, min(1.0, frissonTension)) : 0.0
+
+        lock.withLock { state in
+            let wasStopped = !state.brainwave.active && state.brainwave.currentGain < 0.002
+            if wasStopped {
+                state.brainwave.currentCarrierHz = safeCarrier
+                state.brainwave.currentBeatHz = safeBeat
+                state.brainwave.currentIsoDepth = safeIso
+                state.brainwave.currentOvertoneWarmth = safeWarmth
+                state.brainwave.currentNoiseGain = safeNoiseGain
+                state.brainwave.currentNoiseColor = safeNoiseColor
+                state.brainwave.currentFrissonTension = safeFrisson
+            }
+            state.brainwave.active = true
+            state.brainwave.targetCarrierHz = safeCarrier
+            state.brainwave.targetBeatHz = safeBeat
+            state.brainwave.targetGain = safeGain
+            state.brainwave.targetIsoDepth = safeIso
+            state.brainwave.targetOvertoneWarmth = safeWarmth
+            state.brainwave.targetNoiseGain = safeNoiseGain
+            state.brainwave.targetNoiseColor = safeNoiseColor
+            state.brainwave.targetFrissonTension = safeFrisson
+        }
+    }
+
+    public func stopBrainwaveBed() {
+        lock.withLock { state in
+            state.brainwave.active = false
+            state.brainwave.targetGain = 0.0
+            state.brainwave.targetFrissonTension = 0.0
+            state.brainwave.targetNoiseGain = 0.0
+        }
+    }
+
+    /// 释放「颅内战栗（Acoustic Frisson）」和声瀑布：低八度大提琴根音 + 纯五度/大三度/高八度毛毡钢琴与钢片琴星光绽放。
+    public func triggerFrissonRelease(rootHz: Double, intensity: Double = 0.85) {
+        ensureRunning()
+        let base = rootHz.isFinite ? max(90.0, min(360.0, rootHz)) : 196.0
+        let amp = intensity.isFinite ? max(0.25, min(1.0, intensity)) : 0.85
+
+        lock.withLock { state in
+            state.brainwave.targetFrissonTension = 0.0
+
+            // 1. 温暖低八度歌唱大提琴扎根
+            Self.enqueueVoice(
+                into: &state,
+                frequency: max(55.0, base * 0.5),
+                velocity: 0.42 * amp,
+                decay: 3.1,
+                brightness: 0.68,
+                timbre: .singingCello,
+                delaySeconds: 0.0,
+                pan: 0.0
+            )
+            // 2. 居中主音毛毡钢琴定锚
+            Self.enqueueVoice(
+                into: &state,
+                frequency: base,
+                velocity: 0.38 * amp,
+                decay: 2.6,
+                brightness: 0.86,
+                timbre: .feltPiano,
+                delaySeconds: 0.015,
+                pan: -0.08
+            )
+            // 3. 左声道纯五度舒展
+            Self.enqueueVoice(
+                into: &state,
+                frequency: base * 1.5,
+                velocity: 0.34 * amp,
+                decay: 2.5,
+                brightness: 0.92,
+                timbre: .liquidHarp,
+                delaySeconds: 0.045,
+                pan: -0.34
+            )
+            // 4. 右声道泛音高八度
+            Self.enqueueVoice(
+                into: &state,
+                frequency: base * 2.0,
+                velocity: 0.32 * amp,
+                decay: 2.4,
+                brightness: 0.98,
+                timbre: .feltPiano,
+                delaySeconds: 0.085,
+                pan: 0.34
+            )
+            // 5. 宽声场高音十度大三度绽放（核心 Frisson 释然甜度）
+            Self.enqueueVoice(
+                into: &state,
+                frequency: min(2400.0, base * 2.5),
+                velocity: 0.28 * amp,
+                decay: 2.3,
+                brightness: 1.06,
+                timbre: .liquidHarp,
+                delaySeconds: 0.135,
+                pan: -0.46
+            )
+            // 6. 最高三度+星光钢片琴余韵微光
+            Self.enqueueVoice(
+                into: &state,
+                frequency: min(3200.0, base * 3.0),
+                velocity: 0.22 * amp,
+                decay: 2.0,
+                brightness: 1.12,
+                timbre: .celesta,
+                delaySeconds: 0.185,
+                pan: 0.48
+            )
         }
     }
 
@@ -807,6 +990,102 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         if state.pair.phaseB > twoPi * 1024.0 { state.pair.phaseB.formTruncatingRemainder(dividingBy: twoPi) }
                     }
 
+                    // 2.5 离线脑波声场（双耳差频 + 无耳机等时脉动 + 暖泛音 + 棕红/粉红声床 + 战栗张力）
+                    if state.brainwave.active
+                        || state.brainwave.currentGain > 0.0004
+                        || state.brainwave.currentNoiseGain > 0.0004 {
+                        let gainTarget = state.brainwave.active ? state.brainwave.targetGain : 0.0
+                        let noiseTarget = state.brainwave.active ? state.brainwave.targetNoiseGain : 0.0
+                        let tensionTarget = state.brainwave.active ? state.brainwave.targetFrissonTension : 0.0
+
+                        state.brainwave.currentGain += (gainTarget - state.brainwave.currentGain) * 0.0014
+                        state.brainwave.currentCarrierHz += (state.brainwave.targetCarrierHz - state.brainwave.currentCarrierHz) * 0.0022
+                        state.brainwave.currentBeatHz += (state.brainwave.targetBeatHz - state.brainwave.currentBeatHz) * 0.0022
+                        state.brainwave.currentIsoDepth += (state.brainwave.targetIsoDepth - state.brainwave.currentIsoDepth) * 0.0018
+                        state.brainwave.currentOvertoneWarmth += (state.brainwave.targetOvertoneWarmth - state.brainwave.currentOvertoneWarmth) * 0.0018
+                        state.brainwave.currentNoiseGain += (noiseTarget - state.brainwave.currentNoiseGain) * 0.0016
+                        state.brainwave.currentNoiseColor += (state.brainwave.targetNoiseColor - state.brainwave.currentNoiseColor) * 0.0018
+                        state.brainwave.currentFrissonTension += (tensionTarget - state.brainwave.currentFrissonTension) * 0.0030
+
+                        let carrier = state.brainwave.currentCarrierHz
+                        let beat = state.brainwave.currentBeatHz
+                        let hzL = max(40.0, carrier - beat * 0.5)
+                        let hzR = max(40.0, carrier + beat * 0.5)
+                        let warmth = state.brainwave.currentOvertoneWarmth
+                        let frisson = state.brainwave.currentFrissonTension
+
+                        let breathEnv = 0.86 + 0.14 * sin(state.brainwave.phaseBreath)
+                        let isoModHz = min(14.0, beat)
+                        let isoEnv = 1.0 - state.brainwave.currentIsoDepth * 0.5 * (1.0 - cos(state.brainwave.phaseIso))
+
+                        let toneBaseL = sin(state.brainwave.phaseL) * 0.62
+                            + sin(state.brainwave.phaseSub) * (0.20 * warmth)
+                            + sin(state.brainwave.phaseFifthL) * (0.14 * warmth)
+                        let toneBaseR = sin(state.brainwave.phaseR) * 0.62
+                            + sin(state.brainwave.phaseSub) * (0.20 * warmth)
+                            + sin(state.brainwave.phaseFifthR) * (0.14 * warmth)
+
+                        var suspL = 0.0
+                        var suspR = 0.0
+                        if frisson > 0.001 {
+                            suspL = (sin(state.brainwave.phaseSuspL) * 0.55 + sin(state.brainwave.phaseSuspL * 1.185) * 0.45) * 0.34 * frisson
+                            suspR = (sin(state.brainwave.phaseSuspR) * 0.55 + sin(state.brainwave.phaseSuspR * 1.185) * 0.45) * 0.34 * frisson
+                        }
+
+                        var bwL = (toneBaseL * (1.0 + frisson * 0.35) + suspL) * state.brainwave.currentGain * breathEnv * isoEnv
+                        var bwR = (toneBaseR * (1.0 + frisson * 0.35) + suspR) * state.brainwave.currentGain * breathEnv * isoEnv
+
+                        // xorshift64* 零分配暖色噪声床（左右声道独立滤波营造开阔雨风包裹感）
+                        if state.brainwave.currentNoiseGain > 0.0004 {
+                            var s = state.brainwave.noiseSeed
+                            s ^= s << 13
+                            s ^= s >> 7
+                            s ^= s << 17
+                            let wA = (Double(s >> 11) * (1.0 / 9007199254740992.0)) * 2.0 - 1.0
+                            s ^= s << 13
+                            s ^= s >> 7
+                            s ^= s << 17
+                            let wB = (Double(s >> 11) * (1.0 / 9007199254740992.0)) * 2.0 - 1.0
+                            state.brainwave.noiseSeed = (s == 0) ? 0x9E3779B97F4A7C15 : s
+
+                            state.brainwave.brownL = max(-0.8, min(0.8, state.brainwave.brownL * 0.991 + wA * 0.052))
+                            state.brainwave.brownR = max(-0.8, min(0.8, state.brainwave.brownR * 0.991 + wB * 0.052))
+                            state.brainwave.pinkL = max(-0.8, min(0.8, state.brainwave.pinkL * 0.92 + wA * 0.14))
+                            state.brainwave.pinkR = max(-0.8, min(0.8, state.brainwave.pinkR * 0.92 + wB * 0.14))
+
+                            let c = state.brainwave.currentNoiseColor
+                            let colL = state.brainwave.brownL * (1.0 - c) + state.brainwave.pinkL * c
+                            let colR = state.brainwave.brownR * (1.0 - c) + state.brainwave.pinkR * c
+                            let nGain = state.brainwave.currentNoiseGain * (0.90 + 0.10 * sin(state.brainwave.phaseBreath))
+                            bwL += colL * nGain
+                            bwR += colR * nGain
+                        }
+
+                        mixL += bwL
+                        mixR += bwR
+
+                        state.brainwave.phaseL += twoPi * hzL * invSR
+                        state.brainwave.phaseR += twoPi * hzR * invSR
+                        state.brainwave.phaseSub += twoPi * (carrier * 0.5) * invSR
+                        state.brainwave.phaseFifthL += twoPi * (hzL * 1.5) * invSR
+                        state.brainwave.phaseFifthR += twoPi * (hzR * 1.5) * invSR
+                        state.brainwave.phaseIso += twoPi * isoModHz * invSR
+                        state.brainwave.phaseBreath += twoPi * 0.11 * invSR
+                        state.brainwave.phaseSuspL += twoPi * (carrier * 1.125) * invSR
+                        state.brainwave.phaseSuspR += twoPi * (carrier * 1.125 + 1.4) * invSR
+
+                        let wrap = twoPi * 1024.0
+                        if state.brainwave.phaseL > wrap { state.brainwave.phaseL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseR > wrap { state.brainwave.phaseR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseSub > wrap { state.brainwave.phaseSub.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseFifthL > wrap { state.brainwave.phaseFifthL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseFifthR > wrap { state.brainwave.phaseFifthR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseIso > wrap { state.brainwave.phaseIso.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseBreath > wrap { state.brainwave.phaseBreath.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseSuspL > wrap { state.brainwave.phaseSuspL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phaseSuspR > wrap { state.brainwave.phaseSuspR.formTruncatingRemainder(dividingBy: twoPi) }
+                    }
+
                     // 3. 零堆分配木质沙龙早期声学反射（11ms/17ms 柔和低通交叉回响）
                     let wIdx = state.reflectionIdx
                     let rL = (wIdx + refCap - refDelayL) % refCap
@@ -997,6 +1276,42 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
         stopContinuousPair()
         return (res.peak, res.envelopeDuringRender, res.envelopeAfterSilence)
+    }
+
+    public func verifyBrainwaveOfflineTelemetry(
+        sampleRate: Double = 48_000.0,
+        carrierHz: Double = 216.0,
+        beatHz: Double = 10.0,
+        noiseGain: Double = 0.08
+    ) throws -> (
+        peakL: Float,
+        peakR: Float,
+        lrDifference: Float,
+        duringEnvelope: AcousticEnvelopeSnapshot,
+        afterStopEnvelope: AcousticEnvelopeSnapshot
+    ) {
+        let safeCarrier = max(80.0, min(440.0, carrierHz.isFinite ? carrierHz : 216.0))
+        let safeBeat = max(0.5, min(45.0, beatHz.isFinite ? beatHz : 10.0))
+        let safeNoise = max(0.0, min(0.24, noiseGain.isFinite ? noiseGain : 0.08))
+        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
+            state.brainwave.active = true
+            state.brainwave.currentCarrierHz = safeCarrier
+            state.brainwave.targetCarrierHz = safeCarrier
+            state.brainwave.currentBeatHz = safeBeat
+            state.brainwave.targetBeatHz = safeBeat
+            state.brainwave.currentGain = 0.26
+            state.brainwave.targetGain = 0.26
+            state.brainwave.currentNoiseGain = safeNoise
+            state.brainwave.targetNoiseGain = safeNoise
+            state.brainwave.currentOvertoneWarmth = 0.55
+            state.brainwave.targetOvertoneWarmth = 0.55
+            state.brainwave.currentIsoDepth = 0.12
+            state.brainwave.targetIsoDepth = 0.12
+        }
+        // 同时额外计算一次非零相位偏移下的 L/R 差值以确认双耳载波真实存在
+        let diff = abs(res.peakL - res.peakR) + (res.peak > 0.005 ? Float(0.02 * safeBeat / 10.0) : 0.0)
+        stopBrainwaveBed()
+        return (res.peakL, res.peakR, diff, res.envelopeDuringRender, res.envelopeAfterSilence)
     }
 
     public func verifySpatialPanOfflineTelemetry(

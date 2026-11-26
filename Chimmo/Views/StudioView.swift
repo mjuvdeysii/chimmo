@@ -159,7 +159,7 @@ public final class StudioViewModel: ObservableObject {
         var hasUnsavedChanges: Bool
     }
 
-    private let router = HalfDuplexAudioRouter()
+    public let router = HalfDuplexAudioRouter()
     private let preferences: UserDefaults?
     private var undoStack: [MelodyDocument] = []
     private var showcaseSnapshot: WorkspaceSnapshot?

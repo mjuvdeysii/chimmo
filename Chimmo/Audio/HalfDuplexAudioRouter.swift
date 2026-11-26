@@ -27,6 +27,22 @@ public final class HalfDuplexAudioRouter: @unchecked Sendable {
         return 48_000.0
     }
 
+    public var isHeadphonesConnected: Bool {
+        #if os(iOS)
+        let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+        return outputs.contains { out in
+            switch out.portType {
+            case .headphones, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP, .usbAudio, .lineOut:
+                return true
+            default:
+                return false
+            }
+        }
+        #else
+        return false
+        #endif
+    }
+
     public init() {}
 
     public func configure(mode: Mode) throws {

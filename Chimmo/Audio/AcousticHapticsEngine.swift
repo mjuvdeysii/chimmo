@@ -14,6 +14,8 @@ public final class AcousticHapticsEngine {
 
     private var lastPlaybackPulseTime: Double = 0
     private var lastVibratoPulseTime: Double = 0
+    private var lastFrissonTickTime: Double = 0
+    private var lastBrainwavePulseTime: Double = 0
 
     #if os(iOS)
     private var engine: CHHapticEngine?
@@ -366,6 +368,136 @@ public final class AcousticHapticsEngine {
             )
         }
         playPattern(events: events, curves: [])
+        #endif
+    }
+
+    // MARK: - V2.0 Brainwave & Frisson Tactile Patterns
+
+    /// 滑过 Delta / Theta / Alpha / Gamma 频段分界时的温润磁吸刻度感
+    public func playBrainwaveDetent(bandIndex: Int) {
+        let clamped = max(0, min(3, bandIndex))
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            mediumImpact.impactOccurred(intensity: 0.72)
+            ensureEngineAsync()
+            return
+        }
+        let sharpness = Float(0.20 + Double(clamped) * 0.18)
+        let ev = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.66),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+            ],
+            relativeTime: 0
+        )
+        playPattern(events: [ev], curves: [])
+        #endif
+    }
+
+    /// 长按蓄积颅内战栗时的渐强微颤（90ms 节流，平滑升温而不刺手）
+    public func playFrissonBuildTick(progress: Double) {
+        let now = CACurrentMediaTime()
+        guard now - lastFrissonTickTime >= 0.090 else { return }
+        lastFrissonTickTime = now
+
+        let p = Float(max(0.0, min(1.0, progress.isFinite ? progress : 0.0)))
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            softImpact.impactOccurred(intensity: CGFloat(0.28 + p * 0.55))
+            ensureEngineAsync()
+            return
+        }
+        let ev = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.24 + p * 0.52),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.28 + p * 0.44)
+            ],
+            relativeTime: 0
+        )
+        playPattern(events: [ev], curves: [])
+        #endif
+    }
+
+    /// 颅内战栗绽放瀑布（「温润冲击 -> 双波泛音涟漪 -> 0.42s 释然长呼」）
+    public func playFrissonCascade(intensity: Float = 0.85) {
+        let clamped = max(0.35, min(1.0, intensity))
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            notifyGenerator.notificationOccurred(.success)
+            ensureEngineAsync()
+            return
+        }
+        let impact = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: clamped),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.34)
+            ],
+            relativeTime: 0.0
+        )
+        let ripple = CHHapticEvent(
+            eventType: .hapticTransient,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: clamped * 0.72),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.22)
+            ],
+            relativeTime: 0.11
+        )
+        let exhale = CHHapticEvent(
+            eventType: .hapticContinuous,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: clamped * 0.62),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.12)
+            ],
+            relativeTime: 0.06,
+            duration: 0.42
+        )
+        let curve = CHHapticParameterCurve(
+            parameterID: .hapticIntensityControl,
+            controlPoints: [
+                .init(relativeTime: 0.06, value: 1.0),
+                .init(relativeTime: 0.48, value: 0.0)
+            ],
+            relativeTime: 0.0
+        )
+        playPattern(events: [impact, ripple, exhale], curves: [curve])
+        #endif
+    }
+
+    /// 低功耗掌心脑波微脉搏（严格 >= 450ms 节流，兼具柔和触感与电池续航）
+    public func playBrainwavePulse(intensity: Float = 0.32) {
+        let now = CACurrentMediaTime()
+        guard now - lastBrainwavePulseTime >= 0.45 else { return }
+        lastBrainwavePulseTime = now
+
+        let amp = max(0.14, min(0.65, intensity))
+        #if os(iOS)
+        guard supportsHaptics && isEngineRunning else {
+            softImpact.impactOccurred(intensity: CGFloat(amp))
+            ensureEngineAsync()
+            return
+        }
+        let ev = CHHapticEvent(
+            eventType: .hapticContinuous,
+            parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: amp),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.10)
+            ],
+            relativeTime: 0.0,
+            duration: 0.16
+        )
+        let curve = CHHapticParameterCurve(
+            parameterID: .hapticIntensityControl,
+            controlPoints: [
+                .init(relativeTime: 0.0, value: 0.2),
+                .init(relativeTime: 0.06, value: 1.0),
+                .init(relativeTime: 0.16, value: 0.0)
+            ],
+            relativeTime: 0.0
+        )
+        playPattern(events: [ev], curves: [curve])
         #endif
     }
 

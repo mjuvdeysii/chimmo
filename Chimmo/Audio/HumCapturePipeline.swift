@@ -337,6 +337,67 @@ public final class HumCapturePipeline: ObservableObject {
         return heights
     }
 
+    /// 离线捕捉轻哼自然基频（Hz），用于「迷走神经同频共振」包裹人声根音。
+    public func stopAndExtractFundamentalHz() async -> Double? {
+        guard isRecording else { return nil }
+        isRecording = false
+        inputLevel = 0.0
+        liveTraceTask?.cancel()
+        liveTraceTask = nil
+        livePitchTrace = []
+
+        recordEngine?.inputNode.removeTap(onBus: 0)
+        recordEngine?.stop()
+        recordEngine = nil
+
+        let elapsed = Date().timeIntervalSince(startTimestamp ?? Date())
+        let rawSamples = sampleLock.withLock { buf -> [Float] in
+            let copy = buf
+            buf.removeAll(keepingCapacity: false)
+            return copy
+        }
+        let sourceRate = capturedSampleRate
+        synth.ensureRunning()
+
+        guard elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
+            statusMessage = "再轻轻多哼一小会儿，我就能锁住你的频率"
+            return nil
+        }
+
+        statusMessage = ""
+        let det = detector
+
+        let medianHz: Double? = await Task.detached(priority: .userInitiated) {
+            let mono16k = HumCapturePipeline.resampleLinear(rawSamples, from: sourceRate, to: PitchContour.sampleRate)
+            let contour = det.detect(mono16kSamples: mono16k, fmin: 70.0, fmax: 700.0)
+            let rmsFrames = LivePitchContourFilter.frameRMS(
+                mono16kSamples: mono16k,
+                frameCount: contour.pitchHz.count,
+                hopSize: PitchContour.hopSize
+            )
+            var voicedHz: [Double] = []
+            for i in 0..<contour.pitchHz.count {
+                let hz = contour.pitchHz[i]
+                let conf = i < contour.confidence.count ? contour.confidence[i] : 1.0
+                let rms = i < rmsFrames.count ? rmsFrames[i] : 0.05
+                if hz.isFinite && hz >= 70.0 && hz <= 700.0 && conf >= 0.42 && rms >= 0.004 {
+                    voicedHz.append(hz)
+                }
+            }
+            guard voicedHz.count >= 3 else { return nil }
+            let sorted = voicedHz.sorted()
+            return sorted[sorted.count / 2]
+        }.value
+
+        if let hz = medianHz, hz.isFinite {
+            statusMessage = ""
+            return hz
+        } else {
+            statusMessage = "没听清轻哼声，再靠近轻哼试试，或直接选常用人声"
+            return nil
+        }
+    }
+
     nonisolated public static func resampleLinear(_ input: [Float], from srcRate: Double, to dstRate: Double) -> [Float] {
         guard !input.isEmpty else { return [] }
         if abs(srcRate - dstRate) < 1.0 { return input }

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Zero-dependency App Store Connect API helper for Chimmo CI.
+"""Zero-dependency App Store Connect API helper for Chimmo CI & TestFlight Public Beta.
 
 Uses only Python 3 standard library + `openssl` (preinstalled on macOS/Linux).
 Commands:
   python3 Tools/asc.py ensure-bundle-ids app.chimmo
   python3 Tools/asc.py check-app app.chimmo
-  python3 Tools/asc.py sync-whats-new --bundle-id app.chimmo --build 101 --version 0.1.0 --changelog CHANGELOG.md
+  python3 Tools/asc.py sync-whats-new --bundle-id app.chimmo --build 101 --version 2.0.0 --changelog CHANGELOG.md --locale zh-Hans
+  python3 Tools/asc.py prepare-public-beta --bundle-id app.chimmo --build 101 --version 2.0.0 --changelog CHANGELOG.md [--submit-review]
+  python3 Tools/asc.py audit-beta-readiness app.chimmo
 
 Env: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (or --key-path).
 """
@@ -28,6 +30,47 @@ import urllib.request
 
 API_BASE = "https://api.appstoreconnect.apple.com/v1"
 MAX_WHATS_NEW_CHARS = 4000
+
+PRIVACY_URL = "https://mjuvdeysii.github.io/chimmo/privacy.html"
+SUPPORT_URL = "https://mjuvdeysii.github.io/chimmo/"
+
+PUBLIC_BETA_APP_DESCRIPTIONS = {
+    "zh-Hans": (
+        "「咩哞（Mie & Mou）」是一款 100% 本机离线的脑波共振与声触放松应用（非医疗器械）。"
+        "无需注册账号、不联网、零广告。提供 Delta / Theta / Alpha / Gamma 四大声波频段、"
+        "立体声双耳差频（外放自动切换等时脉动）、长按蓄力松手即发触发颅内战栗和声瀑布，"
+        "以及 3 秒轻哼同频包裹、闭眼夜灯触觉盲操与 8 首高张力声波乐章。适用于日常放松、阅读专注与睡前静心。"
+    ),
+    "en-US": (
+        "Mie & Mou (app.chimmo) is a 100% offline brainwave resonance and tactile sound relaxation studio "
+        "(sensory art and relaxation only, not a medical device). No account, no internet connection, no ads. "
+        "Features Delta, Theta, Alpha, and Gamma acoustic beds with stereo binaural beats (and automatic speaker isochronic pulse fallback), "
+        "a hold-and-release acoustic frisson cascade, 3-second offline hum frequency matching (with mic-denied presets), "
+        "a zero-glare Night Lamp tactile mode, and 8 curated musical relaxation capsules."
+    ),
+}
+
+PUBLIC_BETA_REVIEW_NOTES = (
+    "Thank you for reviewing Mie & Mou (咩哞, v2.0.0) for TestFlight External Beta.\n\n"
+    "1. Non-Medical Wellness & Sensory Art Positioning (Guideline 1.4.1):\n"
+    "   Mie & Mou is strictly an offline sound-art, focus ambiance, and acoustic relaxation tool. "
+    "It is NOT a medical device and makes zero diagnostic, therapeutic, or clinical claims.\n\n"
+    "2. Zero Login & 100% Offline Verification:\n"
+    "   No sign-in, account, or network access is required. All audio DSP (AVAudioEngine), CoreHaptics, "
+    "and on-device pitch detection (YIN/vDSP) run locally without outbound requests.\n\n"
+    "3. How to Test Key Features in External Beta:\n"
+    "   - Today Tab (今日): Tap the warm hero card or explore presets to launch an instant brainwave session.\n"
+    "   - Resonance Field Tab (共振): Tap the center orb to play/pause binaural waves; drag left/right across the orb "
+    "to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); press & hold the orb or "
+    "'按住战栗' for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale.\n"
+    "   - Hum Frequency Matching (轻哼同频): Tap '轻哼同频', allow microphone access, hum softly for 2-3 seconds, "
+    "and tap stop to lock the carrier to your vocal fundamental. If microphone access is denied, 3 instant fallback "
+    "voice pitch presets (136 Hz / 174 Hz / 216 Hz) remain immediately usable.\n"
+    "   - Background Audio (UIBackgroundModes audio): Playback continues smoothly when locking the screen unless "
+    "disabled in Profile -> '锁屏继续收听声场'. Only active soundscapes use background audio.\n"
+    "   - Explore & Profile Tabs (探索 / 我的): Includes 2x2 quick states, Night Lamp zero-glare mode, "
+    "8 curated relaxation music capsules, and Acoustic Safety / Privacy / Legal disclosures."
+)
 
 
 def b64url(data: bytes) -> str:
@@ -77,6 +120,15 @@ def make_jwt(key_id: str, issuer_id: str, key_path: str, ttl_seconds: int = 1000
     return f"{signing_input}.{b64url(raw_sig)}"
 
 
+class ASCHttpError(RuntimeError):
+    def __init__(self, method: str, path: str, code: int, detail: str):
+        self.method = method
+        self.path = path
+        self.code = code
+        self.detail = detail
+        super().__init__(f"ASC {method} {path} failed ({code}): {detail[:500]}")
+
+
 class ASCClient:
     def __init__(self, key_id: str, issuer_id: str, key_path: str):
         self.key_id = key_id
@@ -106,7 +158,7 @@ class ASCClient:
                 return json.loads(raw.decode("utf-8")) if raw else {}
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"ASC {method} {path} failed ({e.code}): {detail[:500]}") from e
+            raise ASCHttpError(method, path, e.code, detail) from e
 
 
 def resolve_key_file(key_path: str | None) -> tuple[str, str | None]:
@@ -120,6 +172,42 @@ def resolve_key_file(key_path: str | None) -> tuple[str, str | None]:
         f.write(p8)
     os.chmod(tmp, 0o600)
     return tmp, tmp
+
+
+def find_app(client: ASCClient, bundle_id: str) -> dict | None:
+    q = urllib.parse.urlencode({"filter[bundleId]": bundle_id})
+    apps = [
+        a for a in client.request("GET", f"/apps?{q}").get("data", [])
+        if a.get("attributes", {}).get("bundleId") == bundle_id
+    ]
+    return apps[0] if apps else None
+
+
+def wait_for_valid_build(
+    client: ASCClient,
+    app_id: str,
+    build_number: str,
+    version: str | None,
+    timeout_seconds: int = 1200,
+) -> str:
+    deadline = time.time() + timeout_seconds
+    build_id = None
+    while time.time() < deadline:
+        params = {"filter[app]": app_id, "filter[version]": build_number, "limit": "5"}
+        if version:
+            params["filter[preReleaseVersion.version]"] = version
+        builds = client.request("GET", f"/builds?{urllib.parse.urlencode(params)}").get("data", [])
+        if builds:
+            b = builds[0]
+            build_id = b["id"]
+            state = b.get("attributes", {}).get("processingState", "")
+            print(f"[ASC] Build {build_number} state={state}", flush=True)
+            if state in ("INVALID", "FAILED"):
+                raise RuntimeError(f"Build {build_number} failed processing ({state})")
+            if state == "VALID":
+                return build_id
+        time.sleep(20)
+    raise RuntimeError(f"Timed out waiting for build {build_number} to become VALID")
 
 
 def ensure_bundle_ids(client: ASCClient, ids: list[str], app_name: str = "Chimmo") -> None:
@@ -146,19 +234,15 @@ def ensure_bundle_ids(client: ASCClient, ids: list[str], app_name: str = "Chimmo
 
 
 def check_app(client: ASCClient, bundle_id: str) -> int:
-    q = urllib.parse.urlencode({"filter[bundleId]": bundle_id})
-    apps = [
-        a for a in client.request("GET", f"/apps?{q}").get("data", [])
-        if a.get("attributes", {}).get("bundleId") == bundle_id
-    ]
-    if not apps:
+    app = find_app(client, bundle_id)
+    if not app:
         print(
             f"::warning title=App Store Connect App 未创建::尚未在 App Store Connect 找到 {bundle_id} 的 App 记录。"
-            "请到 App Store Connect → 我的 App → + 新建 App（iOS，套装 ID 选 app.chimmo，中文名 咩哞），"
+            "请到 App Store Connect -> 我的 App -> + 新建 App（iOS，套装 ID 选 app.chimmo，中文名 咩哞），"
             "完成后重新运行工作流即可自动上传 TestFlight。"
         )
         return 2
-    attr = apps[0]["attributes"]
+    attr = app["attributes"]
     print(f"::notice title=App Store Connect App::{attr.get('name')} ({bundle_id})")
     return 0
 
@@ -208,43 +292,12 @@ def extract_changelog(changelog_path: str, version: str | None = None, build: st
     return text[: MAX_WHATS_NEW_CHARS - 1] + "…" if len(text) > MAX_WHATS_NEW_CHARS else text
 
 
-def sync_whats_new(
+def upsert_beta_build_localization(
     client: ASCClient,
-    bundle_id: str,
-    build_number: str,
-    version: str | None,
-    changelog: str,
-    locale: str = "zh-Hans",
-    timeout_seconds: int = 1200,
+    build_id: str,
+    locale: str,
+    whats_new: str,
 ) -> None:
-    whats_new = extract_changelog(changelog, version=version, build=build_number)
-    q = urllib.parse.urlencode({"filter[bundleId]": bundle_id})
-    apps = client.request("GET", f"/apps?{q}").get("data", [])
-    if not apps:
-        raise RuntimeError(f"No app found in App Store Connect for {bundle_id}")
-    app_id = apps[0]["id"]
-
-    deadline = time.time() + timeout_seconds
-    build_id = None
-    while time.time() < deadline:
-        params = {"filter[app]": app_id, "filter[version]": build_number, "limit": "5"}
-        if version:
-            params["filter[preReleaseVersion.version]"] = version
-        builds = client.request("GET", f"/builds?{urllib.parse.urlencode(params)}").get("data", [])
-        if builds:
-            b = builds[0]
-            build_id = b["id"]
-            state = b.get("attributes", {}).get("processingState", "")
-            print(f"[ASC] Build {build_number} state={state}", flush=True)
-            if state in ("INVALID", "FAILED"):
-                raise RuntimeError(f"Build {build_number} failed processing ({state})")
-            if state == "VALID":
-                break
-        time.sleep(20)
-
-    if not build_id:
-        raise RuntimeError(f"Timed out waiting for build {build_number}")
-
     locs = client.request("GET", f"/builds/{build_id}/betaBuildLocalizations").get("data", [])
     existing = next((x for x in locs if x.get("attributes", {}).get("locale") == locale), None)
     if existing:
@@ -266,11 +319,297 @@ def sync_whats_new(
                 }
             },
         )
+
+
+def sync_whats_new(
+    client: ASCClient,
+    bundle_id: str,
+    build_number: str,
+    version: str | None,
+    changelog: str,
+    locale: str = "zh-Hans",
+    timeout_seconds: int = 1200,
+) -> None:
+    whats_new = extract_changelog(changelog, version=version, build=build_number)
+    app = find_app(client, bundle_id)
+    if not app:
+        raise RuntimeError(f"No app found in App Store Connect for {bundle_id}")
+    build_id = wait_for_valid_build(client, app["id"], build_number, version, timeout_seconds=timeout_seconds)
+    upsert_beta_build_localization(client, build_id, locale=locale, whats_new=whats_new)
     print(f"::notice title=TestFlight 测试信息已同步::build {build_number} ({locale})")
 
 
+def sync_beta_app_localizations(
+    client: ASCClient,
+    app_id: str,
+    feedback_email: str = "",
+) -> None:
+    existing_locs = client.request("GET", f"/apps/{app_id}/betaAppLocalizations").get("data", [])
+    for locale, description in PUBLIC_BETA_APP_DESCRIPTIONS.items():
+        attrs: dict[str, str] = {
+            "description": description,
+            "marketingUrl": SUPPORT_URL,
+            "privacyPolicyUrl": PRIVACY_URL,
+        }
+        if feedback_email.strip():
+            attrs["feedbackEmail"] = feedback_email.strip()
+
+        existing = next((x for x in existing_locs if x.get("attributes", {}).get("locale") == locale), None)
+        if existing:
+            loc_id = existing["id"]
+            client.request(
+                "PATCH",
+                f"/betaAppLocalizations/{loc_id}",
+                {"data": {"type": "betaAppLocalizations", "id": loc_id, "attributes": attrs}},
+            )
+        else:
+            attrs["locale"] = locale
+            client.request(
+                "POST",
+                "/betaAppLocalizations",
+                {
+                    "data": {
+                        "type": "betaAppLocalizations",
+                        "attributes": attrs,
+                        "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+                    }
+                },
+            )
+        print(f"[ASC] Synced betaAppLocalization ({locale})")
+
+
+def sync_beta_review_details(
+    client: ASCClient,
+    app_id: str,
+    contact_first: str = "",
+    contact_last: str = "",
+    contact_email: str = "",
+    contact_phone: str = "",
+) -> dict:
+    try:
+        resp = client.request("GET", f"/apps/{app_id}/betaAppReviewDetail")
+        detail = resp.get("data")
+    except ASCHttpError as e:
+        if e.code == 404:
+            detail = None
+        else:
+            raise
+
+    attrs: dict[str, object] = {
+        "demoAccountRequired": False,
+        "notes": PUBLIC_BETA_REVIEW_NOTES,
+    }
+    if contact_first.strip():
+        attrs["contactFirstName"] = contact_first.strip()
+    if contact_last.strip():
+        attrs["contactLastName"] = contact_last.strip()
+    if contact_email.strip():
+        attrs["contactEmail"] = contact_email.strip()
+    if contact_phone.strip():
+        attrs["contactPhone"] = contact_phone.strip()
+
+    if detail and detail.get("id"):
+        did = detail["id"]
+        updated = client.request(
+            "PATCH",
+            f"/betaAppReviewDetails/{did}",
+            {"data": {"type": "betaAppReviewDetails", "id": did, "attributes": attrs}},
+        )
+        print("[ASC] Updated betaAppReviewDetails")
+        return updated.get("data", detail)
+    else:
+        print("::warning title=TestFlight Review Contact Missing::betaAppReviewDetails ID not yet present; review notes skipped.")
+        return {}
+
+
+def ensure_external_beta_group(
+    client: ASCClient,
+    app_id: str,
+    group_name: str,
+    public_link: bool,
+    build_id: str,
+) -> str:
+    groups = client.request("GET", f"/apps/{app_id}/betaGroups?limit=200").get("data", [])
+    external = next(
+        (
+            g for g in groups
+            if not g.get("attributes", {}).get("isInternalGroup", False)
+            and g.get("attributes", {}).get("name") == group_name
+        ),
+        None,
+    )
+    if not external:
+        created = client.request(
+            "POST",
+            "/betaGroups",
+            {
+                "data": {
+                    "type": "betaGroups",
+                    "attributes": {
+                        "name": group_name,
+                        "isInternalGroup": False,
+                    },
+                    "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+                }
+            },
+        )
+        external = created["data"]
+        print(f"[ASC] Created external beta group '{group_name}'")
+
+    group_id = external["id"]
+    client.request(
+        "POST",
+        f"/betaGroups/{group_id}/relationships/builds",
+        {"data": [{"type": "builds", "id": build_id}]},
+    )
+    print(f"[ASC] Associated build {build_id} with external group '{group_name}'")
+
+    if public_link and not external.get("attributes", {}).get("publicLinkEnabled", False):
+        try:
+            res = client.request(
+                "PATCH",
+                f"/betaGroups/{group_id}",
+                {"data": {"type": "betaGroups", "id": group_id, "attributes": {"publicLinkEnabled": True}}},
+            )
+            link_url = res.get("data", {}).get("attributes", {}).get("publicLink", "")
+            if link_url:
+                print(f"::notice title=TestFlight Public Link::{link_url}")
+        except ASCHttpError as e:
+            print(
+                f"::warning title=TestFlight Public Link Pending::将在公测审核通过后可开启公开链接 ({e.code})"
+            )
+    return group_id
+
+
+def submit_beta_review(client: ASCClient, build_id: str) -> None:
+    try:
+        existing = client.request("GET", f"/builds/{build_id}/betaAppReviewSubmission").get("data")
+        if existing:
+            state = existing.get("attributes", {}).get("betaReviewState", "")
+            print(f"::notice title=TestFlight Beta Review::{build_id} already state={state}")
+            return
+    except ASCHttpError as e:
+        if e.code != 404:
+            raise
+
+    try:
+        res = client.request(
+            "POST",
+            "/betaAppReviewSubmissions",
+            {
+                "data": {
+                    "type": "betaAppReviewSubmissions",
+                    "relationships": {"build": {"data": {"type": "builds", "id": build_id}}},
+                }
+            },
+        )
+        state = res.get("data", {}).get("attributes", {}).get("betaReviewState", "WAITING_FOR_REVIEW")
+        print(f"::notice title=TestFlight 公测审核已提交::state={state}")
+    except ASCHttpError as e:
+        print(
+            "::warning title=TestFlight 公测提审需要补齐联系信息::"
+            f"App Store Connect 返回 {e.code}，请确认已在 TestFlight -> 测试信息 填好反馈邮箱与审核联系人电话后重试 ({e.detail[:240]})"
+        )
+
+
+def prepare_public_beta(
+    client: ASCClient,
+    bundle_id: str,
+    build_number: str,
+    version: str | None,
+    changelog: str,
+    group_name: str,
+    public_link: bool,
+    submit_review: bool,
+    feedback_email: str,
+    contact_first: str,
+    contact_last: str,
+    contact_email: str,
+    contact_phone: str,
+    timeout_seconds: int,
+) -> None:
+    app = find_app(client, bundle_id)
+    if not app:
+        raise RuntimeError(f"No app found in App Store Connect for {bundle_id}")
+    app_id = app["id"]
+    build_id = wait_for_valid_build(client, app_id, build_number, version, timeout_seconds=timeout_seconds)
+
+    zh_whats_new = extract_changelog(changelog, version=version, build=build_number)
+    upsert_beta_build_localization(client, build_id, locale="zh-Hans", whats_new=zh_whats_new)
+
+    en_whats_new = (
+        f"v{version or '2.0.0'} (Build {build_number}) Public Beta\n"
+        "• Complete V2.0 Brainwave Resonance Studio: Delta / Theta / Alpha / Gamma states\n"
+        "• Hold & release acoustic Frisson cascade with synchronized CoreHaptics\n"
+        "• 3-second offline hum frequency matching (plus preset voice roots if mic denied)\n"
+        "• Zero-glare Night Lamp tactile mode & 8 musical relaxation capsules"
+    )
+    upsert_beta_build_localization(client, build_id, locale="en-US", whats_new=en_whats_new)
+
+    sync_beta_app_localizations(client, app_id, feedback_email=feedback_email)
+    sync_beta_review_details(
+        client,
+        app_id,
+        contact_first=contact_first,
+        contact_last=contact_last,
+        contact_email=contact_email,
+        contact_phone=contact_phone,
+    )
+    ensure_external_beta_group(
+        client,
+        app_id,
+        group_name=group_name,
+        public_link=public_link,
+        build_id=build_id,
+    )
+    if submit_review:
+        submit_beta_review(client, build_id)
+
+
+def audit_beta_readiness(client: ASCClient, bundle_id: str) -> int:
+    app = find_app(client, bundle_id)
+    if not app:
+        print(f"[AUDIT] App NOT found for {bundle_id}")
+        return 2
+    app_id = app["id"]
+    print(f"[AUDIT] App: {app.get('attributes', {}).get('name')} ({bundle_id}, id={app_id})")
+
+    locs = client.request("GET", f"/apps/{app_id}/betaAppLocalizations").get("data", [])
+    print(f"[AUDIT] BetaAppLocalizations: {[l.get('attributes', {}).get('locale') for l in locs]}")
+    for loc in locs:
+        a = loc.get("attributes", {})
+        print(
+            f"  - {a.get('locale')}: feedbackEmail={'YES' if a.get('feedbackEmail') else 'MISSING'}, "
+            f"privacyUrl={'YES' if a.get('privacyPolicyUrl') else 'MISSING'}"
+        )
+
+    try:
+        detail = client.request("GET", f"/apps/{app_id}/betaAppReviewDetail").get("data", {}) or {}
+        da = detail.get("attributes", {})
+        print(
+            f"[AUDIT] ReviewDetails: first={bool(da.get('contactFirstName'))}, "
+            f"last={bool(da.get('contactLastName'))}, "
+            f"email={bool(da.get('contactEmail'))}, "
+            f"phone={bool(da.get('contactPhone'))}, "
+            f"notes={bool(da.get('notes'))}"
+        )
+    except ASCHttpError as e:
+        print(f"[AUDIT] ReviewDetails fetch error ({e.code})")
+
+    groups = client.request("GET", f"/apps/{app_id}/betaGroups?limit=200").get("data", [])
+    ext_groups = [g for g in groups if not g.get("attributes", {}).get("isInternalGroup", False)]
+    print(
+        f"[AUDIT] External BetaGroups ({len(ext_groups)}): "
+        + ", ".join(
+            f"{g.get('attributes', {}).get('name')}(publicLink={g.get('attributes', {}).get('publicLink') or 'off'})"
+            for g in ext_groups
+        )
+    )
+    return 0
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Chimmo App Store Connect CI helper")
+    ap = argparse.ArgumentParser(description="Chimmo App Store Connect CI & Public Beta helper")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p1 = sub.add_parser("ensure-bundle-ids")
@@ -290,6 +629,26 @@ def main() -> int:
     p3.add_argument("--locale", default="zh-Hans")
     p3.add_argument("--key-path", default=None)
     p3.add_argument("--timeout", type=int, default=1200)
+
+    p4 = sub.add_parser("prepare-public-beta")
+    p4.add_argument("--bundle-id", default="app.chimmo")
+    p4.add_argument("--build", required=True)
+    p4.add_argument("--version", default="2.0.0")
+    p4.add_argument("--changelog", default="CHANGELOG.md")
+    p4.add_argument("--group-name", default="Public Beta")
+    p4.add_argument("--public-link", action="store_true")
+    p4.add_argument("--submit-review", action="store_true")
+    p4.add_argument("--feedback-email", default="")
+    p4.add_argument("--contact-first", default="")
+    p4.add_argument("--contact-last", default="")
+    p4.add_argument("--contact-email", default="")
+    p4.add_argument("--contact-phone", default="")
+    p4.add_argument("--key-path", default=None)
+    p4.add_argument("--timeout", type=int, default=1200)
+
+    p5 = sub.add_parser("audit-beta-readiness")
+    p5.add_argument("bundle_id")
+    p5.add_argument("--key-path", default=None)
 
     args = ap.parse_args()
     key_id = os.environ.get("ASC_KEY_ID", "")
@@ -317,6 +676,26 @@ def main() -> int:
                 timeout_seconds=args.timeout,
             )
             return 0
+        if args.cmd == "prepare-public-beta":
+            prepare_public_beta(
+                client,
+                bundle_id=args.bundle_id,
+                build_number=args.build,
+                version=args.version or None,
+                changelog=args.changelog,
+                group_name=args.group_name,
+                public_link=args.public_link,
+                submit_review=args.submit_review,
+                feedback_email=args.feedback_email,
+                contact_first=args.contact_first,
+                contact_last=args.contact_last,
+                contact_email=args.contact_email,
+                contact_phone=args.contact_phone,
+                timeout_seconds=args.timeout,
+            )
+            return 0
+        if args.cmd == "audit-beta-readiness":
+            return audit_beta_readiness(client, args.bundle_id)
     finally:
         if tmp and os.path.exists(tmp):
             os.remove(tmp)

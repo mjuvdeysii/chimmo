@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key><string>zh-Hans</string>
-	<key>CFBundleDisplayName</key><string>咩哞琴盒</string>
+	<key>CFBundleDisplayName</key><string>咩哞</string>
 	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
@@ -13,7 +13,11 @@
 	<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key><true/>
 	<key>ITSAppUsesNonExemptEncryption</key><false/>
-	<key>NSMicrophoneUsageDescription</key><string>咩哞琴盒只在本机实时聆听你的哼唱并生成旋律，所有声音不上传、不联网。</string>
+	<key>NSMicrophoneUsageDescription</key><string>咩哞只在本机离线捕捉轻哼基频，用于生成与你声音同频的声波共振；所有声音从不上传、不联网。</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key><string>PaperBackground</string>

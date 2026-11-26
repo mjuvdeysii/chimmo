@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.81.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0.0"
     }
 
     private var appBuild: String {
@@ -70,12 +70,12 @@ public struct SettingsView: View {
                     .frame(width: 66, height: 66)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("咩哞琴盒 · Mie & Mou")
+                    Text("咩哞 · Mie & Mou")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(palette.primaryInk)
                         .accessibilityAddTraits(.isHeader)
 
-                    Text("离线声学音乐绘本与轻创作工具")
+                    Text("离线脑波共振与声学放松绘本")
                         .font(.subheadline)
                         .foregroundStyle(palette.secondaryInk)
 
@@ -545,7 +545,7 @@ public struct SettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
             .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
 
-            Text("咩哞琴盒（Mie & Mou）完全在本机离线运行，无需登录，不上传任何录音或个人数据。")
+            Text("咩哞（Mie & Mou）完全在本机离线运行，无需登录，不上传任何录音或个人数据。")
                 .font(.footnote)
                 .foregroundStyle(palette.secondaryInk)
                 .padding(.horizontal, 4)
@@ -598,7 +598,7 @@ public struct ChimmoLegalDocumentView: View {
             switch self {
             case .privacy: return "隐私政策"
             case .terms: return "使用条款"
-            case .licenses: return "开源许可与曲目鸣谢"
+            case .licenses: return "开源许可与声库鸣谢"
             }
         }
     }
@@ -629,21 +629,21 @@ public struct ChimmoLegalDocumentView: View {
     private var privacySections: some View {
         Section {
             LabeledContent("生效日期", value: "2026 年 11 月 21 日")
-            LabeledContent("最近修订", value: "2026 年 11 月 25 日")
+            LabeledContent("最近修订", value: "2026 年 11 月 26 日")
         }
 
         Section("1. 核心原则：不联网、不收集任何数据") {
-            Text("咩哞琴盒（Mie & Mou）是一款完全在您的设备本地离线运行的音乐创作与可视化应用。我们不设账号系统，不连接任何远程服务器，不包含任何广告、统计分析或第三方追踪 SDK。")
+            Text("咩哞（Mie & Mou）是一款完全在您的设备本地离线运行的脑波声学放松与感官艺术应用。我们不设账号系统，不连接任何远程服务器，不包含任何广告、统计分析或第三方追踪 SDK。")
                 .font(.subheadline)
         }
 
         Section("2. 麦克风权限的使用") {
-            Text("当您使用「哼唱捉珠」功能时，应用会向 iOS 系统请求麦克风访问权限。您哼唱的音频信号仅在设备本机内存中实时转换为音高与音珠，从不上传、不外发，也不会用于任何云端训练或个人身份识别。您随时可以在系统「设置 > 隐私与安全性 > 麦克风」中撤回权限。")
+            Text("当您使用「轻哼同频」等功能时，应用会向 iOS 系统请求麦克风访问权限。您轻哼的音频信号仅在设备本机内存中实时捕捉基频并转换为包裹声场，从不上传、不外发，也不会用于任何云端训练或个人身份识别。您随时可以在系统「设置 > 隐私与安全性 > 麦克风」中撤回权限。")
                 .font(.subheadline)
         }
 
         Section("3. 本地存储与离线导出") {
-            Text("您在应用内创作或调整的旋律仅保存在您的设备本机。只有当您主动使用系统分享菜单导出绘本明信片（PNG）、立体声音频（WAV）或标准 MIDI 文件时，对应文件才会通过您指定的系统方式分享。")
+            Text("您的声场偏好、收藏配方与本地创作记录仅保存在您的设备本机（系统标准离线偏好存储）。只有当您主动使用系统分享菜单导出图片、立体声音频或 MIDI 文件时，对应文件才会通过您指定的系统方式分享。")
                 .font(.subheadline)
         }
 
@@ -665,18 +665,18 @@ public struct ChimmoLegalDocumentView: View {
             LabeledContent("生效日期", value: "2026 年 11 月 21 日")
         }
 
-        Section("1. 创作归属") {
-            Text("您使用咩哞琴盒（Mie & Mou）自行哼唱、点按或编排并导出的原创旋律、PNG 卡片、WAV 音频与标准 MIDI 作品，其著作权完全归您本人所有。")
+        Section("1. 创作与作品归属") {
+            Text("您使用咩哞（Mie & Mou）导出的声音与曲目作品，其个人创作权益归您本人所有。")
                 .font(.subheadline)
         }
 
         Section("2. 应用与 IP 权利") {
-            Text("应用内的「咩哞七小只（陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫、叮尖）」以及小羊咩、小牛哞角色造型、视觉设计、文案与原创代码受著作权保护。")
+            Text("应用内的「咩哞七小只（陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫、叮尖）」以及小羊咩、小牛哞角色造型、声学视觉设计与原创代码受著作权保护。")
                 .font(.subheadline)
         }
 
-        Section("3. 免责声明") {
-            Text("本应用按“现状”提供，完全在设备本地离线运行。开发者不对因设备硬件故障或系统升级导致的本地临时草图丢失承担赔偿责任。")
+        Section("3. 非医疗用途与免责声明") {
+            Text("本应用按“现状”提供，完全在设备本地离线运行，仅作声学放松、专注氛围与感官艺术体验之用，不构成任何医疗诊断或临床治疗依据。开发者不对因设备硬件故障或系统升级导致的本地数据丢失承担赔偿责任。")
                 .font(.subheadline)
         }
 
