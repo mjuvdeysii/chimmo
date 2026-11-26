@@ -1,7 +1,7 @@
 import QuartzCore
 import SwiftUI
 
-/// Tab 1 · 共振：V2.0 核心「脑电波快感」活体触声舞台（双耳差频 / 无耳机等时 / 颅内战栗 / 3秒轻哼同频）。
+/// Tab 0 · 声场：咩哞原创活体窑陶共振工作台（双耳差频 / 无耳机等时 / 和声战栗 / 3秒轻哼同频）。
 public struct ResonanceFieldView: View {
     @ObservedObject public var vm: ResonanceViewModel
     public let palette: ChimmoPalette
@@ -123,6 +123,27 @@ public struct ResonanceFieldView: View {
             }
 
             Spacer(minLength: 4)
+
+            Button {
+                vm.openNightLampSheet = true
+            } label: {
+                ChimmoCraftMark(
+                    .nightLampHalo,
+                    color: palette.isNight ? palette.nightLampGold : palette.primaryInk,
+                    secondaryColor: palette.secondaryInk
+                )
+                .frame(width: 18, height: 18)
+                .frame(width: 40, height: 40)
+                .background(
+                    Circle()
+                        .fill(palette.cardSurface)
+                        .overlay(Circle().strokeBorder(palette.divider, lineWidth: 1.0))
+                )
+                .contentShape(Circle())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+            .accessibilityLabel("打开闭眼夜灯零光台")
+            .accessibilityHint("进入纯黑防蓝光触觉音场")
 
             Button {
                 showBreathGuide.toggle()

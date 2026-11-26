@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// V2.0 主导航标签（Headspace 极简四页直觉秩序：今日 / 共振 / 探索 / 我的）
+/// V2.2 咩哞原创三页声学工坊导航：声场（默认直达）/ 声库 / 工坊
 public enum ResonanceTab: Int, Hashable, CaseIterable, Sendable {
-    case today = 0
-    case field = 1
-    case explore = 2
-    case profile = 3
+    case field = 0    // 声场（默认首页，直达活体窑陶共振盆）
+    case library = 1  // 声库（四频段窑陶调音座 / 12套配方 / 闭眼夜灯 / 8首乐章 / 28首典藏）
+    case atelier = 2  // 工坊（咩哞窑陶铭牌 / 纪念卡导出 / 角色试音 / 外观三联 / 偏好与安全合规）
 }
 
-/// V2.0 「咩哞 · Mie & Mou」脑波共振场主根视图。
+/// V2.2 「咩哞 · Mie & Mou」离线窑陶共振工作台主根视图。
 public struct ResonanceRootView: View {
     @StateObject private var vm: ResonanceViewModel
     @Environment(\.colorScheme) private var systemScheme
@@ -16,7 +15,7 @@ public struct ResonanceRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    @State private var selectedTab: ResonanceTab = .today
+    @State private var selectedTab: ResonanceTab = .field
 
     public init(preferences: UserDefaults? = .standard) {
         _vm = StateObject(
@@ -43,41 +42,30 @@ public struct ResonanceRootView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            Tab(value: ResonanceTab.today) {
-                TodayJourneyView(
-                    vm: vm,
-                    palette: palette,
-                    onOpenField: { selectedTab = .field },
-                    onOpenExplore: { selectedTab = .explore }
-                )
-            } label: {
-                Label("今日", systemImage: selectedTab == .today ? "sun.horizon.fill" : "sun.horizon")
-            }
-
             Tab(value: ResonanceTab.field) {
                 ResonanceFieldView(vm: vm, palette: palette)
             } label: {
-                Label("共振", systemImage: selectedTab == .field ? "waveform.circle.fill" : "waveform.circle")
+                Label("声场", systemImage: selectedTab == .field ? "waveform.circle.fill" : "waveform.circle")
             }
 
-            Tab(value: ResonanceTab.explore) {
-                ExploreResonanceView(
+            Tab(value: ResonanceTab.library) {
+                AcousticLibraryView(
                     vm: vm,
                     palette: palette,
                     onOpenField: { selectedTab = .field }
                 )
             } label: {
-                Label("探索", systemImage: selectedTab == .explore ? "square.grid.2x2.fill" : "square.grid.2x2")
+                Label("声库", systemImage: selectedTab == .library ? "books.vertical.fill" : "books.vertical")
             }
 
-            Tab(value: ResonanceTab.profile) {
-                ProfileSanctuaryView(
+            Tab(value: ResonanceTab.atelier) {
+                AtelierSettingsView(
                     vm: vm,
                     palette: palette,
                     onOpenField: { selectedTab = .field }
                 )
             } label: {
-                Label("我的", systemImage: selectedTab == .profile ? "person.crop.circle.fill" : "person.crop.circle")
+                Label("工坊", systemImage: selectedTab == .atelier ? "dial.medium.fill" : "dial.medium")
             }
         }
         .tint(palette.homeAnchor)
@@ -153,7 +141,7 @@ private struct ResonanceFloatingMiniBar: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("正在播放 \(vm.currentHeadline)，\(vm.currentSubline)")
-            .accessibilityHint("轻点打开共振控制台")
+            .accessibilityHint("轻点打开声场控制台")
 
             Button {
                 if vm.activeCapsule != nil {

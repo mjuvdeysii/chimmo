@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Tab 3 · 我的：对标 Airbnb Profile × Headspace Profile × 摸索台灯商业级洁净架构。
-/// 包含：弧形天幕双子星身份卡 / Airbnb 三项沉淀卡 / 反焦虑无说教文案 / 双列图鉴与夜灯微卡 / 外观三联预览 / 声学安全与法务中心。
-public struct ProfileSanctuaryView: View {
+/// Tab 2 · 工坊：咩哞原创窑陶工坊与声学设置（窑陶品牌铭牌 / 纪念卡导出 / 角色试音与夜灯 / 外观三联画布 / 偏好与非医疗合规声明）。
+public struct AtelierSettingsView: View {
     @ObservedObject public var vm: ResonanceViewModel
     public let palette: ChimmoPalette
     public let onOpenField: () -> Void
@@ -21,7 +20,7 @@ public struct ProfileSanctuaryView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.1.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.2.0"
     }
 
     private var appBuild: String {
@@ -30,16 +29,17 @@ public struct ProfileSanctuaryView: View {
 
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    rainbowProfileBanner
+            ZStack {
+                AmbientPaperBackdrop(
+                    palette: palette,
+                    accentTint: palette.harmonyWash
+                )
 
-                    VStack(alignment: .leading, spacing: 20) {
-                        airbnbStatsCard
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        atelierBrandCard
 
-                        gentleCompanionCard
-
-                        pairedDioramaCards
+                        atelierToolsCard
 
                         appearanceSwatchCard
 
@@ -47,138 +47,54 @@ public struct ProfileSanctuaryView: View {
 
                         safetyAndLegalHub
                     }
-                    .padding(.horizontal, 18)
+                    .padding(.top, 6)
+                    .padding(.horizontal, 16)
                     .padding(.bottom, 34)
                 }
             }
-            .background(palette.paper.ignoresSafeArea())
-            .ignoresSafeArea(edges: .top)
-            .toolbar(.hidden, for: .navigationBar)
+            .navigationTitle("工坊")
+            .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showShareCard) {
                 ResonanceShareCardSheet(vm: vm, palette: palette)
             }
         }
     }
 
-    // MARK: - 1. Headspace Rainbow/Sunset Top Banner + Centered Chimmo Avatar
+    // MARK: - 1. Kiln-Ceramic Atelier Brand Crest & Share Card
 
-    private var rainbowProfileBanner: some View {
-        let arcTop = palette.isNight ? Color(hex: 0x212A4C) : Color(hex: 0xFF7B29)
-        let arcMid = palette.isNight ? Color(hex: 0x352E5B) : Color(hex: 0xFFA927)
-        let arcBot = palette.isNight ? Color(hex: 0x4E3F35) : Color(hex: 0xFFD43B)
+    private var atelierBrandCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 14) {
+                SettingsBrandMarkView(isNight: palette.isNight)
+                    .frame(width: 66, height: 66)
 
-        return VStack(spacing: 10) {
-            ZStack(alignment: .bottom) {
-                ZStack(alignment: .topTrailing) {
-                    VStack(spacing: 0) {
-                        arcTop.frame(height: 54)
-                        arcMid.frame(height: 26)
-                        arcBot.frame(height: 28)
-                    }
-                    .overlay(alignment: .bottom) {
-                        ProfileTopArchCut()
-                            .fill(palette.paper)
-                            .frame(height: 32)
-                            .offset(y: 1)
-                    }
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("咩哞 · Mie & Mou")
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
+                        .accessibilityAddTraits(.isHeader)
 
-                    NavigationLink {
-                        CharacterSoundTestView(
-                            palette: palette,
-                            scaleMode: vm.studioVM.document.scaleMode,
-                            cradleEnabled: vm.studioVM.cradleEnabled,
-                            onAuditionDuo: { vm.studioVM.auditionDuoCharacter($0) },
-                            onAuditionMember: { vm.studioVM.auditionChimmoMember($0) }
+                    Text("100% 离线脑波共振与窑陶声学工坊")
+                        .font(.subheadline)
+                        .foregroundStyle(palette.secondaryInk)
+
+                    ChimmoFlowRow(spacing: 6, lineSpacing: 5) {
+                        atelierBadge(
+                            text: "累计 \(vm.stats.totalMinutes) 分钟",
+                            symbol: "waveform",
+                            tint: palette.celadonAccent
                         )
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(palette.cardSurface)
-                                .frame(width: 40, height: 40)
-                                .shadow(color: palette.elevationShadow(dayOpacity: 0.14, nightOpacity: 0.30), radius: 6, y: 2)
-                            Image(systemName: "tuningfork")
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(palette.primaryInk)
-                        }
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                    }
-                    .padding(.top, 52)
-                    .padding(.trailing, 18)
-                    .accessibilityLabel("声音家族角色试音台")
-                    .accessibilityHint("轻点认识并试听双子咩哞与七声音阶小偶")
-                }
-
-                // 居中大头像圈（LivingChimmoDuoBadgeView）
-                ZStack {
-                    Circle()
-                        .fill(palette.paper)
-                        .frame(width: 96, height: 96)
-                    Circle()
-                        .fill(palette.storybookButter)
-                        .frame(width: 84, height: 84)
-                    LivingChimmoDuoBadgeView(
-                        isNight: palette.isNight,
-                        accentColor: palette.homeAnchor,
-                        melodyActive: vm.isBedPlaying,
-                        cowAwake: vm.isBedPlaying
-                    )
-                    .frame(width: 68, height: 46)
-                }
-                .offset(y: 20)
-                .accessibilityHidden(true)
-            }
-            .padding(.bottom, 18)
-
-            VStack(spacing: 3) {
-                Text("咩哞 · Mie & Mou")
-                    .font(.system(.title2, design: .rounded).weight(.bold))
-                    .foregroundStyle(palette.primaryInk)
-                    .accessibilityAddTraits(.isHeader)
-
-                Text("声波共振与感官放松 · \(vm.stats.firstUseFormattedDate)")
-                    .font(.subheadline)
-                    .foregroundStyle(palette.secondaryInk)
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    // MARK: - 2. Airbnb Elevated Stats Card
-
-    private var airbnbStatsCard: some View {
-        let favBand = vm.stats.favoriteBand
-
-        return VStack(spacing: 12) {
-            HStack(spacing: 16) {
-                VStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .fill(palette.storybookMint)
-                            .frame(width: 84, height: 84)
-                        ChimmoFigureView(
-                            member: favBand == .theta ? .taono : (favBand == .delta ? .bomo : .udo),
-                            isNight: palette.isNight,
-                            isMinor: false,
-                            isSinging: vm.isBedPlaying,
-                            time: 0
+                        atelierBadge(
+                            text: "和声绽放 \(vm.stats.frissonPeakCount) 次",
+                            symbol: "sparkles",
+                            tint: palette.homeAnchor
                         )
-                        .scaleEffect(0.95)
+                        atelierBadge(
+                            text: "v\(appVersion)",
+                            symbol: "checkmark.shield.fill",
+                            tint: palette.nightLampGold
+                        )
                     }
-                    .accessibilityHidden(true)
-
-                    Text("100% 离线本机")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(palette.celadonAccent)
-                }
-                .frame(width: 112)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    statLine(value: "\(vm.stats.totalMinutes)", label: "累计共振分钟")
-                    Divider().opacity(0.45)
-                    statLine(value: "\(vm.stats.frissonPeakCount)", label: "颅内战栗次数")
-                    Divider().opacity(0.45)
-                    statLine(value: favBand?.shortCode ?? "探索中", label: "最合拍频段")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -186,186 +102,165 @@ public struct ProfileSanctuaryView: View {
             Button {
                 showShareCard = true
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.caption.weight(.bold))
-                    Text("生成我的脑波共振纪念卡")
+                    Text("导出 1080×1350 离线共振纪念卡")
                         .font(.caption.weight(.bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
                 .foregroundStyle(palette.primaryInk)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 40)
-                .background(RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous).fill(palette.shelfSurface))
+                .frame(minHeight: 42)
+                .background(
+                    RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous)
+                        .fill(palette.shelfSurface)
+                )
                 .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous))
             }
             .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-            .accessibilityHint("离线渲染高清共振纪念卡片并通过系统菜单保存或分享")
-        }
-        .padding(18)
-        .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
-    }
-
-    private func statLine(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(value)
-                .font(.system(.title3, design: .rounded).weight(.heavy).monospacedDigit())
-                .foregroundStyle(palette.primaryInk)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(palette.secondaryInk)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    // MARK: - 3. Anti-Anxiety Companion Card
-
-    private var gentleCompanionCard: some View {
-        let copy = ResonanceKinematics.gentleCompanionMessage(
-            totalMinutes: vm.stats.totalMinutes,
-            frissonCount: vm.stats.frissonPeakCount,
-            favoriteBand: vm.stats.favoriteBand
-        )
-
-        return HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(palette.homeAnchor.opacity(palette.isNight ? 0.25 : 0.14))
-                    .frame(width: 50, height: 50)
-                    .rotationEffect(.degrees(45))
-                Image(systemName: "sparkles")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(palette.homeAnchor)
-            }
-            .frame(width: 58, height: 58)
-            .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("不打卡的陪伴")
-                    .font(.system(.subheadline, design: .rounded).weight(.bold))
-                    .foregroundStyle(palette.primaryInk)
-                    .accessibilityAddTraits(.isHeader)
-
-                Text(copy)
-                    .font(.caption)
-                    .foregroundStyle(palette.secondaryInk)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            .accessibilityHint("在本地渲染并保存或分享当前频率的高清纪念卡 PNG")
         }
         .padding(16)
         .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
     }
 
-    // MARK: - 4. Airbnb 2-Column Tactile Diorama Tiles
+    private func atelierBadge(text: String, symbol: String, tint: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol)
+                .font(.caption2.weight(.bold))
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.caption2.weight(.semibold).monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .foregroundStyle(palette.isNight ? tint : tint.mix(with: palette.primaryInk, by: 0.20))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3.5)
+        .background(
+            Capsule(style: .continuous)
+                .fill(tint.opacity(palette.isNight ? 0.16 : 0.10))
+        )
+    }
 
-    private var pairedDioramaCards: some View {
-        let cols: [GridItem] = dynamicTypeSize.isAccessibilitySize
-            ? [GridItem(.flexible())]
-            : [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+    // MARK: - 2. Original Kiln Acoustic Tools
 
-        return LazyVGrid(columns: cols, spacing: 12) {
-            NavigationLink {
-                CharacterSoundTestView(
-                    palette: palette,
-                    scaleMode: vm.studioVM.document.scaleMode,
-                    cradleEnabled: vm.studioVM.cradleEnabled,
-                    onAuditionDuo: { vm.studioVM.auditionDuoCharacter($0) },
-                    onAuditionMember: { vm.studioVM.auditionChimmoMember($0) }
-                )
-            } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Spacer()
-                        Text("图鉴")
-                            .font(.caption2.weight(.heavy))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(palette.bassRibbon))
-                    }
+    private var atelierToolsCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ChimmoSectionTitle(
+                title: "窑陶声学家族与夜灯",
+                isNight: palette.isNight,
+                tint: palette.homeAnchor
+            )
 
-                    HStack(spacing: 4) {
-                        ChimmoFigureView(member: .taono, isNight: palette.isNight, isMinor: false, isSinging: false)
-                            .scaleEffect(0.75)
+            VStack(spacing: 0) {
+                NavigationLink {
+                    CharacterSoundTestView(
+                        palette: palette,
+                        scaleMode: vm.studioVM.document.scaleMode,
+                        cradleEnabled: vm.studioVM.cradleEnabled,
+                        onAuditionDuo: { vm.studioVM.auditionDuoCharacter($0) },
+                        onAuditionMember: { vm.studioVM.auditionChimmoMember($0) }
+                    )
+                } label: {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous)
+                                .fill(palette.storybookButter)
+                                .frame(width: 40, height: 40)
+                            ChimmoFigureView(
+                                member: .taono,
+                                isNight: palette.isNight,
+                                isMinor: false,
+                                isSinging: false,
+                                time: 0
+                            )
+                            .scaleEffect(0.72)
                             .frame(width: 34, height: 34)
-                        ChimmoFigureView(member: .plokko, isNight: palette.isNight, isMinor: false, isSinging: false)
-                            .scaleEffect(0.75)
-                            .frame(width: 34, height: 34)
-                        ChimmoFigureView(member: .corllo, isNight: palette.isNight, isMinor: false, isSinging: false)
-                            .scaleEffect(0.75)
-                            .frame(width: 34, height: 34)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .accessibilityHidden(true)
-
-                    Text("声学角色家族")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                    Text("轻触试听双子与七声")
-                        .font(.caption2)
-                        .foregroundStyle(palette.secondaryInk)
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
-                .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
-            }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-            .accessibilityLabel("声学角色家族，轻触试听双子与七声小偶")
-
-            Button {
-                vm.openNightLampSheet = true
-            } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Spacer()
-                        Text("盲操")
-                            .font(.caption2.weight(.heavy))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(palette.harmonyWash))
-                    }
-
-                    ZStack {
-                        RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous)
-                            .fill(palette.nightLampBackdrop)
-                        HStack(spacing: 8) {
-                            Image(systemName: "moon.stars.fill")
-                                .font(.title3)
-                                .foregroundStyle(palette.nightLampGold)
-                            Image(systemName: "hand.draw.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(Color.white.opacity(0.85))
                         }
-                    }
-                    .frame(height: 52)
-                    .accessibilityHidden(true)
+                        .accessibilityHidden(true)
 
-                    Text("闭眼夜灯模式")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(palette.primaryInk)
-                    Text("熄灯低亮度防蓝光滑奏")
-                        .font(.caption2)
-                        .foregroundStyle(palette.secondaryInk)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("咩哞与七声小偶试音台")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(palette.primaryInk)
+                            Text("轻触试听双子星与 1–7 音级窑陶原音")
+                                .font(.caption2)
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+
+                        Spacer(minLength: 4)
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(palette.secondaryInk.opacity(0.65))
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: 58)
+                    .contentShape(Rectangle())
                 }
-                .padding(14)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
-                .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
+                .buttonStyle(.plain)
+                .accessibilityHint("进入双子咩哞与七声小偶互动试音页面")
+
+                Divider().opacity(0.45).padding(.leading, 66)
+
+                Button {
+                    vm.openNightLampSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous)
+                                .fill(palette.nightLampBackdrop)
+                                .frame(width: 40, height: 40)
+                            ChimmoCraftMark(
+                                .nightLampHalo,
+                                color: palette.nightLampGold,
+                                secondaryColor: Color(hex: 0xF2E2C4).opacity(0.72)
+                            )
+                            .frame(width: 20, height: 20)
+                        }
+                        .accessibilityHidden(true)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("闭眼夜灯零光盲操")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(palette.primaryInk)
+                            Text("熄灯纯黑低亮度防蓝光滑奏音脊")
+                                .font(.caption2)
+                                .foregroundStyle(palette.secondaryInk)
+                        }
+
+                        Spacer(minLength: 4)
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(palette.secondaryInk.opacity(0.65))
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: 58)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("进入纯黑夜灯触觉声场")
             }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-            .accessibilityLabel("闭眼夜灯模式，熄灯低亮度防蓝光滑奏")
+            .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
+            .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
         }
     }
 
-    // MARK: - 5. Moss & Otto Twin Appearance Swatches
+    // MARK: - 3. Daylight / Night Lamp / Auto Canvas Preview
 
     private var appearanceSwatchCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 ChimmoResonanceBead(size: 10, isNight: palette.isNight, tint: palette.nightLampGold)
-                Text("外观")
+                Text("画布外观")
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
                     .foregroundStyle(palette.primaryInk)
                     .accessibilityAddTraits(.isHeader)
@@ -395,7 +290,7 @@ public struct ProfileSanctuaryView: View {
                     .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
                     .accessibilityLabel("外观 \(pref.label)")
                     .accessibilityValue(active ? "已选中" : "")
-                    .accessibilityHint("选择日间棉纸、夜间星灯或跟随系统")
+                    .accessibilityHint("切换日间棉纸、夜间星灯或跟随系统外观")
                 }
             }
         }
@@ -447,7 +342,7 @@ public struct ProfileSanctuaryView: View {
         .contentShape(shape)
     }
 
-    // MARK: - 6. Acoustic Preferences Card
+    // MARK: - 4. Acoustic & Tactile Preferences
 
     private var acousticPreferencesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -522,7 +417,7 @@ public struct ProfileSanctuaryView: View {
         .accessibilityHidden(true)
     }
 
-    // MARK: - 7. Guideline 1.4.1 Acoustic Safety & Legal Compliance Hub
+    // MARK: - 5. Guideline 1.4.1 Acoustic Safety & Legal Compliance Hub
 
     private var safetyAndLegalHub: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -649,19 +544,6 @@ public struct ProfileSanctuaryView: View {
     }
 }
 
-private struct ProfileTopArchCut: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-        p.addQuadCurve(
-            to: CGPoint(x: rect.maxX, y: rect.maxY),
-            control: CGPoint(x: rect.midX, y: -rect.height * 0.45)
-        )
-        p.closeSubpath()
-        return p
-    }
-}
-
 /// 声学安全与非医疗声明页面（符合 Apple Guideline 1.4.1 审核规范）。
 public struct ChimmoAcousticSafetyView: View {
     public init() {}
@@ -684,7 +566,7 @@ public struct ChimmoAcousticSafetyView: View {
             }
 
             Section("4. 麦克风与物理触觉控制") {
-                Text("「轻哼同频」功能完全在设备本地实时处理人声基频，不录音留存、不联网传输；即使不开启麦克风权限，也可以直接选择预设共振基频继续使用。如需关闭震动，可随时在「我的 -> 掌心脑波触觉脉动」一键关闭。")
+                Text("「轻哼同频」功能完全在设备本地实时处理人声基频，不录音留存、不联网传输；即使不开启麦克风权限，也可以直接选择预设共振基频继续使用。如需关闭震动，可随时在「工坊 -> 掌心脑波触觉脉动」一键关闭。")
                     .font(.subheadline)
             }
         }

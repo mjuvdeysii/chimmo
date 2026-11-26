@@ -62,17 +62,18 @@ PUBLIC_BETA_REVIEW_NOTES_TEMPLATE = (
     "lock-screen Now Playing controls, PNG Resonance Card rendering, and on-device pitch detection (YIN/vDSP) "
     "run locally without outbound requests.\n\n"
     "3. How to Test Key Features in External Beta:\n"
-    "   - Today Tab (今日): Tap the warm hero card or explore presets to launch an instant brainwave session.\n"
-    "   - Resonance Field Tab (共振): Tap the center breath-guided orb to play/pause binaural waves; drag left/right across the orb "
-    "to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); press & hold the orb or "
-    "'按住战栗' for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale; tap share to export a 1080x1350 Resonance Card.\n"
+    "   - Resonance Field Tab (声场, default home): Tap the breath-guided resonance orb to play/pause binaural waves; "
+    "drag left/right across the orb to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); "
+    "press & hold the orb or '按住战栗' for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale; "
+    "tap the lamp button for zero-glare Night Lamp mode or share to export a 1080x1350 Resonance Card.\n"
     "   - Hum Frequency Matching (轻哼同频): Tap '轻哼同频', allow microphone access, hum softly for 2-3 seconds, "
     "and tap stop to lock the carrier to your vocal fundamental. If microphone access is denied, 3 instant fallback "
     "voice pitch presets (136 Hz / 174 Hz / 216 Hz) remain immediately usable.\n"
-    "   - Background Audio & Lock Screen (UIBackgroundModes audio): Playback continues smoothly when locking the screen "
-    "with full lock-screen artwork and play/pause/skip controls unless disabled in Profile -> '锁屏继续收听声场'. Only active soundscapes use background audio.\n"
-    "   - Explore & Profile Tabs (探索 / 我的): Includes 2x2 quick states, Night Lamp zero-glare mode, "
-    "8 curated relaxation music capsules, and Acoustic Safety / Privacy / Legal disclosures."
+    "   - Acoustic Library Tab (声库): Browse the kiln-ceramic 4-band bench, 12 offline soundscape presets, "
+    "Night Lamp tactile bench, 8 curated relaxation music capsules, and the 28-piece archive sheet.\n"
+    "   - Background Audio & Atelier Tab (工坊): Playback continues smoothly when locking the screen with live "
+    "MPNowPlayingInfoCenter controls unless disabled in Atelier -> '锁屏继续收听声场'. Includes 1080x1350 Card export, "
+    "Chimmo character auditioning, and Acoustic Safety / Privacy / Legal disclosures."
 )
 
 
@@ -552,11 +553,11 @@ def prepare_public_beta(
     upsert_beta_build_localization(client, build_id, locale="zh-Hans", whats_new=zh_whats_new)
 
     en_whats_new = (
-        f"v{version or '2.1.0'} (Build {build_number}) Public Beta\n"
-        "• Lock-screen & Control Center Now Playing controls with 256x256 kiln-halo artwork\n"
-        "• Organic 60fps audio-envelope resonance orb with 4s inhale / 6s exhale breath guide\n"
-        "• Lock-free 0.065 Hz spatial drift on warm rain/overtone layers & 10 tactile kiln clicks\n"
-        "• Offline 1080x1350 Day/Night Resonance Card PNG export & full Delta/Theta/Alpha/Gamma field"
+        f"v{version or '2.2.0'} (Build {build_number}) Public Beta\n"
+        "• Rebuilt in Mie & Mou's 100% original kiln-ceramic 3-tab layout (Resonance Field / Acoustic Library / Atelier)\n"
+        "• Direct entry to the 60fps breath-guided resonance basin, 0.065 Hz spatial drift, and 10 tactile kiln clicks\n"
+        "• Lock-screen Now Playing controls with 256x256 artwork, Night Lamp zero-glare bench, and 12 offline presets\n"
+        "• Offline 1080x1350 Day/Night Resonance Card PNG export & 3-second hum frequency matching"
     )
     upsert_beta_build_localization(client, build_id, locale="en-US", whats_new=en_whats_new)
 
@@ -669,7 +670,7 @@ def main() -> int:
     p4 = sub.add_parser("prepare-public-beta")
     p4.add_argument("--bundle-id", default="app.chimmo")
     p4.add_argument("--build", required=True)
-    p4.add_argument("--version", default="2.1.0")
+    p4.add_argument("--version", default="2.2.0")
     p4.add_argument("--changelog", default="CHANGELOG.md")
     p4.add_argument("--group-name", default="公测")
     p4.add_argument("--public-link", action="store_true")

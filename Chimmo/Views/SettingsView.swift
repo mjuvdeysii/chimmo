@@ -24,7 +24,7 @@ public struct SettingsView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.1.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.2.0"
     }
 
     private var appBuild: String {
@@ -923,10 +923,14 @@ public struct CharacterSoundTestView: View {
 }
 
 /// 商业级窑陶品牌印记徽章（1-3-5 三人组居中陈列，无厚重黑色漫画框）。
-private struct SettingsBrandMarkView: View {
-    let isNight: Bool
+public struct SettingsBrandMarkView: View {
+    public let isNight: Bool
 
-    var body: some View {
+    public init(isNight: Bool) {
+        self.isNight = isNight
+    }
+
+    public var body: some View {
         let p = ChimmoPalette(isNight: isNight)
         ZStack {
             RoundedRectangle(cornerRadius: ChimmoRadius.inner, style: .continuous)

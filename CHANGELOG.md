@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.0 - 2026-11-27
+- **彻底去冥想壳与 100% 原创窑陶三页架构重构（`声场 / 声库 / 工坊`）**：
+  - 删除 `TodayJourneyView.swift`、`ExploreResonanceView.swift` 与 `ProfileSanctuaryView.swift` 等外部冥想应用模仿壳与插画，回归「咩哞 · Mie & Mou」100% 原创窑陶棉纸声学语言；
+  - 升级 [ResonanceRootView.swift](Chimmo/Views/ResonanceRootView.swift) 为三页直觉架构并默认直达 [ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift)（「声场」活体窑陶共振盆，顶栏增设闭眼夜灯零光台快捷入口）；
+  - 新增 [AcousticLibraryView.swift](Chimmo/Views/AcousticLibraryView.swift)（「声库」：零横滑 `ChimmoFlowRow` 筛选栏、四频段窑陶调音座、12 套离线声景配方、原生深靛夜灯盲操台、8 首和声战栗乐章及 28 首典藏曲本）；
+  - 新增 [AtelierSettingsView.swift](Chimmo/Views/AtelierSettingsView.swift)（「工坊」：复用 `SettingsBrandMarkView` 1-3-5 窑陶铭牌、1080×1350 离线共振纪念卡导出、咩哞与七声小偶试音台、三态外观画布、偏好开关与声学非医疗合规中心）；
+  - 同步升级 `project.yml`（`2.2.0`）、[BrainwaveModels.swift](Chimmo/Domain/BrainwaveModels.swift)、[BrainwaveResonanceTests.swift](ChimmoTests/BrainwaveResonanceTests.swift)、OpenMotion 官网 [docs/index.html](docs/index.html)（三页架构交互同步）、12 秒短片及全套文档与 [Tools/asc.py](Tools/asc.py)。
+
 ## 2.1.0 - 2026-11-26
 - **Phase 3 终极版收官（官网、短片与 TestFlight 公测对齐）**：
   - OpenMotion Design Studio 互动官网升级至 `v20` 并同步导出单文件 [docs/index.html](docs/index.html)：全面切换为「咩哞 · Mie & Mou (v2.1.0)」100% 离线脑波共振主题，内置真实 Web Audio 双耳差频/外放等时切换、60fps/15Hz 呼吸驻波球、长按蓄力颅内战栗瀑布、轻哼人声锁频、四标签空间面板、闭眼夜灯触觉场、8 首乐章胶囊与 1080×1350 共振纪念卡预览，通过整页 PNG 视觉抽检与 `node --check` 零报错。

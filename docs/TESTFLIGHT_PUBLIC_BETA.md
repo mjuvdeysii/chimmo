@@ -1,11 +1,11 @@
-# 咩哞 · Mie & Mou (v2.1.0) TestFlight 外部公测准备与过审手册
+# 咩哞 · Mie & Mou (v2.2.0) TestFlight 外部公测准备与过审手册
 
 > 套装标识 (Bundle ID)：`app.chimmo`  
-> 版本：v2.1.0（完全离线、零账号、零广告、零追踪、非医疗声学放松工具）
+> 版本：v2.2.0（完全离线、零账号、零广告、零追踪、非医疗声学放松工具）
 
 ---
 
-## 一、端内硬件与系统合规核验清单（V2.0 已全部落盘）
+## 一、端内硬件与系统合规核验清单（v2.2.0 已全部落盘）
 
 1. **Required Reason API (`ITMS-91053` 零阻断)**
    - [PrivacyInfo.xcprivacy](file:///Users/someone/Projects/chimmo/Chimmo/Resources/PrivacyInfo.xcprivacy) 已申报 `NSPrivacyAccessedAPICategoryUserDefaults` 并附合规原因码 `CA92.1`；
@@ -14,12 +14,12 @@
    - [Info.plist](file:///Users/someone/Projects/chimmo/Chimmo/Resources/Info.plist) 已配置 `<key>ITSAppUsesNonExemptEncryption</key><false/>`，上传 TestFlight 无需反复人工点选加密问卷。
 3. **后台音频声明与停播边界 (`UIBackgroundModes: audio`)**
    - [Info.plist](file:///Users/someone/Projects/chimmo/Chimmo/Resources/Info.plist) 已配置 `audio` 后台能力；
-   - App 仅在用户主动播放脑波声床或乐章且打开「锁屏继续收听声场」时运行后台音频，暂停或开启关闭开关时进入后台立即停止，避免触发滥用后台音频退回。
+   - App 仅在用户主动播放脑波声床或乐章且打开「锁屏继续收听声场」时运行后台音频，暂停或关闭开关时进入后台立即停止，避免触发滥用后台音频退回。
 4. **双语权限与本地化显示名称**
    - [InfoPlist.xcstrings](file:///Users/someone/Projects/chimmo/Chimmo/Resources/InfoPlist.xcstrings)：简体中文 `咩哞`、英文 `Mie & Mou`；
    - 明确声明 `NSMicrophoneUsageDescription` 仅用于本机实时捕捉轻哼基频、从不上传联网；即使审核员在弹出框点击 **不允许 (Don't Allow)**，也可直接通过三档预设人声基频（`136 Hz / 174 Hz / 216 Hz`）流畅体验无障碍降级路线。
 5. **Apple Guideline 1.4.1（非医疗宣称红线）**
-   - 全端文案、公测介绍及 [ProfileSanctuaryView.swift](file:///Users/someone/Projects/chimmo/Chimmo/Views/ProfileSanctuaryView.swift) 内置的 `ChimmoAcousticSafetyView`（「我的 -> 声学安全与非医疗声明」）严禁出现治疗失眠、临床康复、缓解疾病等医学词汇，统一界定为 **声学放松、专注氛围与感官艺术体验（非医疗器械）**。
+   - 全端文案、公测介绍及 [AtelierSettingsView.swift](file:///Users/someone/Projects/chimmo/Chimmo/Views/AtelierSettingsView.swift) 内置的 `ChimmoAcousticSafetyView`（「工坊 -> 声学安全与非医疗声明」）严禁出现治疗失眠、临床康复、缓解疾病等医学词汇，统一界定为 **声学放松、专注氛围与感官艺术体验（非医疗器械）**。
 
 ---
 
@@ -33,10 +33,10 @@
 
 ### 2. 测试重点 (`What to Test`)
 - 优先测试四项核心体感知觉：
-  1. 「今日」tab 的分时脑波旅程 Hero 卡与「最近 / 收藏」快捷抽屉；
-  2. 「共振」tab 轻点共振球播停、左右滑频切换 Delta/Theta/Alpha/Gamma，以及长按 1.5 秒再松手触发颅内战栗和声瀑布 + 掌心 CoreHaptics；
+  1. 「声场」默认主台：轻点共振球播停、左右滑频切换 Delta/Theta/Alpha/Gamma、长按 1.5 秒松手触发颅内战栗和声瀑布 + 掌心 CoreHaptics，以及顶栏直达「闭眼夜灯零光台」与纪念卡导出；
+  2. 「声库」页：四频段窑陶调音座、12 套离线声景配方、8 首精选声波乐章与 28 首典藏曲本入口；
   3. 「轻哼同频」麦克风捕捉与拒绝权限后的预设人声基频无缝回退；
-  4. 佩戴耳机（立体声双耳差频）与拔出耳机（自动外放等时共振）无缝切换及锁屏后台收听。
+  4. 佩戴耳机（立体声双耳差频）与拔出耳机（自动外放等时共振）无缝切换及锁屏控制中心 Now Playing 联动。
 
 ### 3. 公测审核备注 (`Review Notes`) 与免登录声明
 - `Sign-in required`：**取消勾选**（`demoAccountRequired = false`，无账号登录系统）。
@@ -45,7 +45,7 @@
 - **Review Notes 原文**：
 
 ```text
-Thank you for reviewing Mie & Mou (咩哞, v2.1.0) for TestFlight External Beta.
+Thank you for reviewing Mie & Mou (咩哞, v2.2.0) for TestFlight External Beta.
 
 1. Non-Medical Wellness & Sensory Art Positioning (Guideline 1.4.1):
    Mie & Mou is strictly an offline sound-art, focus ambiance, and acoustic relaxation tool. It is NOT a medical device and makes zero diagnostic, therapeutic, or clinical claims.
@@ -54,11 +54,10 @@ Thank you for reviewing Mie & Mou (咩哞, v2.1.0) for TestFlight External Beta.
    No sign-in, account, or network access is required. All audio DSP (AVAudioEngine), CoreHaptics, and on-device pitch detection (YIN/vDSP) run locally without outbound requests.
 
 3. How to Test Key Features in External Beta:
-   - Today Tab (今日): Tap the warm hero card or presets to launch an instant brainwave session.
-   - Resonance Field Tab (共振): Tap the center orb to play/pause; drag horizontally across the orb to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); press & hold the orb or "按住战栗" for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale.
+   - Resonance Field Tab (声场, default home): Tap the center orb to play/pause; drag horizontally across the orb to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); press & hold the orb or "按住战栗" for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale; tap the top-bar lamp icon for Night Lamp zero-glare mode.
    - Hum Frequency Matching (轻哼同频): Tap "轻哼同频", allow microphone access, hum softly for 2-3s, and tap stop to match your vocal pitch. If microphone permission is denied, 3 one-tap fallback presets (136 Hz / 174 Hz / 216 Hz) remain immediately usable.
-   - Background Audio & Lock-Screen Now Playing (v2.1.0): Playback continues smoothly when locking the screen unless toggled off in Profile -> "锁屏继续收听声场", with live MPNowPlayingInfoCenter metadata and lock-screen play/pause/preset controls. Only active soundscapes use background audio.
-   - Explore, Poster Card & Profile Tabs (探索 / 我的): Includes 2x2 quick states, Night Lamp zero-glare mode, 8 curated relaxation music capsules, offline 1080x1350 Brainwave Resonance Memory Card export, and Acoustic Safety / Privacy / Legal disclosures.
+   - Acoustic Library Tab (声库): Browse the kiln-ceramic 4-band bench, 12 curated offline presets, Night Lamp bench, 8 relaxation music capsules, and the 28-piece archive sheet.
+   - Background Audio, Lock-Screen Now Playing & Atelier Tab (工坊): Playback continues smoothly when locking the screen unless toggled off in Atelier -> "锁屏继续收听声场", with live MPNowPlayingInfoCenter metadata and lock-screen controls. Includes 1080x1350 Brainwave Resonance Memory Card export, character auditioning, and Acoustic Safety / Privacy / Legal disclosures.
 ```
 
 ---

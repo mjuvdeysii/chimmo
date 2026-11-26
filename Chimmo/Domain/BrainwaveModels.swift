@@ -206,7 +206,7 @@ public enum AcousticWashKind: String, CaseIterable, Identifiable, Codable, Senda
     }
 }
 
-/// 12 套精选离线声波配方（对齐今日分时旅程与探索页瞬间直达场景）。
+/// 12 套离线窑陶声景与双耳配方（覆盖清晨、午后、傍晚与深夜声学氛围）。
 public struct ResonancePreset: Identifiable, Equatable, Codable, Sendable {
     public enum HourWindow: String, Codable, Sendable {
         case morning
@@ -399,7 +399,7 @@ public struct ResonancePreset: Identifiable, Equatable, Codable, Sendable {
     ]
 }
 
-/// 探索页精选「颅内战栗 · 声波乐章胶囊」（升维收纳 SpecimenLibrary 中最易诱发鸡皮疙瘩张力释放的 8 首代表作）。
+/// 声库精选「和声战栗 · 声波乐章」（收纳 SpecimenLibrary 中最富和声张力释放的 8 首代表作）。
 public struct FrissonCapsule: Identifiable, Sendable {
     public let id: String
     public let title: String
@@ -537,18 +537,18 @@ public enum ResonanceKinematics {
     public static func timeOfDayBanner(forHour hour: Int) -> (title: String, subtitle: String) {
         switch timeOfDayWindow(forHour: hour) {
         case .morning:
-            return ("早安，先顺着呼吸醒来", "轻拍一下即可进入今天的第一段清醒声波")
+            return ("晨光调音", "清透 Alpha 与微风声床，适合轻柔进入专注状态")
         case .afternoon:
-            return ("午后，给大脑留一块留白", "放空几分钟，或是沉入平稳专注的心流")
+            return ("午后声场", "温润 Theta 漂浮泛音，给连续用脑留一块安静留白")
         case .evening:
-            return ("傍晚，把紧绷交给水波", "用温热泛音和掌心触觉慢慢卸下一天的疲劳")
+            return ("暮色泛音", "暖木低音与掌心触觉释放，慢慢卸下白日紧绷")
         case .night, .any:
-            return ("夜深了，放心把手机交给安静", "极缓 Delta 低波与暖雨声床，陪你软软滑入夜色")
+            return ("深夜低波", "极缓 Delta 节律与隔窗暖雨，陪你沉入安静夜色")
         }
     }
 
-    /// 今日 3 步脑波旅程配方：步骤 1 为当前时段 Hero 主卡，步骤 2/3 衔接状态过渡。
-    public static func dailyJourneySteps(forHour hour: Int) -> [ResonancePreset] {
+    /// 按当前时段挑选 3 套推荐声景配方：第 1 套为此刻契合主推，后 2 套衔接情绪过渡。
+    public static func recommendedPresets(forHour hour: Int) -> [ResonancePreset] {
         let window = timeOfDayWindow(forHour: hour)
         let all = ResonancePreset.all
         let first = all.first(where: { $0.hourWindow == window }) ?? all[0]
@@ -608,22 +608,22 @@ public enum ResonanceKinematics {
         }
     }
 
-    /// 温柔无说教陪伴短语（绝不使用断签警告或打卡鞭策）。
+    /// 窑陶声学工坊寄语（绝不说教或制造打卡焦虑）。
     public static func gentleCompanionMessage(
         totalMinutes: Int,
         frissonCount: Int,
         favoriteBand: BrainwaveBand?
     ) -> String {
         if totalMinutes <= 0 && frissonCount <= 0 {
-            return "不用连续打卡，也不用赶任何进度。今天哪怕只戴上耳机发呆三分钟，就已经是送给大脑的一场安静假期。"
+            return "在温热的窑陶声场里，随时给耳朵留一片安静留白。"
         }
         if let fav = favoriteBand {
             if frissonCount > 0 {
-                return "你最常在「\(fav.title)」频段里安顿思绪，已经收藏过 \(frissonCount) 次声波绽放。随时回来喘口气，咩哞一直都在。"
+                return "「\(fav.title)」是你最常调谐的频段，已记录 \(frissonCount) 次和声绽放。"
             }
-            return "「\(fav.title)」是最常接住你的频道。疲惫的时候不用勉强振作，让声波替你先把肩颈放下来。"
+            return "「\(fav.title)」是你最常调谐的声波频段，随时轻点即可回到熟悉的安静场域。"
         }
-        return "无论过了多久再打开，这里没有倒扣的进度条，只有随时为你亮起的温热共鸣。"
+        return "完全离线、不扰视线的窑陶声波工作台，随时为你点亮温和共鸣。"
     }
 }
 

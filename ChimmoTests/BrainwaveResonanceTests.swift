@@ -73,9 +73,9 @@ final class BrainwaveResonanceTests: XCTestCase {
         XCTAssertTrue((120.0...260.0).contains(ResonanceKinematics.foldHumFrequencyToCarrier(420.0)))
         XCTAssertEqual(ResonanceKinematics.foldHumFrequencyToCarrier(.nan), 174.0, accuracy: 0.001)
 
-        // 全天 24 小时 3 步旅程完整性
+        // 全天 24 小时推荐配方完整性
         for hour in [0, 8, 15, 20, 23] {
-            let steps = ResonanceKinematics.dailyJourneySteps(forHour: hour)
+            let steps = ResonanceKinematics.recommendedPresets(forHour: hour)
             XCTAssertEqual(steps.count, 3)
             let banner = ResonanceKinematics.timeOfDayBanner(forHour: hour)
             XCTAssertFalse(banner.title.isEmpty)
@@ -90,6 +90,7 @@ final class BrainwaveResonanceTests: XCTestCase {
         let companion = ResonanceKinematics.gentleCompanionMessage(totalMinutes: 12, frissonCount: 3, favoriteBand: .theta)
         XCTAssertFalse(companion.isEmpty)
         XCTAssertTrue(companion.contains("漂浮放空"))
+        XCTAssertFalse(companion.contains("打卡"))
     }
 
     @MainActor
@@ -139,14 +140,14 @@ final class BrainwaveResonanceTests: XCTestCase {
         vm.handleAppEnteredBackground()
         XCTAssertFalse(vm.isBedPlaying)
 
-        // 5. V2.0 全视图日/夜实例化校验 + 声学安全合规页
+        // 5. V2.2 三页窑陶声学架构日/夜实例化校验 + 声学安全合规页
+        XCTAssertEqual(ResonanceTab.allCases, [.field, .library, .atelier])
         XCTAssertNotNil(ResonanceRootView(preferences: defs))
         for isNight in [false, true] {
             let p = ChimmoPalette(isNight: isNight)
-            XCTAssertNotNil(TodayJourneyView(vm: vm, palette: p))
             XCTAssertNotNil(ResonanceFieldView(vm: vm, palette: p))
-            XCTAssertNotNil(ExploreResonanceView(vm: vm, palette: p))
-            XCTAssertNotNil(ProfileSanctuaryView(vm: vm, palette: p))
+            XCTAssertNotNil(AcousticLibraryView(vm: vm, palette: p))
+            XCTAssertNotNil(AtelierSettingsView(vm: vm, palette: p))
         }
         XCTAssertNotNil(ChimmoAcousticSafetyView())
         vm.stopAllAudio()
@@ -174,7 +175,7 @@ final class BrainwaveResonanceTests: XCTestCase {
         let micDesc = Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") as? String ?? ""
         XCTAssertFalse(micDesc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         let shortVer = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-        XCTAssertEqual(shortVer, "2.1.0")
+        XCTAssertEqual(shortVer, "2.2.0")
     }
 
     @MainActor

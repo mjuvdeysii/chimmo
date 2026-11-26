@@ -1,19 +1,19 @@
-# 咩哞 · Mie & Mou (v2.1.0)
+# 咩哞 · Mie & Mou (v2.2.0)
 
 > **把大脑交还给安静的声波。**  
 > 家族序列：`Moss（摸索）` · `Otto（台灯）` · `Mosto（魔头）` · **`Chimmo（咩哞 · 七声小偶）`**
 
-**咩哞（Mie & Mou）** 是一款为 iPhone（iOS 27 原生 SwiftUI）打造的 **100% 本机离线脑波共振与声触放松空间**（简体中文显示名「**咩哞**」，英文显示名「**Mie & Mou**」，套装标识 `app.chimmo` 与七声小偶家族代号 `Chimmo` 保持不变）：**完全离线、无账号、无广告、不联网、不收集任何数据、非医疗器械。**
+**咩哞（Mie & Mou）** 是一款为 iPhone（iOS 27 原生 SwiftUI）打造的 **100% 本机离线窑陶脑波共振工坊**（简体中文显示名「**咩哞**」，英文显示名「**Mie & Mou**」，套装标识 `app.chimmo` 与七声小偶家族代号 `Chimmo` 保持不变）：**完全离线、无账号、无广告、不联网、不收集任何数据、非医疗器械。**
 
 ---
 
-## 核心体感知觉与技术栈（v2.1.0）
+## 核心体感知觉与技术栈（v2.2.0）
 
 - **实时离线双耳差频 + 无耳机等时共振**：[FeltPianoSynth.swift](Chimmo/Audio/FeltPianoSynth.swift) 音频渲染线程内无锁零堆分配 `BrainwaveBedState`，覆盖 `Delta 2.5 Hz`（深潜入眠）、`Theta 6.0 Hz`（漂浮放空）、`Alpha 10.0 Hz`（丝滑心流）与 `Gamma 40.0 Hz`（灵感通透）四大频段；结合 [HalfDuplexAudioRouter.swift](Chimmo/Audio/HalfDuplexAudioRouter.swift) 耳机连接检测在立体声双耳差频与外放温和等时脉动之间无缝切换，内置 `0.065 Hz` 立体声空间微漂移（严格锁定左右核心双耳载波不漂移）、xorshift64* 棕红暖雨 / 粉红微风声床及 10 组手工微差窑陶轻叩音效。
 - **长按蓄力松手战栗（Acoustic Frisson）+ CoreHaptics**：长按活体共振球或蓄力键约 1.5 秒升温，松手瞬间绽放宽立体声纯五度/大三度/钢片琴和声瀑布，并由 [AcousticHapticsEngine.swift](Chimmo/Audio/AcousticHapticsEngine.swift) 同步输出 `playFrissonBuildTick` 与 `playFrissonCascade` 掌心释然长呼触觉脉冲。
 - **3 秒轻哼同频锁频 + 拒麦无障碍兜底**：[HumCapturePipeline.swift](Chimmo/Audio/HumCapturePipeline.swift) 端侧离线提取人声自然基频后按纯八度折叠至舒适共鸣带（`120–260 Hz`）；即使拒绝麦克风权限，仍可一键套用 `136.1 Hz / 174.0 Hz / 216.0 Hz` 三档预设共振基频。
-- **活体呼吸驻波球 + 锁屏 Now Playing + 纪念卡导出**：[ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift) 提供 60fps 音频包络驱动的有机驻波流体光晕与可选 `4 秒吸气 / 6 秒呼气` 引导环（全面受 `accessibilityReduceMotion` 门控降频至 15Hz）；[NowPlayingResonanceController.swift](Chimmo/Audio/NowPlayingResonanceController.swift) 接入 iOS 锁屏与控制中心（含 256×256 窑陶光环专辑封面）；[ResonanceCardExporter.swift](Chimmo/Domain/ResonanceCardExporter.swift) 支持纯离线导出 1080×1350 日/夜双态高清「脑波共振纪念卡」PNG。
-- **Headspace × Airbnb × 摸索台灯四标签体验**：[TodayJourneyView.swift](Chimmo/Views/TodayJourneyView.swift)（今日分时旅程）、[ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift)（活体共振球）、[ExploreResonanceView.swift](Chimmo/Views/ExploreResonanceView.swift)（2×2 脑波格、零蓝光夜灯盲操、`FrissonCapsule` 8 首声波乐章与 28 首典藏曲库）、[ProfileSanctuaryView.swift](Chimmo/Views/ProfileSanctuaryView.swift)（离线沉淀统计、反焦虑陪伴语、声学安全与法务中心）。
+- **活体呼吸驻波球 + 锁屏 Now Playing + 纪念卡导出**：[ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift) 提供 60fps 音频包络驱动的有机驻波流体光晕、可选 `4 秒吸气 / 6 秒呼气` 引导环（全面受 `accessibilityReduceMotion` 门控降频至 15Hz）及顶栏闭眼夜灯直达；[NowPlayingResonanceController.swift](Chimmo/Audio/NowPlayingResonanceController.swift) 接入 iOS 锁屏与控制中心（含 256×256 窑陶光环专辑封面）；[ResonanceCardExporter.swift](Chimmo/Domain/ResonanceCardExporter.swift) 支持纯离线导出 1080×1350 日/夜双态高清「脑波共振纪念卡」PNG。
+- **100% 原创窑陶三标签乐器工作台**：[ResonanceRootView.swift](Chimmo/Views/ResonanceRootView.swift) 默认直达 [ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift)（「声场」活体共振盆），配合 [AcousticLibraryView.swift](Chimmo/Views/AcousticLibraryView.swift)（「声库」四频段窑陶调音座、12 套离线声景配方、原生深靛夜灯盲操台、`FrissonCapsule` 8 首声波乐章与 28 首典藏曲本）和 [AtelierSettingsView.swift](Chimmo/Views/AtelierSettingsView.swift)（「工坊」1-3-5 窑陶品牌铭牌、纪念卡导出、咩哞与七声小偶试音台、三态外观画布与声学安全声明）。
 
 ---
 

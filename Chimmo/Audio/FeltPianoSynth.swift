@@ -364,7 +364,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
     }
 
-    /// 10 组手工窑陶微差轻叩声效（遵循 Not Boring 防听觉疲劳原则，连按切换频段或质地时绝不刺耳）。
+    /// 10 组手工窑陶微差轻叩声效（连按切换频段或质地时音高与声像微变，自然不刺耳）。
     public func playTactileKilnClick(variantIndex: Int, bright: Double = 0.78) {
         ensureRunning()
         let baseTable: [Double] = [
