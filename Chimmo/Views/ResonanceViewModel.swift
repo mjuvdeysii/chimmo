@@ -52,6 +52,8 @@ public final class ResonanceViewModel: ObservableObject {
     @Published public var focusFrissonGuideOnFieldAppear: Bool = false
 
     private let preferences: UserDefaults?
+    private let nowPlaying: NowPlayingResonanceController
+    private var clickVariantCounter: Int = 0
     private var sessionTickTask: Task<Void, Never>?
     private var frissonHoldTask: Task<Void, Never>?
     private var routeObserverToken: NSObjectProtocol?
@@ -61,13 +63,15 @@ public final class ResonanceViewModel: ObservableObject {
     public init(
         studioVM: StudioViewModel? = nil,
         statsStore: ResonanceStatsStore? = nil,
-        preferences: UserDefaults? = nil
+        preferences: UserDefaults? = nil,
+        enableSystemNowPlaying: Bool = false
     ) {
         let resolvedStudio = studioVM ?? StudioViewModel(preferences: preferences)
         let resolvedStats = statsStore ?? ResonanceStatsStore(preferences: preferences)
         self.studioVM = resolvedStudio
         self.stats = resolvedStats
         self.preferences = preferences
+        self.nowPlaying = NowPlayingResonanceController(enabled: enableSystemNowPlaying)
 
         if let prefs = preferences {
             if prefs.object(forKey: Self.hapticsPrefKey) != nil {
@@ -80,6 +84,7 @@ public final class ResonanceViewModel: ObservableObject {
 
         self.isHeadphonesConnected = resolvedStudio.router.isHeadphonesConnected
         observeSystemAndCaptureEvents()
+        bindRemotePlaybackCommands()
     }
 
     deinit {
@@ -164,6 +169,7 @@ public final class ResonanceViewModel: ObservableObject {
         pushSynthBedState()
         stats.recordRecentPreset(preset.id)
         restartSessionTicker()
+        syncNowPlaying()
 
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playBrainwaveDetent(bandIndex: preset.band.bandIndex)
@@ -192,9 +198,14 @@ public final class ResonanceViewModel: ObservableObject {
         } else if isBedPlaying {
             pushSynthBedState()
         }
+        syncNowPlaying()
 
-        if changed && hapticsEnabled {
-            AcousticHapticsEngine.shared.playBrainwaveDetent(bandIndex: band.bandIndex)
+        if changed {
+            clickVariantCounter &+= 1
+            studioVM.synth.playTactileKilnClick(variantIndex: clickVariantCounter)
+            if hapticsEnabled {
+                AcousticHapticsEngine.shared.playBrainwaveDetent(bandIndex: band.bandIndex)
+            }
         }
     }
 
@@ -205,7 +216,10 @@ public final class ResonanceViewModel: ObservableObject {
         activePreset = nil
         if isBedPlaying {
             pushSynthBedState()
+            syncNowPlaying()
         }
+        clickVariantCounter &+= 1
+        studioVM.synth.playTactileKilnClick(variantIndex: clickVariantCounter, bright: 0.85)
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playScrubTick()
         }
@@ -230,9 +244,12 @@ public final class ResonanceViewModel: ObservableObject {
         timerMinutes = safe
         if isBedPlaying {
             remainingSeconds = safe > 0 ? safe * 60 : nil
+            syncNowPlaying()
         } else {
             remainingSeconds = nil
         }
+        clickVariantCounter &+= 1
+        studioVM.synth.playTactileKilnClick(variantIndex: clickVariantCounter, bright: 0.72)
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playScrubTick()
         }
@@ -249,6 +266,7 @@ public final class ResonanceViewModel: ObservableObject {
             }
             pushSynthBedState()
             restartSessionTicker()
+            syncNowPlaying()
             if hapticsEnabled {
                 AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.45)
             }
@@ -260,6 +278,7 @@ public final class ResonanceViewModel: ObservableObject {
         sessionTickTask?.cancel()
         sessionTickTask = nil
         studioVM.synth.stopBrainwaveBed()
+        syncNowPlaying()
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playScrubTick()
         }
@@ -270,6 +289,7 @@ public final class ResonanceViewModel: ObservableObject {
         stopBedPlayback()
         stopCapsule()
         studioVM.synth.silenceAll()
+        nowPlaying.clear()
     }
 
     public func handleAppEnteredBackground() {
@@ -430,6 +450,7 @@ public final class ResonanceViewModel: ObservableObject {
         }
         pushSynthBedState()
         restartSessionTicker()
+        syncNowPlaying()
         studioVM.synth.triggerFrissonRelease(rootHz: folded, intensity: 0.72)
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playResolutionExhale()
@@ -460,6 +481,7 @@ public final class ResonanceViewModel: ObservableObject {
             restartSessionTicker()
         }
         pushSynthBedState()
+        syncNowPlaying()
         studioVM.synth.triggerFrissonRelease(rootHz: folded, intensity: 0.65)
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playConsonantGlow(intensity: 0.55)
@@ -484,6 +506,7 @@ public final class ResonanceViewModel: ObservableObject {
         carrierHz = capsule.companionBand.defaultCarrierHz
         studioVM.openSpecimen(capsule.specimen, autoPlay: true)
         restartSessionTicker()
+        syncNowPlaying()
         if hapticsEnabled {
             AcousticHapticsEngine.shared.playSeedBloom()
         }
@@ -498,9 +521,71 @@ public final class ResonanceViewModel: ObservableObject {
             sessionTickTask?.cancel()
             sessionTickTask = nil
         }
+        syncNowPlaying()
     }
 
     // MARK: - Internals
+
+    private func bindRemotePlaybackCommands() {
+        nowPlaying.bindCommands(
+            onPlay: { [weak self] in
+                guard let self else { return }
+                if !self.isBedPlaying && self.activeCapsule == nil {
+                    self.toggleBedPlayback()
+                }
+            },
+            onPause: { [weak self] in
+                guard let self else { return }
+                if self.activeCapsule != nil {
+                    self.stopCapsule()
+                }
+                if self.isBedPlaying {
+                    self.stopBedPlayback()
+                }
+            },
+            onToggle: { [weak self] in
+                guard let self else { return }
+                if let cap = self.activeCapsule {
+                    self.toggleCapsule(cap)
+                } else {
+                    self.toggleBedPlayback()
+                }
+            }
+        )
+    }
+
+    private func syncNowPlaying() {
+        let playing = isBedPlaying || (activeCapsule != nil && studioVM.isPlaying)
+        let totalDur: Double? = {
+            if let cap = activeCapsule {
+                return cap.specimen.totalDuration
+            }
+            return timerMinutes > 0 ? Double(timerMinutes * 60) : nil
+        }()
+        let elapsed: Double? = {
+            if let rem = remainingSeconds, timerMinutes > 0, isBedPlaying {
+                return max(0.0, Double(timerMinutes * 60 - rem))
+            }
+            return nil
+        }()
+        let hex: UInt32 = {
+            switch selectedBand {
+            case .delta: return 0x6F54B8
+            case .theta: return 0xC4513A
+            case .alpha: return 0x3D7A77
+            case .gamma: return 0x3577A8
+            }
+        }()
+        nowPlaying.updateNowPlaying(
+            title: currentHeadline,
+            bandLabel: currentSubline,
+            isPlaying: playing,
+            durationSeconds: totalDur,
+            elapsedSeconds: elapsed,
+            accentHex: hex,
+            isNight: studioVM.appearance == .nightLamp
+        )
+    }
 
     private func pushSynthBedState() {
         studioVM.synth.setBrainwaveBed(

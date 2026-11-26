@@ -11,6 +11,8 @@ public struct ResonanceFieldView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var showHumSheet: Bool = false
+    @State private var showShareSheet: Bool = false
+    @State private var showBreathGuide: Bool = true
     @State private var showBurstWave: Bool = false
     @State private var burstTask: Task<Void, Never>? = nil
 
@@ -88,12 +90,15 @@ public struct ResonanceFieldView: View {
         }) {
             HumResonanceSheet(vm: vm, palette: palette)
         }
+        .sheet(isPresented: $showShareSheet) {
+            ResonanceShareCardSheet(vm: vm, palette: palette)
+        }
     }
 
     // MARK: - 1. Top Telemetry Header
 
     private var topTelemetryHeader: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     ChimmoResonanceBead(size: 10, isNight: palette.isNight, tint: bandAccent)
@@ -119,6 +124,43 @@ public struct ResonanceFieldView: View {
 
             Spacer(minLength: 4)
 
+            Button {
+                showBreathGuide.toggle()
+                if vm.hapticsEnabled { AcousticHapticsEngine.shared.playScrubTick() }
+            } label: {
+                Image(systemName: showBreathGuide ? "lungs.fill" : "lungs")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(showBreathGuide ? palette.contrastInkOnAccent : palette.primaryInk)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        Circle()
+                            .fill(showBreathGuide ? palette.celadonAccent : palette.cardSurface)
+                            .overlay(Circle().strokeBorder(showBreathGuide ? palette.celadonAccent : palette.divider, lineWidth: 1.0))
+                    )
+                    .contentShape(Circle())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+            .accessibilityLabel(showBreathGuide ? "关闭呼吸引导环" : "开启 4 秒吸气 6 秒呼气引导环")
+            .accessibilityHint("随声波节奏引导舒缓深呼吸")
+
+            Button {
+                showShareSheet = true
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(palette.primaryInk)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        Circle()
+                            .fill(palette.cardSurface)
+                            .overlay(Circle().strokeBorder(palette.divider, lineWidth: 1.0))
+                    )
+                    .contentShape(Circle())
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+            .accessibilityLabel("生成脑波共振纪念卡")
+            .accessibilityHint("制作当前频率的离线高清纪念卡")
+
             Menu {
                 ForEach([0, 5, 15, 30], id: \.self) { mins in
                     Button {
@@ -142,7 +184,7 @@ public struct ResonanceFieldView: View {
                         .minimumScaleFactor(0.75)
                 }
                 .foregroundStyle(palette.primaryInk)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 10)
                 .frame(minHeight: 40)
                 .background(
                     Capsule()
@@ -162,7 +204,7 @@ public struct ResonanceFieldView: View {
             let s = rem % 60
             return String(format: "%d:%02d", m, s)
         }
-        return vm.timerMinutes == 0 ? "不限时长" : "\(vm.timerMinutes) 分钟"
+        return vm.timerMinutes == 0 ? "不限" : "\(vm.timerMinutes)分"
     }
 
     // MARK: - 2. 4-Band Quick Switcher
@@ -218,6 +260,7 @@ public struct ResonanceFieldView: View {
             TimelineView(.animation(minimumInterval: interval, paused: !shouldAnimate)) { timeline in
                 let env = vm.studioVM.synth.currentAcousticEnvelope()
                 let phaseTime = timeline.date.timeIntervalSinceReferenceDate
+                let breath = ResonanceKinematics.breathGuidePhase(at: phaseTime, reduceMotion: reduceMotion || !shouldAnimate)
                 let pulseScale = ResonanceKinematics.orbPulseScale(
                     phaseTime: phaseTime,
                     beatHz: vm.beatHz,
@@ -230,36 +273,63 @@ public struct ResonanceFieldView: View {
                     shape
                         .fill(palette.stageBoardSurface)
 
-                    // 极简同心声波涟漪画布
+                    // 有机驻波流体光晕 + 4s/6s 舒缓呼吸环画布
                     Canvas { ctx, size in
                         let cx = size.width * 0.5
                         let cy = size.height * 0.5
                         let maxR = min(size.width, size.height) * 0.46
                         let charge = vm.frissonCharge
 
-                        for ringIdx in 0..<3 {
-                            let ratio = 0.54 + CGFloat(ringIdx) * 0.16
-                            let squeeze = CGFloat(charge) * (0.14 - CGFloat(ringIdx) * 0.02)
-                            let dynamicBreath = shouldAnimate
-                                ? CGFloat(sin(phaseTime * (1.2 + Double(ringIdx) * 0.4)) * (0.015 + env.warmthEnergy * 0.03))
-                                : 0.0
-                            let r = maxR * max(0.32, ratio - squeeze + dynamicBreath)
-                            let ringRect = CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)
-                            let opacity = (0.14 + Double(charge) * 0.28 + env.shimmerEnergy * 0.12) * (1.0 - Double(ringIdx) * 0.22)
+                        if showBreathGuide && vm.isBedPlaying && !vm.isHoldingFrisson {
+                            let breathR = maxR * CGFloat(0.66 + breath.progress * 0.28)
+                            let breathRect = CGRect(x: cx - breathR, y: cy - breathR, width: breathR * 2, height: breathR * 2)
                             ctx.stroke(
-                                Path(ellipseIn: ringRect),
+                                Path(ellipseIn: breathRect),
+                                with: .color(palette.celadonAccent.opacity(0.28 + breath.progress * 0.16)),
+                                style: StrokeStyle(lineWidth: 2.0, dash: [6, 5])
+                            )
+                        }
+
+                        let segments = 88
+                        for ringIdx in 0..<3 {
+                            let baseRatio = 0.52 + CGFloat(ringIdx) * 0.15
+                            let squeeze = CGFloat(charge) * (0.14 - CGFloat(ringIdx) * 0.02)
+                            let harmonicAmp = shouldAnimate
+                                ? (0.018 + env.warmthEnergy * 0.032 + env.shimmerEnergy * 0.020)
+                                : 0.0
+                            let lobes = Double(ringIdx + 3)
+
+                            var ringPath = Path()
+                            for step in 0...segments {
+                                let theta = (Double(step) / Double(segments)) * Double.pi * 2.0
+                                let waveOffset = harmonicAmp * cos(theta * lobes + phaseTime * (1.1 + Double(ringIdx) * 0.45))
+                                let r = maxR * max(0.30, baseRatio - squeeze + CGFloat(waveOffset))
+                                let pt = CGPoint(x: cx + CGFloat(cos(theta)) * r, y: cy + CGFloat(sin(theta)) * r)
+                                if step == 0 {
+                                    ringPath.move(to: pt)
+                                } else {
+                                    ringPath.addLine(to: pt)
+                                }
+                            }
+                            ringPath.closeSubpath()
+
+                            let opacity = (0.16 + Double(charge) * 0.30 + env.shimmerEnergy * 0.12) * (1.0 - Double(ringIdx) * 0.22)
+                            ctx.stroke(
+                                ringPath,
                                 with: .color(bandAccent.opacity(opacity)),
-                                style: StrokeStyle(lineWidth: ringIdx == 0 ? 2.2 : 1.4, lineCap: .round)
+                                style: StrokeStyle(lineWidth: ringIdx == 0 ? 2.2 : 1.4, lineCap: .round, lineJoin: .round)
                             )
                         }
 
                         if showBurstWave {
-                            let burstR = maxR * 0.96
-                            ctx.stroke(
-                                Path(ellipseIn: CGRect(x: cx - burstR, y: cy - burstR, width: burstR * 2, height: burstR * 2)),
-                                with: .color(palette.nightLampGold.opacity(0.65)),
-                                style: StrokeStyle(lineWidth: 3.0)
-                            )
+                            for bIdx in 0..<2 {
+                                let burstR = maxR * (0.86 + CGFloat(bIdx) * 0.11)
+                                ctx.stroke(
+                                    Path(ellipseIn: CGRect(x: cx - burstR, y: cy - burstR, width: burstR * 2, height: burstR * 2)),
+                                    with: .color(palette.nightLampGold.opacity(0.68 - Double(bIdx) * 0.24)),
+                                    style: StrokeStyle(lineWidth: bIdx == 0 ? 3.2 : 2.0)
+                                )
+                            }
                         }
                     }
                     .allowsHitTesting(false)
@@ -302,9 +372,9 @@ public struct ResonanceFieldView: View {
                                 .font(.system(.subheadline, design: .rounded).weight(.heavy).monospacedDigit())
                                 .foregroundStyle(palette.primaryInk)
 
-                            Text(orbCenterSubline)
+                            Text(showBreathGuide && vm.isBedPlaying && !vm.isHoldingFrisson ? breath.label : orbCenterSubline)
                                 .font(.caption2.weight(.semibold))
-                                .foregroundStyle(palette.secondaryInk)
+                                .foregroundStyle(showBreathGuide && vm.isBedPlaying && !vm.isHoldingFrisson ? palette.celadonAccent : palette.secondaryInk)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
                         }

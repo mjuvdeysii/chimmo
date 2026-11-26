@@ -122,6 +122,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var phaseBreath: Double = 0.0
         var phaseSuspL: Double = 0.0
         var phaseSuspR: Double = 0.0
+        var phasePan: Double = 0.0
 
         var noiseSeed: UInt64 = 0x9E3779B97F4A7C15
         var brownL: Double = 0.0
@@ -361,6 +362,35 @@ public final class FeltPianoSynth: @unchecked Sendable {
             state.brainwave.targetFrissonTension = 0.0
             state.brainwave.targetNoiseGain = 0.0
         }
+    }
+
+    /// 10 组手工窑陶微差轻叩声效（遵循 Not Boring 防听觉疲劳原则，连按切换频段或质地时绝不刺耳）。
+    public func playTactileKilnClick(variantIndex: Int, bright: Double = 0.78) {
+        ensureRunning()
+        let baseTable: [Double] = [
+            432.0, 456.0, 480.0, 498.0, 520.0,
+            444.0, 472.0, 508.0, 540.0, 568.0
+        ]
+        let decayTable: [Double] = [
+            0.062, 0.070, 0.056, 0.078, 0.066,
+            0.074, 0.059, 0.082, 0.064, 0.072
+        ]
+        let panTable: [Double] = [
+            -0.14, 0.12, -0.06, 0.18, 0.0,
+            -0.18, 0.08, -0.10, 0.15, -0.03
+        ]
+        let idx = ((variantIndex % baseTable.count) + baseTable.count) % baseTable.count
+        let safeBright = bright.isFinite ? max(0.35, min(1.15, bright)) : 0.78
+
+        playNote(
+            frequency: baseTable[idx],
+            velocity: 0.24,
+            decay: decayTable[idx],
+            brightness: safeBright,
+            timbre: idx.isMultiple(of: 2) ? .liquidHarp : .celesta,
+            delaySeconds: 0.0,
+            pan: panTable[idx]
+        )
     }
 
     /// 释放「颅内战栗（Acoustic Frisson）」和声瀑布：低八度大提琴根音 + 纯五度/大三度/高八度毛毡钢琴与钢片琴星光绽放。
@@ -1017,13 +1047,16 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         let breathEnv = 0.86 + 0.14 * sin(state.brainwave.phaseBreath)
                         let isoModHz = min(14.0, beat)
                         let isoEnv = 1.0 - state.brainwave.currentIsoDepth * 0.5 * (1.0 - cos(state.brainwave.phaseIso))
+                        let panShift = 0.14 * sin(state.brainwave.phasePan)
+                        let overtoneL = sin(state.brainwave.phaseFifthL) * (0.14 * warmth) * (1.0 - panShift)
+                        let overtoneR = sin(state.brainwave.phaseFifthR) * (0.14 * warmth) * (1.0 + panShift)
 
                         let toneBaseL = sin(state.brainwave.phaseL) * 0.62
                             + sin(state.brainwave.phaseSub) * (0.20 * warmth)
-                            + sin(state.brainwave.phaseFifthL) * (0.14 * warmth)
+                            + overtoneL
                         let toneBaseR = sin(state.brainwave.phaseR) * 0.62
                             + sin(state.brainwave.phaseSub) * (0.20 * warmth)
-                            + sin(state.brainwave.phaseFifthR) * (0.14 * warmth)
+                            + overtoneR
 
                         var suspL = 0.0
                         var suspR = 0.0
@@ -1035,7 +1068,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         var bwL = (toneBaseL * (1.0 + frisson * 0.35) + suspL) * state.brainwave.currentGain * breathEnv * isoEnv
                         var bwR = (toneBaseR * (1.0 + frisson * 0.35) + suspR) * state.brainwave.currentGain * breathEnv * isoEnv
 
-                        // xorshift64* 零分配暖色噪声床（左右声道独立滤波营造开阔雨风包裹感）
+                        // xorshift64* 零分配暖色噪声床（左右声道独立滤波 + 0.065Hz 极缓呼吸环绕漂移）
                         if state.brainwave.currentNoiseGain > 0.0004 {
                             var s = state.brainwave.noiseSeed
                             s ^= s << 13
@@ -1057,8 +1090,8 @@ public final class FeltPianoSynth: @unchecked Sendable {
                             let colL = state.brainwave.brownL * (1.0 - c) + state.brainwave.pinkL * c
                             let colR = state.brainwave.brownR * (1.0 - c) + state.brainwave.pinkR * c
                             let nGain = state.brainwave.currentNoiseGain * (0.90 + 0.10 * sin(state.brainwave.phaseBreath))
-                            bwL += colL * nGain
-                            bwR += colR * nGain
+                            bwL += colL * nGain * (1.0 - panShift)
+                            bwR += colR * nGain * (1.0 + panShift)
                         }
 
                         mixL += bwL
@@ -1073,6 +1106,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         state.brainwave.phaseBreath += twoPi * 0.11 * invSR
                         state.brainwave.phaseSuspL += twoPi * (carrier * 1.125) * invSR
                         state.brainwave.phaseSuspR += twoPi * (carrier * 1.125 + 1.4) * invSR
+                        state.brainwave.phasePan += twoPi * 0.065 * invSR
 
                         let wrap = twoPi * 1024.0
                         if state.brainwave.phaseL > wrap { state.brainwave.phaseL.formTruncatingRemainder(dividingBy: twoPi) }
@@ -1084,6 +1118,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
                         if state.brainwave.phaseBreath > wrap { state.brainwave.phaseBreath.formTruncatingRemainder(dividingBy: twoPi) }
                         if state.brainwave.phaseSuspL > wrap { state.brainwave.phaseSuspL.formTruncatingRemainder(dividingBy: twoPi) }
                         if state.brainwave.phaseSuspR > wrap { state.brainwave.phaseSuspR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.brainwave.phasePan > wrap { state.brainwave.phasePan.formTruncatingRemainder(dividingBy: twoPi) }
                     }
 
                     // 3. 零堆分配木质沙龙早期声学反射（11ms/17ms 柔和低通交叉回响）

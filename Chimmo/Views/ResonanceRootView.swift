@@ -19,7 +19,12 @@ public struct ResonanceRootView: View {
     @State private var selectedTab: ResonanceTab = .today
 
     public init(preferences: UserDefaults? = .standard) {
-        _vm = StateObject(wrappedValue: ResonanceViewModel(preferences: preferences))
+        _vm = StateObject(
+            wrappedValue: ResonanceViewModel(
+                preferences: preferences,
+                enableSystemNowPlaying: preferences === UserDefaults.standard
+            )
+        )
     }
 
     private var isNight: Bool {

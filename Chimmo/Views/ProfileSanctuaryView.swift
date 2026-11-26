@@ -8,6 +8,7 @@ public struct ProfileSanctuaryView: View {
     public let onOpenField: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var showShareCard: Bool = false
 
     public init(
         vm: ResonanceViewModel,
@@ -20,7 +21,7 @@ public struct ProfileSanctuaryView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.1.0"
     }
 
     private var appBuild: String {
@@ -53,6 +54,9 @@ public struct ProfileSanctuaryView: View {
             .background(palette.paper.ignoresSafeArea())
             .ignoresSafeArea(edges: .top)
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showShareCard) {
+                ResonanceShareCardSheet(vm: vm, palette: palette)
+            }
         }
     }
 
@@ -145,37 +149,57 @@ public struct ProfileSanctuaryView: View {
     private var airbnbStatsCard: some View {
         let favBand = vm.stats.favoriteBand
 
-        return HStack(spacing: 16) {
-            VStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(palette.storybookMint)
-                        .frame(width: 84, height: 84)
-                    ChimmoFigureView(
-                        member: favBand == .theta ? .taono : (favBand == .delta ? .bomo : .udo),
-                        isNight: palette.isNight,
-                        isMinor: false,
-                        isSinging: vm.isBedPlaying,
-                        time: 0
-                    )
-                    .scaleEffect(0.95)
+        return VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(palette.storybookMint)
+                            .frame(width: 84, height: 84)
+                        ChimmoFigureView(
+                            member: favBand == .theta ? .taono : (favBand == .delta ? .bomo : .udo),
+                            isNight: palette.isNight,
+                            isMinor: false,
+                            isSinging: vm.isBedPlaying,
+                            time: 0
+                        )
+                        .scaleEffect(0.95)
+                    }
+                    .accessibilityHidden(true)
+
+                    Text("100% 离线本机")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(palette.celadonAccent)
                 }
-                .accessibilityHidden(true)
+                .frame(width: 112)
 
-                Text("100% 离线本机")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(palette.celadonAccent)
+                VStack(alignment: .leading, spacing: 10) {
+                    statLine(value: "\(vm.stats.totalMinutes)", label: "累计共振分钟")
+                    Divider().opacity(0.45)
+                    statLine(value: "\(vm.stats.frissonPeakCount)", label: "颅内战栗次数")
+                    Divider().opacity(0.45)
+                    statLine(value: favBand?.shortCode ?? "探索中", label: "最合拍频段")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(width: 112)
 
-            VStack(alignment: .leading, spacing: 10) {
-                statLine(value: "\(vm.stats.totalMinutes)", label: "累计共振分钟")
-                Divider().opacity(0.45)
-                statLine(value: "\(vm.stats.frissonPeakCount)", label: "颅内战栗次数")
-                Divider().opacity(0.45)
-                statLine(value: favBand?.shortCode ?? "探索中", label: "最合拍频段")
+            Button {
+                showShareCard = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.caption.weight(.bold))
+                    Text("生成我的脑波共振纪念卡")
+                        .font(.caption.weight(.bold))
+                }
+                .foregroundStyle(palette.primaryInk)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 40)
+                .background(RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous).fill(palette.shelfSurface))
+                .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+            .accessibilityHint("离线渲染高清共振纪念卡片并通过系统菜单保存或分享")
         }
         .padding(18)
         .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)

@@ -174,6 +174,74 @@ final class BrainwaveResonanceTests: XCTestCase {
         let micDesc = Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") as? String ?? ""
         XCTAssertFalse(micDesc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         let shortVer = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-        XCTAssertEqual(shortVer, "2.0.0")
+        XCTAssertEqual(shortVer, "2.1.0")
+    }
+
+    @MainActor
+    func testV21NowPlayingBreathGuideKilnClicksAndShareCardExporter() throws {
+        // 1. 10 变奏窑陶轻叩声效与离线声压校验
+        let synth = FeltPianoSynth()
+        for variant in 0..<10 {
+            synth.playTactileKilnClick(variantIndex: variant)
+        }
+        synth.silenceAll()
+        let harpRes = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 432.0, timbre: .liquidHarp)
+        let celestaRes = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 568.0, timbre: .celesta)
+        XCTAssertGreaterThan(harpRes.peak, 0.01)
+        XCTAssertGreaterThan(celestaRes.peak, 0.01)
+
+        // 2. 4s 吸 / 6s 呼呼吸节律与减弱动态静态门控
+        let inhale = ResonanceKinematics.breathGuidePhase(at: 2.0, reduceMotion: false)
+        XCTAssertTrue(inhale.isInhaling)
+        XCTAssertGreaterThan(inhale.progress, 0.1)
+        let exhale = ResonanceKinematics.breathGuidePhase(at: 7.0, reduceMotion: false)
+        XCTAssertFalse(exhale.isInhaling)
+        let reduced = ResonanceKinematics.breathGuidePhase(at: 7.0, reduceMotion: true)
+        XCTAssertEqual(reduced.progress, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(reduced.label, "平稳呼吸")
+
+        // 3. 1080x1350 离线脑波共振纪念卡 PNG 日/夜双态及轻哼锁定校验
+        for isNight in [false, true] {
+            let png = try XCTUnwrap(
+                ResonanceCardExporter.renderPNGData(
+                    band: .theta,
+                    beatHz: 6.0,
+                    carrierHz: 184.0,
+                    matchedHumHz: 184.0,
+                    totalMinutes: 28,
+                    frissonCount: 5,
+                    isNight: isNight
+                )
+            )
+            XCTAssertGreaterThan(png.count, 5000)
+            XCTAssertEqual(Array(png.prefix(4)), [0x89, 0x50, 0x4E, 0x47])
+        }
+
+        // 4. 锁屏 Now Playing 控制器隔离模式 + 分享弹窗实例化
+        let np = NowPlayingResonanceController(enabled: false)
+        np.bindCommands(onPlay: {}, onPause: {}, onToggle: {})
+        np.updateNowPlaying(
+            title: "漂浮放空 · 6.0 Hz",
+            bandLabel: "立体声双耳",
+            isPlaying: true,
+            durationSeconds: 900,
+            elapsedSeconds: 15,
+            accentHex: 0xC4513A,
+            isNight: false
+        )
+        np.clear()
+
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chimmo_v21_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let vm = ResonanceViewModel(
+            studioVM: StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir)),
+            statsStore: ResonanceStatsStore(),
+            enableSystemNowPlaying: false
+        )
+        XCTAssertNotNil(ResonanceShareCardSheet(vm: vm, palette: ChimmoPalette(isNight: false)))
+        XCTAssertNotNil(ResonanceShareCardSheet(vm: vm, palette: ChimmoPalette(isNight: true)))
     }
 }

@@ -586,6 +586,28 @@ public enum ResonanceKinematics {
         return CGFloat(max(0.84, min(1.14, 1.0 + wave * breathAmp - squeeze)))
     }
 
+    /// 10 秒舒缓呼吸引导节律（4 秒柔和吸气 0->1 + 6 秒缓慢呼气 1->0；减弱动态下稳态返回 0.5）。
+    public static func breathGuidePhase(
+        at time: Double,
+        reduceMotion: Bool
+    ) -> (progress: Double, isInhaling: Bool, label: String) {
+        if reduceMotion {
+            return (0.5, true, "平稳呼吸")
+        }
+        let safeTime = time.isFinite ? max(0.0, time) : 0.0
+        let cycle = 10.0
+        let local = safeTime.truncatingRemainder(dividingBy: cycle)
+        if local < 4.0 {
+            let p = local / 4.0
+            let eased = 0.5 - 0.5 * cos(Double.pi * p)
+            return (eased, true, "吸气 4 秒")
+        } else {
+            let p = (local - 4.0) / 6.0
+            let eased = 0.5 + 0.5 * cos(Double.pi * p)
+            return (eased, false, "呼气 6 秒")
+        }
+    }
+
     /// 温柔无说教陪伴短语（绝不使用断签警告或打卡鞭策）。
     public static func gentleCompanionMessage(
         totalMinutes: Int,

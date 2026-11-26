@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0 - 2026-11-26
+- **V2.1 端内终极感官、锁屏控制与共振纪念卡打磨**：
+  - 新增 [NowPlayingResonanceController.swift](Chimmo/Audio/NowPlayingResonanceController.swift) 并接入 [ResonanceViewModel.swift](Chimmo/Views/ResonanceViewModel.swift) 与 [ResonanceRootView.swift](Chimmo/Views/ResonanceRootView.swift)：锁屏与 iOS 控制中心完整展示当前脑波标题、频段、256×256 窑陶光环专辑封面及再生进度，并直接响应锁屏播放/暂停/切换指令。
+  - 在 [FeltPianoSynth.swift](Chimmo/Audio/FeltPianoSynth.swift) 新增零堆分配 `phasePan` 极缓 `0.065 Hz` 立体声空间漂移（严格锁定左右核心双耳载波不偏移，仅柔和摇曳纯五度泛音与棕红/粉红暖雨声床），并引入 10 组手工微差变奏 `playTactileKilnClick` 交互轻叩声效消除连按疲劳。
+  - 在 [BrainwaveModels.swift](Chimmo/Domain/BrainwaveModels.swift) 与 [ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift) 升级活体共振球为 60fps 音频包络驱动的有机驻波流体光晕与可选 `4 秒吸气 / 6 秒呼气` 节律引导环（全量受 `accessibilityReduceMotion` 门控）。
+  - 新增 [ResonanceCardExporter.swift](Chimmo/Domain/ResonanceCardExporter.swift) 与 [ProfileSanctuaryView.swift](Chimmo/Views/ProfileSanctuaryView.swift) 一键导出 1080×1350 日/夜双态高清「脑波共振纪念卡」PNG（零网络、含个人轻哼共振基频、累计分钟与颅内战栗次数）；同步修复 [privacy.html](docs/privacy.html) `<code>` 标签并增补 [BrainwaveResonanceTests.swift](ChimmoTests/BrainwaveResonanceTests.swift) 全项单测。
+
 ## 2.0.0 - 2026-11-26
 - **V2.0 战略升维与主题重塑（「咩哞 · Mie & Mou」脑波共振场）**：彻底跳出旧版「音乐欣赏 + 旋律编曲」功能作业框架，对标 Headspace、Airbnb 与同宇宙姊妹作《摸索台灯 / Moss & Otto》，打造兼顾极简空气感视觉与即时感官爽点的 **100% 离线脑波共振与声触放松空间**（中英文定名「**咩哞 / Mie & Mou**」，保留 `app.chimmo` 与既有全部声学引擎及核心单测兼容）。
 - **离线实时脑波声场与颅内战栗引擎（Audio & Haptics Upgrade）**：
