@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2.1.0 - 2026-11-26
+- **Phase 3 终极版收官（官网、短片与 TestFlight 公测对齐）**：
+  - OpenMotion Design Studio 互动官网升级至 `v20` 并同步导出单文件 [docs/index.html](docs/index.html)：全面切换为「咩哞 · Mie & Mou (v2.1.0)」100% 离线脑波共振主题，内置真实 Web Audio 双耳差频/外放等时切换、60fps/15Hz 呼吸驻波球、长按蓄力颅内战栗瀑布、轻哼人声锁频、四标签空间面板、闭眼夜灯触觉场、8 首乐章胶囊与 1080×1350 共振纪念卡预览，通过整页 PNG 视觉抽检与 `node --check` 零报错。
+  - OpenMotion Director 12 秒动画短片升级至 `v21` 并通过 `1920×1080 / 30fps` 带音轨 MP4 技术检验与多帧实拍目检：三幕完整演绎立体声双耳启波与 4s/6s 呼吸引导（`s1-wake`）、夜灯深靛长按蓄力松手颅内战栗绽放（`s2-choir`）及四色脑波印章终章（`s3-finale`）。
+  - 全面同步 [README.md](README.md)、[TESTFLIGHT_PUBLIC_BETA.md](docs/TESTFLIGHT_PUBLIC_BETA.md)、[APP_STORE_1.0.md](docs/APP_STORE_1.0.md)、[Tools/asc.py](Tools/asc.py)（增补最新 Build `betaReviewState` 审计输出与 `v2.1.0` 双语元数据）及 [ios.yml](.github/workflows/ios.yml)（外部公测默认对齐既有 `公测` 群组并在提审后执行完整审计）。
 - **V2.1 端内终极感官、锁屏控制与共振纪念卡打磨**：
   - 新增 [NowPlayingResonanceController.swift](Chimmo/Audio/NowPlayingResonanceController.swift) 并接入 [ResonanceViewModel.swift](Chimmo/Views/ResonanceViewModel.swift) 与 [ResonanceRootView.swift](Chimmo/Views/ResonanceRootView.swift)：锁屏与 iOS 控制中心完整展示当前脑波标题、频段、256×256 窑陶光环专辑封面及再生进度，并直接响应锁屏播放/暂停/切换指令。
   - 在 [FeltPianoSynth.swift](Chimmo/Audio/FeltPianoSynth.swift) 新增零堆分配 `phasePan` 极缓 `0.065 Hz` 立体声空间漂移（严格锁定左右核心双耳载波不偏移，仅柔和摇曳纯五度泛音与棕红/粉红暖雨声床），并引入 10 组手工微差变奏 `playTactileKilnClick` 交互轻叩声效消除连按疲劳。

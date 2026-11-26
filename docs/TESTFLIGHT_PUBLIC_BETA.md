@@ -1,7 +1,7 @@
-# 咩哞 · Mie & Mou (v2.0.0) TestFlight 外部公测准备与过审手册
+# 咩哞 · Mie & Mou (v2.1.0) TestFlight 外部公测准备与过审手册
 
 > 套装标识 (Bundle ID)：`app.chimmo`  
-> 版本：v2.0.0（完全离线、零账号、零广告、零追踪、非医疗声学放松工具）
+> 版本：v2.1.0（完全离线、零账号、零广告、零追踪、非医疗声学放松工具）
 
 ---
 
@@ -27,9 +27,9 @@
 
 ### 1. 公测测试简介 (`Beta App Description`)
 - **简体中文 (`zh-Hans`)**：
-  「咩哞（Mie & Mou）」是一款 100% 本机离线的脑波共振与声触放松应用（非医疗器械）。无需注册账号、不联网、零广告。提供 Delta / Theta / Alpha / Gamma 四大声波频段、立体声双耳差频（外放自动切换等时脉动）、长按蓄力松手即发触发颅内战栗和声瀑布，以及 3 秒轻哼同频包裹、闭眼夜灯触觉盲操与 8 首高张力声波乐章。适用于日常放松、阅读专注与睡前静心。
+  「咩哞（Mie & Mou）」是一款 100% 本机离线的脑波共振与声触放松应用（非医疗器械）。无需注册账号、不联网、零广告。提供 Delta / Theta / Alpha / Gamma 四大声波频段、立体声双耳差频（外放自动切换等时脉动）与 0.065 Hz 空间微漂移、60fps 有机呼吸驻波球与 4s/6s 呼吸引导、长按蓄力松手即发触发颅内战栗和声瀑布、3 秒轻哼同频包裹、锁屏 Now Playing 控制、闭眼夜灯触觉盲操与 1080×1350 高清共振纪念卡导出。适用于日常放松、阅读专注与睡前静心。
 - **English (`en-US`)**：
-  Mie & Mou (`app.chimmo`) is a 100% offline brainwave resonance and tactile sound relaxation studio (sensory art and relaxation only, not a medical device). No account, no internet connection, no ads. Features Delta, Theta, Alpha, and Gamma acoustic beds with stereo binaural beats (and automatic speaker isochronic pulse fallback), a hold-and-release acoustic frisson cascade, 3-second offline hum frequency matching (with mic-denied presets), a zero-glare Night Lamp tactile mode, and 8 curated musical relaxation capsules.
+  Mie & Mou (`app.chimmo`) is a 100% offline brainwave resonance and tactile sound relaxation studio (sensory art and relaxation only, not a medical device). No account, no internet connection, no ads. Features Delta, Theta, Alpha, and Gamma acoustic beds with stereo binaural beats (and automatic speaker isochronic pulse fallback), subtle 0.065 Hz spatial drift, an organic 60fps breath-guided resonance orb, hold-and-release acoustic frisson cascades, 3-second offline hum frequency matching (with mic-denied presets), lock-screen Now Playing controls, a zero-glare Night Lamp tactile mode, 8 curated relaxation capsules, and offline Resonance Card PNG export.
 
 ### 2. 测试重点 (`What to Test`)
 - 优先测试四项核心体感知觉：
@@ -45,7 +45,7 @@
 - **Review Notes 原文**：
 
 ```text
-Thank you for reviewing Mie & Mou (咩哞, v2.0.0) for TestFlight External Beta.
+Thank you for reviewing Mie & Mou (咩哞, v2.1.0) for TestFlight External Beta.
 
 1. Non-Medical Wellness & Sensory Art Positioning (Guideline 1.4.1):
    Mie & Mou is strictly an offline sound-art, focus ambiance, and acoustic relaxation tool. It is NOT a medical device and makes zero diagnostic, therapeutic, or clinical claims.
@@ -57,8 +57,8 @@ Thank you for reviewing Mie & Mou (咩哞, v2.0.0) for TestFlight External Beta.
    - Today Tab (今日): Tap the warm hero card or presets to launch an instant brainwave session.
    - Resonance Field Tab (共振): Tap the center orb to play/pause; drag horizontally across the orb to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); press & hold the orb or "按住战栗" for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale.
    - Hum Frequency Matching (轻哼同频): Tap "轻哼同频", allow microphone access, hum softly for 2-3s, and tap stop to match your vocal pitch. If microphone permission is denied, 3 one-tap fallback presets (136 Hz / 174 Hz / 216 Hz) remain immediately usable.
-   - Background Audio (UIBackgroundModes audio): Playback continues smoothly when locking the screen unless toggled off in Profile -> "锁屏继续收听声场". Only active soundscapes use background audio.
-   - Explore & Profile Tabs (探索 / 我的): Includes 2x2 quick states, Night Lamp zero-glare mode, 8 curated relaxation music capsules, and Acoustic Safety / Privacy / Legal disclosures.
+   - Background Audio & Lock-Screen Now Playing (v2.1.0): Playback continues smoothly when locking the screen unless toggled off in Profile -> "锁屏继续收听声场", with live MPNowPlayingInfoCenter metadata and lock-screen play/pause/preset controls. Only active soundscapes use background audio.
+   - Explore, Poster Card & Profile Tabs (探索 / 我的): Includes 2x2 quick states, Night Lamp zero-glare mode, 8 curated relaxation music capsules, offline 1080x1350 Brainwave Resonance Memory Card export, and Acoustic Safety / Privacy / Legal disclosures.
 ```
 
 ---
@@ -71,6 +71,6 @@ Thank you for reviewing Mie & Mou (咩哞, v2.0.0) for TestFlight External Beta.
 2. **通过 GitHub Actions 一键创建外测群组并提交公测审核**
    - 运行 [ios.yml](file:///Users/someone/Projects/chimmo/.github/workflows/ios.yml) 的 **Run workflow (`workflow_dispatch`)**，勾选：
      - `submit_public_beta = true`
-     - `public_beta_group = Public Beta`
+     - `public_beta_group = 公测`（或自定义群组名，已核验 ASC 现存外部群组为 `公测`）
      - `enable_public_link = true`
    - 脚本 [Tools/asc.py](file:///Users/someone/Projects/chimmo/Tools/asc.py) 将自动等待 Build 状态变为 `VALID`，同步双语 Beta 资料与审核备注、把 Build 加入外部群组并提交 `betaAppReviewSubmissions` 公测审核。审核通过（通常 24–48 小时）后即可启用 Public Link 邀请最多 10,000 名外部测试员。

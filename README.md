@@ -1,52 +1,56 @@
-# 咩哞琴盒 Mie & Mou
+# 咩哞 · Mie & Mou (v2.1.0)
 
-> **把脑海里的旋律唱出来、看得见。**  
+> **把大脑交还给安静的声波。**  
 > 家族序列：`Moss（摸索）` · `Otto（台灯）` · `Mosto（魔头）` · **`Chimmo（咩哞 · 七声小偶）`**
 
-**咩哞琴盒（Mie & Mou）** 是一款为 iPhone（iOS 27 原生 SwiftUI）打造的音乐可视化与零乐理脑放旋律复现应用（中文名「咩哞琴盒」，英文名「Mie & Mou」对标姊妹作《摸索台灯 Moss & Otto》；套装标识 `app.chimmo` 与七声小偶家族代号 `Chimmo` 保持不变）：**完全离线、无账号、无广告、不联网、不收集任何数据。**
+**咩哞（Mie & Mou）** 是一款为 iPhone（iOS 27 原生 SwiftUI）打造的 **100% 本机离线脑波共振与声触放松空间**（简体中文显示名「**咩哞**」，英文显示名「**Mie & Mou**」，套装标识 `app.chimmo` 与七声小偶家族代号 `Chimmo` 保持不变）：**完全离线、无账号、无广告、不联网、不收集任何数据、非医疗器械。**
 
 ---
 
-## 咩哞七小只
+## 核心体感知觉与技术栈（v2.1.0）
 
-咩哞不是一只，而是像七个小矮人一样的**七只哑光窑陶声学小偶**——它们正好对应当前调内的 **`1 2 3 4 5 6 7`** 七个音级（Do – Ti）。全员不说话，只用姿态、倾角、呼吸与微光回应真实发生的音乐：
+- **实时离线双耳差频 + 无耳机等时共振**：[FeltPianoSynth.swift](Chimmo/Audio/FeltPianoSynth.swift) 音频渲染线程内无锁零堆分配 `BrainwaveBedState`，覆盖 `Delta 2.5 Hz`（深潜入眠）、`Theta 6.0 Hz`（漂浮放空）、`Alpha 10.0 Hz`（丝滑心流）与 `Gamma 40.0 Hz`（灵感通透）四大频段；结合 [HalfDuplexAudioRouter.swift](Chimmo/Audio/HalfDuplexAudioRouter.swift) 耳机连接检测在立体声双耳差频与外放温和等时脉动之间无缝切换，内置 `0.065 Hz` 立体声空间微漂移（严格锁定左右核心双耳载波不漂移）、xorshift64* 棕红暖雨 / 粉红微风声床及 10 组手工微差窑陶轻叩音效。
+- **长按蓄力松手战栗（Acoustic Frisson）+ CoreHaptics**：长按活体共振球或蓄力键约 1.5 秒升温，松手瞬间绽放宽立体声纯五度/大三度/钢片琴和声瀑布，并由 [AcousticHapticsEngine.swift](Chimmo/Audio/AcousticHapticsEngine.swift) 同步输出 `playFrissonBuildTick` 与 `playFrissonCascade` 掌心释然长呼触觉脉冲。
+- **3 秒轻哼同频锁频 + 拒麦无障碍兜底**：[HumCapturePipeline.swift](Chimmo/Audio/HumCapturePipeline.swift) 端侧离线提取人声自然基频后按纯八度折叠至舒适共鸣带（`120–260 Hz`）；即使拒绝麦克风权限，仍可一键套用 `136.1 Hz / 174.0 Hz / 216.0 Hz` 三档预设共振基频。
+- **活体呼吸驻波球 + 锁屏 Now Playing + 纪念卡导出**：[ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift) 提供 60fps 音频包络驱动的有机驻波流体光晕与可选 `4 秒吸气 / 6 秒呼气` 引导环（全面受 `accessibilityReduceMotion` 门控降频至 15Hz）；[NowPlayingResonanceController.swift](Chimmo/Audio/NowPlayingResonanceController.swift) 接入 iOS 锁屏与控制中心（含 256×256 窑陶光环专辑封面）；[ResonanceCardExporter.swift](Chimmo/Domain/ResonanceCardExporter.swift) 支持纯离线导出 1080×1350 日/夜双态高清「脑波共振纪念卡」PNG。
+- **Headspace × Airbnb × 摸索台灯四标签体验**：[TodayJourneyView.swift](Chimmo/Views/TodayJourneyView.swift)（今日分时旅程）、[ResonanceFieldView.swift](Chimmo/Views/ResonanceFieldView.swift)（活体共振球）、[ExploreResonanceView.swift](Chimmo/Views/ExploreResonanceView.swift)（2×2 脑波格、零蓝光夜灯盲操、`FrissonCapsule` 8 首声波乐章与 28 首典藏曲库）、[ProfileSanctuaryView.swift](Chimmo/Views/ProfileSanctuaryView.swift)（离线沉淀统计、反焦虑陪伴语、声学安全与法务中心）。
+
+---
+
+## 咩哞守护家族与七小只
+
+咩哞的双主角（云朵小羊「咩 · Mie」与可可小牛「哞 · Mou」）与**七只哑光窑陶声学小偶**对应调内 `1–7` 音级，在乐章模式与家族图鉴中以姿态、倾角、呼吸与微光回应真实声音：
 
 | 音级 | 成员 | 窑陶原型 | 音乐角色 |
 |---|---|---|---|
 | **1 · 家 (Do)** | **陶诺 · Taono** *(1-3-5 核心)* | 赤陶倒钟共鸣铃 | 归家老大；旋律落到他身上，全员松气 |
-| **2 · 迈步 (Re)** | **豆叩 · Doko** | 暖杏陶小木鱼 | 好奇前倾 5°，走出家门的第一步 |
-| **3 · 晴雨 (Mi)** | **拍咯 · Plokko** *(1-3-5 核心)* | 胭脂珊瑚平衡不倒翁 | 大调双耳轻扬、小调微垂——零术语情绪晴雨表 |
+| **2 · 迈步 (Re)** | **豆叩 · Doko** | 暖杏陶小木鱼 | 好奇前倾 5 度，走出家门的第一步 |
+| **3 · 晴雨 (Mi)** | **拍咯 · Plokko** *(1-3-5 核心)* | 胭脂珊瑚平衡不倒翁 | 大调双耳轻扬、小调微垂的零术语情绪晴雨表 |
 | **4 · 悬步 (Fa)** | **呜嘟 · Udo** | 影青瓷小陶笛 | 轻吸一口气的悬浮牵引，微向 3 号靠拢 |
 | **5 · 远望 (Sol)** | **壳咯 · Corllo** *(1-3-5 核心)* | 宣瓷暖白螺旋号角贝 | 与 1 号撑起天空的五度支柱 |
-| **6 · 怀旧 (La)** | **钵莫 · Bomo** | 焙赭陶小手碟 | 流行与影视副歌里最温柔微酸的 6 级阴影 |
-| **7 · 踮脚 (Ti)** | **叮尖 · Tinki** | 窑赭陶小陀螺尖芽 | 天生踮脚微斜 10° 急切望向 1 号，直觉看见张力与解决 |
+| **6 · 怀旧 (La)** | **钵莫 · Bomo** | 焙赭陶小手碟 | 流行与影视副歌里温柔微酸的 6 级阴影 |
+| **7 · 踮脚 (Ti)** | **叮尖 · Tinki** | 窑赭陶小陀螺尖芽 | 天生踮脚微斜 10 度急切望向 1 号，直觉看见张力与解决 |
 
-完整 IP 正典见 [docs/IP.md](docs/IP.md)，正式立项总纲见 [docs/CHARTER.md](docs/CHARTER.md)。
-
----
-
-## 核心特性（v0.1.0 Phase 0 首发闭环）
-
-- **单音节轻哼捉珠**：端侧离线音频采集 + 自动增益（AGC）+ `Accelerate/vDSP` YIN 基频追踪 + 移植自 MIT 开源 `SwiftF0` 的动态规划音符切分算法（精准切分同音重复音），松手瞬间把脑放凝结为纸上陶珠。
-- **调式引力 + 幽灵备选珠**：针对业余哼唱常见的“大跳音程压缩”，自动在调内相邻音级浮现半透明幽灵珠，一指轻点吸附并实时试音；亦可直接上下微拖音珠或点按下方 7 只咩哞修音。
-- **边听边拍定重拍（Tap-Along）**：录音时不强制节拍器；回放时轻拍纸面 4–8 下即可锚定 BPM 与强拍位置，支持无损滑动归整焦距（自然呼吸 ↔ 稳健律动）。
-- **水面托底现代和声 + 毛毡钢琴**：向上托起水面，实时铺开现代开放排列和声（`add9` / `maj7` / `sus2` / 斜杠低音），上方张力弦丝随底层换底瞬间变化；内置低延迟温暖谐波毛毡钢琴合成器与空间混响。
-- **可拆解编曲标本**：内置 100% 版权自洁的古典公版精编与原创现代技法标本，支持独奏主旋律、独奏水面和声、0.5× 慢放与一键借用其和声色温。
-- **半双工蓝牙护航**：录音时自动切机身麦并关闭外放回灌，杜绝蓝牙耳机强制跌入 16kHz 电话音质；回放切回 48kHz 高保真立体声。
-- **日光与夜灯双态 + 无障碍**：延续家族暖棉纸 `#F7F3EA`（日光）与深夜蓝 `#1B2245`（夜灯），完整支持 VoiceOver 音乐语义播报、色盲线形双编码与「减弱动态效果」。
+完整 IP 正典见 [docs/IP.md](docs/IP.md)，立项总纲见 [docs/CHARTER.md](docs/CHARTER.md)，TestFlight 公测过审指南见 [docs/TESTFLIGHT_PUBLIC_BETA.md](docs/TESTFLIGHT_PUBLIC_BETA.md)。
 
 ---
 
-## 开发与 CI
+## 非医疗定位与隐私合规（Guideline 1.4.1）
 
-- 目标平台：**iOS 27.0+**（Xcode 27 / SwiftUI / `AVAudioEngine` / `Accelerate`）
+- **非医疗器械声明**：本应用严格界定为声学放松、专注氛围与感官艺术体验工具，不提供任何疾病预防、诊断、治疗或临床康复功能。
+- **App Privacy & Required Reason API**：[PrivacyInfo.xcprivacy](Chimmo/Resources/PrivacyInfo.xcprivacy) 已声明 `NSPrivacyAccessedAPICategoryUserDefaults: CA92.1`；[Info.plist](Chimmo/Resources/Info.plist) 已声明 `ITSAppUsesNonExemptEncryption: false` 与按需停播的 `UIBackgroundModes: audio`；[InfoPlist.xcstrings](Chimmo/Resources/InfoPlist.xcstrings) 提供双语应用名称与麦克风说明。
+
+---
+
+## 开发、CI 与 TestFlight 自动化
+
+- 目标平台：**iOS 27.0+**（Xcode 27 / SwiftUI / `AVAudioEngine` / `CoreHaptics` / `MediaPlayer` / `Accelerate`）
 - 工程生成：`xcodegen generate`（配置见 [project.yml](project.yml)）
 - CI 流水线：[`.github/workflows/ios.yml`](.github/workflows/ios.yml) 运行在 `xcode-27` Apple Silicon Runner，自动执行：
-  1. 单元测试（音符切分 DP、正弦波基频误差、调式引力与幽灵珠、Tap-Along 无损恢复、标本完整性）
-  2. 零联网探针校验（输出 `ios_network.txt` 核查进程零网络请求）
-  3. 当仓库配置 `ASC_KEY_ID`、`ASC_ISSUER_ID`、`ASC_KEY_P8`、`APPLE_TEAM_ID` 后，推送至 `main` 自动注册 Bundle ID `app.chimmo`、云端自动签名上传 TestFlight、自动同步 `CHANGELOG.md` 至测试说明并提取备案 SHA-1。
-- 3D 资产脚本：`Tools/ip/chimmo3d.py`（Blender `bpy` 参数化哑光软胶模型生成）；`Tools/gen_icon.py`（`1-3-5` 主三和弦图标生成）。
+  1. 全量单元测试与 `ios_network.txt` 零联网探针核验；
+  2. 推送至 `main` 后通过云端自动签名 Archive 上传 TestFlight，并自动同步双语 `What to Test` 与 `audit-beta-readiness` 状态输出；
+  3. 通过 `workflow_dispatch (submit_public_beta=true)` 一键联动 [Tools/asc.py](Tools/asc.py) 同步双语公测资料、关联外部群组与提交 TestFlight 公测审核。
 
 ## 第三方开源致谢
 
-- 音符动态规划切分算法参考并移植自 [lars76/swift-f0](https://github.com/lars76/swift-f0)（MIT License），预置 `ThirdParty/SwiftF0/model.onnx`（135 KB，MIT）供后续 CoreML/ONNX A/B 接入。
+- 音符动态规划切分算法参考并移植自 [lars76/swift-f0](https://github.com/lars76/swift-f0)（MIT License），预置 `ThirdParty/SwiftF0/model.onnx`（135 KB，MIT）。

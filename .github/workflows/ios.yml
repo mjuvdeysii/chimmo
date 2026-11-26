@@ -16,7 +16,7 @@ on:
         description: "External TestFlight Beta Group name"
         type: string
         required: false
-        default: "Public Beta"
+        default: "公测"
       enable_public_link:
         description: "Enable public TestFlight invite link on external group"
         type: boolean
@@ -199,7 +199,7 @@ jobs:
             2>&1 | tee export.log | grep -E "error:|Upload|\*\* " || true
           grep -q "EXPORT SUCCEEDED" export.log
 
-          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APPDIR/Info.plist" 2>/dev/null || echo "2.0.0")
+          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APPDIR/Info.plist" 2>/dev/null || echo "2.1.0")
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
           echo "MARKETING_VERSION=$VER" >> "$GITHUB_ENV"
           echo "::notice title=TestFlight::咩哞 v${VER} (Build $BUILD) 已上传，Apple 处理约需 10-30 分钟。"
@@ -245,7 +245,7 @@ jobs:
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.submit_public_beta }}" = "true" ]; then
             GROUP="${{ inputs.public_beta_group }}"
-            GROUP="${GROUP:-Public Beta}"
+            GROUP="${GROUP:-公测}"
             LINK_FLAG=()
             if [ "${{ inputs.enable_public_link }}" = "true" ]; then
               LINK_FLAG+=(--public-link)
@@ -260,6 +260,9 @@ jobs:
               --submit-review \
               "${EXTRA_ARGS[@]}" \
               --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
+            python3 Tools/asc.py audit-beta-readiness app.chimmo \
+              --build "$BUILD" \
+              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
           else
             python3 Tools/asc.py sync-whats-new \
               --bundle-id app.chimmo \
@@ -276,5 +279,6 @@ jobs:
               --locale en-US \
               --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
             python3 Tools/asc.py audit-beta-readiness app.chimmo \
+              --build "$BUILD" \
               --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
           fi

@@ -1,4 +1,4 @@
-# 咩哞 · Mie & Mou (v2.0.0)｜App Store 与 TestFlight 公测资料包
+# 咩哞 · Mie & Mou (v2.1.0)｜App Store 与 TestFlight 公测资料包
 
 > 说明：App Store Connect 元数据与 [docs/TESTFLIGHT_PUBLIC_BETA.md](file:///Users/someone/Projects/chimmo/docs/TESTFLIGHT_PUBLIC_BETA.md) 完全同步。
 

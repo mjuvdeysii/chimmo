@@ -38,36 +38,39 @@ PUBLIC_BETA_APP_DESCRIPTIONS = {
     "zh-Hans": (
         "「咩哞（Mie & Mou）」是一款 100% 本机离线的脑波共振与声触放松应用（非医疗器械）。"
         "无需注册账号、不联网、零广告。提供 Delta / Theta / Alpha / Gamma 四大声波频段、"
-        "立体声双耳差频（外放自动切换等时脉动）、长按蓄力松手即发触发颅内战栗和声瀑布，"
-        "以及 3 秒轻哼同频包裹、闭眼夜灯触觉盲操与 8 首高张力声波乐章。适用于日常放松、阅读专注与睡前静心。"
+        "立体声双耳差频（外放自动切换等时脉动）与 0.065 Hz 空间微漂移、60fps 有机呼吸驻波球、"
+        "长按蓄力松手即发触发颅内战栗和声瀑布、3 秒轻哼同频包裹、锁屏 Now Playing 媒体控制、"
+        "闭眼夜灯触觉盲操与 1080×1350 共振纪念卡离线导出。适用于日常放松、阅读专注与睡前静心。"
     ),
     "en-US": (
         "Mie & Mou (app.chimmo) is a 100% offline brainwave resonance and tactile sound relaxation studio "
         "(sensory art and relaxation only, not a medical device). No account, no internet connection, no ads. "
         "Features Delta, Theta, Alpha, and Gamma acoustic beds with stereo binaural beats (and automatic speaker isochronic pulse fallback), "
-        "a hold-and-release acoustic frisson cascade, 3-second offline hum frequency matching (with mic-denied presets), "
-        "a zero-glare Night Lamp tactile mode, and 8 curated musical relaxation capsules."
+        "subtle 0.065 Hz spatial drift, an organic 60fps breath-guided resonance orb, hold-and-release acoustic frisson cascades, "
+        "3-second offline hum frequency matching (with mic-denied presets), lock-screen Now Playing controls, "
+        "a zero-glare Night Lamp tactile mode, 8 curated relaxation capsules, and offline Resonance Card PNG export."
     ),
 }
 
-PUBLIC_BETA_REVIEW_NOTES = (
-    "Thank you for reviewing Mie & Mou (咩哞, v2.0.0) for TestFlight External Beta.\n\n"
+PUBLIC_BETA_REVIEW_NOTES_TEMPLATE = (
+    "Thank you for reviewing Mie & Mou (咩哞, v{version}) for TestFlight External Beta.\n\n"
     "1. Non-Medical Wellness & Sensory Art Positioning (Guideline 1.4.1):\n"
     "   Mie & Mou is strictly an offline sound-art, focus ambiance, and acoustic relaxation tool. "
     "It is NOT a medical device and makes zero diagnostic, therapeutic, or clinical claims.\n\n"
     "2. Zero Login & 100% Offline Verification:\n"
     "   No sign-in, account, or network access is required. All audio DSP (AVAudioEngine), CoreHaptics, "
-    "and on-device pitch detection (YIN/vDSP) run locally without outbound requests.\n\n"
+    "lock-screen Now Playing controls, PNG Resonance Card rendering, and on-device pitch detection (YIN/vDSP) "
+    "run locally without outbound requests.\n\n"
     "3. How to Test Key Features in External Beta:\n"
     "   - Today Tab (今日): Tap the warm hero card or explore presets to launch an instant brainwave session.\n"
-    "   - Resonance Field Tab (共振): Tap the center orb to play/pause binaural waves; drag left/right across the orb "
+    "   - Resonance Field Tab (共振): Tap the center breath-guided orb to play/pause binaural waves; drag left/right across the orb "
     "to sweep between Delta (2.5 Hz), Theta (6 Hz), Alpha (10 Hz), and Gamma (40 Hz); press & hold the orb or "
-    "'按住战栗' for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale.\n"
+    "'按住战栗' for ~1.5s and release to trigger the harmonic Frisson swell + CoreHaptics exhale; tap share to export a 1080x1350 Resonance Card.\n"
     "   - Hum Frequency Matching (轻哼同频): Tap '轻哼同频', allow microphone access, hum softly for 2-3 seconds, "
     "and tap stop to lock the carrier to your vocal fundamental. If microphone access is denied, 3 instant fallback "
     "voice pitch presets (136 Hz / 174 Hz / 216 Hz) remain immediately usable.\n"
-    "   - Background Audio (UIBackgroundModes audio): Playback continues smoothly when locking the screen unless "
-    "disabled in Profile -> '锁屏继续收听声场'. Only active soundscapes use background audio.\n"
+    "   - Background Audio & Lock Screen (UIBackgroundModes audio): Playback continues smoothly when locking the screen "
+    "with full lock-screen artwork and play/pause/skip controls unless disabled in Profile -> '锁屏继续收听声场'. Only active soundscapes use background audio.\n"
     "   - Explore & Profile Tabs (探索 / 我的): Includes 2x2 quick states, Night Lamp zero-glare mode, "
     "8 curated relaxation music capsules, and Acoustic Safety / Privacy / Legal disclosures."
 )
@@ -355,32 +358,36 @@ def sync_beta_app_localizations(
             attrs["feedbackEmail"] = feedback_email.strip()
 
         existing = next((x for x in existing_locs if x.get("attributes", {}).get("locale") == locale), None)
-        if existing:
-            loc_id = existing["id"]
-            client.request(
-                "PATCH",
-                f"/betaAppLocalizations/{loc_id}",
-                {"data": {"type": "betaAppLocalizations", "id": loc_id, "attributes": attrs}},
-            )
-        else:
-            attrs["locale"] = locale
-            client.request(
-                "POST",
-                "/betaAppLocalizations",
-                {
-                    "data": {
-                        "type": "betaAppLocalizations",
-                        "attributes": attrs,
-                        "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
-                    }
-                },
-            )
-        print(f"[ASC] Synced betaAppLocalization ({locale})")
+        try:
+            if existing:
+                loc_id = existing["id"]
+                client.request(
+                    "PATCH",
+                    f"/betaAppLocalizations/{loc_id}",
+                    {"data": {"type": "betaAppLocalizations", "id": loc_id, "attributes": attrs}},
+                )
+            else:
+                attrs["locale"] = locale
+                client.request(
+                    "POST",
+                    "/betaAppLocalizations",
+                    {
+                        "data": {
+                            "type": "betaAppLocalizations",
+                            "attributes": attrs,
+                            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
+                        }
+                    },
+                )
+            print(f"[ASC] Synced betaAppLocalization ({locale})")
+        except ASCHttpError as e:
+            print(f"::warning title=BetaAppLocalization ({locale}) Skipped::{e.code} {e.detail[:220]}")
 
 
 def sync_beta_review_details(
     client: ASCClient,
     app_id: str,
+    version: str = "2.1.0",
     contact_first: str = "",
     contact_last: str = "",
     contact_email: str = "",
@@ -397,7 +404,7 @@ def sync_beta_review_details(
 
     attrs: dict[str, object] = {
         "demoAccountRequired": False,
-        "notes": PUBLIC_BETA_REVIEW_NOTES,
+        "notes": PUBLIC_BETA_REVIEW_NOTES_TEMPLATE.format(version=version or "2.1.0"),
     }
     if contact_first.strip():
         attrs["contactFirstName"] = contact_first.strip()
@@ -410,13 +417,17 @@ def sync_beta_review_details(
 
     if detail and detail.get("id"):
         did = detail["id"]
-        updated = client.request(
-            "PATCH",
-            f"/betaAppReviewDetails/{did}",
-            {"data": {"type": "betaAppReviewDetails", "id": did, "attributes": attrs}},
-        )
-        print("[ASC] Updated betaAppReviewDetails")
-        return updated.get("data", detail)
+        try:
+            updated = client.request(
+                "PATCH",
+                f"/betaAppReviewDetails/{did}",
+                {"data": {"type": "betaAppReviewDetails", "id": did, "attributes": attrs}},
+            )
+            print("[ASC] Updated betaAppReviewDetails")
+            return updated.get("data", detail)
+        except ASCHttpError as e:
+            print(f"::warning title=TestFlight Review Details Skipped::{e.code} {e.detail[:220]}")
+            return detail
     else:
         print("::warning title=TestFlight Review Contact Missing::betaAppReviewDetails ID not yet present; review notes skipped.")
         return {}
@@ -457,12 +468,15 @@ def ensure_external_beta_group(
         print(f"[ASC] Created external beta group '{group_name}'")
 
     group_id = external["id"]
-    client.request(
-        "POST",
-        f"/betaGroups/{group_id}/relationships/builds",
-        {"data": [{"type": "builds", "id": build_id}]},
-    )
-    print(f"[ASC] Associated build {build_id} with external group '{group_name}'")
+    try:
+        client.request(
+            "POST",
+            f"/betaGroups/{group_id}/relationships/builds",
+            {"data": [{"type": "builds", "id": build_id}]},
+        )
+        print(f"[ASC] Associated build {build_id} with external group '{group_name}'")
+    except ASCHttpError as e:
+        print(f"::warning title=External Beta Group Build Link::{e.code} {e.detail[:220]}")
 
     if public_link and not external.get("attributes", {}).get("publicLinkEnabled", False):
         try:
@@ -538,11 +552,11 @@ def prepare_public_beta(
     upsert_beta_build_localization(client, build_id, locale="zh-Hans", whats_new=zh_whats_new)
 
     en_whats_new = (
-        f"v{version or '2.0.0'} (Build {build_number}) Public Beta\n"
-        "• Complete V2.0 Brainwave Resonance Studio: Delta / Theta / Alpha / Gamma states\n"
-        "• Hold & release acoustic Frisson cascade with synchronized CoreHaptics\n"
-        "• 3-second offline hum frequency matching (plus preset voice roots if mic denied)\n"
-        "• Zero-glare Night Lamp tactile mode & 8 musical relaxation capsules"
+        f"v{version or '2.1.0'} (Build {build_number}) Public Beta\n"
+        "• Lock-screen & Control Center Now Playing controls with 256x256 kiln-halo artwork\n"
+        "• Organic 60fps audio-envelope resonance orb with 4s inhale / 6s exhale breath guide\n"
+        "• Lock-free 0.065 Hz spatial drift on warm rain/overtone layers & 10 tactile kiln clicks\n"
+        "• Offline 1080x1350 Day/Night Resonance Card PNG export & full Delta/Theta/Alpha/Gamma field"
     )
     upsert_beta_build_localization(client, build_id, locale="en-US", whats_new=en_whats_new)
 
@@ -550,6 +564,7 @@ def prepare_public_beta(
     sync_beta_review_details(
         client,
         app_id,
+        version=version or "2.1.0",
         contact_first=contact_first,
         contact_last=contact_last,
         contact_email=contact_email,
@@ -566,7 +581,7 @@ def prepare_public_beta(
         submit_beta_review(client, build_id)
 
 
-def audit_beta_readiness(client: ASCClient, bundle_id: str) -> int:
+def audit_beta_readiness(client: ASCClient, bundle_id: str, build_number: str = "") -> int:
     app = find_app(client, bundle_id)
     if not app:
         print(f"[AUDIT] App NOT found for {bundle_id}")
@@ -601,10 +616,31 @@ def audit_beta_readiness(client: ASCClient, bundle_id: str) -> int:
     print(
         f"[AUDIT] External BetaGroups ({len(ext_groups)}): "
         + ", ".join(
-            f"{g.get('attributes', {}).get('name')}(publicLink={g.get('attributes', {}).get('publicLink') or 'off'})"
+            f"{g.get('attributes', {}).get('name')}(enabled={g.get('attributes', {}).get('publicLinkEnabled')}, publicLink={g.get('attributes', {}).get('publicLink') or 'off'})"
             for g in ext_groups
         )
     )
+
+    try:
+        params = {"filter[app]": app_id, "limit": "5", "sort": "-uploadedDate"}
+        if build_number.strip():
+            params["filter[version]"] = build_number.strip()
+        builds = client.request("GET", f"/builds?{urllib.parse.urlencode(params)}").get("data", [])
+        if builds:
+            b = builds[0]
+            b_ver = b.get("attributes", {}).get("version", "")
+            b_state = b.get("attributes", {}).get("processingState", "")
+            review_state = "NOT_SUBMITTED"
+            try:
+                sub = client.request("GET", f"/builds/{b['id']}/betaAppReviewSubmission").get("data")
+                if sub:
+                    review_state = sub.get("attributes", {}).get("betaReviewState", "UNKNOWN")
+            except ASCHttpError as se:
+                if se.code != 404:
+                    review_state = f"ERR_{se.code}"
+            print(f"[AUDIT] LatestBuild: build={b_ver}, processingState={b_state}, betaReviewState={review_state}")
+    except ASCHttpError as e:
+        print(f"[AUDIT] LatestBuild fetch error ({e.code})")
     return 0
 
 
@@ -633,9 +669,9 @@ def main() -> int:
     p4 = sub.add_parser("prepare-public-beta")
     p4.add_argument("--bundle-id", default="app.chimmo")
     p4.add_argument("--build", required=True)
-    p4.add_argument("--version", default="2.0.0")
+    p4.add_argument("--version", default="2.1.0")
     p4.add_argument("--changelog", default="CHANGELOG.md")
-    p4.add_argument("--group-name", default="Public Beta")
+    p4.add_argument("--group-name", default="公测")
     p4.add_argument("--public-link", action="store_true")
     p4.add_argument("--submit-review", action="store_true")
     p4.add_argument("--feedback-email", default="")
@@ -648,6 +684,7 @@ def main() -> int:
 
     p5 = sub.add_parser("audit-beta-readiness")
     p5.add_argument("bundle_id")
+    p5.add_argument("--build", default="")
     p5.add_argument("--key-path", default=None)
 
     args = ap.parse_args()
@@ -695,7 +732,7 @@ def main() -> int:
             )
             return 0
         if args.cmd == "audit-beta-readiness":
-            return audit_beta_readiness(client, args.bundle_id)
+            return audit_beta_readiness(client, args.bundle_id, build_number=args.build)
     finally:
         if tmp and os.path.exists(tmp):
             os.remove(tmp)
