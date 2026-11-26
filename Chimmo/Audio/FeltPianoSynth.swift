@@ -1399,6 +1399,9 @@ public final class FeltPianoSynth: @unchecked Sendable {
             throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
         }
 
+        audioQueue.sync {
+            stopEngineOnQueue()
+        }
         silenceAll()
         let activeWet = lock.withLock { state -> Float in
             state.sampleRate = sampleRate
