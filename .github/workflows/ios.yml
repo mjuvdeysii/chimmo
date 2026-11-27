@@ -89,7 +89,7 @@ jobs:
         run: python3 Tools/ci_guard.py
 
       - name: Select Xcode 27 & ensure XcodeGen
-        if: "${{ !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true)) }}"
+        if: "!(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))"
         run: |
           X=$(ls -d /Applications/Xcode_*.app /Applications/Xcode.app 2>/dev/null | sort -V | tail -1)
           sudo xcode-select -s "$X"
@@ -101,11 +101,11 @@ jobs:
           fi
 
       - name: Generate Xcode project
-        if: "${{ !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true)) }}"
+        if: "!(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))"
         run: xcodegen generate
 
       - name: Run unit tests & zero-network probe (iOS 27 Simulator)
-        if: "${{ !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true)) }}"
+        if: "!(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))"
         run: |
           set -o pipefail
           DEV=$(xcrun simctl list devices available -j | python3 -c "
@@ -137,9 +137,9 @@ jobs:
             -project Chimmo.xcodeproj \
             -scheme Chimmo \
             -destination "id=$DEV" \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log | grep -E "error:|warning: |Test Case.*(passed|failed)|\*\* " || true
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/build.log" | grep -E "error:|warning: |Test Case.*(passed|failed)|\*\* " || true
 
-          grep -q "\*\* TEST SUCCEEDED \*\*" build.log
+          grep -q "\*\* TEST SUCCEEDED \*\*" "$RUNNER_TEMP/build.log"
 
       - name: Enforce build log, XCTest count & zero-network policy
         if: always() && !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
@@ -162,14 +162,14 @@ jobs:
             echo "::error title=Offline Policy Violation::Detected $VIOLATIONS network log entries from Chimmo process."
             exit 1
           fi
-          if [ -f build.log ]; then
-            python3 Tools/ci_guard.py --build-log build.log --require-tests
+          if [ -f "$RUNNER_TEMP/build.log" ]; then
+            python3 Tools/ci_guard.py --build-log "$RUNNER_TEMP/build.log" --require-tests
           fi
 
       - name: Report build errors on failure
         if: failure() && !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
         run: |
-          grep -E "error:|fatal error:|failed" build.log 2>/dev/null | tail -60 || tail -80 build.log
+          grep -E "error:|fatal error:|failed" "$RUNNER_TEMP/build.log" 2>/dev/null | tail -60 || tail -80 "$RUNNER_TEMP/build.log"
 
       - name: Upload test artifacts
         if: always() && !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
@@ -178,7 +178,7 @@ jobs:
           name: chimmo-ci-logs
           path: |
             shots/ios_network.txt
-            build.log
+            ${{ runner.temp }}/build.log
           retention-days: 14
 
   testflight:
