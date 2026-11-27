@@ -7,8 +7,23 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      upload_testflight:
+        description: "Archive, sign, and upload a fresh TestFlight build"
+        type: boolean
+        required: false
+        default: true
+      existing_build:
+        description: "Reuse an already uploaded TestFlight build number (skips archive/upload)"
+        type: string
+        required: false
+        default: ""
+      sync_beta_metadata:
+        description: "Sync bilingual Beta metadata, feedback email & review contacts without submitting review"
+        type: boolean
+        required: false
+        default: false
       submit_public_beta:
-        description: "Sync bilingual Beta metadata, external group & submit TestFlight Public Beta review"
+        description: "Sync bilingual Beta metadata, external group & submit TestFlight Public Beta review (strict)"
         type: boolean
         required: false
         default: false
@@ -22,35 +37,75 @@ on:
         type: boolean
         required: false
         default: true
+      extract_filing_cert:
+        description: "Export local IPA to print filing SHA-1 and public modulus"
+        type: boolean
+        required: false
+        default: false
+      audit_only:
+        description: "Only run read-only App Store Connect beta readiness audit"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
   group: ios-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
     runs-on: xcode-27
     timeout-minutes: 45
+    outputs:
+      app_changed: ${{ steps.scope.outputs.app_changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
 
-      - name: Select Xcode 27 & install XcodeGen
+      - name: Detect iOS binary scope changes
+        id: scope
         run: |
-          ls -d /Applications/Xcode*.app
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "app_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            CHANGED=$(git diff --name-only HEAD~1 HEAD)
+            if echo "$CHANGED" | grep -qE '^(Chimmo/|project\.yml$)'; then
+              echo "app_changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "app_changed=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "app_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run static compliance, privacy, icon, web & tooling gate
+        run: python3 Tools/ci_guard.py
+
+      - name: Select Xcode 27 & ensure XcodeGen
+        if: !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
+        run: |
           X=$(ls -d /Applications/Xcode_*.app /Applications/Xcode.app 2>/dev/null | sort -V | tail -1)
           sudo xcode-select -s "$X"
           xcodebuild -version
           SDK=$(xcodebuild -showsdks | grep -oE 'iphoneos[0-9.]+' | sort -V | tail -1 || true)
           echo "::notice title=Toolchain::$(xcodebuild -version | tr '\n' ' ') (${SDK:-unknown})"
-          brew install xcodegen >/dev/null
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install xcodegen >/dev/null
+          fi
 
       - name: Generate Xcode project
+        if: !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
         run: xcodegen generate
 
       - name: Run unit tests & zero-network probe (iOS 27 Simulator)
+        if: !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
         run: |
           set -o pipefail
           DEV=$(xcrun simctl list devices available -j | python3 -c "
@@ -86,13 +141,18 @@ jobs:
 
           grep -q "\*\* TEST SUCCEEDED \*\*" build.log
 
-      - name: Zero-network probe report
-        if: always()
+      - name: Enforce build log, XCTest count & zero-network policy
+        if: always() && !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
         run: |
           kill "$(cat net.pid 2>/dev/null)" 2>/dev/null || true
+          xcrun simctl shutdown all >/dev/null 2>&1 || true
           mkdir -p shots
+          if [ ! -f shots/net_raw.log ]; then
+            echo "::error title=Zero-Network Probe Missing::shots/net_raw.log was not created."
+            exit 1
+          fi
           {
-            echo "Chimmo network probe ($(wc -l < shots/net_raw.log 2>/dev/null || echo 0) raw lines)"
+            echo "Chimmo network probe ($(wc -l < shots/net_raw.log || echo 0) raw lines)"
             grep -E "nw_connection|nw_endpoint|Task <|hostname|https?://|resolver|Connection [0-9]+" shots/net_raw.log 2>/dev/null \
               | sed -E 's/^[0-9-]+ [0-9:.]+ //' | sort | uniq -c | sort -rn | head -50 || true
           } > shots/ios_network.txt
@@ -102,15 +162,18 @@ jobs:
             echo "::error title=Offline Policy Violation::Detected $VIOLATIONS network log entries from Chimmo process."
             exit 1
           fi
+          if [ -f build.log ]; then
+            python3 Tools/ci_guard.py --build-log build.log --require-tests
+          fi
 
       - name: Report build errors on failure
-        if: failure()
+        if: failure() && !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
         run: |
           grep -E "error:|fatal error:|failed" build.log 2>/dev/null | tail -60 || tail -80 build.log
 
       - name: Upload test artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: always() && !(github.event_name == 'workflow_dispatch' && inputs.upload_testflight == false && inputs.submit_public_beta == false && (inputs.audit_only == true || inputs.sync_beta_metadata == true))
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: chimmo-ci-logs
           path: |
@@ -120,7 +183,7 @@ jobs:
 
   testflight:
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && (github.event_name == 'workflow_dispatch' || needs.build.outputs.app_changed == 'true')
     runs-on: xcode-27
     timeout-minutes: 50
     env:
@@ -134,7 +197,9 @@ jobs:
       BETA_CONTACT_EMAIL: ${{ secrets.BETA_CONTACT_EMAIL }}
       BETA_CONTACT_PHONE: ${{ secrets.BETA_CONTACT_PHONE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Check App Store Connect secrets
         id: check
@@ -144,30 +209,47 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          mkdir -p ~/private_keys
-          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
-          chmod 600 ~/private_keys/AuthKey_$ASC_KEY_ID.p8
-          python3 Tools/asc.py ensure-bundle-ids app.chimmo --name "Chimmo" --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
-          if python3 Tools/asc.py check-app app.chimmo --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"; then
+          KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          umask 077
+          printf '%s' "$ASC_KEY_P8" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          echo "ASC_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+          python3 Tools/asc.py ensure-bundle-ids app.chimmo --name "Chimmo" --key-path "$KEY_PATH"
+          if python3 Tools/asc.py check-app app.chimmo --key-path "$KEY_PATH"; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Run read-only TestFlight beta audit (when audit_only=true)
+        if: steps.check.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.audit_only == true
+        env:
+          EXISTING_BUILD: ${{ inputs.existing_build }}
+        run: |
+          ARGS=(app.chimmo --key-path "$ASC_KEY_PATH")
+          if [ -n "$EXISTING_BUILD" ]; then
+            ARGS+=(--build "$EXISTING_BUILD")
+          fi
+          python3 Tools/asc.py audit-beta-readiness "${ARGS[@]}"
+
       - name: Archive, cloud-sign & upload to TestFlight
-        if: steps.check.outputs.ready == 'true'
+        id: archive
+        if: steps.check.outputs.ready == 'true' && !(github.event_name == 'workflow_dispatch' && (inputs.audit_only == true || inputs.upload_testflight == false || inputs.existing_build != ''))
         run: |
           set -o pipefail
           X=$(ls -d /Applications/Xcode_*.app /Applications/Xcode.app 2>/dev/null | sort -V | tail -1)
           sudo xcode-select -s "$X"
-          brew install xcodegen >/dev/null
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install xcodegen >/dev/null
+          fi
           xcodegen generate
 
           AUTH=(-allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID")
-          BUILD=$((100 + ${{ github.run_number }}))
+          MIN_BUILD=$((100 + ${{ github.run_number }}))
+          BUILD=$(python3 Tools/asc.py next-build-number app.chimmo --min "$MIN_BUILD" --key-path "$ASC_KEY_PATH")
 
           xcodebuild archive \
             -project Chimmo.xcodeproj \
@@ -176,7 +258,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath build/Chimmo.xcarchive \
             DEVELOPMENT_TEAM="$TEAM" \
-            CURRENT_PROJECT_VERSION=$BUILD \
+            CURRENT_PROJECT_VERSION="$BUILD" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             2>&1 | tee archive.log | grep -E "error:|\*\* " || true
           grep -q "ARCHIVE SUCCEEDED" archive.log
@@ -208,13 +290,32 @@ jobs:
           echo "MARKETING_VERSION=$VER" >> "$GITHUB_ENV"
           echo "::notice title=TestFlight::咩哞 v${VER} (Build $BUILD) 已上传，Apple 处理约需 10-30 分钟。"
 
+      - name: Resolve existing build parameters when upload skipped
+        if: steps.check.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && (inputs.upload_testflight == false || inputs.existing_build != '') && (inputs.submit_public_beta == true || (inputs.sync_beta_metadata == false && inputs.audit_only == false))
+        env:
+          EXISTING_BUILD: ${{ inputs.existing_build }}
+        run: |
+          if [ -z "$EXISTING_BUILD" ]; then
+            echo "::error title=Missing existing_build::When upload_testflight is false, provide existing_build or enable upload_testflight."
+            exit 1
+          fi
+          VER=$(python3 - <<'PY'
+          import re
+          txt = open("project.yml", encoding="utf-8").read()
+          m = re.search(r'MARKETING_VERSION:\s*"([^"]+)"', txt)
+          print(m.group(1) if m else "2.2.0")
+          PY
+          )
+          echo "BUILD=$EXISTING_BUILD" >> "$GITHUB_ENV"
+          echo "MARKETING_VERSION=$VER" >> "$GITHUB_ENV"
+
       - name: Extract App filing certificate (备案 SHA-1 & 公钥)
-        if: steps.check.outputs.ready == 'true'
+        if: steps.check.outputs.ready == 'true' && steps.archive.outcome == 'success' && github.event_name == 'workflow_dispatch' && inputs.extract_filing_cert == true
         continue-on-error: true
         run: |
           sed 's#<string>upload</string>#<string>export</string>#' ExportOptions.plist > ExportLocal.plist
           AUTH=(-allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID")
           xcodebuild -exportArchive -archivePath build/Chimmo.xcarchive -exportOptionsPlist ExportLocal.plist -exportPath build/local "${AUTH[@]}" > /dev/null 2>&1 || exit 0
@@ -225,13 +326,43 @@ jobs:
           echo "::notice title=备案 SHA-1::$SHA1"
           echo "::notice title=备案 公钥::$MOD"
 
-      - name: Sync TestFlight What to Test & Public Beta Review Metadata
-        if: steps.check.outputs.ready == 'true' && env.BUILD != ''
-        continue-on-error: true
+      - name: Sync TestFlight beta metadata & contacts (no review submission)
+        if: steps.check.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.sync_beta_metadata == true && inputs.submit_public_beta == false && inputs.audit_only == false
+        run: |
+          VER="${MARKETING_VERSION:-}"
+          if [ -z "$VER" ]; then
+            VER=$(python3 -c 'import re; txt=open("project.yml", encoding="utf-8").read(); m=re.search(r"MARKETING_VERSION:\s*\"([^\"]+)\"", txt); print(m.group(1) if m else "2.2.0")')
+          fi
+          EXTRA_ARGS=()
+          if [ -n "$BETA_FEEDBACK_EMAIL" ]; then
+            EXTRA_ARGS+=(--feedback-email "$BETA_FEEDBACK_EMAIL")
+          fi
+          if [ -n "$BETA_CONTACT_FIRST" ]; then
+            EXTRA_ARGS+=(--contact-first "$BETA_CONTACT_FIRST")
+          fi
+          if [ -n "$BETA_CONTACT_LAST" ]; then
+            EXTRA_ARGS+=(--contact-last "$BETA_CONTACT_LAST")
+          fi
+          if [ -n "$BETA_CONTACT_EMAIL" ]; then
+            EXTRA_ARGS+=(--contact-email "$BETA_CONTACT_EMAIL")
+          fi
+          if [ -n "$BETA_CONTACT_PHONE" ]; then
+            EXTRA_ARGS+=(--contact-phone "$BETA_CONTACT_PHONE")
+          fi
+          python3 Tools/asc.py sync-beta-metadata \
+            --bundle-id app.chimmo \
+            --version "$VER" \
+            --strict \
+            "${EXTRA_ARGS[@]}" \
+            --key-path "$ASC_KEY_PATH"
+          python3 Tools/asc.py audit-beta-readiness app.chimmo \
+            --key-path "$ASC_KEY_PATH"
+
+      - name: Strict Public Beta metadata sync & external review submission
+        if: steps.check.outputs.ready == 'true' && env.BUILD != '' && github.event_name == 'workflow_dispatch' && inputs.submit_public_beta == true && inputs.audit_only == false
         timeout-minutes: 25
         env:
           PUBLIC_BETA_GROUP: ${{ inputs.public_beta_group || '公测' }}
-          SUBMIT_PUBLIC_BETA: ${{ inputs.submit_public_beta }}
           ENABLE_PUBLIC_LINK: ${{ inputs.enable_public_link }}
         run: |
           EXTRA_ARGS=()
@@ -251,45 +382,44 @@ jobs:
             EXTRA_ARGS+=(--contact-phone "$BETA_CONTACT_PHONE")
           fi
 
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$SUBMIT_PUBLIC_BETA" = "true" ]; then
-            GROUP="${PUBLIC_BETA_GROUP:-公测}"
-            LINK_FLAG=()
-            if [ "$ENABLE_PUBLIC_LINK" = "true" ]; then
-              LINK_FLAG+=(--public-link)
-            fi
-            python3 Tools/asc.py prepare-public-beta \
-              --bundle-id app.chimmo \
-              --build "$BUILD" \
-              --version "$MARKETING_VERSION" \
-              --changelog CHANGELOG.md \
-              --group-name "$GROUP" \
-              "${LINK_FLAG[@]}" \
-              --submit-review \
-              "${EXTRA_ARGS[@]}" \
-              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
-            python3 Tools/asc.py audit-beta-readiness app.chimmo \
-              --build "$BUILD" \
-              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
-          else
-            python3 Tools/asc.py sync-whats-new \
-              --bundle-id app.chimmo \
-              --build "$BUILD" \
-              --version "$MARKETING_VERSION" \
-              --changelog CHANGELOG.md \
-              --locale zh-Hans \
-              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8"
-            python3 Tools/asc.py sync-whats-new \
-              --bundle-id app.chimmo \
-              --build "$BUILD" \
-              --version "$MARKETING_VERSION" \
-              --changelog CHANGELOG.md \
-              --locale en-US \
-              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
-            python3 Tools/asc.py audit-beta-readiness app.chimmo \
-              --build "$BUILD" \
-              --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
+          GROUP="${PUBLIC_BETA_GROUP:-公测}"
+          LINK_FLAG=()
+          if [ "$ENABLE_PUBLIC_LINK" = "true" ]; then
+            LINK_FLAG+=(--public-link)
           fi
+          python3 Tools/asc.py prepare-public-beta \
+            --bundle-id app.chimmo \
+            --build "$BUILD" \
+            --version "$MARKETING_VERSION" \
+            --changelog CHANGELOG.md \
+            --group-name "$GROUP" \
+            "${LINK_FLAG[@]}" \
+            --submit-review \
+            --strict \
+            "${EXTRA_ARGS[@]}" \
+            --key-path "$ASC_KEY_PATH"
+          python3 Tools/asc.py audit-beta-readiness app.chimmo \
+            --build "$BUILD" \
+            --fail-if-unready \
+            --key-path "$ASC_KEY_PATH"
 
-      - name: Cleanup temporary ASC API key
+      - name: Sync routine bilingual TestFlight What to Test notes
+        if: steps.check.outputs.ready == 'true' && env.BUILD != '' && !(github.event_name == 'workflow_dispatch' && (inputs.submit_public_beta == true || inputs.audit_only == true))
+        continue-on-error: true
+        timeout-minutes: 25
+        run: |
+          python3 Tools/asc.py sync-whats-new \
+            --bundle-id app.chimmo \
+            --build "$BUILD" \
+            --version "$MARKETING_VERSION" \
+            --changelog CHANGELOG.md \
+            --locales zh-Hans,en-US \
+            --key-path "$ASC_KEY_PATH"
+          python3 Tools/asc.py audit-beta-readiness app.chimmo \
+            --build "$BUILD" \
+            --key-path "$ASC_KEY_PATH" || true
+
+      - name: Cleanup temporary secrets and build artifacts
         if: always()
-        run: rm -rf ~/private_keys/AuthKey_*.p8
+        run: |
+          rm -rf "$RUNNER_TEMP"/AuthKey_*.p8 build/ ExportOptions.plist ExportLocal.plist archive.log export.log

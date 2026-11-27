@@ -1558,7 +1558,9 @@ public final class FeltPianoSynth: @unchecked Sendable {
         beatHz: Double = 40.0,
         isochronicDepth: Double
     ) throws -> (minLeftBlockRMS: Float, maxLeftBlockRMS: Float) {
-        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 64, blockSize: 150) { dry, _ in
+        let hzL = max(40.0, carrierHz - beatHz * 0.5)
+        let blockSize = max(64, Int((sampleRate / hzL).rounded()))
+        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 40, blockSize: blockSize) { dry, _ in
             dry.active = true
             dry.currentCarrierHz = carrierHz
             dry.targetCarrierHz = carrierHz
@@ -1731,7 +1733,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var maxLeftRMS: Float = 0.0
         let chCount = Int(buffer.format.channelCount)
 
-        for _ in 0..<blocks {
+        for blockIdx in 0..<blocks {
             let status = try eng.renderOffline(AVAudioFrameCount(blockSize), to: buffer)
             if status == .success, let channels = buffer.floatChannelData {
                 let len = Int(buffer.frameLength)
@@ -1748,9 +1750,11 @@ public final class FeltPianoSynth: @unchecked Sendable {
                     lrDiff = max(lrDiff, abs(sL - sR))
                     sqSumL += sL * sL
                 }
-                let blkRMS = sqrt(sqSumL / Float(max(1, len)))
-                minLeftRMS = min(minLeftRMS, blkRMS)
-                maxLeftRMS = max(maxLeftRMS, blkRMS)
+                if blocks <= 2 || blockIdx > 0 {
+                    let blkRMS = sqrt(sqSumL / Float(max(1, len)))
+                    minLeftRMS = min(minLeftRMS, blkRMS)
+                    maxLeftRMS = max(maxLeftRMS, blkRMS)
+                }
             }
         }
         let peak = max(peakL, peakR)
