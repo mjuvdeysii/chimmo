@@ -1,1575 +1,1207 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hans">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>咩哞 · Mie &amp; Mou — 100% 离线脑波共振与声触放松空间</title>
-  <style data-inlined="styles.css">
-:root{
-  --bg: #FBF7F0;
-  --paper: #FFFFFF;
-  --card: #FFFFFF;
-  --shelf: #F2EBE0;
-  --butter: #F8EBD0;
-  --mint: #E3F0ED;
-  --hill-back: #EAE0CE;
-  --hill-front: #D6E5DD;
-  --outline: #1C1D19;
-  --border: rgba(28, 29, 25, 0.11);
-  --border-strong: rgba(28, 29, 25, 0.16);
-  --ink: #1C1D19;
-  --sub: #5C564D;
-  --accent: #C4513A;
-  --prominent: #B8442E;
-  --celadon: #3D7A77;
-  --gold: #CF8420;
-  --blue: #3577A8;
-  --moon-blue: #2E7DB2;
-  --violet: #6F54B8;
-  --lamp-bg: #070B1A;
-  --lamp-pad: #121A3D;
-  --shadow-soft: 0 10px 28px rgba(122, 82, 48, 0.08);
-  --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10);
-  --shadow-prominent: 0 6px 16px rgba(184, 68, 46, 0.24);
-  --xylo-ink: #1C1D19;
-  --xylo-1: #E8534A;
-  --xylo-2: #F58A2C;
-  --xylo-3: #EBB31A;
-  --xylo-4: #40B865;
-  --xylo-5: #15A6AE;
-  --xylo-6: #5C84F0;
-  --xylo-7: #9973F0;
-  --glow-1: #F25563;
-  --glow-2: #F08030;
-  --glow-3: #E6AD1A;
-  --glow-4: #24AD70;
-  --glow-5: #179BA3;
-  --glow-6: #527EE8;
-  --glow-7: #8E6BE6;
-  --band-delta: #6F54B8;
-  --band-theta: #C4513A;
-  --band-alpha: #3D7A77;
-  --band-gamma: #3577A8;
-  --active-band: #3D7A77;
-}
-html[data-theme="night"]{
-  --bg: #0E1430;
-  --paper: #19213F;
-  --card: #19213F;
-  --shelf: #212A4C;
-  --butter: #272B4D;
-  --mint: #1B3049;
-  --hill-back: #151D40;
-  --hill-front: #1B2650;
-  --outline: #FFB547;
-  --border: rgba(242, 226, 196, 0.12);
-  --border-strong: rgba(255, 181, 71, 0.28);
-  --ink: #F2E2C4;
-  --sub: #B8BED4;
-  --accent: #F08A6C;
-  --prominent: #C4513A;
-  --celadon: #7EC8C3;
-  --gold: #FFB547;
-  --blue: #6EB4F2;
-  --moon-blue: #7EC8E3;
-  --violet: #B39BFF;
-  --lamp-bg: #070B1A;
-  --lamp-pad: #121A3D;
-  --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.36);
-  --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
-  --shadow-prominent: 0 6px 18px rgba(196, 81, 58, 0.34);
-  --xylo-ink: #0E1430;
-  --xylo-1: #FF7B72;
-  --xylo-2: #FFA94D;
-  --xylo-3: #FFD43B;
-  --xylo-4: #69DB7C;
-  --xylo-5: #4FD8CB;
-  --xylo-6: #74C0FC;
-  --xylo-7: #B197FC;
-  --glow-1: #FF7582;
-  --glow-2: #FFA959;
-  --glow-3: #FF74A6;
-  --glow-4: #38E4B7;
-  --glow-5: #5CB3FF;
-  --glow-6: #A98BFF;
-  --glow-7: #FFD94A;
-  --band-delta: #B39BFF;
-  --band-theta: #F08A6C;
-  --band-alpha: #7EC8C3;
-  --band-gamma: #6EB4F2;
-}
-*{ box-sizing: border-box; }
-body{
-  margin: 0;
-  padding: 18px 14px 36px;
-  background-color: var(--bg);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
-  line-height: 1.5;
-  transition: background-color 0.25s ease, color 0.25s ease;
-}
-.wrap{ max-width: 980px; margin: 0 auto; display: grid; gap: 14px; }
-.topbar{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.brand-mark{
-  display: flex; align-items: center; gap: 9px;
-  padding: 6px 12px 6px 8px; border-radius: 999px;
-  background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-btn);
-}
-.brand-seal{
-  width: 30px; height: 30px; border-radius: 999px;
-  background: var(--butter); border: 1px solid var(--border-strong);
-  display: grid; place-items: center;
-}
-.brand-title{ font-size: 14px; font-weight: 900; letter-spacing: 0.04em; }
-.brand-ver{
-  font-size: 11px; font-weight: 800; color: var(--ink);
-  background: var(--butter); padding: 2px 8px; border-radius: 6px;
-}
-.controls{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.pill-btn{
-  appearance: none;
-  border: 1px solid var(--border-strong);
-  background: var(--card); color: var(--ink);
-  border-radius: 999px; padding: 8px 15px; min-height: 40px;
-  font-size: 12.5px; font-weight: 800; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px;
-  box-shadow: var(--shadow-btn);
-  transition: transform 0.14s ease, background-color 0.16s ease, box-shadow 0.16s ease;
-}
-.pill-btn:hover{ transform: translateY(-1px); }
-.pill-btn:active{ transform: translateY(1.5px); }
-.pill-btn[aria-pressed="true"]{
-  background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent);
-}
-.pill-btn.soft-celadon{
-  background: var(--mint); color: var(--celadon); border-color: var(--border-strong);
-}
-.pill-btn.soft-celadon[aria-pressed="true"]{
-  background: var(--celadon); color: #FFFFFF;
-}
-html[data-theme="night"] .pill-btn.soft-celadon[aria-pressed="true"]{ color: #0E1430; }
+  <title>咩哞 · Mie &amp; Mou｜100% 离线声波共振与室内乐工坊</title>
+  <meta name="description" content="咩哞（Mie &amp; Mou）是一款纯本机离线的声波共振与室内乐听觉艺术工具：四重声波频段、个人轻哼调频、琥珀夜灯暗屏与静态明信片分享。" />
+  <style>
+    :root {
+      --bg: #FBF7F0;
+      --surface: #F4ECE0;
+      --card: #FFFDF8;
+      --ink: #1C1D19;
+      --muted: #4E4A42;
+      --border: rgba(28, 29, 25, 0.14);
+      --accent: #2B6865;
+      --accent-ink: #FFFFFF;
+      --terracotta: #A63C28;
+      --cobalt: #256291;
+      --violet: #6246A8;
+      --amber: #7D4806;
+      --shadow: 0 10px 28px rgba(61, 46, 33, 0.08);
+      --svg-ink: #231B15;
+      --svg-wool: #FFFDF7;
+      --svg-sheep-face: #F3E6D4;
+      --svg-sheep-horn: #E59900;
+      --svg-cow-body: #8F5F4E;
+      --svg-cow-snout: #FFF3E2;
+      --svg-cow-horn: #FFE49E;
+      --radius-stage: 28px;
+      --radius-card: 22px;
+      --radius-inner: 16px;
+    }
 
-.hero{
-  position: relative; background: var(--paper); border: 1px solid var(--border);
-  border-radius: 26px; padding: 18px 18px 18px;
-  display: grid; gap: 14px; overflow: hidden; box-shadow: var(--shadow-soft);
-}
-.hero-scenery{ position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.hero-hills-svg{ width: 100%; height: 100%; display: block; }
-.hero-sun-badge{ position: absolute; top: 14px; right: 18px; width: 64px; height: 64px; pointer-events: none; z-index: 1; }
-.hero-head, .band-grid, .resonance-deck{ position: relative; z-index: 1; }
-.hero-head{ display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-right: 76px; }
-.book-tag{
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 10px; border-radius: 6px;
-  background: var(--butter); color: var(--ink); font-size: 11px; font-weight: 800; margin-bottom: 6px;
-}
-h1{ margin: 0; font-size: clamp(24px, 3.8vw, 34px); line-height: 1.15; letter-spacing: -0.02em; }
-.lead{ margin: 5px 0 0; color: var(--sub); font-size: 13.5px; font-weight: 600; max-width: 720px; }
+    html[data-theme="night"] {
+      --bg: #0E1326;
+      --surface: #161D38;
+      --card: #1E2646;
+      --ink: #F4EEE2;
+      --muted: #C6CEE8;
+      --border: rgba(244, 238, 226, 0.16);
+      --accent: #7ECBC5;
+      --accent-ink: #0E1326;
+      --terracotta: #F29476;
+      --cobalt: #78BAFA;
+      --violet: #BAA3FF;
+      --amber: #FFB84D;
+      --shadow: 0 14px 36px rgba(4, 7, 18, 0.42);
+      --svg-ink: #D8DFF4;
+      --svg-wool: #EDE4D5;
+      --svg-sheep-face: #D9C8B4;
+      --svg-sheep-horn: #FFB84D;
+      --svg-cow-body: #564A76;
+      --svg-cow-snout: #DFD0BE;
+      --svg-cow-horn: #FFD275;
+    }
 
-.band-grid{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
-.band-btn{
-  appearance: none; border: 1px solid var(--border-strong); border-radius: 16px;
-  background: var(--card); color: var(--ink); padding: 10px 12px; min-height: 68px;
-  text-align: left; cursor: pointer; display: grid; gap: 2px; box-shadow: var(--shadow-btn);
-  transition: transform 0.14s ease, background-color 0.16s ease, border-color 0.16s ease;
-}
-.band-btn:hover{ transform: translateY(-1px); }
-.band-code{ font-size: 11px; font-weight: 900; color: var(--sub); font-variant-numeric: tabular-nums; }
-.band-name{ font-size: 14.5px; font-weight: 900; }
-.band-hook{ font-size: 11px; font-weight: 700; color: var(--sub); }
-.band-btn.active{
-  background: var(--active-band); color: #FFFFFF; border-color: transparent;
-  box-shadow: var(--shadow-soft);
-}
-.band-btn.active .band-code, .band-btn.active .band-hook{ color: rgba(255,255,255,0.88); }
-html[data-theme="night"] .band-btn.active{ color: #0E1430; }
-html[data-theme="night"] .band-btn.active .band-code,
-html[data-theme="night"] .band-btn.active .band-hook{ color: rgba(14,20,48,0.82); }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover, a:focus-visible { text-decoration: underline; }
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+    }
+    button:focus-visible, a:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
 
-.resonance-deck{ display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; align-items: stretch; }
-.orb-stage, .subcard-panel{
-  background: var(--shelf); border: 1px solid var(--border);
-  border-radius: 20px; padding: 14px; box-shadow: var(--shadow-btn);
-}
-.orb-stage{ display: grid; gap: 10px; align-content: space-between; }
-.orb-stage-top{ display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.orb-visual-wrap{
-  position: relative; height: 240px; border-radius: 18px;
-  background: var(--card); border: 1px solid var(--border);
-  display: grid; place-items: center; overflow: hidden;
-}
-#orbWaveCanvas{ position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.orb-core-btn{
-  position: relative; z-index: 2; appearance: none;
-  width: 158px; height: 158px; border-radius: 999px;
-  background: radial-gradient(circle at center, rgba(61,122,119,0.22), rgba(61,122,119,0.06));
-  border: 2px solid var(--active-band); color: var(--ink);
-  display: grid; justify-items: center; align-content: center; gap: 4px; padding: 10px;
-  cursor: pointer; transition: transform 0.22s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.orb-core-btn.playing{ box-shadow: 0 0 0 8px rgba(61,122,119,0.12); }
-.orb-core-btn.holding{ transform: scale(0.92); border-color: var(--gold); border-width: 3px; }
-.orb-duo-mini{ width: 68px; height: 38px; }
-.orb-core-hz{ font-size: 13.5px; font-weight: 900; font-variant-numeric: tabular-nums; }
-.orb-core-status{ font-size: 10.5px; font-weight: 700; color: var(--sub); text-align: center; }
+    .wrap {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
 
-.orb-controls-bar{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.frisson-btn{ justify-content: center; background: var(--card); border-color: var(--gold); }
-.frisson-btn.holding{ background: var(--gold); color: #1C1D19; border-color: var(--gold); }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 16px;
+      padding: 10px 0;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 4px 2px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+    .nav-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 12px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 999px;
+    }
+    .nav-link:hover { color: var(--ink); text-decoration: none; background: var(--surface); }
+    .pill-btn {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink);
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+    }
+    .pill-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+    .pill-btn[aria-pressed="true"], .pill-btn[aria-selected="true"], .pill-btn.primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-color: var(--accent);
+    }
 
-.freq-slider-row{
-  display: flex; align-items: center; gap: 10px;
-  background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px;
-}
-#beatSlider{ flex: 1; accent-color: var(--active-band); min-height: 28px; cursor: pointer; }
+    .charge-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: var(--amber);
+      opacity: 0.28;
+      pointer-events: none;
+      transition: width 60ms linear;
+    }
 
-.wash-hum-panel{ display: grid; gap: 12px; align-content: stretch; }
-.subcard-panel{ display: grid; gap: 9px; align-content: start; }
-.bench-label{ display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 900; color: var(--ink); flex-wrap: wrap; }
-.bench-sub{ font-size: 11.5px; font-weight: 700; color: var(--sub); }
-.sb-controls-row{ display: flex; flex-wrap: wrap; gap: 6px; }
-.sb-chip{
-  appearance: none; border: 1px solid var(--border-strong); background: var(--card);
-  color: var(--ink); border-radius: 999px; padding: 6px 13px; min-height: 40px;
-  font-size: 11.5px; font-weight: 800; cursor: pointer;
-  transition: background-color 0.16s ease, color 0.16s ease;
-}
-.sb-chip.active{ background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent); }
+    .hero {
+      padding: 40px 0 28px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: center;
+    }
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; padding-top: 24px; }
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.0rem, 4.2vw, 3.05rem);
+      line-height: 1.16;
+      letter-spacing: -0.025em;
+    }
+    .lead {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 52ch;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .meta-tag {
+      padding: 7px 12px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
 
-.spaces-bench, .family-bench{
-  background: var(--paper); border: 1px solid var(--border); border-radius: 22px;
-  padding: 14px; box-shadow: var(--shadow-soft); display: grid; gap: 11px;
-}
-.space-tabs-row{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.space-tab-btn{
-  appearance: none; border: 1px solid var(--border-strong); border-radius: 14px;
-  background: var(--shelf); color: var(--ink); padding: 9px 10px; min-height: 42px;
-  font-size: 12.5px; font-weight: 800; cursor: pointer;
-  box-shadow: var(--shadow-btn); transition: transform 0.14s ease, background-color 0.16s ease;
-}
-.space-tab-btn[aria-selected="true"]{ background: var(--prominent); color: #FFFFFF; border-color: transparent; box-shadow: var(--shadow-prominent); }
-.space-stage-card{ background: var(--shelf); border: 1px solid var(--border); border-radius: 16px; padding: 13px 15px; display: grid; gap: 10px; }
-.space-pane{ display: none; gap: 10px; }
-.space-pane.active{ display: grid; }
+    .studio-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-stage);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .canvas-shell {
+      position: relative;
+      height: 250px;
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    #waveCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .vessel-readout {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+      padding: 12px;
+    }
+    .vessel-hz {
+      font-size: clamp(2.1rem, 4vw, 2.7rem);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    .vessel-band {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+    .vessel-sub {
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 480px) {
+      .controls-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .band-btn {
+      min-height: 48px;
+      padding: 6px 8px;
+      border-radius: var(--radius-inner);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.86rem;
+    }
+    .band-btn span.sub { font-size: 0.74rem; font-weight: 500; color: var(--muted); }
+    .band-btn[aria-selected="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-ink);
+    }
+    .band-btn[aria-selected="true"] span.sub { color: var(--accent-ink); opacity: 0.9; }
 
-.today-journey-grid{ display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; align-items: stretch; }
-.today-hero-demo{
-  border-radius: 16px; padding: 14px; color: #1C1D19;
-  background: linear-gradient(135deg, #FFD43B, #FF9F1C);
-  display: grid; gap: 6px; align-content: center; justify-items: start;
-}
-html[data-theme="night"] .today-hero-demo{
-  background: linear-gradient(135deg, #3A2D18, #5B3C1A); color: #F2E2C4;
-}
-.today-hero-badge{
-  padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800;
-  background: rgba(255,255,255,0.72); color: #1C1D19;
-}
-html[data-theme="night"] .today-hero-badge{ background: rgba(255,255,255,0.16); color: #F2E2C4; }
-.today-steps-list{ display: grid; gap: 7px; }
-.today-step-item{
-  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-  padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 12.5px;
-}
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .action-row .primary-flex { flex: 1 1 160px; min-height: 48px; }
+    .wash-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
 
-.v21-upgrades-grid{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.upgrade-tile{
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-  padding: 11px 13px; display: grid; gap: 4px;
-}
-.upgrade-tile strong{ font-size: 13px; }
-.upgrade-tile p{ margin: 0; line-height: 1.45; }
+    section { padding: 34px 0; }
+    .sec-head { margin-bottom: 18px; }
+    .sec-head h2 {
+      margin: 0 0 6px;
+      font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+      letter-spacing: -0.02em;
+    }
+    .sec-head p { margin: 0; color: var(--muted); max-width: 64ch; }
 
-.nightlamp-preview{
-  background: var(--lamp-bg); color: #F2E2C4; border-radius: 16px;
-  padding: 12px; border: 1px solid rgba(255, 181, 71, 0.24); display: grid; gap: 9px;
-}
-.nightlamp-head{ display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.nightlamp-beacon{
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--lamp-pad); border: 1px solid rgba(255, 181, 71, 0.34);
-  padding: 4px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 800; color: #F2E2C4;
-}
-.sustain-dots{ display: inline-flex; gap: 4px; align-items: center; }
-.sustain-dot{ width: 6px; height: 6px; border-radius: 999px; background: rgba(242, 226, 196, 0.25); transition: background-color 0.14s ease, transform 0.14s ease; }
-.sustain-dot.lit{ background: #FFB547; transform: scale(1.18); }
-.nightlamp-ridges{ display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; }
-.lamp-ridge-btn{
-  appearance: none; min-height: 44px; border-radius: 11px;
-  background: var(--lamp-pad); border: 1px solid rgba(126, 200, 227, 0.28);
-  color: #F2E2C4; font-size: 11px; font-weight: 800; cursor: pointer;
-  display: grid; place-items: center; gap: 1px; padding: 4px 2px;
-}
-.lamp-ridge-btn.lit, .lamp-ridge-btn:hover{ background: #263566; border-color: #FFB547; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 820px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--surface);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1.08rem; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.94rem; }
 
-.capsules-grid{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.capsule-btn{
-  appearance: none; border: 1px solid var(--border); border-radius: 13px;
-  background: var(--card); color: var(--ink); padding: 9px 10px; min-height: 62px;
-  text-align: left; cursor: pointer; display: grid; gap: 2px; box-shadow: var(--shadow-btn);
-}
-.capsule-btn:hover{ border-color: var(--prominent); }
-.capsule-btn.playing{ border-color: var(--prominent); background: var(--butter); }
-.capsule-title{ font-size: 12px; font-weight: 900; }
-.capsule-sub{ font-size: 10.5px; font-weight: 700; color: var(--sub); }
+    .disclaimer-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--terracotta);
+      border-radius: var(--radius-inner);
+      padding: 18px 20px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .disclaimer-box strong { color: var(--ink); }
 
-.profile-card-bench{ display: grid; grid-template-columns: 1fr 1.15fr; gap: 14px; align-items: center; }
-.resonance-card-preview{
-  background: var(--card); border: 1px solid var(--border-strong); border-radius: 18px;
-  padding: 13px; display: grid; justify-items: center; text-align: center; gap: 4px;
-  box-shadow: var(--shadow-btn);
-}
-.rc-top{ font-size: 10px; font-weight: 900; letter-spacing: 0.06em; color: var(--sub); }
-.rc-stat-line{ font-size: 11.5px; font-weight: 800; color: var(--active-band); font-variant-numeric: tabular-nums; }
-.profile-companion-col{ display: grid; gap: 10px; }
-.stats-trio{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.stat-pill{
-  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-  padding: 9px 8px; text-align: center; display: grid; gap: 1px;
-}
-.stat-pill strong{ font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; }
-.stat-pill span{ font-size: 11px; font-weight: 700; color: var(--sub); }
-.companion-quote{
-  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-  padding: 11px 13px; font-size: 12.5px;
-}
-
-.duo-stage{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.mascot-card{
-  position: relative; background: var(--card); border: 1px solid var(--border);
-  border-radius: 20px; padding: 12px 12px 10px; text-align: center; cursor: pointer;
-  display: grid; justify-items: center; gap: 5px; box-shadow: var(--shadow-btn);
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
-}
-.mascot-card.mie-theme{ background: var(--mint); }
-.mascot-card.mou-theme{ background: var(--butter); }
-.mascot-card.singing{ background: var(--paper); box-shadow: 0 0 0 2.5px var(--prominent), var(--shadow-soft); }
-.mascot-svg{ width: 96px; height: 78px; overflow: visible; }
-.mascot-name{ font-size: 15px; font-weight: 900; margin: 0; color: var(--ink); }
-.mascot-role{ font-size: 11.5px; font-weight: 700; color: var(--sub); margin: 0; }
-.wave-badge{
-  position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 999px;
-  background: var(--paper); border: 1px solid var(--border-strong);
-  display: grid; place-items: center; color: var(--ink);
-}
-.choir-shelf{
-  background: var(--shelf); border: 1px solid var(--border);
-  border-radius: 20px; padding: 12px 12px 10px; display: grid; gap: 8px;
-}
-.shelf-stage{ position: relative; padding-bottom: 2px; }
-.meadow-strip{
-  position: absolute; left: 4px; right: 4px; bottom: 42px; height: 11px;
-  border-radius: 999px; background: var(--hill-front); border: 1px solid var(--border); z-index: 0;
-}
-.choir-grid{ position: relative; z-index: 1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; }
-.figure-btn{
-  appearance: none; border: 0; background: transparent;
-  padding: 2px 2px 0; min-height: 44px; cursor: pointer;
-  display: grid; justify-items: center; gap: 4px; color: var(--ink);
-}
-.figure-svg{ width: 100%; max-width: 72px; height: 72px; overflow: visible; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
-.figure-btn:hover .figure-svg{ transform: translateY(-3px); }
-.figure-btn.singing .figure-svg{ transform: translateY(-7px) scale(1.06); }
-.figure-meta{ display: grid; justify-items: center; gap: 2px; }
-.figure-deg{ font-size: 10.5px; font-weight: 900; padding: 1px 7px; border-radius: 6px; color: var(--xylo-ink); border: 1px solid rgba(28, 29, 25, 0.12); }
-.figure-name{ font-size: 11px; font-weight: 800; color: var(--ink); }
-
-.icon-story-bench{ display: grid; grid-template-columns: 1fr 1.15fr; gap: 14px; align-items: stretch; }
-.icon-triptych-card, .story-moments-card{
-  background: var(--paper); border: 1px solid var(--border); border-radius: 22px;
-  padding: 14px; box-shadow: var(--shadow-soft); display: grid; gap: 10px; align-content: start;
-}
-.icon-triptych-row{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.appicon-tile{
-  display: grid; justify-items: center; gap: 5px; background: var(--shelf);
-  border: 1px solid var(--border); border-radius: 16px; padding: 9px 6px 7px;
-  font-size: 11px; font-weight: 800; color: var(--ink);
-}
-.appicon-squircle{ width: 64px; height: 64px; border-radius: 16px; border: 1px solid var(--border-strong); overflow: hidden; box-shadow: var(--shadow-btn); }
-.preset-pills-wrap{ display: flex; flex-wrap: wrap; gap: 6px; }
-
-.cards-grid{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.feature-card{
-  background: var(--paper); border: 1px solid var(--border); border-radius: 20px;
-  padding: 15px; box-shadow: var(--shadow-soft); display: grid; gap: 7px; align-content: start;
-}
-.feature-chip{
-  width: 34px; height: 34px; border-radius: 11px; background: var(--butter); color: var(--prominent);
-  border: 1px solid var(--border); display: grid; place-items: center;
-}
-.feature-card h2{ margin: 2px 0 0; font-size: 15px; font-weight: 900; }
-.feature-card p{ margin: 0; font-size: 13px; font-weight: 600; color: var(--sub); }
-.footer-card{
-  background: var(--shelf); border: 1px solid var(--border); border-radius: 18px; padding: 13px 16px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  font-size: 12.5px; font-weight: 700; box-shadow: var(--shadow-soft);
-}
-.links{ display: flex; gap: 14px; flex-wrap: wrap; }
-a{ color: var(--accent); text-decoration: none; font-weight: 800; }
-a:hover{ text-decoration: underline; }
-a:focus-visible, button:focus-visible, .mascot-card:focus-visible, input:focus-visible{ outline: 2.5px solid var(--prominent); outline-offset: 2px; }
-
-@keyframes breatheSheep{ 0%, 100%{ transform: translateY(0px) scaleY(1); } 50%{ transform: translateY(-2.4px) scaleY(1.022); } }
-@keyframes breatheCow{ 0%, 100%{ transform: translateY(0px) scale(1); } 50%{ transform: translateY(-1.8px) scale(1.018); } }
-@keyframes blinkEyes{ 0%, 94%, 100%{ transform: scaleY(1); } 97%{ transform: scaleY(0.12); } }
-@keyframes bounceFigure{ 0%, 100%{ transform: translateY(0px); } 50%{ transform: translateY(-2px); } }
-.sheep-body-anim{ transform-origin: 56px 78px; animation: breatheSheep 2.9s ease-in-out infinite; }
-.cow-body-anim{ transform-origin: 56px 78px; animation: breatheCow 3.8s ease-in-out infinite; }
-.eye-blink{ transform-box: fill-box; transform-origin: center; animation: blinkEyes 4.8s ease-in-out infinite; }
-.eye-blink-delay{ transform-box: fill-box; transform-origin: center; animation: blinkEyes 5.6s ease-in-out 1.8s infinite; }
-.fig-idle-even{ animation: bounceFigure 2.8s ease-in-out infinite; }
-.fig-idle-odd{ animation: bounceFigure 3.3s ease-in-out 0.9s infinite; }
-@media (prefers-reduced-motion: reduce){
-  .sheep-body-anim, .cow-body-anim, .eye-blink, .eye-blink-delay, .fig-idle-even, .fig-idle-odd{ animation: none !important; }
-  .figure-svg, .pill-btn, .orb-core-btn, .band-btn, .lamp-ridge-btn{ transition: none !important; }
-}
-html[data-reduce-motion="true"] .sheep-body-anim, html[data-reduce-motion="true"] .cow-body-anim, html[data-reduce-motion="true"] .eye-blink, html[data-reduce-motion="true"] .eye-blink-delay, html[data-reduce-motion="true"] .fig-idle-even, html[data-reduce-motion="true"] .fig-idle-odd{ animation: none !important; }
-html[data-reduce-motion="true"] .figure-svg, html[data-reduce-motion="true"] .pill-btn, html[data-reduce-motion="true"] .orb-core-btn, html[data-reduce-motion="true"] .band-btn, html[data-reduce-motion="true"] .lamp-ridge-btn{ transition: none !important; }
-html[data-high-clarity="true"]{
-  --border: rgba(28, 29, 25, 0.34);
-  --border-strong: rgba(28, 29, 25, 0.56);
-}
-html[data-theme="night"][data-high-clarity="true"]{
-  --border: rgba(242, 226, 196, 0.36);
-  --border-strong: rgba(255, 181, 71, 0.62);
-}
-html[data-high-clarity="true"] .hero, html[data-high-clarity="true"] .band-btn, html[data-high-clarity="true"] .orb-stage, html[data-high-clarity="true"] .subcard-panel, html[data-high-clarity="true"] .spaces-bench, html[data-high-clarity="true"] .family-bench, html[data-high-clarity="true"] .mascot-card, html[data-high-clarity="true"] .icon-triptych-card, html[data-high-clarity="true"] .story-moments-card, html[data-high-clarity="true"] .feature-card, html[data-high-clarity="true"] .footer-card, html[data-high-clarity="true"] .pill-btn{ border-width: 1.6px; }
-html[data-high-clarity="true"] .hero-scenery{ opacity: 0.25; }
-@media (max-width: 780px){
-  .hero-head{ padding-right: 0; }
-  .hero-sun-badge{ width: 46px; height: 46px; top: 10px; right: 10px; opacity: 0.85; }
-  .band-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .resonance-deck, .today-journey-grid, .v21-upgrades-grid, .profile-card-bench, .duo-stage, .icon-story-bench, .cards-grid{ grid-template-columns: 1fr; }
-  .capsules-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .space-tabs-row{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .nightlamp-ridges{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .choir-grid{ gap: 2px; }
-  .figure-name{ font-size: 10px; }
-}
-
-</style>
+    footer {
+      margin-top: 24px;
+      padding: 28px 0 42px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.90rem;
+    }
+    .footer-flex {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .footer-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .footer-links a:hover { color: var(--ink); }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-<header class="topbar">
-  <div class="brand-mark">
-    <div class="brand-seal" aria-hidden="true">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <circle cx="6.2" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.5"/>
-        <circle cx="17.8" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.5"/>
-        <rect x="7.8" y="6.2" width="8.4" height="12.2" rx="4.2" fill="#F25563" stroke="#231B15" stroke-width="1.6"/>
-        <circle cx="12" cy="14.2" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
-      </svg>
-    </div>
-    <span class="brand-title">咩哞 · MIE &amp; MOU</span>
-    <span class="brand-ver">v2.2.0</span>
-  </div>
-  <div class="controls">
-    <button id="toggleAudioModeBtn" class="pill-btn" type="button" aria-pressed="true" aria-label="切换立体声双耳差频与外放等时脉动模式">
-      <span id="audioModeLabel">立体声双耳</span>
-    </button>
-    <button id="toggleThemeBtn" class="pill-btn" type="button" aria-pressed="false">
-      <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="5" fill="currentColor"/>
-        <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      </svg>
-      <span id="themeLabel">切换夜灯</span>
-    </button>
-    <button id="toggleCalmBtn" class="pill-btn" type="button" aria-pressed="false" aria-label="切换减弱动态效果与 15Hz 平稳进度模式">
-      <span id="calmLabel">减弱动态 · 15Hz</span>
-    </button>
-    <button id="toggleClarityBtn" class="pill-btn" type="button" aria-pressed="false" aria-label="切换减弱透明度与增强对比度高清晰边线">
-      <span id="clarityLabel">高清晰边线</span>
-    </button>
-  </div>
-</header>
+  <header>
+    <div class="wrap nav-bar">
+      <a class="brand" href="#top" id="brandLink" aria-label="咩哞 · Mie &amp; Mou">
+        <svg width="46" height="30" viewBox="0 0 92 60" aria-hidden="true">
+          <!-- Mou behind on right with 2 curved crescent horns & snout -->
+          <path d="M55 16 Q50 5 58 12" fill="var(--svg-cow-horn)" stroke="var(--svg-ink)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M75 16 Q80 5 72 12" fill="var(--svg-cow-horn)" stroke="var(--svg-ink)" stroke-width="2" stroke-linejoin="round"/>
+          <ellipse cx="47" cy="24" rx="5" ry="3.2" fill="var(--svg-cow-body)" stroke="var(--svg-ink)" stroke-width="2"/>
+          <ellipse cx="83" cy="24" rx="5" ry="3.2" fill="var(--svg-cow-body)" stroke="var(--svg-ink)" stroke-width="2"/>
+          <rect x="48" y="14" width="34" height="31" rx="14" fill="var(--svg-cow-body)" stroke="var(--svg-ink)" stroke-width="2.2"/>
+          <ellipse cx="65" cy="34.5" rx="10.5" ry="6" fill="var(--svg-cow-snout)" stroke="var(--svg-ink)" stroke-width="1.6"/>
+          <circle cx="58.5" cy="23.5" r="2.2" fill="var(--svg-ink)"/>
+          <circle cx="71.5" cy="23.5" r="2.2" fill="var(--svg-ink)"/>
+          <!-- Mie in foreground left: drooping ears, scalloped wool, cream face, TWO symmetrical spiral horns -->
+          <ellipse cx="10" cy="30" rx="5" ry="3.2" fill="var(--svg-wool)" stroke="var(--svg-ink)" stroke-width="2"/>
+          <ellipse cx="44" cy="30" rx="5" ry="3.2" fill="var(--svg-wool)" stroke="var(--svg-ink)" stroke-width="2"/>
+          <circle cx="27" cy="29" r="16.5" fill="var(--svg-wool)" stroke="var(--svg-ink)" stroke-width="2.2"/>
+          <ellipse cx="27" cy="30" rx="10" ry="8.5" fill="var(--svg-sheep-face)" stroke="var(--svg-ink)" stroke-width="1.5"/>
+          <path d="M21 15 C16 6 9 11 14 17" fill="none" stroke="var(--svg-ink)" stroke-width="4.4" stroke-linecap="round"/>
+          <path d="M21 15 C16 6 9 11 14 17" fill="none" stroke="var(--svg-sheep-horn)" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M33 15 C38 6 45 11 40 17" fill="none" stroke="var(--svg-ink)" stroke-width="4.4" stroke-linecap="round"/>
+          <path d="M33 15 C38 6 45 11 40 17" fill="none" stroke="var(--svg-sheep-horn)" stroke-width="2.6" stroke-linecap="round"/>
+          <circle cx="23" cy="28.5" r="2.1" fill="#1C1D19"/>
+          <circle cx="31" cy="28.5" r="2.1" fill="#1C1D19"/>
+        </svg>
+        <span data-i18n="brandTitle">咩哞 · Mie &amp; Mou</span>
+      </a>
 
-<section class="hero" aria-label="咩哞 v2.2 窑陶脑波共振主舞台">
-  <div class="hero-scenery" aria-hidden="true">
-    <svg class="hero-hills-svg" viewBox="0 0 960 540" preserveAspectRatio="none">
-      <path d="M0 390 Q210 335 440 382 T960 360 L960 540 L0 540 Z" fill="var(--hill-back)" opacity="0.62"/>
-      <path d="M0 440 Q300 400 610 436 T960 418 L960 540 L0 540 Z" fill="var(--hill-front)" opacity="0.72"/>
-    </svg>
-  </div>
-  <svg class="hero-sun-badge" viewBox="0 0 72 72" aria-hidden="true">
-    <g stroke="var(--outline)" stroke-width="2.2" stroke-linecap="round" opacity="0.88">
-      <line x1="36" y1="6" x2="36" y2="12"/>
-      <line x1="36" y1="60" x2="36" y2="66"/>
-      <line x1="6" y1="36" x2="12" y2="36"/>
-      <line x1="60" y1="36" x2="66" y2="36"/>
-      <line x1="15" y1="15" x2="20" y2="20"/>
-      <line x1="52" y1="52" x2="57" y2="57"/>
-      <line x1="57" y1="15" x2="52" y2="20"/>
-      <line x1="20" y1="52" x2="15" y2="57"/>
-    </g>
-    <circle cx="36" cy="36" r="18" fill="var(--butter)" stroke="var(--outline)" stroke-width="2.2"/>
-  </svg>
-  <div class="hero-head">
-    <div>
-      <span class="book-tag">MIE &amp; MOU V2.2 · 100% 离线窑陶脑波共振工坊 · 非医疗器械</span>
-      <h1>把大脑交还给安静的声波</h1>
-      <p class="lead">《摸索台灯》同宇宙声学体验 —— 无需账号、不联网、零广告，3 秒把手机变成一团温热呼吸的声波场。佩戴耳机输出左右耳立体声双耳差频，外放自动补充等时脉动，支持长按蓄力松手触发「颅内战栗」泛音瀑布与 3 秒轻哼同频锁频。</p>
-    </div>
-  </div>
-
-  <div class="band-grid" id="bandSelectorRow" role="group" aria-label="四大脑波频段">
-    <button class="band-btn" type="button" data-band="delta" aria-pressed="false">
-      <span class="band-code">Delta · 2.5 Hz</span>
-      <span class="band-name">深潜入眠</span>
-      <span class="band-hook">沉入安静夜海 · 136 Hz</span>
-    </button>
-    <button class="band-btn" type="button" data-band="theta" aria-pressed="false">
-      <span class="band-code">Theta · 6.0 Hz</span>
-      <span class="band-name">漂浮放空</span>
-      <span class="band-hook">给思绪松绑放空 · 174 Hz</span>
-    </button>
-    <button class="band-btn active" type="button" data-band="alpha" aria-pressed="true">
-      <span class="band-code">Alpha · 10.0 Hz</span>
-      <span class="band-name">丝滑心流</span>
-      <span class="band-hook">温和专注而不紧绷 · 216 Hz</span>
-    </button>
-    <button class="band-btn" type="button" data-band="gamma" aria-pressed="false">
-      <span class="band-code">Gamma · 40.0 Hz</span>
-      <span class="band-name">灵感通透</span>
-      <span class="band-hook">清醒敏锐的通透时刻 · 256 Hz</span>
-    </button>
-  </div>
-
-  <div class="resonance-deck">
-    <div class="orb-stage" id="orbStage">
-      <div class="orb-stage-top">
-        <div>
-          <strong id="orbBandHeadline" style="font-size:15px">丝滑心流 · 10.0 Hz</strong>
-          <div id="orbCarrierSubline" class="bench-sub">载波 216 Hz · 立体声双耳 · 0.065 Hz 空间微漂移</div>
-        </div>
-        <button id="toggleBreathGuideBtn" class="pill-btn soft-celadon" type="button" aria-pressed="true" style="min-height:40px;padding:6px 12px;font-size:11.5px">
-          <span id="breathGuideBtnLabel">呼吸环 4s/6s · 已开</span>
-        </button>
-      </div>
-
-      <div class="orb-visual-wrap" id="orbVisualWrap">
-        <canvas id="orbWaveCanvas" width="320" height="250" aria-hidden="true"></canvas>
-        <button id="orbToggleBtn" class="orb-core-btn" type="button" aria-label="点击开启或暂停脑波共振球">
-          <svg class="orb-duo-mini" viewBox="0 0 120 68" aria-hidden="true">
-            <g transform="translate(8,4) scale(0.45)">
-              <circle cx="43" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
-              <circle cx="69" cy="48" r="18" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
-              <ellipse cx="56" cy="46" rx="23" ry="20" fill="#FFFDF7" stroke="#231B15" stroke-width="4"/>
-              <ellipse cx="56" cy="50" rx="16" ry="12" fill="#F3E6D4"/>
-              <path d="M46 28 C41 14, 27 17, 30 30" fill="none" stroke="#E59900" stroke-width="5" stroke-linecap="round"/>
-              <path d="M66 28 C71 14, 85 17, 82 30" fill="none" stroke="#E59900" stroke-width="5" stroke-linecap="round"/>
-              <circle cx="48" cy="48" r="3.4" fill="#231B15"/><circle cx="64" cy="48" r="3.4" fill="#231B15"/>
-            </g>
-            <g transform="translate(62,4) scale(0.45)">
-              <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#231B15" stroke-width="4"/>
-              <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="3"/>
-              <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="3"/>
-              <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD"/>
-              <circle cx="46" cy="44" r="3.4" fill="#231B15"/><circle cx="66" cy="44" r="3.4" fill="#231B15"/>
-            </g>
+      <nav class="nav-actions" id="primaryNav" aria-label="主导航">
+        <a class="nav-link" href="#pillars" data-i18n="navPillars">三页架构</a>
+        <a class="nav-link" href="#safety" data-i18n="navSafety">非医疗声明</a>
+        <a class="nav-link" href="privacy.html" data-i18n="navPrivacy">隐私声明</a>
+        <button id="langToggle" class="pill-btn" type="button" aria-label="Switch to English">EN</button>
+        <button id="themeToggle" class="pill-btn" type="button" aria-pressed="false" aria-label="切换夜灯主题">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/>
           </svg>
-          <span class="orb-core-hz" id="orbCenterHz">10.0 Hz · Alpha</span>
-          <span class="orb-core-status" id="orbCenterStatus">轻点开启 · 按住体验战栗</span>
+          <span data-i18n="themeBtn">夜色</span>
         </button>
-      </div>
-
-      <div class="orb-controls-bar">
-        <button id="frissonHoldBtn" class="pill-btn frisson-btn" type="button" aria-label="按住蓄力松手即发颅内战栗和声瀑布">
-          <span id="frissonBtnLabel">按住蓄力 · 松手战栗</span>
-        </button>
-        <button id="orbPlayBtn" class="pill-btn" type="button" aria-pressed="false" style="background:var(--prominent);color:#FFFFFF;border-color:transparent">
-          <span id="orbPlayLabel">开启声场</span>
-        </button>
-      </div>
-
-      <div class="freq-slider-row">
-        <label for="beatSlider" class="bench-sub" style="white-space:nowrap">无级差频</label>
-        <input id="beatSlider" type="range" min="1.5" max="42.0" step="0.1" value="10.0" aria-label="调节脑波差频赫兹数" />
-        <span id="beatSliderReadout" class="bench-sub" style="min-width:60px;text-align:right;font-variant-numeric:tabular-nums">10.0 Hz</span>
-      </div>
+      </nav>
     </div>
+  </header>
 
-    <div class="wash-hum-panel">
-      <div class="subcard-panel">
-        <div class="bench-label">
-          <span>声床质地（0.065 Hz 空间微漂移）</span>
-          <span class="bench-sub" id="washActiveLabel">粉红微风</span>
+  <main id="top" class="wrap">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">
+          <span data-i18n="eyebrow">100% 本机离线 · iOS 原生声学艺术工坊</span>
         </div>
-        <div class="sb-controls-row" id="washButtons" role="group" aria-label="声床质地选择">
-          <button class="sb-chip" type="button" data-wash="rainBrown" aria-pressed="false">棕红暖雨</button>
-          <button class="sb-chip active" type="button" data-wash="breezePink" aria-pressed="true">粉红微风</button>
-          <button class="sb-chip" type="button" data-wash="kilnOvertone" aria-pressed="false">窑陶泛音</button>
-          <button class="sb-chip" type="button" data-wash="pureWave" aria-pressed="false">纯净双波</button>
+        <h1 data-i18n="heroTitle">棉纸之上，与咩哞听见自己的平稳节律。</h1>
+        <p class="lead" data-i18n="heroLead">
+          零联网、零账户、零追踪。以双总线干声立体声差频、个人轻哼基频调谐与 28 首双语室内乐范例，陪你在白昼聚焦与夜晚静息之间从容换气。
+        </p>
+        <div class="hero-meta">
+          <span class="meta-tag" data-i18n="metaOffline">离线单机运行</span>
+          <span class="meta-tag" data-i18n="metaAudio">44 声部室内乐合成</span>
+          <span class="meta-tag" data-i18n="metaLamp">OLED 琥珀夜灯模式</span>
         </div>
-        <p class="bench-sub" id="washDescText" style="margin:0;line-height:1.45">清透轻盈的粉色松风底噪，抚平环境杂音；左右核心双耳载波严格锁稳不漂移。</p>
       </div>
 
-      <div class="subcard-panel">
-        <div class="bench-label">
-          <span>3 秒轻哼同频 · 人声基频锁频</span>
-          <span class="bench-sub" id="humLockReadout">待捕捉 / 预设直选</span>
-        </div>
-        <p class="bench-sub" style="margin:0;line-height:1.45">端侧 YIN 基频提取后自动八度折叠至 120–260 Hz 舒适共鸣区；拒绝麦克风权限时亦可一键套用三档人声基频。</p>
-        <div class="sb-controls-row" id="humPresetButtons" role="group" aria-label="人声共振基频预设">
-          <button class="sb-chip" type="button" data-hum="136.1" aria-pressed="false">低沉 136 Hz</button>
-          <button class="sb-chip" type="button" data-hum="174.0" aria-pressed="false">温润 174 Hz</button>
-          <button class="sb-chip" type="button" data-hum="216.0" aria-pressed="false">清澈 216 Hz</button>
-        </div>
-        <button id="humScanBtn" class="pill-btn soft-celadon" type="button" style="justify-content:center">
-          <span id="humScanBtnLabel">模拟 3 秒轻哼同频锁定（164 Hz）</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="spaces-bench" aria-label="声场、声库与工坊三页原生窑陶工作台体验">
-  <div class="bench-label">
-    <span>v2.2.0 原创窑陶三页架构（声场 · 声库 · 工坊）</span>
-    <span class="bench-sub" id="spaceMetaReadout">打开即入声场 · 锁屏 Now Playing · 闭眼夜灯直达</span>
-  </div>
-  <div class="space-tabs-row" role="tablist" aria-label="应用空间架构切换">
-    <button class="space-tab-btn" type="button" role="tab" aria-selected="true" data-space="field">1 · 声场</button>
-    <button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="library">2 · 声库</button>
-    <button class="space-tab-btn" type="button" role="tab" aria-selected="false" data-space="atelier">3 · 工坊</button>
-  </div>
-
-  <div class="space-stage-card" id="spaceStagePanel">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-      <strong id="spacePanelTitle" style="font-size:14.5px">声场（默认直达）：活体呼吸驻波球 + 锁屏 Now Playing + 0.065 Hz 空间微漂移</strong>
-      <span id="spacePanelStatus" style="font-size:11.5px;font-weight:800;color:var(--prominent);background:var(--paper);padding:3px 9px;border-radius:6px">v2.2 乐器直达</span>
-    </div>
-    <p id="spacePanelDesc" style="margin:0;font-size:12.5px;font-weight:600;color:var(--sub)">打开应用直接进入活体窑陶共振盆：轻点播停、左右横滑调频、长按 1.5s 松手触发和声战栗，配 60fps 呼吸指引环与 10 组窑陶轻叩声效。</p>
-
-    <div class="space-pane active" data-pane="field">
-      <div class="v21-upgrades-grid">
-        <div class="upgrade-tile">
-          <strong>锁屏 Now Playing 控制</strong>
-          <p class="bench-sub">生成 256×256 窑陶光环专辑封面，锁屏与控制中心直接播停与切频。</p>
-        </div>
-        <div class="upgrade-tile">
-          <strong>有机驻波流体呼吸环</strong>
-          <p class="bench-sub">60fps 音频包络驱动流体光晕与 4 秒吸气 / 6 秒呼气引导（支持 15Hz 减弱动态）。</p>
-        </div>
-        <div class="upgrade-tile">
-          <strong>0.065 Hz 空间微漂移</strong>
-          <p class="bench-sub">核心左右双耳载波锁稳不飘，仅柔和摇曳纯五度泛音与暖雨声床。</p>
-        </div>
-        <div class="upgrade-tile">
-          <strong>10 组窑陶轻叩微变奏</strong>
-          <p class="bench-sub">每次点按自动轮换微差音高与木陶质地，彻底消除连按电子疲惫感。</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-pane" data-pane="library">
-      <div class="nightlamp-preview" aria-label="闭眼夜灯直触声场条交互预览">
-        <div class="nightlamp-head">
-          <span style="font-size:12.5px;font-weight:900">闭眼夜灯触觉场（#070B1A 零蓝光盲操音脊）</span>
-          <div class="nightlamp-beacon">
-            <span id="nightLampPitchLabel">轻触音脊显映唱名</span>
-            <span class="sustain-dots" aria-hidden="true">
-              <span class="sustain-dot" id="sustainDot0"></span>
-              <span class="sustain-dot" id="sustainDot1"></span>
-              <span class="sustain-dot" id="sustainDot2"></span>
-            </span>
+      <div class="studio-card" aria-labelledby="studioHeading">
+        <h2 id="studioHeading" class="sr-only" data-i18n="studioHeading">在线声学共振交互预览</h2>
+        <div class="canvas-shell" id="vesselPanel" role="tabpanel" aria-labelledby="tab-alpha" style="cursor: ew-resize;">
+          <canvas id="waveCanvas" aria-hidden="true"></canvas>
+          <div class="vessel-readout">
+            <div class="vessel-hz" id="hzValue">10.0 Hz</div>
+            <div class="vessel-band" id="bandTitle">Alpha · 松弛心流</div>
+            <div class="vessel-sub" id="washReadout">溪风粉红 · 载波 216 Hz</div>
           </div>
         </div>
-        <div class="nightlamp-ridges" id="nightLampRidges">
-          <button class="lamp-ridge-btn" type="button" data-idx="0" data-deg="1" data-hz="261.63" data-pill="1 · Do"><span>1</span><span>Do</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="1" data-deg="2" data-hz="293.66" data-pill="2 · Re"><span>2</span><span>Re</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="2" data-deg="3" data-hz="329.63" data-pill="3 · Mi"><span>3</span><span>Mi</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="3" data-deg="4" data-hz="349.23" data-pill="4 · Fa"><span>4</span><span>Fa</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="4" data-deg="5" data-hz="392.00" data-pill="5 · Sol"><span>5</span><span>Sol</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="5" data-deg="6" data-hz="440.00" data-pill="6 · La"><span>6</span><span>La</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="6" data-deg="7" data-hz="493.88" data-pill="7 · Ti"><span>7</span><span>Ti</span></button>
-          <button class="lamp-ridge-btn" type="button" data-idx="7" data-deg="1" data-hz="523.25" data-pill="1↑ · Do↑"><span>1↑</span><span>Do↑</span></button>
+
+        <div class="controls-grid" id="bandTabs" role="tablist" aria-label="选择声波频段">
+          <button class="band-btn" id="tab-delta" role="tab" aria-selected="false" aria-controls="vesselPanel" data-band="delta" type="button" tabindex="-1">
+            <span>Delta</span><span class="sub" data-i18n="subDelta">2.5 Hz 深睡</span>
+          </button>
+          <button class="band-btn" id="tab-theta" role="tab" aria-selected="false" aria-controls="vesselPanel" data-band="theta" type="button" tabindex="-1">
+            <span>Theta</span><span class="sub" data-i18n="subTheta">6.0 Hz 浅眠</span>
+          </button>
+          <button class="band-btn" id="tab-alpha" role="tab" aria-selected="true" aria-controls="vesselPanel" data-band="alpha" type="button" tabindex="0">
+            <span>Alpha</span><span class="sub" data-i18n="subAlpha">10 Hz 心流</span>
+          </button>
+          <button class="band-btn" id="tab-gamma" role="tab" aria-selected="false" aria-controls="vesselPanel" data-band="gamma" type="button" tabindex="-1">
+            <span>Gamma</span><span class="sub" data-i18n="subGamma">40 Hz 清澈</span>
+          </button>
         </div>
-      </div>
 
-      <div class="capsules-grid" id="frissonCapsulesGrid" aria-label="8 首和声战栗声波乐章"></div>
-    </div>
-
-    <div class="space-pane" data-pane="atelier">
-      <div class="profile-card-bench">
-        <div class="resonance-card-preview" id="resonanceCardPreview">
-          <div class="rc-top">MIE &amp; MOU · BRAINWAVE RESONANCE CARD</div>
-          <svg id="resonanceCardSvg" width="100%" height="118" viewBox="0 0 220 118" aria-hidden="true"></svg>
-          <strong id="rcBandTitle" style="font-size:16px">丝滑心流 · 10.0 Hz Alpha</strong>
-          <span id="rcCarrierLine" class="bench-sub">双耳载波 216 Hz · 温和专注而不紧绷</span>
-          <span id="rcStatsLine" class="rc-stat-line">累计共振 0 分钟 · 和声绽放 0 次</span>
-          <span class="bench-sub" style="font-size:10.5px">咩哞 · MIE &amp; MOU · 100% OFFLINE · 非医疗声学放松</span>
+        <div class="action-row">
+          <button id="playToggle" class="pill-btn primary primary-flex" type="button" aria-pressed="false" data-i18n="playBtn">开启离线试听</button>
+          <button id="frissonBtn" class="pill-btn primary-flex" type="button">
+            <span class="charge-fill" id="frissonFill"></span>
+            <span data-i18n="frissonBtn">按住释放和声</span>
+          </button>
+          <button id="routeToggle" class="pill-btn" type="button" aria-pressed="true" data-i18n="routeHeadphone">耳机双耳差频</button>
         </div>
-        <div class="profile-companion-col">
-          <div class="stats-trio">
-            <div class="stat-pill"><strong id="statMinsVal">0</strong><span>本次分钟</span></div>
-            <div class="stat-pill"><strong id="statFrissonVal">0</strong><span>战栗绽放</span></div>
-            <div class="stat-pill"><strong id="statBandVal">Alpha</strong><span>当前频段</span></div>
-          </div>
-          <div class="companion-quote">
-            <strong>窑陶声学工坊寄语</strong>
-            <p id="companionQuoteText" class="bench-sub" style="margin:4px 0 0;line-height:1.5">完全离线、不扰视线的窑陶声波工作台，随时为你留一片安静留白。</p>
-          </div>
-          <button id="exportCardPreviewBtn" class="pill-btn soft-celadon" type="button">刷新日夜共振纪念卡状态（端内导出 1080×1350 PNG）</button>
-        </div>
+
+        <div class="wash-row" id="washGroup" role="group" aria-label="声床质地"></div>
+        <div id="liveAnnounce" class="sr-only" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="pillars">
+      <div class="sec-head">
+        <h2 data-i18n="pillarsTitle">三页一体的纯声学体验</h2>
+        <p data-i18n="pillarsLead">对应 iOS 端「声场 / 声库 / 工坊」统一架构，打开即直达共振驻波盘。</p>
+      </div>
+      <div class="grid-3" id="pillarsGrid"></div>
+    </section>
+
+    <section id="details">
+      <div class="sec-head">
+        <h2 data-i18n="techTitle">手工艺质感与隐私边界</h2>
+        <p data-i18n="techLead">所有数学运算、音高追踪与静心明信片渲染均在设备端直接完成。</p>
+      </div>
+      <div class="grid-2" id="detailsGrid"></div>
+    </section>
+
+    <section id="safety">
+      <div class="disclaimer-box">
+        <strong data-i18n="safetyStrong">非医疗艺术边界与收听留意（App Store 1.4.1）：</strong>
+        <span data-i18n="safetyText">咩哞（Mie &amp; Mou）为纯离线感官声音艺术与日常放松陪伴工具，非医疗器械，不用于诊断、治疗、治愈或预防任何生理或心理疾病。若您存在光敏/声敏反应、癫痫病史、耳鸣发作或佩戴植入式助听装置，请在声床抽屉内选用「纯自然声床（零声波脉冲）」或遵医嘱收听 40 Hz 频段；驾驶与机械作业时切勿开启睡前静息或夜灯模式。</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-flex">
+      <div data-i18n="footerCopy">咩哞 · Mie &amp; Mou (app.chimmo) · 100% 本地离线声学工坊</div>
+      <div class="footer-links">
+        <a href="privacy.html" data-i18n="linkPrivacy">隐私声明</a>
+        <a href="terms.html" data-i18n="linkTerms">使用条款</a>
+        <a href="licenses.html" data-i18n="linkLicenses">公版致谢</a>
       </div>
     </div>
-  </div>
-</section>
+  </footer>
 
-<section class="family-bench" aria-label="咩哞双主角与七小只声学守护家族">
-  <div class="bench-label">
-    <span>同宇宙守护家族 · 咩、哞与七声陶瓷小偶（1–7 音级点按试听）</span>
-    <span class="bench-sub" id="choirStatus">轻点任意角色试听纯正窑陶和鸣</span>
-  </div>
-  <div class="duo-stage">
-    <button id="mieCard" class="mascot-card mie-theme" type="button" aria-label="小羊咩，点击试听高音主旋律">
-      <span class="wave-badge" aria-hidden="true">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-          <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-          <path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-        <ellipse cx="56" cy="83" rx="28" ry="4.5" fill="rgba(35,27,21,0.16)"/>
-        <g class="sheep-body-anim">
-          <g id="mieWaves" opacity="0">
-            <path d="M24 23 A12 12 0 0 0 24 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
-            <path d="M88 23 A12 12 0 0 1 88 41" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
-          </g>
-          <ellipse cx="29" cy="48" rx="9" ry="5.5" transform="rotate(-18 29 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
-          <ellipse cx="83" cy="48" rx="9" ry="5.5" transform="rotate(18 83 48)" fill="#E7DDD0" stroke="#231B15" stroke-width="1.8"/>
-          <g stroke="#231B15" stroke-width="3.6" fill="none">
-            <circle cx="43" cy="48" r="18"/><circle cx="69" cy="48" r="18"/>
-            <ellipse cx="56" cy="41" rx="23" ry="20"/><ellipse cx="56" cy="54" rx="26" ry="20"/>
-          </g>
-          <circle cx="43" cy="48" r="18" fill="#FFFDF7"/><circle cx="69" cy="48" r="18" fill="#FFFDF7"/>
-          <ellipse cx="56" cy="41" rx="23" ry="20" fill="#FFFDF7"/><ellipse cx="56" cy="54" rx="26" ry="20" fill="#FFFDF7"/>
-          <ellipse cx="56" cy="50" rx="18" ry="14" fill="#F3E6D4" stroke="#231B15" stroke-width="1.4"/>
-          <path d="M49 28 C44 13, 27 16, 30 30 C32 37, 41 35, 42 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
-          <path d="M63 28 C68 13, 85 16, 82 30 C80 37, 71 35, 70 29" fill="none" stroke="#E59900" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="44" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
-          <circle cx="68" cy="55" r="3" fill="#E87A82" opacity="0.65"/>
-          <g id="mieOpenEyes" class="eye-blink">
-            <circle class="pupil" cx="48" cy="48" r="3.4" fill="#231B15"/><circle cx="46.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-            <circle class="pupil" cx="64" cy="48" r="3.4" fill="#231B15"/><circle cx="62.9" cy="46.9" r="1.1" fill="#FFFFFF"/>
-          </g>
-          <g id="mieSingEyes" opacity="0">
-            <path d="M44.5 49 Q48 44 51.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
-            <path d="M60.5 49 Q64 44 67.5 49" fill="none" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/>
-          </g>
-          <ellipse cx="47" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
-          <ellipse cx="65" cy="77" rx="5.5" ry="3.4" fill="#5B4A42" stroke="#231B15" stroke-width="1.3"/>
-        </g>
-      </svg>
-      <p class="mascot-name">咩 · Mie（云朵小羊）</p>
-      <p class="mascot-role">清亮泛音领唱 · 共振球双子守护</p>
-    </button>
+  <script>
+    (() => {
+      const BANDS = {
+        delta: { beat: 2.5, carrier: 136.1, lobes: 4, zh: "Delta · 深睡休整", en: "Delta · Deep Settling", colorLight: "#6246A8", colorNight: "#BAA3FF" },
+        theta: { beat: 6.0, carrier: 174.0, lobes: 6, zh: "Theta · 浅眠冥想", en: "Theta · Soft Drift", colorLight: "#A63C28", colorNight: "#F29476" },
+        alpha: { beat: 10.0, carrier: 216.0, lobes: 8, zh: "Alpha · 松弛心流", en: "Alpha · Calm Flow", colorLight: "#2B6865", colorNight: "#7ECBC5" },
+        gamma: { beat: 40.0, carrier: 256.0, lobes: 10, zh: "Gamma · 清澈聚焦", en: "Gamma · Crisp Focus", colorLight: "#256291", colorNight: "#78BAFA" }
+      };
 
-    <button id="mouCard" class="mascot-card mou-theme" type="button" aria-label="小牛哞，点击试听低音根音共鸣">
-      <span class="wave-badge" aria-hidden="true">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-          <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
-          <path d="M17 9a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <svg class="mascot-svg" viewBox="0 0 112 92" aria-hidden="true">
-        <ellipse cx="56" cy="83" rx="31" ry="4.5" fill="rgba(35,27,21,0.16)"/>
-        <g class="cow-body-anim">
-          <ellipse cx="26" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
-          <ellipse cx="86" cy="43" rx="9" ry="5" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
-          <rect x="27" y="29" width="58" height="49" rx="24" fill="#8F5F4E" stroke="#231B15" stroke-width="1.8"/>
-          <path d="M44 30 Q32 27 30 15 Q38 22 40 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
-          <path d="M68 30 Q80 27 82 15 Q74 22 72 31 Z" fill="#F3E4CB" stroke="#231B15" stroke-width="1.6"/>
-          <ellipse cx="56" cy="61" rx="20" ry="11" fill="#F6EBDD" stroke="#231B15" stroke-width="1.4"/>
-          <ellipse cx="48" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-          <ellipse cx="64" cy="60" rx="2.4" ry="1.8" fill="#5A3D34"/>
-          <g class="eye-blink-delay">
-            <circle class="pupil" cx="46" cy="44" r="3.4" fill="#231B15"/><circle cx="44.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-            <circle class="pupil" cx="66" cy="44" r="3.4" fill="#231B15"/><circle cx="64.9" cy="42.9" r="1.1" fill="#FFFFFF"/>
-          </g>
-          <ellipse cx="43" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
-          <ellipse cx="69" cy="77" rx="6" ry="3.4" fill="#452B23" stroke="#231B15" stroke-width="1.3"/>
-        </g>
-      </svg>
-      <p class="mascot-name">哞 · Mou（可可小牛）</p>
-      <p class="mascot-role">温暖低八度托底 · 暖雨声床伴眠</p>
-    </button>
-  </div>
-  <div class="choir-shelf">
-    <div class="shelf-stage">
-      <div class="choir-grid" id="choirGrid"></div>
-      <div class="meadow-strip" aria-hidden="true"></div>
-    </div>
-  </div>
-</section>
+      const WASHES = [
+        { id: "rain", zh: "檐雨棕红", en: "Roofline Brown", cutoff: 340, gain: 0.16, pure: false },
+        { id: "breeze", zh: "溪风粉红", en: "Stream Pink", cutoff: 950, gain: 0.12, pure: false },
+        { id: "kiln", zh: "陶窑泛音", en: "Kiln Fifths", cutoff: 620, gain: 0.08, pure: false },
+        { id: "pure", zh: "纯自然声床", en: "Pure Wash", cutoff: 420, gain: 0.15, pure: true }
+      ];
 
-<section class="icon-story-bench" aria-label="1-3-5 应用图标与三态视觉系统">
-  <div class="icon-triptych-card">
-    <div class="bench-label">
-      <span>1-3-5 三态应用图标（v2.2.0 · 29pt 高辨识）</span>
-      <span class="bench-sub">日光 / 星夜 / 单色</span>
-    </div>
-    <div class="icon-triptych-row">
-      <div class="appicon-tile">
-        <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
-          <rect width="100" height="100" fill="#F5EFE2"/>
-          <path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#C2E4D2"/>
-          <g transform="translate(50 51) scale(1.13) translate(-50 -55)">
-            <circle cx="24" cy="60" r="14" fill="#E64980" stroke="#231B15" stroke-width="2.4"/>
-            <circle cx="24" cy="48" r="2.4" fill="#FFB94E" stroke="#231B15" stroke-width="1.3"/>
-            <circle cx="85" cy="54" r="8" fill="#0F4C8A" stroke="#231B15" stroke-width="2.2"/>
-            <ellipse cx="75" cy="60" rx="12" ry="15" fill="#2E7DB2" stroke="#231B15" stroke-width="2.4"/>
-            <rect x="41" y="29" width="6" height="14" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2.2"/>
-            <circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.7"/>
-            <rect x="53" y="30" width="6" height="13" rx="3" fill="#F25563" stroke="#231B15" stroke-width="2.2"/>
-            <circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.7"/>
-            <rect x="33" y="42" width="34" height="35" rx="16" fill="#F25563" stroke="#231B15" stroke-width="2.6"/>
-            <circle cx="44" cy="55" r="2.4" fill="#231B15"/><circle cx="56" cy="55" r="2.4" fill="#231B15"/>
-            <circle cx="47" cy="67" r="5.4" fill="#FFFDF7" stroke="#231B15" stroke-width="1.8"/>
-            <circle cx="47" cy="67" r="2.6" fill="#FFB94E"/>
-          </g>
-        </svg>
-        <span>日光纸感</span>
-      </div>
-      <div class="appicon-tile">
-        <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
-          <rect width="100" height="100" fill="#11193A"/>
-          <path d="M82 11 C74 13 74 23 82 25 C78 22 78 14 82 11 Z" fill="#FFB94E"/>
-          <path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#1E2E63"/>
-          <g transform="translate(50 51) scale(1.13) translate(-50 -55)">
-            <circle cx="24" cy="60" r="14" fill="#F25A90" stroke="#070B1A" stroke-width="2.4"/>
-            <circle cx="85" cy="54" r="8" fill="#1B3C63" stroke="#070B1A" stroke-width="2.2"/>
-            <ellipse cx="75" cy="60" rx="12" ry="15" fill="#7EC8E3" stroke="#070B1A" stroke-width="2.4"/>
-            <rect x="41" y="29" width="6" height="14" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2.2"/>
-            <circle cx="44" cy="27" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.7"/>
-            <rect x="53" y="30" width="6" height="13" rx="3" fill="#F55D6B" stroke="#070B1A" stroke-width="2.2"/>
-            <circle cx="56" cy="28" r="3.6" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.7"/>
-            <rect x="33" y="42" width="34" height="35" rx="16" fill="#F55D6B" stroke="#070B1A" stroke-width="2.6"/>
-            <circle cx="44" cy="55" r="2.4" fill="#090C1C"/><circle cx="56" cy="55" r="2.4" fill="#090C1C"/>
-            <circle cx="47" cy="67" r="6" fill="#FFB94E" fill-opacity="0.32"/>
-            <circle cx="47" cy="67" r="5.4" fill="#FFFDF7" stroke="#070B1A" stroke-width="1.8"/>
-            <circle cx="47" cy="67" r="2.6" fill="#FFB94E"/>
-          </g>
-        </svg>
-        <span>星夜守望</span>
-      </div>
-      <div class="appicon-tile">
-        <svg class="appicon-squircle" viewBox="0 0 100 100" aria-hidden="true">
-          <rect width="100" height="100" fill="#0C0C0E"/>
-          <path d="M0 75 Q50 67 100 75 L100 100 L0 100 Z" fill="#2C2C33"/>
-          <g transform="translate(50 51) scale(1.13) translate(-50 -55)">
-            <circle cx="24" cy="60" r="14" fill="#8E8E98" stroke="#0C0C0E" stroke-width="2.4"/>
-            <circle cx="85" cy="54" r="8" fill="#64646E" stroke="#0C0C0E" stroke-width="2.2"/>
-            <ellipse cx="75" cy="60" rx="12" ry="15" fill="#AEAEB8" stroke="#0C0C0E" stroke-width="2.4"/>
-            <rect x="41" y="29" width="6" height="14" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.2"/>
-            <circle cx="44" cy="27" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.7"/>
-            <rect x="53" y="30" width="6" height="13" rx="3" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.2"/>
-            <circle cx="56" cy="28" r="3.6" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.7"/>
-            <rect x="33" y="42" width="34" height="35" rx="16" fill="#F5F5F7" stroke="#0C0C0E" stroke-width="2.6"/>
-            <circle cx="44" cy="55" r="2.4" fill="#0C0C0E"/><circle cx="56" cy="55" r="2.4" fill="#0C0C0E"/>
-            <circle cx="47" cy="67" r="5.4" fill="#D8D8E0" stroke="#0C0C0E" stroke-width="1.8"/>
-            <circle cx="47" cy="67" r="2.6" fill="#3A3A42"/>
-          </g>
-        </svg>
-        <span>单色着染</span>
-      </div>
-    </div>
-  </div>
+      const PILLAR_PATHS = [
+        // Standing wave concentric icon
+        '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 2.5"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.1" fill="currentColor"/>',
+        // Sound Library 2x2 kiln tiles icon
+        '<rect x="4" y="4" width="6.5" height="6.5" rx="2" fill="currentColor"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.65"/>',
+        // Night Lamp crescent + halo icon
+        '<path d="M13.5 5a7 7 0 1 0 5.5 11.3A5.8 5.8 0 0 1 13.5 5Z" fill="currentColor"/><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.5 3" opacity="0.55"/>'
+      ];
 
-  <div class="story-moments-card">
-    <div class="bench-label">
-      <span>12 套离线脑波配方 · 声景档案</span>
-      <span class="bench-sub">一键载入上方声场</span>
-    </div>
-    <div class="preset-pills-wrap" id="presetPillsWrap"></div>
-  </div>
-</section>
+      const PILLARS = [
+        {
+          id: "field",
+          zhTitle: "01 声场 · 共振主盘",
+          zhBody: "微调 1.5–42 Hz 节律，双声总线隔离耳机纯左/右双耳差频与混响，外放自动切换等时脉冲，并可开启零脉冲纯自然声床与轻哼同频。",
+          enTitle: "01 Field · Standing-Wave Dial",
+          enBody: "Slide across 1.5-42 Hz with dry stereo binaural isolation, automatic speaker pulses, zero-pulse ambient wash mode, and hum tuning."
+        },
+        {
+          id: "library",
+          zhTitle: "02 声库 · 配方与双语室乐",
+          zhBody: "依昼夜时段推荐 12 组质感配方与 8 枚古典战栗胶囊，全面支持中英双语检索全部 28 首毛毡钢琴、大提琴与竖琴微声学范例。",
+          enTitle: "02 Library · Scenes & Bilingual Archive",
+          enBody: "Discover 12 circadian scenes, 8 single-tap harmonic capsules, and a fully bilingual 28-piece public-domain and original chamber library."
+        },
+        {
+          id: "atelier",
+          zhTitle: "03 工坊 · 夜灯与明信片",
+          zhBody: "本地记录专注时长与常停频段，进入纯黑 OLED 琥珀夜灯盲操模式，或单次离线导出 1080×1350 静态 PNG 共振明信片。",
+          enTitle: "03 Atelier · Night Lamp & Cards",
+          enBody: "Review local-only listening insights, launch pure black #000000 Night Lamp control, or export 1080x1350 static PNG keepsake cards offline."
+        }
+      ];
 
-<section class="cards-grid">
-  <article class="feature-card">
-    <div class="feature-chip" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2.2"/>
-        <circle cx="12" cy="12" r="3" fill="currentColor"/>
-      </svg>
-    </div>
-    <h2>零堆分配实时脑波 DSP</h2>
-    <p>全自主研发 <code>AVAudioEngine</code> 渲染线程，无锁运行双耳差频、外放等时脉动、xorshift64* 暖雨声床与宽立体声颅内战栗瀑布，支持锁屏后台收听。</p>
-  </article>
-  <article class="feature-card">
-    <div class="feature-chip" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-        <path d="M4 15c3-7 6-7 8 0s5 7 8 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <h2>CoreHaptics 与 15Hz 无障碍</h2>
-    <p>频段磁吸刻度、蓄力微颤与 0.42s 释然长呼触觉脉冲；全面适配 VoiceOver 频率微调转子、15Hz 减弱动态与减弱透明度高清晰边线。</p>
-  </article>
-  <article class="feature-card">
-    <div class="feature-chip" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="6" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2.2"/>
-        <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <h2>100% 离线与非医疗声明</h2>
-    <p>零账号、零网络请求（经 CI 零联网探针核验）、零追踪。仅提供声学放松、专注氛围与感官艺术体验，非医疗器械。</p>
-  </article>
-</section>
+      const DETAILS = [
+        {
+          zhTitle: "YIN-vDSP 本机轻哼基频校音",
+          zhBody: "使用纯 Swift 与 Accelerate/vDSP 在内存里瞬间估算轻哼声基频，不存储录音、不含任何外部神经网络模型或网络请求。",
+          enTitle: "Pure Swift YIN-vDSP Vocal Tuning",
+          enBody: "Extracts your natural hum pitch strictly in RAM with Accelerate/vDSP — no audio files written to disk and zero external ML binaries."
+        },
+        {
+          zhTitle: "双项 Privacy Manifest 声明",
+          zhBody: "应用零联网请求、零追踪、零广告；仅合法声明 CA92.1（用户偏好）与 35F9.1（音频时钟单调计时），相册权限仅主动存卡触发。",
+          enTitle: "Minimal Privacy Manifest Footprint",
+          enBody: "Zero analytics or network domains. Declares only CA92.1 (UserDefaults) and 35F9.1 (SystemBootTime monotonic audio cadence)."
+        }
+      ];
 
-<footer class="footer-card">
-  <span>100% 本机离线运行 · 无账号 · 无广告 · 非医疗器械（Guideline 1.4.1 合规）</span>
-  <div class="links">
-    <a href="privacy.html">隐私政策</a>
-    <a href="terms.html">使用条款</a>
-    <a href="licenses.html">开源许可</a>
-    <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
-    <a href="https://github.com/mjuvdeysii/chimmo/issues">问题反馈</a>
-  </div>
-</footer>
-</div>
+      const COPY = {
+        zh: {
+          brandTitle: "咩哞 · Mie & Mou",
+          navPillars: "三页架构",
+          navSafety: "非医疗声明",
+          navPrivacy: "隐私声明",
+          navLabel: "主导航",
+          langLabel: "Switch to English",
+          themeLabel: "切换夜灯主题",
+          tabListLabel: "选择声波频段",
+          washGroupLabel: "声床质地",
+          studioHeading: "在线声学共振交互预览",
+          themeBtn: "夜色",
+          themeDayBtn: "日纸",
+          eyebrow: "100% 本机离线 · iOS 原生声学艺术工坊",
+          heroTitle: "棉纸之上，与咩哞听见自己的平稳节律。",
+          heroLead: "零联网、零账户、零追踪。以双总线干声立体声差频、个人轻哼基频调谐与 28 首双语室内乐范例，陪你在白昼聚焦与夜晚静息之间从容换气。",
+          metaOffline: "离线单机运行",
+          metaAudio: "44 声部室内乐合成",
+          metaLamp: "OLED 琥珀夜灯模式",
+          subDelta: "2.5 Hz 深睡",
+          subTheta: "6.0 Hz 浅眠",
+          subAlpha: "10 Hz 心流",
+          subGamma: "40 Hz 清澈",
+          playBtn: "开启离线试听",
+          pauseBtn: "暂停试听",
+          frissonBtn: "按住释放和声",
+          frissonCharging: "蓄力和声中...",
+          routeHeadphone: "耳机双耳差频",
+          routeSpeaker: "外放等时脉动",
+          pillarsTitle: "三页一体的纯声学体验",
+          pillarsLead: "对应 iOS 端「声场 / 声库 / 工坊」统一架构，打开即直达共振驻波盘。",
+          techTitle: "手工艺质感与隐私边界",
+          techLead: "所有数学运算、音高追踪与静心明信片渲染均在设备端直接完成。",
+          safetyStrong: "非医疗艺术边界与收听留意（App Store 1.4.1）：",
+          safetyText: "咩哞（Mie & Mou）为纯离线感官声音艺术与日常放松陪伴工具，非医疗器械，不用于诊断、治疗、治愈或预防任何生理或心理疾病。若您存在光敏/声敏反应、癫痫病史、耳鸣发作或佩戴植入式助听装置，请在声床抽屉内选用「纯自然声床（零声波脉冲）」或遵医嘱收听 40 Hz 频段；驾驶与机械作业时切勿开启睡前静息或夜灯模式。",
+          footerCopy: "咩哞 · Mie & Mou (app.chimmo) · 100% 本地离线声学工坊",
+          linkPrivacy: "隐私声明",
+          linkTerms: "使用条款",
+          linkLicenses: "公版致谢"
+        },
+        en: {
+          brandTitle: "Mie & Mou · 咩哞",
+          navPillars: "Architecture",
+          navSafety: "Non-Medical Notice",
+          navPrivacy: "Privacy",
+          navLabel: "Primary Navigation",
+          langLabel: "切换到中文",
+          themeLabel: "Toggle Day or Night Canvas",
+          tabListLabel: "Choose acoustic band",
+          washGroupLabel: "Ambient wash texture",
+          studioHeading: "Interactive Acoustic Field Preview",
+          themeBtn: "Night",
+          themeDayBtn: "Day",
+          eyebrow: "100% Offline · Native iOS Acoustic Atelier",
+          heroTitle: "Quiet standing waves on warm cotton paper.",
+          heroLead: "Zero network traffic, zero accounts, zero tracking. Dual-bus dry stereo binaural tones, on-device hum tuning, and 28 bilingual chamber specimens.",
+          metaOffline: "Offline Architecture",
+          metaAudio: "44-Voice Chamber Synth",
+          metaLamp: "OLED Amber Night Lamp",
+          subDelta: "2.5 Hz Rest",
+          subTheta: "6.0 Hz Drift",
+          subAlpha: "10 Hz Flow",
+          subGamma: "40 Hz Focus",
+          playBtn: "Preview Sound",
+          pauseBtn: "Pause Sound",
+          frissonBtn: "Hold Harmonic Bloom",
+          frissonCharging: "Gathering Bloom...",
+          routeHeadphone: "Binaural Stereo",
+          routeSpeaker: "Speaker Pulse",
+          pillarsTitle: "Unified Three-Tab Sanctuary",
+          pillarsLead: "Mirrors the streamlined iOS app: Field, Library, and Kiln Atelier.",
+          techTitle: "Craft & Privacy Boundaries",
+          techLead: "All synthesis, vocal fundamental extraction, and PNG rendering stay strictly on device.",
+          safetyStrong: "Non-Medical Art Notice (App Store 1.4.1):",
+          safetyText: "Mie & Mou is strictly an offline sensory sound-art tool — not a medical device. Consult a clinician before 40 Hz listening or choose Pure Ambient Wash (No Pulse) if you experience epilepsy, active tinnitus, or wear a hearing implant; never use sleep or Night Lamp modes while driving.",
+          footerCopy: "Mie & Mou (app.chimmo) · 100% Offline Acoustic Studio",
+          linkPrivacy: "Privacy Policy",
+          linkTerms: "Terms",
+          linkLicenses: "Credits"
+        }
+      };
 
-<script data-inlined="app.js">
-(function () {
-  const BANDS = {
-    delta: { id: "delta", code: "Delta", title: "深潜入眠", beatHz: 2.5, carrierHz: 136.1, hook: "沉入安静夜海", dayColor: "#6F54B8", nightColor: "#B39BFF" },
-    theta: { id: "theta", code: "Theta", title: "漂浮放空", beatHz: 6.0, carrierHz: 174.0, hook: "给思绪松绑放空", dayColor: "#C4513A", nightColor: "#F08A6C" },
-    alpha: { id: "alpha", code: "Alpha", title: "丝滑心流", beatHz: 10.0, carrierHz: 216.0, hook: "温和专注而不紧绷", dayColor: "#3D7A77", nightColor: "#7EC8C3" },
-    gamma: { id: "gamma", code: "Gamma", title: "灵感通透", beatHz: 40.0, carrierHz: 256.0, hook: "清醒敏锐的通透时刻", dayColor: "#3577A8", nightColor: "#6EB4F2" }
-  };
-
-  const WASHES = {
-    rainBrown: { name: "棕红暖雨", gain: 0.12, desc: "像隔窗听见远远落下的低频暖雨，松软包裹耳朵；0.065 Hz 空间微漂移仅作用泛音与雨声。" },
-    breezePink: { name: "粉红微风", gain: 0.09, desc: "清透轻盈的粉色松风底噪，抚平环境杂音；左右核心双耳载波严格锁稳不漂移。" },
-    kilnOvertone: { name: "窑陶泛音", gain: 0.05, desc: "低噪加倍呈现纯五度与八度暖泛音，适合闭眼轻哼同频。" },
-    pureWave: { name: "纯净双波", gain: 0.0, desc: "极简双耳正弦与柔和低八度托底，纯粹感最直接。" }
-  };
-
-  const PRESETS = [
-    { id: "morning-alpha-flow", title: "晨光清澈心流", band: "alpha", beat: 10.0, carrier: 216.0, wash: "breezePink", mins: 15 },
-    { id: "morning-gamma-spark", title: "灵感擦亮一瞬", band: "gamma", beat: 40.0, carrier: 256.0, wash: "pureWave", mins: 5 },
-    { id: "afternoon-alpha-deep", title: "午后专注白纸", band: "alpha", beat: 11.2, carrier: 224.0, wash: "rainBrown", mins: 25 },
-    { id: "afternoon-theta-drift", title: "午后三点放空云", band: "theta", beat: 6.0, carrier: 174.0, wash: "kilnOvertone", mins: 10 },
-    { id: "evening-theta-unhook", title: "傍晚卸下重担", band: "theta", beat: 5.2, carrier: 164.0, wash: "rainBrown", mins: 15 },
-    { id: "evening-alpha-warm", title: "暮色橘灯手账", band: "alpha", beat: 8.5, carrier: 196.0, wash: "kilnOvertone", mins: 15 },
-    { id: "night-delta-anchor", title: "零重力深夜入眠", band: "delta", beat: 2.5, carrier: 136.1, wash: "rainBrown", mins: 30 },
-    { id: "night-delta-velvet", title: "深靛天鹅绒微光", band: "delta", beat: 1.8, carrier: 128.0, wash: "pureWave", mins: 30 },
-    { id: "any-theta-rainhouse", title: "屋檐远雨放空室", band: "theta", beat: 6.5, carrier: 184.0, wash: "rainBrown", mins: 15 },
-    { id: "any-alpha-reading", title: "一页安静长书", band: "alpha", beat: 9.5, carrier: 210.0, wash: "breezePink", mins: 30 },
-    { id: "any-gamma-clarity", title: "清晨通透重启", band: "gamma", beat: 36.0, carrier: 244.0, wash: "breezePink", mins: 10 },
-    { id: "any-theta-cradle", title: "窑陶五度和鸣床", band: "theta", beat: 4.8, carrier: 152.0, wash: "kilnOvertone", mins: 20 }
-  ];
-
-  const CAPSULES = [
-    { title: "天鹅入水 · 大跳", sub: "圣桑 1886 · Alpha", notes: [523.25, 493.88, 329.63, 392.00] },
-    { title: "银白月光 · 四度", sub: "德彪西 1890 · Theta", notes: [329.63, 261.63, 392.00, 329.63] },
-    { title: "吉诺佩蒂 · 漂浮", sub: "萨蒂 1888 · Theta", notes: [293.66, 349.23, 440.00, 392.00] },
-    { title: "G弦咏叹 · 长呼", sub: "巴赫公版 · Alpha", notes: [392.00, 349.23, 329.63, 261.63] },
-    { title: "安慰曲 · 长音光环", sub: "李斯特 1850 · Theta", notes: [261.63, 329.63, 392.00, 523.25] },
-    { title: "夏风四度 · 悬浮", sub: "Chimmo 原创 · Alpha", notes: [349.23, 392.00, 329.63, 440.00] },
-    { title: "午夜海岸 · 七音", sub: "Chimmo 原创 · Alpha", notes: [293.66, 392.00, 523.25, 493.88] },
-    { title: "星尘对话 · 镜像", sub: "Chimmo 原创 · Gamma", notes: [261.63, 392.00, 329.63, 523.25] }
-  ];
-
-  const members = [
-    { deg: 1, name: "陶诺", sol: "Do",  role: "家", color: "var(--xylo-1)", dark: "#8F1D28", tilt: 0,    hz: 261.63, shape: "taono" },
-    { deg: 2, name: "豆叩", sol: "Re",  role: "迈步", color: "var(--xylo-2)", dark: "#8A420A", tilt: 4,    hz: 293.66, shape: "doko" },
-    { deg: 3, name: "拍咯", sol: "Mi",  role: "晴雨", color: "var(--xylo-3)", dark: "#8A5E00", tilt: 0,    hz: 329.63, shape: "plokko" },
-    { deg: 4, name: "呜嘟", sol: "Fa",  role: "悬步", color: "var(--xylo-4)", dark: "#085E45", tilt: -4.5, hz: 349.23, shape: "udo" },
-    { deg: 5, name: "壳咯", sol: "Sol", role: "远望", color: "var(--xylo-5)", dark: "#0C575C", tilt: 0,    hz: 392.00, shape: "corllo" },
-    { deg: 6, name: "钵莫", sol: "La",  role: "怀旧", color: "var(--xylo-6)", dark: "#29469B", tilt: 0,    hz: 440.00, shape: "bomo" },
-    { deg: 7, name: "叮尖", sol: "Ti",  role: "踮脚", color: "var(--xylo-7)", dark: "#4A2FA1", tilt: -9,   hz: 493.88, shape: "tinki" }
-  ];
-
-  let audioCtx = null;
-  let bedNodes = null;
-  let isBedPlaying = false;
-  let isHeadphones = true;
-  let currentBand = "alpha";
-  let beatHz = 10.0;
-  let carrierHz = 216.0;
-  let matchedHumHz = null;
-  let currentWash = "breezePink";
-  let breathEnabled = true;
-  let frissonCharge = 0;
-  let isHoldingFrisson = false;
-  let holdTimer = null;
-  let burstGlow = 0;
-  let frissonCount = 0;
-  let accumulatedSec = 0;
-  let isNight = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  let isCalmMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  let isHighClarity = !!(window.matchMedia && window.matchMedia("(prefers-contrast: more)").matches);
-
-  function ensureAudio() {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return null;
-    if (!audioCtx) audioCtx = new AC();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    return audioCtx;
-  }
-
-  function bandAccent(bandId) {
-    const b = BANDS[bandId] || BANDS.alpha;
-    return isNight ? b.nightColor : b.dayColor;
-  }
-
-  function startBedAudio() {
-    const ctx = ensureAudio();
-    if (!ctx) return;
-    stopBedAudio();
-    const t0 = ctx.currentTime;
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(0.0001, t0);
-    master.gain.linearRampToValueAtTime(0.14, t0 + 0.35);
-    master.connect(ctx.destination);
-
-    const oscL = ctx.createOscillator();
-    const oscR = ctx.createOscillator();
-    const panL = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    const panR = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    const gainL = ctx.createGain();
-    const gainR = ctx.createGain();
-    oscL.type = "sine";
-    oscR.type = "sine";
-    oscL.frequency.setValueAtTime(Math.max(40, carrierHz - beatHz * 0.5), t0);
-    oscR.frequency.setValueAtTime(Math.max(40, carrierHz + beatHz * 0.5), t0);
-    gainL.gain.setValueAtTime(0.45, t0);
-    gainR.gain.setValueAtTime(0.45, t0);
-
-    if (panL && panR) {
-      panL.pan.setValueAtTime(isHeadphones ? -0.9 : 0, t0);
-      panR.pan.setValueAtTime(isHeadphones ? 0.9 : 0, t0);
-      oscL.connect(gainL).connect(panL).connect(master);
-      oscR.connect(gainR).connect(panR).connect(master);
-    } else {
-      oscL.connect(gainL).connect(master);
-      oscR.connect(gainR).connect(master);
-    }
-
-    const overtoneOsc = ctx.createOscillator();
-    const overtoneGain = ctx.createGain();
-    overtoneOsc.type = "triangle";
-    overtoneOsc.frequency.setValueAtTime(carrierHz * 1.5, t0);
-    overtoneGain.gain.setValueAtTime(currentWash === "kilnOvertone" ? 0.16 : 0.08, t0);
-    overtoneOsc.connect(overtoneGain).connect(master);
-
-    oscL.start(t0);
-    oscR.start(t0);
-    overtoneOsc.start(t0);
-    bedNodes = { oscL, oscR, overtoneOsc, panL, panR, overtoneGain, master };
-  }
-
-  function updateBedAudioParams() {
-    if (!bedNodes || !audioCtx) return;
-    const t0 = audioCtx.currentTime;
-    bedNodes.oscL.frequency.setTargetAtTime(Math.max(40, carrierHz - beatHz * 0.5), t0, 0.06);
-    bedNodes.oscR.frequency.setTargetAtTime(Math.max(40, carrierHz + beatHz * 0.5), t0, 0.06);
-    bedNodes.overtoneOsc.frequency.setTargetAtTime(carrierHz * 1.5, t0, 0.06);
-    bedNodes.overtoneGain.gain.setTargetAtTime(currentWash === "kilnOvertone" ? 0.16 : 0.08, t0, 0.08);
-    if (bedNodes.panL && bedNodes.panR) {
-      bedNodes.panL.pan.setTargetAtTime(isHeadphones ? -0.9 : 0, t0, 0.08);
-      bedNodes.panR.pan.setTargetAtTime(isHeadphones ? 0.9 : 0, t0, 0.08);
-    }
-  }
-
-  function stopBedAudio() {
-    if (!bedNodes) return;
-    try {
-      const ctx = audioCtx;
-      const nodes = bedNodes;
-      bedNodes = null;
-      if (ctx) {
-        const t0 = ctx.currentTime;
-        nodes.master.gain.setTargetAtTime(0.0001, t0, 0.08);
-        setTimeout(() => {
-          try { nodes.oscL.stop(); nodes.oscR.stop(); nodes.overtoneOsc.stop(); } catch (_) {}
-        }, 250);
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (prefersDark) {
+        document.documentElement.setAttribute("data-theme", "night");
       }
-    } catch (_) {}
-  }
 
-  function playTone(freq, durationSec, delaySec, gainPeak, type) {
-    const ctx = ensureAudio();
-    if (!ctx) return;
-    const t0 = ctx.currentTime + (delaySec || 0);
-    const osc = ctx.createOscillator();
-    const sub = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const subGain = ctx.createGain();
-    osc.type = type || "triangle";
-    sub.type = "sine";
-    osc.frequency.setValueAtTime(freq, t0);
-    sub.frequency.setValueAtTime(freq * 2, t0);
-    subGain.gain.setValueAtTime(0.18, t0);
-    gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.exponentialRampToValueAtTime(gainPeak || 0.14, t0 + 0.025);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (durationSec || 0.72));
-    osc.connect(gain);
-    sub.connect(subGain).connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(t0);
-    sub.start(t0);
-    osc.stop(t0 + (durationSec || 0.72) + 0.05);
-    sub.stop(t0 + (durationSec || 0.72) + 0.05);
-  }
+      const state = {
+        lang: "zh",
+        night: Boolean(prefersDark),
+        band: "alpha",
+        beatHz: 10.0,
+        wash: "breeze",
+        headphones: true,
+        playing: false,
+        burstPhase: 0,
+        charging: false,
+        chargeTimer: null,
+        chargeProgress: 0,
+        ctx: null,
+        master: null,
+        toneGain: null,
+        oscL: null,
+        oscR: null,
+        isoLFO: null,
+        isoGain: null,
+        noiseSource: null,
+        noiseFilter: null,
+        noiseGain: null
+      };
 
-  function triggerFrissonRelease() {
-    frissonCount += 1;
-    burstGlow = 1.0;
-    const root = carrierHz;
-    [root, root * 1.5, root * 2.0, root * 2.5, root * 3.0].forEach((hz, idx) => {
-      playTone(hz, 1.35, idx * 0.065, 0.11, idx >= 3 ? "sine" : "triangle");
-    });
-    syncUI();
-  }
+      const $ = (id) => document.getElementById(id);
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  function bandForBeat(hz) {
-    if (hz < 4.0) return "delta";
-    if (hz < 8.0) return "theta";
-    if (hz < 20.0) return "alpha";
-    return "gamma";
-  }
+      function activeAccent() {
+        const b = BANDS[state.band];
+        return state.night ? b.colorNight : b.colorLight;
+      }
 
-  function syncUI() {
-    const b = BANDS[currentBand] || BANDS.alpha;
-    const color = bandAccent(currentBand);
-    document.documentElement.style.setProperty("--active-band", color);
+      function applyAccentCSS() {
+        document.documentElement.style.setProperty("--accent", activeAccent());
+      }
 
-    document.querySelectorAll("#bandSelectorRow .band-btn").forEach((btn) => {
-      const on = btn.dataset.band === currentBand;
-      btn.classList.toggle("active", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
+      function renderCards() {
+        const pGrid = $("pillarsGrid");
+        pGrid.replaceChildren();
+        PILLARS.forEach((p, idx) => {
+          const card = document.createElement("article");
+          card.className = "card";
+          const iconWrap = document.createElement("div");
+          iconWrap.className = "card-icon";
+          iconWrap.style.color = activeAccent();
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("width", "22");
+          svg.setAttribute("height", "22");
+          svg.setAttribute("viewBox", "0 0 24 24");
+          svg.setAttribute("aria-hidden", "true");
+          svg.innerHTML = PILLAR_PATHS[idx] || PILLAR_PATHS[0];
+          iconWrap.appendChild(svg);
 
-    document.getElementById("orbBandHeadline").textContent = `${b.title} · ${beatHz.toFixed(1)} Hz`;
-    const routeText = isHeadphones ? "立体声双耳" : "等时包裹";
-    const lockText = matchedHumHz ? `人声基频锁频 ${Math.round(carrierHz)} Hz` : `载波 ${Math.round(carrierHz)} Hz`;
-    document.getElementById("orbCarrierSubline").textContent = `${lockText} · ${routeText} · 0.065 Hz 空间微漂移`;
-
-    const orbCoreBtn = document.getElementById("orbToggleBtn");
-    orbCoreBtn.classList.toggle("playing", isBedPlaying);
-    orbCoreBtn.classList.toggle("holding", isHoldingFrisson);
-    document.getElementById("orbCenterHz").textContent = isHoldingFrisson
-      ? `正在蓄力 ${Math.round(frissonCharge * 100)}%`
-      : `${beatHz.toFixed(1)} Hz · ${b.code}`;
-    document.getElementById("orbCenterStatus").textContent = isHoldingFrisson
-      ? "松手即刻绽放颅内波峰"
-      : (isBedPlaying ? b.hook : "轻点开启 · 按住体验战栗");
-
-    const orbPlayBtn = document.getElementById("orbPlayBtn");
-    orbPlayBtn.setAttribute("aria-pressed", isBedPlaying ? "true" : "false");
-    document.getElementById("orbPlayLabel").textContent = isBedPlaying ? "暂停声场" : "开启声场";
-
-    const frissonBtn = document.getElementById("frissonHoldBtn");
-    frissonBtn.classList.toggle("holding", isHoldingFrisson);
-    document.getElementById("frissonBtnLabel").textContent = isHoldingFrisson ? "松手绽放战栗瀑布" : "按住蓄力 · 松手战栗";
-
-    document.getElementById("beatSlider").value = beatHz.toFixed(1);
-    document.getElementById("beatSliderReadout").textContent = `${beatHz.toFixed(1)} Hz`;
-
-    document.getElementById("washActiveLabel").textContent = WASHES[currentWash].name;
-    document.getElementById("washDescText").textContent = WASHES[currentWash].desc;
-    document.querySelectorAll("#washButtons .sb-chip").forEach((btn) => {
-      const on = btn.dataset.wash === currentWash;
-      btn.classList.toggle("active", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-
-    document.getElementById("statMinsVal").textContent = String(Math.floor(accumulatedSec / 60));
-    document.getElementById("statFrissonVal").textContent = String(frissonCount);
-    document.getElementById("statBandVal").textContent = b.code;
-    document.getElementById("rcBandTitle").textContent = `${b.title} · ${beatHz.toFixed(1)} Hz ${b.code}`;
-    document.getElementById("rcCarrierLine").textContent = matchedHumHz
-      ? `专属轻哼共振基频 ${Math.round(matchedHumHz)} Hz · ${b.hook}`
-      : `双耳载波 ${Math.round(carrierHz)} Hz · ${b.hook}`;
-    document.getElementById("rcStatsLine").textContent = `累计共振 ${Math.floor(accumulatedSec / 60)} 分钟 · 和声绽放 ${frissonCount} 次`;
-    document.getElementById("companionQuoteText").textContent = frissonCount > 0
-      ? `「${b.title}」是你最常调谐的频段，已记录 ${frissonCount} 次和声瀑布绽放。`
-      : "完全离线、不扰视线的窑陶声波工作台，随时为你留一片安静留白。";
-
-    renderResonanceCardSvg(color);
-  }
-
-  function renderResonanceCardSvg(accent) {
-    const svg = document.getElementById("resonanceCardSvg");
-    const rings = [0, 1, 2, 3, 4].map((i) => {
-      const r = 18 + i * 8;
-      const op = (0.42 - i * 0.07).toFixed(2);
-      return `<circle cx="110" cy="59" r="${r}" fill="none" stroke="${accent}" stroke-width="${i === 0 ? 2.4 : 1.5}" opacity="${op}"/>`;
-    }).join("");
-    svg.innerHTML = `${rings}<circle cx="110" cy="59" r="22" fill="${accent}" fill-opacity="0.18" stroke="${accent}" stroke-width="2.2"/><text x="110" y="57" text-anchor="middle" font-size="11" font-weight="900" fill="var(--ink)">${beatHz.toFixed(1)} Hz</text><text x="110" y="70" text-anchor="middle" font-size="8.5" font-weight="800" fill="${accent}">${BANDS[currentBand].code.toUpperCase()}</text>`;
-  }
-
-  document.querySelectorAll("#bandSelectorRow .band-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const b = BANDS[btn.dataset.band];
-      if (!b) return;
-      currentBand = b.id;
-      beatHz = b.beatHz;
-      if (!matchedHumHz) carrierHz = b.carrierHz;
-      isBedPlaying = true;
-      startBedAudio();
-      playTone(carrierHz, 0.48, 0, 0.12, "sine");
-      syncUI();
-    });
-  });
-
-  document.getElementById("beatSlider").addEventListener("input", (e) => {
-    beatHz = parseFloat(e.target.value) || 10.0;
-    currentBand = bandForBeat(beatHz);
-    updateBedAudioParams();
-    syncUI();
-  });
-
-  function togglePlayback() {
-    isBedPlaying = !isBedPlaying;
-    if (isBedPlaying) startBedAudio();
-    else stopBedAudio();
-    syncUI();
-  }
-  document.getElementById("orbToggleBtn").addEventListener("click", togglePlayback);
-  document.getElementById("orbPlayBtn").addEventListener("click", togglePlayback);
-
-  function startHold() {
-    if (isHoldingFrisson) return;
-    isHoldingFrisson = true;
-    frissonCharge = 0.08;
-    clearInterval(holdTimer);
-    holdTimer = setInterval(() => {
-      frissonCharge = Math.min(1.0, frissonCharge + 0.08);
-      syncUI();
-    }, 80);
-    syncUI();
-  }
-  function endHold() {
-    if (!isHoldingFrisson) return;
-    isHoldingFrisson = false;
-    clearInterval(holdTimer);
-    frissonCharge = 0;
-    triggerFrissonRelease();
-  }
-  const fBtn = document.getElementById("frissonHoldBtn");
-  fBtn.addEventListener("pointerdown", startHold);
-  fBtn.addEventListener("pointerup", endHold);
-  fBtn.addEventListener("pointerleave", () => { if (isHoldingFrisson) endHold(); });
-  fBtn.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      triggerFrissonRelease();
-    }
-  });
-
-  document.querySelectorAll("#washButtons .sb-chip").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      currentWash = btn.dataset.wash;
-      updateBedAudioParams();
-      playTone(carrierHz * 1.25, 0.35, 0, 0.1, "sine");
-      syncUI();
-    });
-  });
-
-  document.querySelectorAll("#humPresetButtons .sb-chip").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const hz = parseFloat(btn.dataset.hum) || 174.0;
-      matchedHumHz = hz;
-      carrierHz = hz;
-      document.querySelectorAll("#humPresetButtons .sb-chip").forEach((b) => {
-        const on = b === btn;
-        b.classList.toggle("active", on);
-        b.setAttribute("aria-pressed", on ? "true" : "false");
-      });
-      document.getElementById("humLockReadout").textContent = `已锁定 ${Math.round(hz)} Hz`;
-      isBedPlaying = true;
-      startBedAudio();
-      playTone(hz, 0.65, 0, 0.14, "triangle");
-      syncUI();
-    });
-  });
-
-  document.getElementById("humScanBtn").addEventListener("click", () => {
-    const btnLabel = document.getElementById("humScanBtnLabel");
-    btnLabel.textContent = "正在捕捉 3 秒轻哼声纹……";
-    playTone(164.0, 0.85, 0, 0.12, "sine");
-    setTimeout(() => {
-      matchedHumHz = 164.0;
-      carrierHz = 164.0;
-      document.getElementById("humLockReadout").textContent = "已锁定轻哼基频 164 Hz";
-      btnLabel.textContent = "模拟 3 秒轻哼同频锁定（164 Hz）";
-      isBedPlaying = true;
-      startBedAudio();
-      playTone(164.0, 0.6, 0, 0.12, "triangle");
-      playTone(246.0, 0.7, 0.08, 0.11, "sine");
-      syncUI();
-    }, 650);
-  });
-
-  document.getElementById("toggleBreathGuideBtn").addEventListener("click", () => {
-    breathEnabled = !breathEnabled;
-    const btn = document.getElementById("toggleBreathGuideBtn");
-    btn.setAttribute("aria-pressed", breathEnabled ? "true" : "false");
-    document.getElementById("breathGuideBtnLabel").textContent = breathEnabled ? "呼吸环 4s/6s · 已开" : "呼吸环 · 已关";
-  });
-
-  document.getElementById("toggleAudioModeBtn").addEventListener("click", () => {
-    isHeadphones = !isHeadphones;
-    const btn = document.getElementById("toggleAudioModeBtn");
-    btn.setAttribute("aria-pressed", isHeadphones ? "true" : "false");
-    document.getElementById("audioModeLabel").textContent = isHeadphones ? "立体声双耳" : "外放等时";
-    updateBedAudioParams();
-    syncUI();
-  });
-
-  const spaceSpecs = {
-    field: {
-      title: "声场（默认直达）：活体呼吸驻波球 + 锁屏 Now Playing + 0.065 Hz 空间微漂移",
-      status: "v2.2 乐器直达",
-      desc: "打开应用直接进入活体窑陶共振盆：轻点播停、左右横滑调频、长按 1.5s 松手触发和声战栗，配 60fps 呼吸指引环与 10 组窑陶轻叩声效。"
-    },
-    library: {
-      title: "声库：四频段窑陶调音座 + 12 套离线声景 + 闭眼夜灯零光台 + 8 首乐章",
-      status: "12 配方 + 28 首典藏",
-      desc: "四只沉静小偶守候对应频段；夜灯模式以 #070B1A 零蓝光护眼，单指滑过 8 道音脊亮起唱名与三颗琥珀余韵珠。"
-    },
-    atelier: {
-      title: "工坊：窑陶品牌铭牌 + 1080×1350 纪念卡导出 + 角色试音 + 非医疗安全合规",
-      status: "Guideline 1.4.1 合规",
-      desc: "纯净本地沉淀与 1080×1350 日夜共振纪念卡导出，一键跳转咩哞与七声小偶试音台及离线声学安全声明。"
-    }
-  };
-  document.querySelectorAll(".space-tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const k = btn.dataset.space;
-      document.querySelectorAll(".space-tab-btn").forEach((b) => b.setAttribute("aria-selected", b === btn ? "true" : "false"));
-      document.querySelectorAll("#spaceStagePanel .space-pane").forEach((p) => p.classList.toggle("active", p.dataset.pane === k));
-      const sp = spaceSpecs[k];
-      document.getElementById("spacePanelTitle").textContent = sp.title;
-      document.getElementById("spacePanelStatus").textContent = sp.status;
-      document.getElementById("spacePanelDesc").textContent = sp.desc;
-      playTone(392.0, 0.3, 0, 0.09, "sine");
-    });
-  });
-
-  const capGrid = document.getElementById("frissonCapsulesGrid");
-  CAPSULES.forEach((c) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "capsule-btn";
-    btn.innerHTML = `<span class="capsule-title">${c.title}</span><span class="capsule-sub">${c.sub}</span>`;
-    btn.addEventListener("click", () => {
-      capGrid.querySelectorAll(".capsule-btn").forEach((x) => x.classList.remove("playing"));
-      btn.classList.add("playing");
-      c.notes.forEach((hz, i) => playTone(hz, 0.56, i * 0.16, 0.12, "triangle"));
-      setTimeout(() => btn.classList.remove("playing"), 900);
-    });
-    capGrid.appendChild(btn);
-  });
-
-  const presetWrap = document.getElementById("presetPillsWrap");
-  PRESETS.forEach((p) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "sb-chip";
-    btn.textContent = `${p.title} (${p.beat}Hz)`;
-    btn.addEventListener("click", () => {
-      presetWrap.querySelectorAll(".sb-chip").forEach((x) => x.classList.remove("active"));
-      btn.classList.add("active");
-      currentBand = p.band;
-      beatHz = p.beat;
-      if (!matchedHumHz) carrierHz = p.carrier;
-      currentWash = p.wash;
-      isBedPlaying = true;
-      startBedAudio();
-      playTone(carrierHz, 0.45, 0, 0.1, "sine");
-      syncUI();
-    });
-    presetWrap.appendChild(btn);
-  });
-
-  let lampTimer = null;
-  const lampLabel = document.getElementById("nightLampPitchLabel");
-  const sustainDots = [document.getElementById("sustainDot0"), document.getElementById("sustainDot1"), document.getElementById("sustainDot2")];
-  document.querySelectorAll("#nightLampRidges .lamp-ridge-btn").forEach((ridge) => {
-    ridge.addEventListener("click", () => {
-      document.querySelectorAll("#nightLampRidges .lamp-ridge-btn").forEach((r) => r.classList.toggle("lit", r === ridge));
-      lampLabel.textContent = ridge.dataset.pill || "1 · Do";
-      sustainDots.forEach((d) => d.classList.add("lit"));
-      playTone(Number(ridge.dataset.hz) || 261.63, 0.7, 0, 0.13, "sine");
-      clearTimeout(lampTimer);
-      lampTimer = setTimeout(() => {
-        ridge.classList.remove("lit");
-        sustainDots.forEach((d) => d.classList.remove("lit"));
-      }, 650);
-    });
-  });
-
-  function buildFigureSVG(m, index) {
-    const animClass = index % 2 === 0 ? "fig-idle-even" : "fig-idle-odd";
-    let detail = "";
-    if (m.shape === "taono") {
-      detail = `<rect x="20" y="13" width="6" height="14" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/><circle cx="23" cy="12" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/><g transform="rotate(-11 38 22)"><rect x="34" y="14" width="6" height="13" rx="3" fill="${m.color}" stroke="#231B15" stroke-width="1.5"/><circle cx="37" cy="13" r="3.6" fill="#FFFDF7" stroke="#231B15" stroke-width="1.4"/></g><rect x="14" y="25" width="32" height="31" rx="14" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/><circle cx="27" cy="47" r="5.5" fill="#FFFDF7" stroke="#231B15" stroke-width="1.3"/><circle cx="27" cy="47" r="2.8" fill="#FFB94E"/>`;
-    } else if (m.shape === "doko") {
-      detail = `<rect x="14" y="29" width="32" height="27" rx="13" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/><rect x="23" y="26" width="14" height="3.2" rx="1.6" fill="${m.dark}"/>`;
-    } else if (m.shape === "plokko") {
-      detail = `<ellipse cx="30" cy="57" rx="12" ry="3.2" fill="${m.dark}"/><rect x="8" y="37" width="13" height="7" rx="3.5" transform="rotate(10 14 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/><rect x="39" y="37" width="13" height="7" rx="3.5" transform="rotate(-10 45 40)" fill="${m.color}" stroke="#231B15" stroke-width="1.6"/><circle cx="30" cy="42" r="15" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/><circle cx="30" cy="28" r="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>`;
-    } else if (m.shape === "udo") {
-      detail = `<ellipse cx="30" cy="42" rx="14" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/><circle cx="39" cy="34" r="2.2" fill="${m.dark}"/><circle cx="39" cy="40" r="1.7" fill="${m.dark}"/>`;
-    } else if (m.shape === "corllo") {
-      detail = `<circle cx="43" cy="34" r="9.5" fill="${m.dark}" stroke="#231B15" stroke-width="1.6"/><circle cx="43" cy="34" r="5.5" fill="#FFFDF7"/><circle cx="43" cy="34" r="2.8" fill="#FFE49E"/><ellipse cx="28" cy="42" rx="13" ry="16" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>`;
-    } else if (m.shape === "bomo") {
-      detail = `<ellipse cx="30" cy="44" rx="16.5" ry="12.5" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/><ellipse cx="30" cy="34" rx="9" ry="2.8" fill="#FFE49E" stroke="#231B15" stroke-width="1.2"/>`;
-    } else {
-      detail = `<line x1="30" y1="18" x2="30" y2="25" stroke="#231B15" stroke-width="2.2" stroke-linecap="round"/><circle cx="30" cy="15" r="3.6" fill="#FFE49E" stroke="#231B15" stroke-width="1.4"/><rect x="19" y="25" width="22" height="31" rx="11" fill="${m.color}" stroke="#231B15" stroke-width="1.8"/>`;
-    }
-    const eyeY = m.shape === "bomo" ? 44 : (m.shape === "doko" ? 42 : 39);
-    return `<svg class="figure-svg" viewBox="0 0 60 66" aria-hidden="true"><ellipse cx="30" cy="60" rx="14" ry="3" fill="rgba(35,27,21,0.16)"/><g class="${animClass}" transform="rotate(${m.tilt} 30 58)"><circle class="sing-halo" cx="30" cy="38" r="23" fill="none" stroke="var(--glow-${m.deg})" stroke-width="2.4" opacity="0"/><ellipse cx="24" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/><ellipse cx="36" cy="56" rx="4.5" ry="2.6" fill="${m.dark}"/>${detail}<g class="eyes-open"><circle class="eye-pupil" cx="25.5" cy="${eyeY}" r="2.5" fill="#231B15"/><circle cx="24.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/><circle class="eye-pupil" cx="34.5" cy="${eyeY}" r="2.5" fill="#231B15"/><circle cx="33.8" cy="${eyeY - 0.7}" r="0.8" fill="#FFFFFF"/></g><g class="eyes-sing" opacity="0"><path d="M23 ${eyeY + 0.8} Q25.5 ${eyeY - 2.4} 28 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/><path d="M32 ${eyeY + 0.8} Q34.5 ${eyeY - 2.4} 37 ${eyeY + 0.8}" fill="none" stroke="#231B15" stroke-width="1.9" stroke-linecap="round"/></g></g></svg>`;
-  }
-
-  const choirGrid = document.getElementById("choirGrid");
-  const choirStatus = document.getElementById("choirStatus");
-  let gazeTimer = null;
-  members.forEach((m, idx) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "figure-btn";
-    btn.dataset.deg = String(m.deg);
-    btn.setAttribute("aria-label", `${m.deg} ${m.name} ${m.sol}，${m.role}`);
-    btn.innerHTML = `${buildFigureSVG(m, idx)}<div class="figure-meta"><span class="figure-deg" style="background:var(--xylo-${m.deg})">${m.deg}</span><span class="figure-name">${m.name}</span></div>`;
-    btn.addEventListener("click", () => {
-      choirStatus.textContent = `${m.deg} ${m.sol} · ${m.name}（${m.role}）`;
-      choirGrid.querySelectorAll(".figure-btn").forEach((b) => {
-        const on = Number(b.dataset.deg) === m.deg;
-        b.classList.toggle("singing", on);
-        b.querySelector(".sing-halo").setAttribute("opacity", on ? "0.75" : "0");
-      });
-      playTone(m.hz, 0.8, 0, 0.14, "triangle");
-      clearTimeout(gazeTimer);
-      gazeTimer = setTimeout(() => {
-        choirGrid.querySelectorAll(".figure-btn").forEach((b) => {
-          b.classList.remove("singing");
-          b.querySelector(".sing-halo").setAttribute("opacity", "0");
+          const h3 = document.createElement("h3");
+          h3.textContent = state.lang === "zh" ? p.zhTitle : p.enTitle;
+          const body = document.createElement("p");
+          body.textContent = state.lang === "zh" ? p.zhBody : p.enBody;
+          card.append(iconWrap, h3, body);
+          pGrid.appendChild(card);
         });
-      }, 720);
-    });
-    choirGrid.appendChild(btn);
-  });
 
-  document.getElementById("mieCard").addEventListener("click", () => {
-    playTone(392.0, 0.6, 0, 0.14, "triangle");
-    playTone(523.25, 0.85, 0.1, 0.15, "triangle");
-  });
-  document.getElementById("mouCard").addEventListener("click", () => {
-    playTone(130.81, 0.95, 0, 0.16, "sine");
-    playTone(196.0, 0.85, 0.04, 0.1, "triangle");
-  });
-  document.getElementById("exportCardPreviewBtn").addEventListener("click", () => {
-    playTone(carrierHz, 0.35, 0, 0.1, "sine");
-    syncUI();
-  });
-
-  const canvas = document.getElementById("orbWaveCanvas");
-  const ctx2d = canvas.getContext("2d");
-  let lastDraw = 0;
-  function drawOrbCanvas(ts) {
-    requestAnimationFrame(drawOrbCanvas);
-    const minInterval = isCalmMotion ? 66 : 16;
-    if (ts - lastDraw < minInterval) return;
-    lastDraw = ts;
-
-    if (isBedPlaying) accumulatedSec += minInterval / 1000;
-    if (burstGlow > 0.01) burstGlow *= 0.92;
-    else burstGlow = 0;
-
-    const w = canvas.width;
-    const h = canvas.height;
-    const cx = w * 0.5;
-    const cy = h * 0.5;
-    const maxR = Math.min(w, h) * 0.45;
-    const t = ts * 0.001;
-    const accent = bandAccent(currentBand);
-
-    ctx2d.clearRect(0, 0, w, h);
-
-    if (breathEnabled) {
-      const cycle = t % 10;
-      const p = isCalmMotion ? 0.5 : (cycle < 4 ? (0.5 - 0.5 * Math.cos(Math.PI * (cycle / 4))) : (0.5 + 0.5 * Math.cos(Math.PI * ((cycle - 4) / 6))));
-      const br = maxR * (0.72 + p * 0.24);
-      ctx2d.save();
-      ctx2d.setLineDash([5, 4]);
-      ctx2d.strokeStyle = isNight ? "rgba(126, 200, 195, 0.45)" : "rgba(61, 122, 119, 0.42)";
-      ctx2d.lineWidth = 2;
-      ctx2d.beginPath();
-      ctx2d.arc(cx, cy, br, 0, Math.PI * 2);
-      ctx2d.stroke();
-      ctx2d.restore();
-    }
-
-    for (let ring = 0; ring < 3; ring += 1) {
-      const baseR = maxR * (0.62 + ring * 0.13) * (1 - frissonCharge * 0.12);
-      const amp = isCalmMotion ? 0 : (isBedPlaying ? 4.5 : 1.5);
-      ctx2d.beginPath();
-      for (let s = 0; s <= 72; s += 1) {
-        const ang = (s / 72) * Math.PI * 2;
-        const r = baseR + amp * Math.cos(ang * (ring + 3) + t * (1.2 + ring * 0.5));
-        const px = cx + Math.cos(ang) * r;
-        const py = cy + Math.sin(ang) * r;
-        if (s === 0) ctx2d.moveTo(px, py);
-        else ctx2d.lineTo(px, py);
+        const dGrid = $("detailsGrid");
+        dGrid.replaceChildren();
+        DETAILS.forEach((d) => {
+          const card = document.createElement("article");
+          card.className = "card";
+          const h3 = document.createElement("h3");
+          h3.textContent = state.lang === "zh" ? d.zhTitle : d.enTitle;
+          const body = document.createElement("p");
+          body.textContent = state.lang === "zh" ? d.zhBody : d.enBody;
+          card.append(h3, body);
+          dGrid.appendChild(card);
+        });
       }
-      ctx2d.closePath();
-      ctx2d.strokeStyle = accent;
-      ctx2d.globalAlpha = Math.max(0.14, (isBedPlaying ? 0.42 : 0.22) - ring * 0.07 + frissonCharge * 0.3);
-      ctx2d.lineWidth = ring === 0 ? 2.2 : 1.4;
-      ctx2d.stroke();
-    }
 
-    if (burstGlow > 0.05) {
-      ctx2d.beginPath();
-      ctx2d.arc(cx, cy, maxR * (0.9 + (1 - burstGlow) * 0.12), 0, Math.PI * 2);
-      ctx2d.strokeStyle = "#FFB547";
-      ctx2d.globalAlpha = burstGlow * 0.85;
-      ctx2d.lineWidth = 3;
-      ctx2d.stroke();
-    }
-    ctx2d.globalAlpha = 1;
-  }
-  requestAnimationFrame(drawOrbCanvas);
+      function syncWashButtons() {
+        const group = $("washGroup");
+        if (!group.children.length) {
+          WASHES.forEach((w) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "pill-btn";
+            btn.dataset.wash = w.id;
+            btn.addEventListener("click", () => {
+              state.wash = w.id;
+              updateUI();
+              updateAudioParams();
+            });
+            group.appendChild(btn);
+          });
+        }
+        Array.from(group.children).forEach((btn) => {
+          const w = WASHES.find((x) => x.id === btn.dataset.wash);
+          if (!w) return;
+          btn.setAttribute("aria-pressed", String(state.wash === w.id));
+          btn.textContent = state.lang === "zh" ? w.zh : w.en;
+        });
+      }
 
-  const toggleThemeBtn = document.getElementById("toggleThemeBtn");
-  const themeLabel = document.getElementById("themeLabel");
-  function applyTheme() {
-    document.documentElement.dataset.theme = isNight ? "night" : "day";
-    toggleThemeBtn.setAttribute("aria-pressed", isNight ? "true" : "false");
-    themeLabel.textContent = isNight ? "切换日光" : "切换夜灯";
-    syncUI();
-  }
-  toggleThemeBtn.addEventListener("click", () => { isNight = !isNight; applyTheme(); });
+      function updateUI() {
+        const dict = COPY[state.lang];
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (dict[key]) el.textContent = dict[key];
+        });
+        $("primaryNav").setAttribute("aria-label", dict.navLabel);
+        $("langToggle").setAttribute("aria-label", dict.langLabel);
+        $("themeToggle").setAttribute("aria-label", dict.themeLabel);
+        $("bandTabs").setAttribute("aria-label", dict.tabListLabel);
+        $("washGroup").setAttribute("aria-label", dict.washGroupLabel);
+        $("brandLink").setAttribute("aria-label", dict.brandTitle);
 
-  const toggleCalmBtn = document.getElementById("toggleCalmBtn");
-  const calmLabel = document.getElementById("calmLabel");
-  function applyCalm() {
-    document.documentElement.dataset.reduceMotion = isCalmMotion ? "true" : "false";
-    toggleCalmBtn.setAttribute("aria-pressed", isCalmMotion ? "true" : "false");
-    calmLabel.textContent = isCalmMotion ? "减弱动态 · 15Hz 已开" : "减弱动态 · 15Hz";
-  }
-  toggleCalmBtn.addEventListener("click", () => { isCalmMotion = !isCalmMotion; applyCalm(); });
+        $("playToggle").textContent = state.playing ? dict.pauseBtn : dict.playBtn;
+        $("playToggle").setAttribute("aria-pressed", String(state.playing));
+        $("frissonBtn").querySelector("[data-i18n]").textContent = state.charging ? dict.frissonCharging : dict.frissonBtn;
+        $("routeToggle").textContent = state.headphones ? dict.routeHeadphone : dict.routeSpeaker;
+        $("routeToggle").setAttribute("aria-pressed", String(state.headphones));
+        $("themeToggle").setAttribute("aria-pressed", String(state.night));
+        $("themeToggle").querySelector("span").textContent = state.night ? dict.themeDayBtn : dict.themeBtn;
+        $("langToggle").textContent = state.lang === "zh" ? "EN" : "中文";
 
-  const toggleClarityBtn = document.getElementById("toggleClarityBtn");
-  const clarityLabel = document.getElementById("clarityLabel");
-  function applyClarity() {
-    document.documentElement.dataset.highClarity = isHighClarity ? "true" : "false";
-    toggleClarityBtn.setAttribute("aria-pressed", isHighClarity ? "true" : "false");
-    clarityLabel.textContent = isHighClarity ? "高清晰 · 已开" : "高清晰边线";
-  }
-  toggleClarityBtn.addEventListener("click", () => { isHighClarity = !isHighClarity; applyClarity(); });
+        const b = BANDS[state.band];
+        const w = WASHES.find((x) => x.id === state.wash);
+        $("hzValue").textContent = w.pure
+          ? (state.lang === "zh" ? w.zh : w.en)
+          : `${state.beatHz.toFixed(1)} Hz`;
+        $("bandTitle").textContent = w.pure
+          ? (state.lang === "zh" ? "纯自然声床 · 无脉冲" : "Pure Ambient Wash · No Pulse")
+          : (state.lang === "zh" ? b.zh : b.en);
+        const wLabel = state.lang === "zh" ? w.zh : w.en;
+        $("washReadout").textContent = w.pure
+          ? (state.lang === "zh" ? `${wLabel} · 零周期脉冲` : `${wLabel} · Zero Pulse`)
+          : (state.lang === "zh" ? `${wLabel} · 载波 ${b.carrier} Hz` : `${wLabel} · Carrier ${b.carrier} Hz`);
 
-  applyCalm();
-  applyClarity();
-  applyTheme();
-})();
-</script>
+        document.querySelectorAll(".band-btn").forEach((btn) => {
+          const selected = btn.dataset.band === state.band;
+          btn.setAttribute("aria-selected", String(selected));
+          btn.setAttribute("tabindex", selected ? "0" : "-1");
+        });
+        $("vesselPanel").setAttribute("aria-labelledby", `tab-${state.band}`);
+        applyAccentCSS();
+        renderCards();
+        syncWashButtons();
+      }
+
+      // Offline Web Audio Dual-Bus Synthesis Engine
+      function ensureAudioGraph() {
+        if (state.ctx) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const master = ctx.createGain();
+        master.gain.value = 0.0001;
+        master.connect(ctx.destination);
+
+        const panL = ctx.createStereoPanner();
+        const panR = ctx.createStereoPanner();
+        panL.pan.value = -0.92;
+        panR.pan.value = 0.92;
+
+        const isoGain = ctx.createGain();
+        isoGain.gain.value = 1.0;
+
+        const oscL = ctx.createOscillator();
+        const oscR = ctx.createOscillator();
+        const toneGain = ctx.createGain();
+        toneGain.gain.value = 0.14;
+        oscL.connect(panL).connect(isoGain);
+        oscR.connect(panR).connect(isoGain);
+        isoGain.connect(toneGain).connect(master);
+
+        const isoLFO = ctx.createOscillator();
+        const isoDepth = ctx.createGain();
+        isoDepth.gain.value = 0.0;
+        isoLFO.connect(isoDepth).connect(isoGain.gain);
+
+        const bufLen = ctx.sampleRate * 4;
+        const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        let last = 0;
+        for (let i = 0; i < bufLen; i++) {
+          const white = Math.random() * 2 - 1;
+          last = (last + 0.04 * white) / 1.04;
+          data[i] = last * 1.8 + white * 0.15;
+        }
+        const nSrc = ctx.createBufferSource();
+        nSrc.buffer = buf;
+        nSrc.loop = true;
+        const nFilter = ctx.createBiquadFilter();
+        nFilter.type = "lowpass";
+        const nGain = ctx.createGain();
+        nSrc.connect(nFilter).connect(nGain).connect(master);
+
+        oscL.start();
+        oscR.start();
+        isoLFO.start();
+        nSrc.start();
+
+        state.ctx = ctx;
+        state.master = master;
+        state.toneGain = toneGain;
+        state.oscL = oscL;
+        state.oscR = oscR;
+        state.isoLFO = isoLFO;
+        state.isoGain = isoDepth;
+        state.noiseSource = nSrc;
+        state.noiseFilter = nFilter;
+        state.noiseGain = nGain;
+      }
+
+      function updateAudioParams() {
+        if (!state.ctx) return;
+        const now = state.ctx.currentTime;
+        const b = BANDS[state.band];
+        const w = WASHES.find((x) => x.id === state.wash);
+        state.oscL.frequency.setTargetAtTime(b.carrier - state.beatHz * 0.5, now, 0.08);
+        state.oscR.frequency.setTargetAtTime(b.carrier + state.beatHz * 0.5, now, 0.08);
+        state.isoLFO.frequency.setTargetAtTime(state.beatHz, now, 0.08);
+        state.toneGain.gain.setTargetAtTime(w.pure ? 0.0 : 0.14, now, 0.08);
+        state.isoGain.gain.setTargetAtTime(w.pure ? 0.0 : (state.headphones ? 0.04 : 0.28), now, 0.08);
+        state.noiseFilter.frequency.setTargetAtTime(w.cutoff, now, 0.10);
+        state.noiseGain.gain.setTargetAtTime(w.gain, now, 0.10);
+        state.master.gain.setTargetAtTime(state.playing ? 0.85 : 0.0001, now, 0.08);
+      }
+
+      function triggerFrissonBloom(intensity = 0.85) {
+        state.burstPhase = 1.0;
+        if (!state.ctx) ensureAudioGraph();
+        if (state.ctx && state.ctx.state === "suspended") {
+          state.ctx.resume().catch(() => {});
+        }
+        if (state.ctx && state.master) {
+          const base = BANDS[state.band].carrier;
+          [1.0, 1.5, 2.0, 2.5].forEach((mult, idx) => {
+            const t = state.ctx.currentTime + idx * 0.06;
+            const o = state.ctx.createOscillator();
+            const g = state.ctx.createGain();
+            o.type = "sine";
+            o.frequency.value = base * mult;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime((0.08 * intensity) / (idx + 1), t + 0.06);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+            o.connect(g).connect(state.master);
+            o.start(t);
+            o.stop(t + 1.45);
+          });
+          if (!state.playing) {
+            const now = state.ctx.currentTime;
+            state.master.gain.setTargetAtTime(0.85, now, 0.03);
+            setTimeout(() => {
+              if (!state.playing && state.ctx && state.master) {
+                state.master.gain.setTargetAtTime(0.0001, state.ctx.currentTime, 0.12);
+              }
+            }, 1350);
+          }
+        }
+        kickAnimation();
+      }
+
+      function startFrissonCharge() {
+        if (state.charging) return;
+        state.charging = true;
+        state.chargeProgress = 0;
+        updateUI();
+        const startTs = performance.now();
+        clearInterval(state.chargeTimer);
+        state.chargeTimer = setInterval(() => {
+          if (!state.charging) return;
+          const pct = Math.min(1, (performance.now() - startTs) / 900);
+          state.chargeProgress = pct;
+          $("frissonFill").style.width = `${Math.round(pct * 100)}%`;
+          if (pct >= 1) {
+            releaseFrissonCharge(1.0);
+          }
+        }, 40);
+      }
+
+      function releaseFrissonCharge(forcedIntensity) {
+        if (!state.charging) return;
+        const pct = forcedIntensity ?? Math.max(0.55, state.chargeProgress);
+        state.charging = false;
+        state.chargeProgress = 0;
+        clearInterval(state.chargeTimer);
+        state.chargeTimer = null;
+        $("frissonFill").style.width = "0%";
+        updateUI();
+        triggerFrissonBloom(pct);
+      }
+
+      // Single deduplicated rAF animation loop
+      const canvas = $("waveCanvas");
+      const cCtx = canvas.getContext("2d");
+      let canvasVisible = true;
+      let rafId = null;
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        cCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawFrame(performance.now());
+      }
+
+      function drawFrame(ts) {
+        rafId = null;
+        const w = canvas.parentElement.clientWidth || 320;
+        const h = canvas.parentElement.clientHeight || 240;
+        cCtx.clearRect(0, 0, w, h);
+        const accent = activeAccent();
+        const b = BANDS[state.band];
+        const t = state.playing && !reducedMotion.matches ? ts * 0.001 : 0.0;
+        if (state.burstPhase > 0.005) state.burstPhase *= 0.94;
+        else state.burstPhase = 0;
+
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const baseR = Math.min(w, h) * 0.30;
+
+        for (let ring = 0; ring < 4; ring++) {
+          const rBase = baseR + ring * 18 + state.burstPhase * 12;
+          const amp = (4 - ring * 0.7) * (state.playing ? 1.15 : 0.5) + state.burstPhase * 6;
+          cCtx.beginPath();
+          const steps = 90;
+          for (let i = 0; i <= steps; i++) {
+            const ang = (i / steps) * Math.PI * 2;
+            const wave = Math.sin(ang * b.lobes + t * (0.8 + ring * 0.25)) * amp;
+            const r = rBase + wave;
+            const x = cx + Math.cos(ang) * r;
+            const y = cy + Math.sin(ang) * r;
+            if (i === 0) cCtx.moveTo(x, y); else cCtx.lineTo(x, y);
+          }
+          cCtx.closePath();
+          cCtx.strokeStyle = accent;
+          cCtx.globalAlpha = Math.max(0.08, (state.playing ? 0.36 : 0.16) - ring * 0.06);
+          cCtx.lineWidth = ring === 0 ? 2.2 : 1.3;
+          cCtx.stroke();
+        }
+        cCtx.globalAlpha = 1.0;
+
+        if ((state.playing || state.burstPhase > 0.01) && canvasVisible && !document.hidden && !reducedMotion.matches) {
+          kickAnimation();
+        }
+      }
+
+      function kickAnimation() {
+        if (!rafId && canvasVisible && !document.hidden && !reducedMotion.matches) {
+          rafId = requestAnimationFrame(drawFrame);
+        }
+      }
+
+      new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+      new IntersectionObserver((entries) => {
+        canvasVisible = entries[0]?.isIntersecting ?? true;
+        if (canvasVisible && (state.playing || state.burstPhase > 0.01)) {
+          kickAnimation();
+        } else if (!canvasVisible && rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+      }).observe(canvas);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && (state.playing || state.burstPhase > 0.01)) {
+          kickAnimation();
+        } else if (document.hidden && rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+      });
+
+      $("playToggle").addEventListener("click", () => {
+        ensureAudioGraph();
+        if (state.ctx && state.ctx.state === "suspended") {
+          state.ctx.resume().catch(() => {});
+        }
+        state.playing = !state.playing;
+        updateAudioParams();
+        updateUI();
+        const b = BANDS[state.band];
+        $("liveAnnounce").textContent = state.playing
+          ? (state.lang === "zh" ? `正在试听 ${b.zh}` : `Playing ${b.en}`)
+          : (state.lang === "zh" ? "已暂停试听" : "Paused preview");
+        kickAnimation();
+        if (!state.playing) drawFrame(performance.now());
+      });
+
+      $("routeToggle").addEventListener("click", () => {
+        state.headphones = !state.headphones;
+        updateAudioParams();
+        updateUI();
+      });
+
+      const fBtn = $("frissonBtn");
+      fBtn.addEventListener("pointerdown", () => { startFrissonCharge(); });
+      fBtn.addEventListener("pointerup", () => { releaseFrissonCharge(); });
+      fBtn.addEventListener("pointerleave", () => { if (state.charging) releaseFrissonCharge(); });
+      fBtn.addEventListener("pointercancel", () => {
+        state.charging = false;
+        clearInterval(state.chargeTimer);
+        $("frissonFill").style.width = "0%";
+        updateUI();
+      });
+      fBtn.addEventListener("keydown", (e) => {
+        if (!e.repeat && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          triggerFrissonBloom(0.85);
+        }
+      });
+
+      const bandBtns = Array.from($("bandTabs").querySelectorAll(".band-btn"));
+      bandBtns.forEach((btn, idx) => {
+        btn.addEventListener("click", () => {
+          state.band = btn.dataset.band;
+          state.beatHz = BANDS[state.band].beat;
+          updateUI();
+          updateAudioParams();
+          drawFrame(performance.now());
+        });
+        btn.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            const step = e.key === "ArrowRight" ? 1 : -1;
+            const nextBtn = bandBtns[(idx + step + bandBtns.length) % bandBtns.length];
+            state.band = nextBtn.dataset.band;
+            state.beatHz = BANDS[state.band].beat;
+            updateUI();
+            updateAudioParams();
+            drawFrame(performance.now());
+            nextBtn.focus();
+          }
+        });
+      });
+
+      // Horizontal pointer-drag frequency scrubbing on standing-wave vessel (1.5-42.0 Hz)
+      (() => {
+        const panel = $("vesselPanel");
+        let dragging = false;
+        let lockedHorizontal = false;
+        let startX = 0;
+        let startY = 0;
+        let startHz = 10.0;
+
+        function bandForHz(hz) {
+          if (hz < 4.0) return "delta";
+          if (hz < 8.0) return "theta";
+          if (hz < 20.0) return "alpha";
+          return "gamma";
+        }
+
+        panel.addEventListener("pointerdown", (e) => {
+          const w = WASHES.find((x) => x.id === state.wash);
+          if (w && w.pure) return;
+          dragging = true;
+          lockedHorizontal = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          startHz = state.beatHz;
+        });
+
+        panel.addEventListener("pointermove", (e) => {
+          if (!dragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (!lockedHorizontal) {
+            if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+              dragging = false;
+              return;
+            }
+            if (Math.abs(dx) > 8) {
+              lockedHorizontal = true;
+              try { panel.setPointerCapture(e.pointerId); } catch (_) {}
+            } else {
+              return;
+            }
+          }
+          const rawHz = Math.max(1.5, Math.min(42.0, startHz + dx * 0.14));
+          const snappedHz = Math.round(rawHz * 2.0) / 2.0;
+          if (Math.abs(snappedHz - state.beatHz) >= 0.49) {
+            state.beatHz = snappedHz;
+            state.band = bandForHz(snappedHz);
+            updateUI();
+            updateAudioParams();
+            drawFrame(performance.now());
+          }
+        });
+
+        const endDrag = () => { dragging = false; lockedHorizontal = false; };
+        panel.addEventListener("pointerup", endDrag);
+        panel.addEventListener("pointercancel", endDrag);
+      })();
+
+      $("themeToggle").addEventListener("click", () => {
+        state.night = !state.night;
+        if (state.night) document.documentElement.setAttribute("data-theme", "night");
+        else document.documentElement.removeAttribute("data-theme");
+        updateUI();
+        drawFrame(performance.now());
+      });
+
+      $("langToggle").addEventListener("click", () => {
+        state.lang = state.lang === "zh" ? "en" : "zh";
+        document.documentElement.lang = state.lang === "zh" ? "zh-Hans" : "en";
+        updateUI();
+      });
+
+      updateUI();
+      resizeCanvas();
+    })();
+  </script>
 </body>
 </html>

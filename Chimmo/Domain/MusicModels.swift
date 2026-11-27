@@ -90,14 +90,14 @@ public enum ScaleMode: String, CaseIterable, Codable, Sendable, Identifiable {
         }
     }
 
-    /// 与相邻天光对应的极光天色（让画布背景随五色天光呼吸流转）
+    /// 与相邻天光对应的极光天色（统一为咩哞暖瓷窑彩矿石色系，融合于棉纸与夜靛画布）
     public func skyAuroraColor(isNight: Bool) -> Color {
         switch self {
-        case .cloudLydian:      return isNight ? Color(hex: 0x74C0FC) : Color(hex: 0x4DABF7)
-        case .brightMajor:      return isNight ? Color(hex: 0x38E4C0) : Color(hex: 0x12B886)
-        case .goldenMixolydian: return isNight ? Color(hex: 0xFFA94D) : Color(hex: 0xF76707)
-        case .forestDorian:     return isNight ? Color(hex: 0x63E6BE) : Color(hex: 0x0CA678)
-        case .wistfulMinor:     return isNight ? Color(hex: 0x9775FA) : Color(hex: 0x7048E8)
+        case .cloudLydian:      return isNight ? Color(hex: 0x78BAFA) : Color(hex: 0x256291)
+        case .brightMajor:      return isNight ? Color(hex: 0x7ECBC5) : Color(hex: 0x2B6865)
+        case .goldenMixolydian: return isNight ? Color(hex: 0xFFB84D) : Color(hex: 0x7D4806)
+        case .forestDorian:     return isNight ? Color(hex: 0xF29476) : Color(hex: 0xA63C28)
+        case .wistfulMinor:     return isNight ? Color(hex: 0xBAA3FF) : Color(hex: 0x6246A8)
         }
     }
 
@@ -136,42 +136,6 @@ public enum MelodyVoice: String, CaseIterable, Codable, Sendable, Identifiable {
         case .concertPiano: return "pianokeys"
         case .liquidHarp: return "water.waves"
         case .celestaGlass: return "sparkles"
-        }
-    }
-}
-
-/// 三层无障碍认知翻译透镜（同一张画布自由切换感知语言，永不拿术语筑墙）：
-/// 1. 诗意直觉镜（纯情绪与光影，零数字零术语）
-/// 2. 逻辑哲学镜（实时利萨如波纹对称花 + 种子折纸架构 + 延留张力丝 + 掌心触觉）
-/// 3. 音乐家母语镜（真实半音窄缝 + Do-Ti 唱名 + 音程弧标 + 和弦内/外音标注）
-public enum CognitiveLens: String, CaseIterable, Codable, Sendable, Identifiable {
-    case poetic     // 诗意直觉
-    case philosophy // 逻辑哲学
-    case musician   // 音乐母语
-
-    public var id: String { rawValue }
-
-    public var label: String {
-        switch self {
-        case .poetic: return "诗意直觉"
-        case .philosophy: return "逻辑哲学"
-        case .musician: return "音乐母语"
-        }
-    }
-
-    public var shortLabel: String {
-        switch self {
-        case .poetic: return "诗意"
-        case .philosophy: return "哲学"
-        case .musician: return "乐理"
-        }
-    }
-
-    public var iconName: String {
-        switch self {
-        case .poetic: return "leaf.fill"
-        case .philosophy: return "atom"
-        case .musician: return "music.note"
         }
     }
 }
@@ -253,18 +217,6 @@ public enum HarmonyProfile: String, CaseIterable, Codable, Sendable, Identifiabl
     }
 }
 
-public struct GhostCandidate: Identifiable, Hashable, Codable, Sendable {
-    public let id: UUID
-    public let degree: Int
-    public let octaveOffset: Int
-
-    public init(id: UUID = UUID(), degree: Int, octaveOffset: Int) {
-        self.id = id
-        self.degree = degree
-        self.octaveOffset = octaveOffset
-    }
-}
-
 /// 单颗纸上陶珠。严格保留原始自由呼吸时间轴（rawOnset/rawDuration），并支持记录分形生长角色（起·承·转·合 / 延留迟到）。
 public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
@@ -275,7 +227,6 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
     public var quantizedOnset: Double?
     public var quantizedDuration: Double?
     public var confidence: Double
-    public var ghostCandidates: [GhostCandidate]
     public var phraseTag: String?
 
     public init(
@@ -287,18 +238,18 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
         quantizedOnset: Double? = nil,
         quantizedDuration: Double? = nil,
         confidence: Double = 1.0,
-        ghostCandidates: [GhostCandidate] = [],
         phraseTag: String? = nil
     ) {
         self.id = id
         self.degree = max(1, min(7, degree))
         self.octaveOffset = max(-1, min(1, octaveOffset))
-        self.rawOnset = max(0, rawOnset)
-        self.rawDuration = max(0.08, rawDuration)
-        self.quantizedOnset = quantizedOnset
-        self.quantizedDuration = quantizedDuration
-        self.confidence = confidence
-        self.ghostCandidates = ghostCandidates
+        let safeOnset = rawOnset.isFinite ? max(0.0, min(600.0, rawOnset)) : 0.0
+        let safeDuration = rawDuration.isFinite ? max(0.08, min(30.0, rawDuration)) : 0.25
+        self.rawOnset = safeOnset
+        self.rawDuration = safeDuration
+        self.quantizedOnset = quantizedOnset.flatMap { $0.isFinite ? max(0.0, min(600.0, $0)) : nil }
+        self.quantizedDuration = quantizedDuration.flatMap { $0.isFinite ? max(0.08, min(30.0, $0)) : nil }
+        self.confidence = confidence.isFinite ? max(0.0, min(1.0, confidence)) : 1.0
         self.phraseTag = phraseTag
     }
 
@@ -317,27 +268,12 @@ public struct NoteBead: Identifiable, Equatable, Codable, Sendable {
     }
 }
 
-/// 每次音珠发声时在画布与声盘上激起的物理涟漪与飞珠轨迹。
-public struct VisualImpulse: Identifiable, Sendable {
-    public let id: UUID
-    public let birth: TimeInterval
-    public let degree: Int
-    public let octaveOffset: Int
-    public let xNorm: Double
+public enum SpecimenEra: String, CaseIterable, Codable, Sendable, Identifiable {
+    case classical
+    case romantic
+    case original
 
-    public init(
-        id: UUID = UUID(),
-        birth: TimeInterval = Date().timeIntervalSinceReferenceDate,
-        degree: Int,
-        octaveOffset: Int = 0,
-        xNorm: Double
-    ) {
-        self.id = id
-        self.birth = birth
-        self.degree = degree
-        self.octaveOffset = octaveOffset
-        self.xNorm = max(0.05, min(0.95, xNorm))
-    }
+    public var id: String { rawValue }
 }
 
 public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
@@ -351,6 +287,7 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
     public var estimatedBPM: Double
     public var notes: [NoteBead]
     public var isSpecimen: Bool
+    public var specimenEra: SpecimenEra?
     public var specimenCategory: String?
     public var composerInsight: String?
     public var preferredTexture: AccompanimentTexture?
@@ -368,6 +305,7 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
         estimatedBPM: Double = 92.0,
         notes: [NoteBead] = [],
         isSpecimen: Bool = false,
+        specimenEra: SpecimenEra? = nil,
         specimenCategory: String? = nil,
         composerInsight: String? = nil,
         preferredTexture: AccompanimentTexture? = nil,
@@ -384,6 +322,7 @@ public struct MelodyDocument: Identifiable, Equatable, Codable, Sendable {
         self.estimatedBPM = estimatedBPM
         self.notes = notes
         self.isSpecimen = isSpecimen
+        self.specimenEra = specimenEra
         self.specimenCategory = specimenCategory
         self.composerInsight = composerInsight
         self.preferredTexture = preferredTexture

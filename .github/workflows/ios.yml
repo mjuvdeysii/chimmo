@@ -24,7 +24,7 @@ on:
         default: true
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ios-${{ github.ref }}
@@ -88,7 +88,6 @@ jobs:
 
       - name: Zero-network probe report
         if: always()
-        continue-on-error: true
         run: |
           kill "$(cat net.pid 2>/dev/null)" 2>/dev/null || true
           mkdir -p shots
@@ -98,6 +97,11 @@ jobs:
               | sed -E 's/^[0-9-]+ [0-9:.]+ //' | sort | uniq -c | sort -rn | head -50 || true
           } > shots/ios_network.txt
           cat shots/ios_network.txt | head -30 | while IFS= read -r l; do echo "::notice title=Network::$l"; done
+          VIOLATIONS=$(tail -n +2 shots/ios_network.txt | grep -cE "nw_connection|nw_endpoint|Task <|hostname|https?://|resolver|Connection [0-9]+" || true)
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            echo "::error title=Offline Policy Violation::Detected $VIOLATIONS network log entries from Chimmo process."
+            exit 1
+          fi
 
       - name: Report build errors on failure
         if: failure()
@@ -225,6 +229,10 @@ jobs:
         if: steps.check.outputs.ready == 'true' && env.BUILD != ''
         continue-on-error: true
         timeout-minutes: 25
+        env:
+          PUBLIC_BETA_GROUP: ${{ inputs.public_beta_group || '公测' }}
+          SUBMIT_PUBLIC_BETA: ${{ inputs.submit_public_beta }}
+          ENABLE_PUBLIC_LINK: ${{ inputs.enable_public_link }}
         run: |
           EXTRA_ARGS=()
           if [ -n "$BETA_FEEDBACK_EMAIL" ]; then
@@ -243,11 +251,10 @@ jobs:
             EXTRA_ARGS+=(--contact-phone "$BETA_CONTACT_PHONE")
           fi
 
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.submit_public_beta }}" = "true" ]; then
-            GROUP="${{ inputs.public_beta_group }}"
-            GROUP="${GROUP:-公测}"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$SUBMIT_PUBLIC_BETA" = "true" ]; then
+            GROUP="${PUBLIC_BETA_GROUP:-公测}"
             LINK_FLAG=()
-            if [ "${{ inputs.enable_public_link }}" = "true" ]; then
+            if [ "$ENABLE_PUBLIC_LINK" = "true" ]; then
               LINK_FLAG+=(--public-link)
             fi
             python3 Tools/asc.py prepare-public-beta \
@@ -282,3 +289,7 @@ jobs:
               --build "$BUILD" \
               --key-path "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" || true
           fi
+
+      - name: Cleanup temporary ASC API key
+        if: always()
+        run: rm -rf ~/private_keys/AuthKey_*.p8

@@ -1,594 +1,412 @@
 import SwiftUI
 
-/// Tab 1 · 声库：咩哞原创窑陶声学资料库（四频段窑陶调音座 / 12 套离线配方 / 闭眼夜灯零光台 / 8 首和声战栗乐章 / 28 首典藏曲本）。
+/// Sound Library Tab (Tab 2):
+/// Live circadian greeting, 12 acoustic scene tiles, 8 single-tap frisson capsules,
+/// and direct NavigationLink into the 28-specimen offline archive (single NavigationStack).
 public struct AcousticLibraryView: View {
     @ObservedObject public var vm: ResonanceViewModel
     public let palette: ChimmoPalette
-    public let onOpenField: () -> Void
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var searchText: String = ""
-    @State private var filter: LibraryFilter = .all
-    @State private var showFullSpecimenShelf: Bool = false
+    @State private var selectedFilter: LibraryFilter = .all
+    @State private var currentHour: Int = Calendar.current.component(.hour, from: Date())
+    @Environment(\.dynamicTypeSize) private var type
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.scenePhase) private var scenePhase
 
-    private enum LibraryFilter: String, CaseIterable, Identifiable {
+    public enum LibraryFilter: String, CaseIterable, Identifiable {
         case all
         case favorites
-        case delta
-        case theta
-        case alpha
-        case gamma
+        case morning
+        case afternoon
+        case evening
+        case midnight
 
-        var id: String { rawValue }
+        public var id: String { rawValue }
 
-        var title: String {
+        public var label: String {
             switch self {
-            case .all: return "全部"
-            case .favorites: return "已收藏"
-            case .delta: return "Delta"
-            case .theta: return "Theta"
-            case .alpha: return "Alpha"
-            case .gamma: return "Gamma"
-            }
-        }
-
-        var bandFilter: BrainwaveBand? {
-            switch self {
-            case .delta: return .delta
-            case .theta: return .theta
-            case .alpha: return .alpha
-            case .gamma: return .gamma
-            case .all, .favorites: return nil
+            case .all: return String(localized: "lib_filter_all", defaultValue: "全部场景")
+            case .favorites: return String(localized: "lib_filter_fav", defaultValue: "已收藏")
+            case .morning: return String(localized: "lib_filter_morning", defaultValue: "晨间")
+            case .afternoon: return String(localized: "lib_filter_afternoon", defaultValue: "午后")
+            case .evening: return String(localized: "lib_filter_evening", defaultValue: "傍晚")
+            case .midnight: return String(localized: "lib_filter_midnight", defaultValue: "深夜")
             }
         }
     }
 
-    public init(
-        vm: ResonanceViewModel,
-        palette: ChimmoPalette,
-        onOpenField: @escaping () -> Void = {}
-    ) {
+    public init(vm: ResonanceViewModel, palette: ChimmoPalette) {
         self.vm = vm
         self.palette = palette
-        self.onOpenField = onOpenField
-    }
-
-    private var currentHour: Int {
-        Calendar.current.component(.hour, from: Date())
-    }
-
-    private var normalizedQuery: String {
-        searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-    }
-
-    private var currentHourFeaturedPresetID: String? {
-        ResonanceKinematics.recommendedPresets(forHour: currentHour).first?.id
     }
 
     private var filteredPresets: [ResonancePreset] {
-        ResonancePreset.all.filter { preset in
-            if filter == .favorites && !vm.stats.isFavorite(preset.id) {
-                return false
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return ResonancePreset.all.filter { preset in
+            switch selectedFilter {
+            case .all: break
+            case .favorites:
+                if !vm.stats.isFavorite(preset.id) { return false }
+            case .morning:
+                if preset.hourWindow != .morning { return false }
+            case .afternoon:
+                if preset.hourWindow != .afternoon { return false }
+            case .evening:
+                if preset.hourWindow != .evening { return false }
+            case .midnight:
+                if preset.hourWindow != .midnight { return false }
             }
-            if let band = filter.bandFilter, preset.band != band {
-                return false
+            if !query.isEmpty {
+                return preset.title.localizedCaseInsensitiveContains(query)
+                    || preset.subtitle.localizedCaseInsensitiveContains(query)
+                    || preset.band.title.localizedCaseInsensitiveContains(query)
+                    || preset.band.chineseSubtitle.localizedCaseInsensitiveContains(query)
             }
-            if normalizedQuery.isEmpty {
-                return true
-            }
-            return preset.title.lowercased().contains(normalizedQuery)
-                || preset.subtitle.lowercased().contains(normalizedQuery)
-                || preset.tagline.lowercased().contains(normalizedQuery)
-                || preset.band.shortCode.lowercased().contains(normalizedQuery)
-                || preset.washKind.title.lowercased().contains(normalizedQuery)
+            return true
         }
     }
 
     private var filteredCapsules: [FrissonCapsule] {
-        FrissonCapsule.all.filter { capsule in
-            if let band = filter.bandFilter, capsule.companionBand != band {
-                return false
-            }
-            if normalizedQuery.isEmpty {
-                return true
-            }
-            return capsule.title.lowercased().contains(normalizedQuery)
-                || capsule.subtitle.lowercased().contains(normalizedQuery)
-                || capsule.frissonHighlight.lowercased().contains(normalizedQuery)
-                || capsule.companionBand.shortCode.lowercased().contains(normalizedQuery)
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return FrissonCapsule.all.filter { cap in
+            if query.isEmpty { return true }
+            return cap.title.localizedCaseInsensitiveContains(query)
+                || cap.subtitle.localizedCaseInsensitiveContains(query)
+                || cap.frissonNote.localizedCaseInsensitiveContains(query)
+                || cap.badgeTag.localizedCaseInsensitiveContains(query)
         }
     }
 
     public var body: some View {
+        let accent = vm.selectedBand.accentColor(isNight: palette.isNight)
+
         NavigationStack {
             ZStack {
-                AmbientPaperBackdrop(
-                    palette: palette,
-                    accentTint: vm.selectedBand.accentColor(isNight: palette.isNight)
-                )
+                AmbientPaperBackdrop(palette: palette, tint: accent)
 
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
-                        filterChipsRow
+                        circadianBanner(accent: accent)
 
-                        if normalizedQuery.isEmpty && filter == .all {
-                            kilnBandBenchSection
-                        }
+                        filterStrip(accent: accent)
 
-                        offlinePresetsSection
+                        presetsSection(accent: accent)
 
-                        if normalizedQuery.isEmpty && filter == .all {
-                            nightLampAtelierBanner
-                        }
+                        frissonCapsulesSection(accent: accent)
 
-                        if filter != .favorites || !normalizedQuery.isEmpty {
-                            frissonCapsulesSection
-                        }
-
-                        archiveMusicShelfEntry
+                        archiveEntryCard(accent: accent)
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 34)
+                    .padding(.top, 12)
+                    .padding(.bottom, 24)
                 }
             }
-            .navigationTitle("声库")
+            .navigationTitle(String(localized: "tab_library", defaultValue: "声库"))
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $searchText, prompt: "搜索声景、频段或乐章")
-            .sheet(isPresented: $showFullSpecimenShelf) {
-                NavigationStack {
-                    MusicBoxShelfView(
-                        palette: palette,
-                        synth: vm.studioVM.synth,
-                        notebook: vm.studioVM.notebook,
-                        currentDocumentID: vm.studioVM.document.id,
-                        navigationTitleText: "全部 28 首声波乐章",
-                        showsDismissButton: true,
-                        onLoadSavedToBoard: { entry in
-                            vm.stopBedPlayback()
-                            vm.studioVM.openSavedEntry(entry, autoPlay: true)
-                        },
-                        onPlaySavedInShowcase: { entry in
-                            vm.stopBedPlayback()
-                            vm.studioVM.openSavedEntry(entry, autoPlay: true)
-                        },
-                        onPlayAlongSpecimen: { spec in
-                            vm.stopBedPlayback()
-                            vm.studioVM.openSpecimen(spec, autoPlay: true)
-                        },
-                        onEditSpecimenOnBoard: { spec in
-                            vm.stopBedPlayback()
-                            vm.studioVM.openSpecimen(spec, autoPlay: true)
-                        },
-                        onStartNewTap: {
-                            showFullSpecimenShelf = false
-                            vm.focusHumGuideOnFieldAppear = true
-                            onOpenField()
-                        },
-                        onWillPlayInline: {
-                            vm.stopAllAudio()
-                        }
-                    )
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: String(localized: "lib_search_prompt", defaultValue: "搜索白昼声场或室内乐胶囊")
+            )
+            .onAppear {
+                currentHour = Calendar.current.component(.hour, from: Date())
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    currentHour = Calendar.current.component(.hour, from: Date())
                 }
             }
         }
     }
 
-    // MARK: - 1. Wrapping Filter Chips (Zero Horizontal Scroll)
-
-    private var filterChipsRow: some View {
-        ChimmoFlowRow(spacing: 8, lineSpacing: 8) {
-            ForEach(LibraryFilter.allCases) { item in
-                let active = filter == item
-                let tint = item.bandFilter?.accentColor(isNight: palette.isNight) ?? palette.homeAnchor
-                Button {
-                    filter = item
-                    if vm.hapticsEnabled { AcousticHapticsEngine.shared.playScrubTick() }
-                } label: {
-                    HStack(spacing: 5) {
-                        if item == .favorites {
-                            Image(systemName: active ? "heart.fill" : "heart")
-                                .font(.caption2.weight(.bold))
-                        }
-                        Text(item.title)
-                            .font(.caption.weight(.bold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                        if item == .favorites && !vm.stats.favoritePresetIDs.isEmpty {
-                            Text("\(vm.stats.favoritePresetIDs.count)")
-                                .font(.caption2.weight(.heavy).monospacedDigit())
-                        }
-                    }
-                    .foregroundStyle(active ? palette.contrastInkOnAccent : palette.primaryInk)
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 38)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(active ? tint : palette.shelfSurface)
-                    )
-                    .overlay(
-                        Capsule(style: .continuous)
-                            .strokeBorder(active ? tint : palette.divider, lineWidth: 1.0)
-                    )
-                    .contentShape(Capsule(style: .continuous))
-                }
-                .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
-                .accessibilityLabel("筛选 \(item.title)")
-                .accessibilityValue(active ? "已选中" : "")
-            }
-        }
-    }
-
-    // MARK: - 2. Kiln Ceramic 4-Band Bench (Single Card, Four Divided Rows)
-
-    private var kilnBandBenchSection: some View {
+    private func circadianBanner(accent: Color) -> some View {
         let banner = ResonanceKinematics.timeOfDayBanner(forHour: currentHour)
+        let recommended = ResonanceKinematics.recommendedPresets(forHour: currentHour).first
 
         return VStack(alignment: .leading, spacing: 10) {
-            ChimmoSectionTitle(
-                title: "四频段窑陶调音座",
-                detail: banner.title,
-                isNight: palette.isNight,
-                tint: palette.homeAnchor
-            )
+            HStack(spacing: 12) {
+                ChimmoDuoBadgeView(
+                    isNight: palette.isNight,
+                    accentColor: accent,
+                    melodyActive: vm.isResonancePlaying || vm.isSpecimenPlaying,
+                    cowAwake: vm.isResonancePlaying
+                )
+                .frame(width: 48, height: 30)
 
-            VStack(spacing: 0) {
-                ForEach(Array(BrainwaveBand.allCases.enumerated()), id: \.element.id) { index, band in
-                    let tint = band.accentColor(isNight: palette.isNight)
-                    let isPlayingBand = vm.isBedPlaying && vm.selectedBand == band
-
-                    Button {
-                        vm.selectBand(band, autoPlay: true)
-                        onOpenField()
-                    } label: {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(tint.opacity(palette.isNight ? 0.24 : 0.14))
-                                    .frame(width: 42, height: 42)
-                                ChimmoFigureView(
-                                    member: kilnMember(for: band),
-                                    isNight: palette.isNight,
-                                    isMinor: false,
-                                    isSinging: isPlayingBand,
-                                    time: 0
-                                )
-                                .scaleEffect(0.72)
-                                .frame(width: 36, height: 36)
-                            }
-                            .accessibilityHidden(true)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 6) {
-                                    Text(band.title)
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(palette.primaryInk)
-                                    Text(band.englishTag)
-                                        .font(.caption.weight(.bold).monospacedDigit())
-                                        .foregroundStyle(tint)
-                                }
-                                Text(band.somaticHook)
-                                    .font(.caption)
-                                    .foregroundStyle(palette.secondaryInk)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.78)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                            if isPlayingBand {
-                                ChimmoResonanceBead(size: 10, isNight: palette.isNight, tint: tint)
-                            }
-
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(palette.secondaryInk.opacity(0.65))
-                                .accessibilityHidden(true)
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .frame(minHeight: 58)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(band.accessibilitySummary)
-                    .accessibilityValue(isPlayingBand ? "正在共振" : "")
-                    .accessibilityHint("轻点调谐至此频段并打开声场")
-
-                    if index < BrainwaveBand.allCases.count - 1 {
-                        Divider().opacity(0.45).padding(.leading, 68)
-                    }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(banner.title)
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
+                    Text(banner.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(palette.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
-            .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
+
+            if let recommended {
+                let active = (vm.activePreset?.id == recommended.id && vm.isResonancePlaying)
+                Button {
+                    if active {
+                        vm.pauseResonancePlayback()
+                    } else {
+                        vm.startPreset(recommended)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: active ? "pause.fill" : "play.fill")
+                            .font(.caption.weight(.bold))
+                        Text(active
+                             ? String(format: String(localized: "lib_playing_preset_fmt", defaultValue: "正在聆听：%@"), recommended.title)
+                             : String(format: String(localized: "lib_quick_start_fmt", defaultValue: "一键开启此刻建议：%@"), recommended.title))
+                            .font(.system(.caption, design: .rounded).weight(.bold))
+                            .lineLimit(type.isAccessibilitySize ? 3 : 2)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.chimmoVinyl(palette: palette, tint: recommended.band.accentColor(isNight: palette.isNight), prominent: active))
+                .accessibilityValue(active ? String(localized: "state_playing", defaultValue: "正在播放") : "")
+            }
+        }
+        .padding(16)
+        .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card, tint: accent)
+    }
+
+    private func filterStrip(accent: Color) -> some View {
+        ChimmoFlowRow(spacing: 8, lineSpacing: 8) {
+            ForEach(LibraryFilter.allCases) { item in
+                let selected = (selectedFilter == item)
+                Button {
+                    selectedFilter = item
+                } label: {
+                    Text(item.label)
+                        .font(.system(.caption, design: .rounded).weight(.bold))
+                }
+                .buttonStyle(.chimmoVinyl(palette: palette, tint: accent, prominent: selected))
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
         }
     }
 
-    private func kilnMember(for band: BrainwaveBand) -> ChimmoMember {
-        switch band {
-        case .delta: return .bomo
-        case .theta: return .taono
-        case .alpha: return .udo
-        case .gamma: return .corllo
-        }
-    }
-
-    // MARK: - 3. Offline Acoustic Presets (12 Curated Kiln Soundscapes)
-
-    private var offlinePresetsSection: some View {
-        let featuredID = currentHourFeaturedPresetID
-
-        return VStack(alignment: .leading, spacing: 12) {
+    @ViewBuilder
+    private func presetsSection(accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             ChimmoSectionTitle(
-                title: "离线声景配方",
-                detail: "\(filteredPresets.count) 套",
+                title: String(localized: "lib_section_presets", defaultValue: "时间声景配方"),
+                detail: String(format: String(localized: "lib_count_fmt", defaultValue: "%lld 组"), filteredPresets.count),
                 isNight: palette.isNight,
-                tint: palette.celadonAccent
+                tint: accent
             )
 
             if filteredPresets.isEmpty {
-                emptyResultCard(
-                    message: filter == .favorites && normalizedQuery.isEmpty
-                        ? "还没有收藏声景配方，轻点右侧心形即可收入这里。"
-                        : "没有找到匹配的声景配方，换个关键词或筛选条件试试。"
-                )
+                Text(selectedFilter == .favorites
+                     ? String(localized: "lib_empty_favorites", defaultValue: "轻点任意声景卡片右上角的心形图标，即可收集常听配方。")
+                     : String(localized: "lib_empty_search", defaultValue: "没有匹配该关键词的声景"))
+                    .font(.subheadline)
+                    .foregroundStyle(palette.secondaryInk)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
             } else {
-                ForEach(filteredPresets) { preset in
-                    let isPlayingThis = vm.activePreset?.id == preset.id && vm.isBedPlaying
-                    let tint = preset.band.accentColor(isNight: palette.isNight)
-                    let fav = vm.stats.isFavorite(preset.id)
-                    let isHourMatch = preset.id == featuredID
-
-                    HStack(spacing: 12) {
-                        Button {
-                            vm.startPreset(preset)
-                            onOpenField()
-                        } label: {
-                            HStack(spacing: 12) {
-                                ChimmoResonanceBead(size: 12, isNight: palette.isNight, tint: tint)
-
-                                VStack(alignment: .leading, spacing: 3) {
-                                    HStack(spacing: 6) {
-                                        Text(preset.title)
-                                            .font(.subheadline.weight(.bold))
-                                            .foregroundStyle(palette.primaryInk)
-                                            .lineLimit(1)
-                                            .minimumScaleFactor(0.78)
-
-                                        if isHourMatch {
-                                            Text("此刻契合")
-                                                .font(.caption2.weight(.heavy))
-                                                .foregroundStyle(palette.contrastInkOnAccent)
-                                                .padding(.horizontal, 7)
-                                                .padding(.vertical, 2)
-                                                .background(Capsule().fill(palette.homeAnchor))
-                                        }
-                                    }
-
-                                    Text("\(preset.subtitle) · \(preset.durationMinutes) 分钟 · \(preset.washKind.title)")
-                                        .font(.caption.weight(.semibold).monospacedDigit())
-                                        .foregroundStyle(tint)
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.78)
-
-                                    Text(preset.tagline)
-                                        .font(.caption)
-                                        .foregroundStyle(palette.secondaryInk)
-                                        .lineLimit(2)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .frame(minHeight: 44)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(preset.title)，\(preset.subtitle)")
-                        .accessibilityValue(isPlayingThis ? "正在播放" : "")
-                        .accessibilityHint("启动此离线声景并切换至声场控制台")
-
-                        Button {
-                            vm.stats.toggleFavoritePreset(preset.id)
-                            if vm.hapticsEnabled { AcousticHapticsEngine.shared.playScrubTick() }
-                        } label: {
-                            Image(systemName: fav ? "heart.fill" : "heart")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(fav ? palette.homeAnchor : palette.secondaryInk)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(fav ? "取消收藏 \(preset.title)" : "收藏 \(preset.title)")
-                        .accessibilityHint("添加或移出已收藏声景")
+                let columns = type >= .xxLarge
+                    ? [GridItem(.flexible())]
+                    : [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(filteredPresets) { preset in
+                        presetTile(preset)
                     }
-                    .padding(14)
-                    .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card, tint: isPlayingThis ? tint : nil)
                 }
             }
         }
     }
 
-    // MARK: - 4. Native Dark-Indigo Night Lamp Tactile Bench
+    private func presetTile(_ preset: ResonancePreset) -> some View {
+        let cardAccent = preset.band.accentColor(isNight: palette.isNight)
+        let active = (vm.activePreset?.id == preset.id && vm.isResonancePlaying)
+        let fav = vm.stats.isFavorite(preset.id)
 
-    private var nightLampAtelierBanner: some View {
-        let shape = RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous)
-        let moonCream = Color(hex: 0xF2E2C4)
+        return ZStack(alignment: .topTrailing) {
+            Button {
+                if active {
+                    vm.pauseResonancePlayback()
+                } else {
+                    vm.startPreset(preset)
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(cardAccent)
+                            .frame(width: 9, height: 9)
+                        Text(preset.band.title)
+                            .font(.system(.caption2, design: .rounded).weight(.heavy))
+                            .foregroundStyle(cardAccent)
+                        Spacer(minLength: 36)
+                    }
+                    .frame(minHeight: 30)
 
-        return VStack(alignment: .leading, spacing: 10) {
-            ChimmoSectionTitle(
-                title: "夜间零光盲操",
-                isNight: palette.isNight,
-                tint: palette.nightLampGold
-            )
+                    Text(preset.title)
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .foregroundStyle(palette.primaryInk)
+                        .lineLimit(type.isAccessibilitySize ? 3 : 2)
+                        .multilineTextAlignment(.leading)
+
+                    Text(preset.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(palette.secondaryInk)
+                        .lineLimit(type.isAccessibilitySize ? 4 : 2)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer(minLength: 0)
+
+                    HStack {
+                        Text(String(format: String(localized: "lib_mins_hint_fmt", defaultValue: "建议 %lld 分钟"), preset.durationHintMinutes))
+                            .font(.caption2.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(palette.secondaryInk)
+                        Spacer()
+                        Image(systemName: active ? "pause.circle.fill" : "play.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(active ? cardAccent : palette.secondaryInk)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 136, alignment: .topLeading)
+                .padding(14)
+                .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card, tint: active ? cardAccent : nil)
+            }
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
+            .accessibilityLabel(String(format: String(localized: "vo_pair_fmt", defaultValue: "%@ · %@"), preset.title, preset.subtitle))
+            .accessibilityValue(active ? String(localized: "state_playing", defaultValue: "正在播放") : "")
 
             Button {
-                vm.openNightLampSheet = true
+                vm.stats.toggleFavoritePreset(preset.id)
+                if vm.hapticsEnabled { AcousticHapticsEngine.shared.playScrubTick() }
             } label: {
-                HStack(spacing: 14) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
-                            ChimmoCraftMark(
-                                .nightLampHalo,
-                                color: palette.nightLampGold,
-                                secondaryColor: moonCream.opacity(0.75)
-                            )
-                            .frame(width: 22, height: 22)
-
-                            Text("闭眼夜灯触觉场")
-                                .font(.system(.title3, design: .rounded).weight(.bold))
-                                .foregroundStyle(moonCream)
-                        }
-
-                        Text("纯黑防蓝光夜空音脊，单指盲滑与细腻触感，熄灯后也不刺眼。")
-                            .font(.caption)
-                            .foregroundStyle(moonCream.opacity(0.82))
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.06))
-                            .overlay(Circle().strokeBorder(palette.nightLampGold.opacity(0.32), lineWidth: 1.2))
-                            .frame(width: 70, height: 70)
-                        LivingChimmoDuoBadgeView(
-                            isNight: true,
-                            accentColor: palette.nightLampGold,
-                            melodyActive: false,
-                            cowAwake: false
-                        )
-                        .frame(width: 56, height: 38)
-                    }
-                    .accessibilityHidden(true)
-                }
-                .padding(18)
-                .background(
-                    LinearGradient(
-                        colors: [palette.nightLampBackdrop, palette.nightLampHillSurface],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .clipShape(shape)
-                .overlay(
-                    shape.strokeBorder(palette.nightLampGold.opacity(0.28), lineWidth: 1.2)
-                )
-                .shadow(color: palette.elevationShadow(dayOpacity: 0.16, nightOpacity: 0.34), radius: 10, y: 5)
-                .contentShape(shape)
+                Image(systemName: fav ? "heart.fill" : "heart")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(fav ? palette.homeAnchor : palette.secondaryInk)
+                    .frame(width: 44, height: 44)
             }
-            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.4))
-            .accessibilityLabel("闭眼夜灯触觉场，纯黑防蓝光盲操音脊")
-            .accessibilityHint("轻点开启夜间零光触觉声音台")
+            .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.0))
+            .accessibilityLabel(fav
+                                ? String(localized: "lib_unfav_vo", defaultValue: "取消收藏该声景")
+                                : String(localized: "lib_fav_vo", defaultValue: "收藏该声景"))
         }
     }
 
-    // MARK: - 5. Acoustic Frisson Capsules (8 Curated Releases)
-
-    private var frissonCapsulesSection: some View {
+    @ViewBuilder
+    private func frissonCapsulesSection(accent: Color) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             ChimmoSectionTitle(
-                title: "和声战栗乐章",
-                detail: "\(filteredCapsules.count) 首精选",
+                title: String(localized: "lib_section_capsules", defaultValue: "和声战栗胶囊"),
+                detail: String(localized: "lib_capsules_detail", defaultValue: "单点即听 · 离线室内乐"),
                 isNight: palette.isNight,
-                tint: palette.bassRibbon
+                tint: palette.harmonyWash
             )
 
             if filteredCapsules.isEmpty {
-                emptyResultCard(message: "没有找到匹配「\(searchText)」的和声乐章，换个词试试。")
+                Text(String(localized: "lib_empty_capsules", defaultValue: "没有匹配该关键词的室内乐胶囊"))
+                    .font(.subheadline)
+                    .foregroundStyle(palette.secondaryInk)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
             } else {
-                ForEach(filteredCapsules) { capsule in
-                    let isPlayingThis = vm.activeCapsule?.id == capsule.id && vm.studioVM.isPlaying
-                    let tint = capsule.companionBand.accentColor(isNight: palette.isNight)
-
-                    HStack(spacing: 12) {
+                LazyVStack(spacing: 10) {
+                    ForEach(filteredCapsules) { cap in
+                        let playing = (vm.activeCapsule?.id == cap.id && vm.isSpecimenPlaying)
                         Button {
-                            vm.toggleCapsule(capsule)
+                            vm.toggleCapsule(cap)
                         } label: {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous)
-                                    .fill(tint.opacity(palette.isNight ? 0.24 : 0.14))
-                                    .frame(width: 48, height: 48)
-                                Image(systemName: isPlayingThis ? "stop.fill" : "play.fill")
-                                    .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(tint)
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(playing ? accent : palette.insetStageSurface)
+                                        .frame(width: 44, height: 44)
+                                    Image(systemName: playing ? "pause.fill" : "play.fill")
+                                        .font(.subheadline.weight(.bold))
+                                        .foregroundStyle(playing ? palette.contrastInkOnAccent : accent)
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if type >= .xxLarge {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(cap.title)
+                                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                                .foregroundStyle(palette.primaryInk)
+                                            capsuleBadge(cap.badgeTag, accent: accent)
+                                        }
+                                    } else {
+                                        HStack(spacing: 6) {
+                                            Text(cap.title)
+                                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                                .foregroundStyle(palette.primaryInk)
+                                            capsuleBadge(cap.badgeTag, accent: accent)
+                                        }
+                                    }
+                                    Text(cap.frissonNote)
+                                        .font(.caption)
+                                        .foregroundStyle(palette.secondaryInk)
+                                        .lineLimit(type.isAccessibilitySize ? 4 : 2)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                Spacer(minLength: 4)
                             }
-                            .frame(width: 48, height: 48)
-                            .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.tile, style: .continuous))
+                            .padding(12)
+                            .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card, tint: playing ? accent : nil)
                         }
                         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-                        .accessibilityLabel(isPlayingThis ? "停止播放 \(capsule.title)" : "试听 \(capsule.title)")
-                        .accessibilityHint("通过离线室内乐合成器播放这段和声乐章")
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack(spacing: 6) {
-                                Text(capsule.title)
-                                    .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(palette.primaryInk)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.78)
-                                Spacer(minLength: 4)
-                                Text(capsule.companionBand.shortCode)
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(tint)
-                            }
-
-                            Text(capsule.frissonHighlight)
-                                .font(.caption)
-                                .foregroundStyle(palette.secondaryInk)
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text("\(capsule.subtitle) · \(capsule.durationText)")
-                                .font(.caption2)
-                                .foregroundStyle(palette.secondaryInk.opacity(0.85))
-                                .lineLimit(1)
-                        }
+                        .accessibilityLabel(String(format: String(localized: "vo_pair_fmt", defaultValue: "%@ · %@"), cap.title, cap.frissonNote))
+                        .accessibilityValue(playing ? String(localized: "state_playing", defaultValue: "正在播放") : "")
                     }
-                    .padding(14)
-                    .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card, tint: isPlayingThis ? tint : nil)
                 }
             }
         }
     }
 
-    // MARK: - 6. Full 28-Piece Archive Entry
+    private func capsuleBadge(_ text: String, accent: Color) -> some View {
+        let increased = (contrast == .increased)
+        let strokeAlpha = increased ? 0.85 : (reduceTransparency ? 0.65 : 0.45)
+        let strokeW = StorybookSurfaceClarityPolicy.borderLineWidth(isActive: false, reduceTransparency: reduceTransparency, increasedContrast: increased)
 
-    private var archiveMusicShelfEntry: some View {
-        Button {
-            showFullSpecimenShelf = true
+        return Text(text)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(palette.primaryInk)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(palette.insetStageSurface)
+                    .overlay(Capsule().strokeBorder(accent.opacity(strokeAlpha), lineWidth: strokeW))
+            )
+    }
+
+    private func archiveEntryCard(accent: Color) -> some View {
+        NavigationLink {
+            SpecimenArchiveSheet(vm: vm, palette: palette)
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "books.vertical.fill")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(palette.secondaryInk)
+                ChimmoCraftMark(.soundLibrary, color: accent)
+                    .frame(width: 26, height: 26)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("完整声学典藏档案（28 首）")
-                        .font(.subheadline.weight(.bold))
+                    Text(String(localized: "lib_archive_link_title", defaultValue: "古典公版与原创室乐全集（28 首）"))
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
                         .foregroundStyle(palette.primaryInk)
-                    Text("浏览公版古典、自研声学曲库与本地录音笔记")
+                    Text(String(localized: "lib_archive_link_sub", defaultValue: "按时代浏览、检索并试听全套钢琴、大提琴与竖琴微声学范例"))
                         .font(.caption)
                         .foregroundStyle(palette.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(palette.secondaryInk)
             }
-            .padding(14)
-            .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
-            .contentShape(RoundedRectangle(cornerRadius: ChimmoRadius.card, style: .continuous))
+            .padding(16)
+            .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card, tint: accent)
         }
         .buttonStyle(StorybookTactileButtonStyle(sinkY: 1.2))
-        .accessibilityHint("在弹窗中浏览全部 28 首内置声学乐章与个人曲本")
-    }
-
-    private func emptyResultCard(message: String) -> some View {
-        Text(message)
-            .font(.subheadline)
-            .foregroundStyle(palette.secondaryInk)
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .chimmoAtelierCard(palette: palette, radius: ChimmoRadius.card)
     }
 }

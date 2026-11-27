@@ -1,198 +1,136 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hans">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>隐私政策 · 咩哞 (Mie &amp; Mou)</title>
+  <title>隐私与安全声明 · 咩哞（Mie &amp; Mou）</title>
   <style>
     :root {
       --bg: #FBF7F0;
-      --paper: #FFFFFF;
-      --shelf: #F2EBE0;
-      --butter: #F8EBD0;
-      --mint: #E3F0ED;
-      --outline: #1C1D19;
-      --border: rgba(28, 29, 25, 0.11);
-      --border-strong: rgba(28, 29, 25, 0.16);
+      --surface: #F4ECE0;
+      --card: #FFFDF8;
       --ink: #1C1D19;
-      --sub: #5C564D;
-      --accent: #C4513A;
-      --prominent: #B8442E;
-      --celadon: #3D7A77;
-      --shadow-soft: 0 10px 28px rgba(122, 82, 48, 0.08);
-      --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10);
+      --muted: #4E4A42;
+      --border: rgba(28, 29, 25, 0.14);
+      --accent: #2B6865;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0E1430;
-        --paper: #19213F;
-        --shelf: #212A4C;
-        --butter: #272B4D;
-        --mint: #1B3049;
-        --outline: #FFB547;
-        --border: rgba(242, 226, 196, 0.12);
-        --border-strong: rgba(255, 181, 71, 0.28);
-        --ink: #F2E2C4;
-        --sub: #B8BED4;
-        --accent: #F08A6C;
-        --prominent: #C4513A;
-        --celadon: #7EC8C3;
-        --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.36);
-        --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
-      }
-    }
-    @media (prefers-contrast: more) {
-      :root {
-        --border: rgba(28, 29, 25, 0.34);
-        --border-strong: rgba(28, 29, 25, 0.56);
-      }
-      .hero-banner, .card, .back-bar, .brand-pill { border-width: 1.6px; }
-      a.home-btn { border-color: var(--outline); }
-    }
-    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
-      :root {
-        --border: rgba(242, 226, 196, 0.36);
-        --border-strong: rgba(255, 181, 71, 0.62);
+        --bg: #0E1326;
+        --surface: #161D38;
+        --card: #1E2646;
+        --ink: #F4EEE2;
+        --muted: #C6CEE8;
+        --border: rgba(244, 238, 226, 0.16);
+        --accent: #7ECBC5;
       }
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 28px 16px 40px;
       background: var(--bg);
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", sans-serif;
       line-height: 1.72;
     }
-    .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
-    .hero-banner {
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 18px 22px;
-      box-shadow: var(--shadow-soft);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .brand-pill {
+    .wrap { max-width: 780px; margin: 0 auto; padding: 28px 20px 56px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .pill-link, .lang-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 4px 12px 4px 6px;
+      min-height: 44px;
+      padding: 0 16px;
       border-radius: 999px;
-      background: var(--butter);
-      color: var(--ink);
+      background: var(--card);
       border: 1px solid var(--border);
-      font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 6px;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
     }
-    h1 { margin: 0; font-size: 24px; font-weight: 900; }
-    .meta { margin: 4px 0 0; color: var(--sub); font-size: 13px; font-weight: 700; }
+    h1 { margin: 0 0 8px; font-size: 1.9rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .card {
-      background: var(--paper);
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 18px 22px;
-      box-shadow: var(--shadow-soft);
+      padding: 20px;
+      margin-bottom: 14px;
     }
-    .card.mint-card { background: var(--mint); }
-    h2 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
-    p { margin: 0; font-size: 15px; font-weight: 500; }
-    .back-bar {
+    h2 { margin: 0 0 8px; font-size: 1.12rem; }
+    p, li { margin: 0 0 8px; color: var(--muted); }
+    code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 0.88em;
+    }
+    footer {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.90rem;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
       flex-wrap: wrap;
-      background: var(--shelf);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 12px 18px;
-      box-shadow: var(--shadow-soft);
+      gap: 14px;
+      justify-content: space-between;
     }
-    a.home-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 9px 16px;
-      min-height: 40px;
-      border-radius: 999px;
-      background: var(--prominent);
-      color: #FFFFFF;
-      border: 1px solid transparent;
-      box-shadow: var(--shadow-btn);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
-    .nav-links a { color: var(--accent); text-decoration: none; }
-    .nav-links a:hover { text-decoration: underline; }
-    a:focus-visible { outline: 2px solid var(--prominent); outline-offset: 2px; border-radius: 6px; }
-    a.home-btn:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
+    footer a { color: var(--muted); font-weight: 600; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <header class="hero-banner">
+    <div class="top-bar">
+      <a class="pill-link" href="index.html" data-zh="返回咩哞主页" data-en="Back to Home">返回咩哞主页</a>
+      <button id="langToggle" class="lang-btn" type="button">EN</button>
+    </div>
+    <h1 data-zh="隐私与安全声明" data-en="Privacy Policy">隐私与安全声明</h1>
+    <p class="meta" data-zh="生效日期：2026-11-27 · 适用版本：咩哞 Mie &amp; Mou (app.chimmo)" data-en="Effective Date: 2026-11-27 · Mie &amp; Mou (app.chimmo)">生效日期：2026-11-27 · 适用版本：咩哞 Mie &amp; Mou (app.chimmo)</p>
+
+    <article class="card">
+      <h2 data-zh="一、100% 本地离线架构，零网络追踪" data-en="1. 100% Offline Architecture, Zero Tracking">一、100% 本地离线架构，零网络追踪</h2>
+      <p data-zh="咩哞（Mie &amp; Mou）从声音合成引擎到轻哼音高计算全部运行于本机 iPhone：无用户账户、无云端同步、不集成任何第三方统计、广告或崩溃上报 SDK，也不在后台发起任何外部网络请求。" data-en="Mie &amp; Mou runs entirely on your device from audio synthesis to hum pitch analysis. There are no accounts, no cloud sync, no third-party analytics, ads, or crash SDKs, and zero outbound network requests.">咩哞（Mie &amp; Mou）从声音合成引擎到轻哼音高计算全部运行于本机 iPhone：无用户账户、无云端同步、不集成任何第三方统计、广告或崩溃上报 SDK，也不在后台发起任何外部网络请求。</p>
+    </article>
+
+    <article class="card">
+      <h2 data-zh="二、系统权限与 Apple Privacy Manifest 边界" data-en="2. Permissions &amp; Apple Privacy Manifest">二、系统权限与 Apple Privacy Manifest 边界</h2>
+      <p data-zh="您的声场偏好、收藏配方与专注分钟数只保存在设备本机系统偏好存储中，应用遵循以下最小授权原则：" data-en="All preferences, favorite presets, and listening totals remain in local on-device storage under strict least-privilege rules:">您的声场偏好、收藏配方与专注分钟数只保存在设备本机系统偏好存储中，应用遵循以下最小授权原则：</p>
+      <ul>
+        <li data-zh="<strong>麦克风权限（可选）</strong>：仅在您主动开启「轻哼找同频」时临时采样音频帧以计算基频（Hz），纯内存实时计算后即刻释放，永不保存或上传音频。" data-en="<strong>Microphone (Optional)</strong>: Used solely on-demand during Hum Pitch Match to compute vocal fundamental (Hz) in RAM—never saved or uploaded."><strong>麦克风权限（可选）</strong>：仅在您主动开启「轻哼找同频」时临时采样音频帧以计算基频（Hz），纯内存实时计算后即刻释放，永不保存或上传音频。</li>
+        <li data-zh="<strong>照片仅添加权限（可选）</strong>：仅在您主动点击将生成的 1080×1350 静态 PNG 共振明信片「存入相册」或系统分享时触发，从不读取或扫描您的任何已有照片。" data-en="<strong>Photos Add-Only (Optional)</strong>: Requested strictly when you choose to save a generated 1080x1350 static PNG keepsake card—never reads existing photos."><strong>照片仅添加权限（可选）</strong>：仅在您主动点击将生成的 1080×1350 静态 PNG 共振明信片「存入相册」或系统分享时触发，从不读取或扫描您的任何已有照片。</li>
+        <li data-zh="<strong>PrivacyInfo 必要理由 API</strong>：本机仅声明 <code>NSPrivacyAccessedAPICategoryUserDefaults: CA92.1</code>（保存本机外观及统计偏好）与 <code>NSPrivacyAccessedAPICategorySystemBootTime: 35F9.1</code>（计算实时声学时钟与平滑睡眠淡出）。" data-en="<strong>Required Reason APIs</strong>: PrivacyInfo.xcprivacy declares only <code>NSPrivacyAccessedAPICategoryUserDefaults: CA92.1</code> and <code>NSPrivacyAccessedAPICategorySystemBootTime: 35F9.1</code>."><strong>PrivacyInfo 必要理由 API</strong>：本机仅声明 <code>NSPrivacyAccessedAPICategoryUserDefaults: CA92.1</code>（保存本机外观及统计偏好）与 <code>NSPrivacyAccessedAPICategorySystemBootTime: 35F9.1</code>（计算实时声学时钟与平滑睡眠淡出）。</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h2 data-zh="三、您的控制与重置权" data-en="3. Your Control &amp; Reset Rights">三、您的控制与重置权</h2>
+      <p data-zh="您可以随时在 iOS 系统设置关闭麦克风或照片写入权限、在「工坊」清空本地专注记录，或直接卸载应用以移除所有本地数据。" data-en="You may revoke Microphone or Photos access anytime in iOS Settings, reset local statistics in Kiln Atelier, or delete the app to erase all local state.">您可以随时在 iOS 系统设置关闭麦克风或照片写入权限、在「工坊」清空本地专注记录，或直接卸载应用以移除所有本地数据。</p>
+    </article>
+
+    <footer>
+      <span data-zh="咩哞 · Mie &amp; Mou (app.chimmo)" data-en="Mie &amp; Mou (app.chimmo)">咩哞 · Mie &amp; Mou (app.chimmo)</span>
       <div>
-        <span class="brand-pill">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="17.5" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.6"/>
-            <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
-            <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
-          </svg>
-          <span>MIE &amp; MOU PRIVACY CHARTER</span>
-        </span>
-        <h1>咩哞（Mie &amp; Mou）隐私政策</h1>
-        <p class="meta">生效日期：2026 年 11 月 21 日 · 最近修订：2026 年 11 月 26 日</p>
+        <a href="terms.html" data-zh="使用条款" data-en="Terms">使用条款</a> ·
+        <a href="licenses.html" data-zh="公版致谢" data-en="Credits">公版致谢</a>
       </div>
-      <svg width="86" height="56" viewBox="0 0 86 56" aria-hidden="true">
-        <path d="M4 44 Q24 30 44 41 T82 37 L82 54 L4 54 Z" fill="var(--mint)" stroke="var(--outline)" stroke-width="2"/>
-        <circle cx="30" cy="30" r="11" fill="#F25563" stroke="var(--outline)" stroke-width="2.2"/>
-        <circle cx="27" cy="28" r="1.8" fill="#231B15"/>
-        <circle cx="33" cy="28" r="1.8" fill="#231B15"/>
-        <circle cx="29" cy="34" r="3" fill="#FFE49E" stroke="#231B15" stroke-width="1.4"/>
-        <circle cx="56" cy="32" r="10" fill="#2E7DB2" stroke="var(--outline)" stroke-width="2.2"/>
-        <circle cx="65" cy="29" r="5" fill="#0F4C8A" stroke="var(--outline)" stroke-width="1.8"/>
-        <circle cx="53" cy="30" r="1.7" fill="#231B15"/>
-        <circle cx="59" cy="30" r="1.7" fill="#231B15"/>
-      </svg>
-    </header>
-
-    <section class="card mint-card">
-      <h2>1. 核心原则：不联网、不收集任何数据</h2>
-      <p><strong>咩哞（Mie &amp; Mou）</strong> 是一款完全在您的设备本地离线运行的脑波共振与声学放松应用（非医疗器械）。我们不设账号系统，不连接任何远程服务器，不包含任何广告、统计分析或第三方追踪 SDK。</p>
-    </section>
-
-    <section class="card">
-      <h2>2. 麦克风权限的使用</h2>
-      <p>当您使用「轻哼同频」功能时，应用会向 iOS 系统请求麦克风访问权限。您轻哼的音频信号<strong>仅在设备本机内存中实时捕捉基频并转换为包裹声场</strong>，从不上传、不外发，也不会用于任何云端训练或个人身份识别。您随时可以在 iOS「设置 › 隐私与安全性 › 麦克风」中撤回该权限，撤回后仍可使用三档预设共振基频与全部声波功能。</p>
-    </section>
-
-    <section class="card">
-      <h2>3. 本地存储与离线导出</h2>
-      <p>您的声场偏好、收藏配方与本地记录仅保存在您的设备本机（标准本地偏好存储 <code>NSPrivacyAccessedAPICategoryUserDefaults: CA92.1</code>）。只有当您主动使用系统分享菜单导出图片（PNG）、立体声音频（WAV）或标准 MIDI 文件时，对应文件才会通过您指定的系统方式分享。</p>
-    </section>
-
-    <section class="card">
-      <h2>4. 联系我们</h2>
-      <p>如对本隐私政策有任何疑问，请通过 <a href="https://github.com/mjuvdeysii/chimmo/issues" style="color:var(--accent);font-weight:800;">GitHub Issues</a> 联系开发者。</p>
-    </section>
-
-    <footer class="back-bar">
-      <a class="home-btn" href="index.html">返回咩哞主页</a>
-      <nav class="nav-links" aria-label="法律与开源页面">
-        <a href="terms.html">使用条款</a>
-        <a href="licenses.html">开源许可</a>
-        <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
-      </nav>
     </footer>
   </main>
+  <script>
+    (() => {
+      let lang = "zh";
+      const btn = document.getElementById("langToggle");
+      function apply() {
+        document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en";
+        btn.textContent = lang === "zh" ? "EN" : "中文";
+        document.querySelectorAll("[data-zh]").forEach((el) => {
+          el.innerHTML = lang === "zh" ? el.dataset.zh : el.dataset.en;
+        });
+      }
+      btn.addEventListener("click", () => { lang = lang === "zh" ? "en" : "zh"; apply(); });
+    })();
+  </script>
 </body>
 </html>

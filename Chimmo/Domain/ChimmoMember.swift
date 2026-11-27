@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// 咩哞七小只（调内 1–7 音级正典，采用鲜活年轻的彩虹陶釉色板 + 形状/数字/名称三重无障碍编码）。
+/// Seven kiln ceramic-glaze scale members (1-7) with shape, numeral, and name encodings.
 public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Sendable {
-    case taono = 1  // 1 · 家 (Do)   - 珊瑚红陶钟（1-3-5 核心）
-    case doko = 2   // 2 · 迈步 (Re) - 鲜橘小木鱼
-    case plokko = 3 // 3 · 晴雨 (Mi) - 莓果粉不倒翁（1-3-5 核心）
-    case udo = 4    // 4 · 悬步 (Fa) - 薄荷青小陶笛
-    case corllo = 5 // 5 · 远望 (Sol)- 晴空蓝螺旋贝（1-3-5 核心）
-    case bomo = 6   // 6 · 怀旧 (La) - 鸢尾紫小手碟
-    case tinki = 7  // 7 · 踮脚 (Ti) - 暖阳黄小陀螺
+    case taono = 1
+    case doko = 2
+    case plokko = 3
+    case udo = 4
+    case corllo = 5
+    case bomo = 6
+    case tinki = 7
 
     public var id: Int { rawValue }
     public var degree: Int { rawValue }
@@ -37,6 +37,18 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
         }
     }
 
+    public var localizedName: String {
+        switch self {
+        case .taono: return String(localized: "member_name_taono", defaultValue: "陶诺")
+        case .doko: return String(localized: "member_name_doko", defaultValue: "豆叩")
+        case .plokko: return String(localized: "member_name_plokko", defaultValue: "拍咯")
+        case .udo: return String(localized: "member_name_udo", defaultValue: "呜嘟")
+        case .corllo: return String(localized: "member_name_corllo", defaultValue: "壳咯")
+        case .bomo: return String(localized: "member_name_bomo", defaultValue: "钵莫")
+        case .tinki: return String(localized: "member_name_tinki", defaultValue: "叮尖")
+        }
+    }
+
     public var solfege: String {
         switch self {
         case .taono: return "Do"
@@ -51,37 +63,37 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
 
     public var roleLabel: String {
         switch self {
-        case .taono: return "家"
-        case .doko: return "迈步"
-        case .plokko: return "晴雨"
-        case .udo: return "悬步"
-        case .corllo: return "远望"
-        case .bomo: return "怀旧"
-        case .tinki: return "踮脚"
+        case .taono: return String(localized: "member_role_taono", defaultValue: "家")
+        case .doko: return String(localized: "member_role_doko", defaultValue: "迈步")
+        case .plokko: return String(localized: "member_role_plokko", defaultValue: "晴雨")
+        case .udo: return String(localized: "member_role_udo", defaultValue: "悬步")
+        case .corllo: return String(localized: "member_role_corllo", defaultValue: "远望")
+        case .bomo: return String(localized: "member_role_bomo", defaultValue: "怀旧")
+        case .tinki: return String(localized: "member_role_tinki", defaultValue: "踮脚")
         }
     }
 
     public var voiceOverSummary: String {
         switch self {
-        case .taono: return "1 Do，主音"
-        case .doko: return "2 Re"
-        case .plokko: return "3 Mi，决定明亮或忧郁"
-        case .udo: return "4 Fa"
-        case .corllo: return "5 Sol"
-        case .bomo: return "6 La，抒情音"
-        case .tinki: return "7 Si，倾向回到 1"
+        case .taono: return String(localized: "member_vo_taono", defaultValue: "1 Do，主音")
+        case .doko: return String(localized: "member_vo_doko", defaultValue: "2 Re")
+        case .plokko: return String(localized: "member_vo_plokko", defaultValue: "3 Mi，决定明亮或忧郁")
+        case .udo: return String(localized: "member_vo_udo", defaultValue: "4 Fa")
+        case .corllo: return String(localized: "member_vo_corllo", defaultValue: "5 Sol")
+        case .bomo: return String(localized: "member_vo_bomo", defaultValue: "6 La，抒情音")
+        case .tinki: return String(localized: "member_vo_tinki", defaultValue: "7 Ti，倾向回到 1")
         }
     }
 
     public var bodyHex: UInt32 {
         switch self {
-        case .taono: return 0xF25563  // 活力珊瑚红
-        case .doko: return 0xF7882F   // 清爽鲜橘
-        case .plokko: return 0xE64980 // 亮莓果粉
-        case .udo: return 0x12B886    // 鲜薄荷青
-        case .corllo: return 0x228BE6 // 晴空清蓝
-        case .bomo: return 0x7950F2   // 梦幻鸢尾紫
-        case .tinki: return 0xE59900  // 向日葵暖金
+        case .taono: return 0xC85042
+        case .doko: return 0xC97836
+        case .plokko: return 0xB85672
+        case .udo: return 0x2F8F76
+        case .corllo: return 0x3B74A8
+        case .bomo: return 0x7A5EC2
+        case .tinki: return 0xC68824
         }
     }
 
@@ -99,13 +111,13 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
 
     public var nightGlowHex: UInt32 {
         switch self {
-        case .taono: return 0xFF7582
-        case .doko: return 0xFFA959
-        case .plokko: return 0xFF74A6
-        case .udo: return 0x38E4B7
-        case .corllo: return 0x5CB3FF
-        case .bomo: return 0xA98BFF
-        case .tinki: return 0xFFD94A
+        case .taono: return 0xFF7B88
+        case .doko: return 0xFFB066
+        case .plokko: return 0xFF7AA9
+        case .udo: return 0x45E6BB
+        case .corllo: return 0x6BB9FF
+        case .bomo: return 0xBCA3FF // >= 6.8:1 against dark ink #0E1326
+        case .tinki: return 0xFFDF5E
         }
     }
 
@@ -113,12 +125,10 @@ public enum ChimmoMember: Int, CaseIterable, Identifiable, Codable, Hashable, Se
     public var accentColor: Color { Color(hex: accentHex) }
     public var nightGlowColor: Color { Color(hex: nightGlowHex) }
 
-    /// 1·3·5 主三和弦核心位。
     public var isTriadPillar: Bool {
         self == .taono || self == .plokko || self == .corllo
     }
 
-    /// 4 级（向 3 下行牵引）与 7 级（向高八度 1 强烈上行牵引）为天然张力音级。
     public var isTensionDegree: Bool {
         self == .udo || self == .tinki
     }

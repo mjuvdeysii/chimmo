@@ -1,77 +1,7 @@
+import Foundation
 import SwiftUI
 
-/// 真实的半音音高几何映射：让 3-4 与 7-1↑ 的「半音窄缝」肉眼可见，切换大/小调时 3/6/7 级真实下移半音。
-public enum ScalePitchGeometry {
-    /// 相对主音 1 Do 的真实半音位置（支持 -1, 0, +1 八度）
-    public static func semitoneOffset(degree: Int, octaveOffset: Int, mode: ScaleMode) -> Int {
-        let clampedDeg = max(1, min(7, degree))
-        let base = mode.semitoneOffsets[clampedDeg - 1]
-        return base + octaveOffset * 12
-    }
-
-    /// 归一化到 [0, 1]（0 = 底部低音界，1 = 顶部高音界），默认显示区间为 [-5, 14] 共 19 个半音，
-    /// 完整包容低音 5↓/6↓/7↓（如《爱之梦》《天鹅湖》《肖邦夜曲》）到高音 1↑/2↑。
-    public static func normalizedY(semitone: Int, minSemitone: Int = -5, maxSemitone: Int = 14) -> CGFloat {
-        let span = CGFloat(max(1, maxSemitone - minSemitone))
-        let clamped = CGFloat(max(minSemitone, min(maxSemitone, semitone)))
-        return (clamped - CGFloat(minSemitone)) / span
-    }
-
-    public static func normalizedY(degree: Int, octaveOffset: Int, mode: ScaleMode) -> CGFloat {
-        let semi = semitoneOffset(degree: degree, octaveOffset: octaveOffset, mode: mode)
-        return normalizedY(semitone: semi)
-    }
-
-    /// 根据画布 Y 坐标反推最接近的调内 (degree, octaveOffset)
-    public static func nearestDegreeAndOctave(
-        normalizedFromBottom: CGFloat,
-        mode: ScaleMode,
-        minSemitone: Int = -5,
-        maxSemitone: Int = 14
-    ) -> (degree: Int, octaveOffset: Int) {
-        let targetSemi = Double(minSemitone) + Double(max(0, min(1, normalizedFromBottom))) * Double(maxSemitone - minSemitone)
-        var bestDeg = 1
-        var bestOct = 0
-        var bestDist = Double.greatestFiniteMagnitude
-
-        for oct in -1...1 {
-            for deg in 1...7 {
-                let s = Double(semitoneOffset(degree: deg, octaveOffset: oct, mode: mode))
-                if s < Double(minSemitone) - 0.5 || s > Double(maxSemitone) + 0.5 { continue }
-                let dist = abs(s - targetSemi)
-                if dist < bestDist {
-                    bestDist = dist
-                    bestDeg = deg
-                    bestOct = oct
-                }
-            }
-        }
-        return (bestDeg, bestOct)
-    }
-
-    /// 两个相邻音之间的真实半音数与零基础友好的中文音程名
-    public static func intervalDescription(from a: NoteBead, to b: NoteBead, mode: ScaleMode) -> (semitones: Int, shortLabel: String) {
-        let sa = semitoneOffset(degree: a.degree, octaveOffset: a.octaveOffset, mode: mode)
-        let sb = semitoneOffset(degree: b.degree, octaveOffset: b.octaveOffset, mode: mode)
-        let diff = abs(sb - sa)
-        let label: String
-        switch diff {
-        case 0: label = "同音"
-        case 1: label = "半音"
-        case 2: label = "全音"
-        case 3: label = "小三度"
-        case 4: label = "大三度"
-        case 5: label = "纯四度"
-        case 6: label = "增四度"
-        case 7: label = "纯五度"
-        case 8, 9: label = "六度"
-        case 10, 11: label = "七度"
-        case 12: label = "八度"
-        default: label = "大跨度"
-        }
-        return (diff, label)
-    }
-}
+/// Diatonic chord catalog for acoustic accompaniment.
 
 /// 真实可透视的调内基础和弦（用于照亮画布上对应的 3 条音高泳道光带）
 public enum DiatonicChord: String, CaseIterable, Codable, Sendable, Identifiable {
@@ -257,15 +187,6 @@ public struct ChordSpan: Identifiable, Equatable, Sendable {
     }
 }
 
-/// 面向零基础的实时乐理解读结果
-public struct MelodyTheoryInsight: Equatable, Sendable {
-    public let headline: String
-    public let detail: String
-    public let tryNextTip: String
-    public let inChordRatio: Double
-    public let highlightedTags: [String]
-}
-
 public enum TheoryLensEngine {
 
     /// 为当前旋律自动划分 4 个视觉清晰的和弦光带区间（支持用户手动覆写任意一拍的和弦）
@@ -346,97 +267,5 @@ public enum TheoryLensEngine {
     public static func chord(at time: Double, in spans: [ChordSpan]) -> DiatonicChord? {
         spans.first(where: { time >= $0.startTime - 0.01 && time < $0.endTime + 0.01 })?.chord
             ?? spans.last?.chord
-    }
-
-    /// 对任意旋律（包括用户自己哼唱或点出的旋律）生成零门槛、有启发性的乐理解读
-    public static func analyze(document: MelodyDocument, spans: [ChordSpan]) -> MelodyTheoryInsight {
-        let notes = document.notes.sorted {
-            $0.displayOnset(grooveStrength: document.grooveStrength) < $1.displayOnset(grooveStrength: document.grooveStrength)
-        }
-        guard !notes.isEmpty else {
-            return MelodyTheoryInsight(
-                headline: "空白画布",
-                detail: "直接点画面或下方彩条加音，也可以用写旋律功能录音或敲节奏。",
-                tryNextTip: "先点几下 1、3、5 听听基础音的和谐感。",
-                inChordRatio: 1.0,
-                highlightedTags: [document.scaleMode.label]
-            )
-        }
-
-        // 1. 统计和弦内音比例
-        var inChordCount = 0
-        for bead in notes {
-            let t = bead.displayOnset(grooveStrength: document.grooveStrength)
-            if let ch = chord(at: t, in: spans), ch.chordToneDegrees.contains(bead.degree) {
-                inChordCount += 1
-            }
-        }
-        let ratio = spans.isEmpty ? 1.0 : Double(inChordCount) / Double(notes.count)
-
-        // 2. 找出最大音程跳跃与半音次数
-        var maxSemi = 0
-        var maxJumpText = ""
-        var semitoneSteps = 0
-        if notes.count > 1 {
-            for i in 0..<(notes.count - 1) {
-                let info = ScalePitchGeometry.intervalDescription(from: notes[i], to: notes[i + 1], mode: document.scaleMode)
-                if info.semitones == 1 { semitoneSteps += 1 }
-                if info.semitones > maxSemi {
-                    maxSemi = info.semitones
-                    maxJumpText = "\(notes[i].degree)→\(notes[i + 1].degree)（\(info.shortLabel)）"
-                }
-            }
-        }
-
-        // 3. 尾音收束解读
-        let last = notes.last!
-        let endingDesc: String
-        let tip: String
-        switch last.degree {
-        case 1:
-            endingDesc = "收在 1 (Do)，听起来平稳完整。"
-            tip = "点一下外圈色环，可以换不同的和弦风格。"
-        case 6:
-            endingDesc = "停在 6 (La)，有一点淡淡的回味感。"
-            tip = "把最后一颗音拉到 1 (Do)，对比两种结尾的感觉。"
-        case 5:
-            endingDesc = "停在 5 (Sol)，像把句子留了一点悬念。"
-            tip = "在结尾补一个 1 (Do)，整句会立刻安定下来。"
-        case 7:
-            endingDesc = "停在 7 (Si)，差半步就能落回高音 1。"
-            tip = "把最后的 7 往上推到高音 1，听听释放的感觉。"
-        case 4:
-            endingDesc = "停在 4 (Fa)，带一点轻轻落下的倾向。"
-            tip = "后面接一颗 3 (Mi) 会很自然。"
-        default:
-            endingDesc = "停在第 \(last.degree) 音，留着轻松的延续感。"
-            tip = "拖动任意音珠，就能实时调整高低和拍子。"
-        }
-
-        var tags: [String] = [document.scaleMode.label]
-        if maxSemi >= 5 { tags.append("大跨度 \(maxJumpText)") }
-        if semitoneSteps > 0 { tags.append("含 \(semitoneSteps) 处半音") }
-        if !spans.isEmpty { tags.append("协和音 \(Int((ratio * 100).rounded()))%") }
-
-        let headline: String
-        if let customInsight = document.composerInsight, document.isSpecimen {
-            headline = customInsight
-        } else if maxSemi >= 5 {
-            headline = "起伏丰富的旋律线条（\(maxJumpText)），\(endingDesc)"
-        } else {
-            headline = "流畅自然的旋律线条，\(endingDesc)"
-        }
-
-        let detail = spans.isEmpty
-            ? "当前仅播放单旋律；在声音设置里开启伴奏即可加上和弦衬托。"
-            : "共有 \(inChordCount)/\(notes.count) 个音落在伴奏和弦内，其余音带来色彩变化。"
-
-        return MelodyTheoryInsight(
-            headline: headline,
-            detail: detail,
-            tryNextTip: tip,
-            inChordRatio: ratio,
-            highlightedTags: tags
-        )
     }
 }

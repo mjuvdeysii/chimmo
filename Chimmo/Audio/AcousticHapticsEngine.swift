@@ -5,12 +5,19 @@ import CoreHaptics
 import UIKit
 #endif
 
-/// 跨感官声学触觉引擎（Core Haptics）：
-/// - 全异步启动与零主线程阻塞：绝不在 `init()` 或主线程同步调用 `CHHapticEngine.start()`，杜绝首屏 XPC 卡顿；
-/// - 音高-质地双映射：低音浑厚沉稳、高音清脆明亮，张力音级微颤、回家主音长舒释然，让听障或零乐理用户也能在掌心里「摸懂」旋律与和声。
+/// Cross-sensory Core Haptics tactile engine:
+/// respects global enable toggle, active-foreground app state, hardware capability caching, and automatic background teardown.
 @MainActor
 public final class AcousticHapticsEngine {
     public static let shared = AcousticHapticsEngine()
+
+    public var isEnabled: Bool = true {
+        didSet {
+            if !isEnabled {
+                stopForBackground()
+            }
+        }
+    }
 
     private var lastPlaybackPulseTime: Double = 0
     private var lastVibratoPulseTime: Double = 0
@@ -20,8 +27,10 @@ public final class AcousticHapticsEngine {
     #if os(iOS)
     private var engine: CHHapticEngine?
     private var supportsHaptics: Bool = false
+    private var didCheckCapabilities: Bool = false
     private var isEngineRunning: Bool = false
     private var isStarting: Bool = false
+    private var startGeneration: UInt64 = 0
 
     private lazy var softImpact = UIImpactFeedbackGenerator(style: .soft)
     private lazy var lightImpact = UIImpactFeedbackGenerator(style: .light)
@@ -30,16 +39,36 @@ public final class AcousticHapticsEngine {
     private lazy var notifyGenerator = UINotificationFeedbackGenerator()
     #endif
 
-    private init() {
-        // 延迟检测与异步启动，确保启动首帧 < 0.1ms
+    private init() {}
+
+    public func stopForBackground() {
+        #if os(iOS)
+        startGeneration &+= 1
+        isStarting = false
+        isEngineRunning = false
+        engine?.stop(completionHandler: { _ in })
+        #endif
+    }
+
+    private func canFireHaptics() -> Bool {
+        guard isEnabled else { return false }
+        #if os(iOS)
+        return UIApplication.shared.applicationState == .active
+        #else
+        return false
+        #endif
     }
 
     #if os(iOS)
     private func ensureEngineAsync() {
-        if !supportsHaptics && engine == nil {
+        guard canFireHaptics() else { return }
+        if !didCheckCapabilities {
             supportsHaptics = CHHapticEngine.capabilitiesForHardware().supportsHaptics
+            didCheckCapabilities = true
         }
         guard supportsHaptics, !isEngineRunning, !isStarting else { return }
+        startGeneration &+= 1
+        let gen = startGeneration
         isStarting = true
 
         if engine == nil {
@@ -70,6 +99,14 @@ public final class AcousticHapticsEngine {
         engine?.start { [weak self] error in
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                guard self.startGeneration == gen && self.canFireHaptics() else {
+                    self.isStarting = false
+                    self.isEngineRunning = false
+                    if let eng = self.engine {
+                        try? await eng.stop()
+                    }
+                    return
+                }
                 self.isStarting = false
                 self.isEngineRunning = (error == nil)
             }
@@ -77,13 +114,12 @@ public final class AcousticHapticsEngine {
     }
     #endif
 
-    /// 音高触感：把 0...7 音阶轨道映射为细腻的质地与清脆度，指尖直接摸出高低起伏与张力解决。
     public func playPitchTouch(laneIndex: Int, isHome: Bool, isTension: Bool) {
         playExpressivePitchTouch(laneIndex: laneIndex, velocity: 0.62, isHome: isHome, isTension: isTension)
     }
 
-    /// 带敲击力度的跨感官音高触感：随手指落键轻重平滑缩放脉冲强弱与锋利度。
     public func playExpressivePitchTouch(laneIndex: Int, velocity: Double, isHome: Bool, isTension: Bool) {
+        guard canFireHaptics() else { return }
         let v = Float(max(0.30, min(1.0, velocity)))
         #if os(iOS)
         if isTension {
@@ -116,8 +152,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 音乐播放时的低功耗掌心触觉脉冲（已做 85ms 节流，支持小节重拍温和强震，兼顾听障无障碍节奏共振与电池寿命）
     public func playPlaybackNotePulse(laneIndex: Int, isHome: Bool, isTension: Bool, isDownbeat: Bool = false) {
+        guard canFireHaptics() else { return }
         let now = CACurrentMediaTime()
         guard now - lastPlaybackPulseTime >= 0.085 else { return }
         lastPlaybackPulseTime = now
@@ -166,8 +202,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 乐句和弦情绪幕布切换时的温柔深呼吸震动
     public func playChordShiftBreath() {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             ensureEngineAsync()
@@ -194,8 +230,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 手拨音乐盒转盘经过音珠时的轻巧机械棘轮滴答感。
     public func playScrubTick() {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             lightImpact.impactOccurred(intensity: 0.65)
@@ -214,8 +250,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 温润平顺的和谐共振（八度 2:1、纯五度 3:2、大三度 5:4）
     public func playConsonantGlow(intensity: Float = 0.62) {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             softImpact.impactOccurred()
@@ -238,8 +274,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 细碎拍频摩擦微颤（半音 16:15、导音 7 或延留音 4 悬停时）
     public func playTensionFlutter(intensity: Float = 0.55) {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             rigidImpact.impactOccurred()
@@ -263,8 +299,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 释然归家绽放（7→1↑ 或 4→3 延留落地的那一瞬间）
     public func playResolutionExhale() {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             notifyGenerator.notificationOccurred(.success)
@@ -300,8 +336,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 敲击心跳节拍时的温润木鱼敲击感
     public func playBeatTap(isStrong: Bool = false) {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             if isStrong {
@@ -324,8 +360,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 持续揉弦共鸣时的细微弓弦颤振反馈（严格 110ms 节流保护）
     public func playVibratoShimmerTick(intensity: Double = 0.55) {
+        guard canFireHaptics() else { return }
         let now = CACurrentMediaTime()
         guard now - lastVibratoPulseTime >= 0.11 else { return }
         lastVibratoPulseTime = now
@@ -349,8 +385,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 种子折纸绽放时的逐颗轻盈连振
     public func playSeedBloom() {
+        guard canFireHaptics() else { return }
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
             mediumImpact.impactOccurred()
@@ -371,10 +407,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    // MARK: - V2.0 Brainwave & Frisson Tactile Patterns
-
-    /// 滑过 Delta / Theta / Alpha / Gamma 频段分界时的温润磁吸刻度感
     public func playBrainwaveDetent(bandIndex: Int) {
+        guard canFireHaptics() else { return }
         let clamped = max(0, min(3, bandIndex))
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
@@ -395,8 +429,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 长按蓄积颅内战栗时的渐强微颤（90ms 节流，平滑升温而不刺手）
     public func playFrissonBuildTick(progress: Double) {
+        guard canFireHaptics() else { return }
         let now = CACurrentMediaTime()
         guard now - lastFrissonTickTime >= 0.090 else { return }
         lastFrissonTickTime = now
@@ -420,8 +454,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 颅内战栗绽放瀑布（「温润冲击 -> 双波泛音涟漪 -> 0.42s 释然长呼」）
     public func playFrissonCascade(intensity: Float = 0.85) {
+        guard canFireHaptics() else { return }
         let clamped = max(0.35, min(1.0, intensity))
         #if os(iOS)
         guard supportsHaptics && isEngineRunning else {
@@ -466,8 +500,8 @@ public final class AcousticHapticsEngine {
         #endif
     }
 
-    /// 低功耗掌心脑波微脉搏（严格 >= 450ms 节流，兼具柔和触感与电池续航）
     public func playBrainwavePulse(intensity: Float = 0.32) {
+        guard canFireHaptics() else { return }
         let now = CACurrentMediaTime()
         guard now - lastBrainwavePulseTime >= 0.45 else { return }
         lastBrainwavePulseTime = now
@@ -505,6 +539,7 @@ public final class AcousticHapticsEngine {
     private func playPattern(events: [CHHapticEvent], curves: [CHHapticParameterCurve]) {
         guard let engine else {
             isEngineRunning = false
+            ensureEngineAsync()
             return
         }
         do {
@@ -513,6 +548,8 @@ public final class AcousticHapticsEngine {
             try player.start(atTime: CHHapticTimeImmediate)
         } catch {
             isEngineRunning = false
+            engine.stop(completionHandler: { _ in })
+            ensureEngineAsync()
         }
     }
     #endif

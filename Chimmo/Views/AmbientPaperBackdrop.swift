@@ -1,133 +1,133 @@
 import SwiftUI
 
-/// 「摸索台灯」同宇宙声学画纸背景（纯棉纸/深靛夜纸 + 柔和分区采光光洗 / 暖灯琥珀微光 + 静谧低山坡）：
-/// 支持系统「减弱透明度」与「减弱动态效果」，并将全部视觉重心让位给前景主角卡片与七声小偶。
+/// Ambient cotton paper / indigo night sky canvas with gentle circadian horizon hills.
 public struct AmbientPaperBackdrop: View {
     public let palette: ChimmoPalette
-    public var accentTint: Color?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    public var tint: Color?
+    public var bandAccent: Color?
+
+    @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    public init(palette: ChimmoPalette, accentTint: Color? = nil) {
+    public init(palette: ChimmoPalette, tint: Color? = nil, bandAccent: Color? = nil) {
         self.palette = palette
-        self.accentTint = accentTint
+        self.tint = tint
+        self.bandAccent = bandAccent
     }
 
     public var body: some View {
-        let glowTint = accentTint ?? palette.homeAnchor
+        let highClarity = reduceTransparency || contrast == .increased
         ZStack {
-            palette.paper
+            palette.paper.ignoresSafeArea()
 
-            if !reduceTransparency {
-                if palette.isNight {
+            // Subtle upper ceramic atmosphere wash (disabled when Reduce Transparency / Increase Contrast is enabled)
+            if StorybookSurfaceClarityPolicy.showsTranslucentTintWash(reduceTransparency: highClarity) {
+                GeometryReader { geo in
+                    let w = max(1, geo.size.width)
+                    let h = max(1, geo.size.height)
+                    let washColor = bandAccent ?? tint ?? (palette.isNight ? palette.nightLampGold : palette.homeAnchor)
+
                     RadialGradient(
                         colors: [
-                            palette.nightLampGold.opacity(0.24),
-                            palette.nightLampGold.opacity(0.07),
+                            washColor.opacity(palette.isNight ? 0.14 : 0.08),
                             Color.clear
                         ],
-                        center: UnitPoint(x: 0.88, y: 0.04),
-                        startRadius: 0,
-                        endRadius: 460
+                        center: .init(x: 0.5, y: 0.24),
+                        startRadius: 12,
+                        endRadius: max(w, h) * 0.56
                     )
-                    RadialGradient(
-                        colors: [
-                            glowTint.opacity(0.11),
-                            Color.clear
-                        ],
-                        center: UnitPoint(x: 0.08, y: 0.88),
-                        startRadius: 0,
-                        endRadius: 340
-                    )
-                } else {
-                    LinearGradient(
-                        stops: [
-                            .init(color: glowTint.opacity(0.13), location: 0.0),
-                            .init(color: glowTint.opacity(0.04), location: 0.28),
-                            .init(color: .clear, location: 0.56)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    RadialGradient(
-                        colors: [glowTint.opacity(0.10), Color.clear],
-                        center: UnitPoint(x: 0.90, y: 0.02),
-                        startRadius: 0,
-                        endRadius: 340
-                    )
+                    .ignoresSafeArea()
                 }
             }
 
+            // Subtle cotton-paper mineral grain & rolling hills near bottom edge
             Canvas { ctx, size in
                 let w = max(1, size.width)
                 let h = max(1, size.height)
+                let ridgeInk = contrast == .increased ? palette.primaryInk.opacity(0.32) : palette.primaryInk.opacity(palette.isNight ? 0.14 : 0.10)
 
-                drawStorybookHillBand(
+                if !highClarity {
+                    let speckColor = palette.primaryInk.opacity(palette.isNight ? 0.032 : 0.026)
+                    for idx in 0..<84 {
+                        let hx = UInt64((idx &* 2654435761) & 0xFFFF)
+                        let hy = UInt64(((idx &+ 37) &* 2246822519) & 0xFFFF)
+                        let x = (CGFloat(hx) / 65535.0) * w
+                        let y = (CGFloat(hy) / 65535.0) * h
+                        let r: CGFloat = idx.isMultiple(of: 3) ? 1.4 : 0.9
+                        ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r * 2, height: r * 2)), with: .color(speckColor))
+                    }
+                }
+
+                drawKilnHillBand(
                     ctx: &ctx,
                     width: w,
                     height: h,
-                    baseTopRatio: 0.82,
-                    amplitude: 0.08,
-                    phaseShift: 0.4,
-                    fill: palette.storybookHillBack.opacity(palette.isNight ? 0.36 : 0.40)
+                    yFrac: palette.isNight ? 0.875 : 0.86,
+                    amplitude: 0.13,
+                    phase: 0.5,
+                    fill: palette.storybookHillBack.opacity(palette.isNight ? 0.55 : 0.65),
+                    outline: ridgeInk
                 )
-                drawStorybookHillBand(
+                drawKilnHillBand(
                     ctx: &ctx,
                     width: w,
                     height: h,
-                    baseTopRatio: 0.89,
-                    amplitude: 0.07,
-                    phaseShift: 2.1,
-                    fill: palette.storybookHillFront.opacity(palette.isNight ? 0.46 : 0.52)
+                    yFrac: palette.isNight ? 0.925 : 0.915,
+                    amplitude: 0.10,
+                    phase: 1.75,
+                    fill: palette.storybookHillFront.opacity(palette.isNight ? 0.72 : 0.82),
+                    outline: ridgeInk
                 )
             }
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: palette.isNight)
     }
 
-    private func drawStorybookHillBand(
+    private func drawKilnHillBand(
         ctx: inout GraphicsContext,
         width: CGFloat,
         height: CGFloat,
-        baseTopRatio: CGFloat,
+        yFrac: CGFloat,
         amplitude: Double,
-        phaseShift: Double,
-        fill: Color
+        phase: Double,
+        fill: Color,
+        outline: Color
     ) {
-        let profile = StorybookIllustrationLayout.rollingHillProfile(
+        let profile = KilnLandscapeGeometry.rollingHillProfile(
             sampleCount: 16,
             amplitude: amplitude,
-            phaseShift: phaseShift
+            phaseShift: phase
         )
         guard let first = profile.first else { return }
-        let bandHeight = height * 0.22
-        let topAnchor = height * baseTopRatio
-
+        let topOffset = height * yFrac
+        let bandHeight: CGFloat = 40
         let mapped = profile.map { pt in
-            CGPoint(
-                x: CGFloat(pt.xFraction) * width,
-                y: topAnchor + CGFloat(pt.yFraction - 0.5) * bandHeight
-            )
+            CGPoint(x: CGFloat(pt.xFraction) * width, y: topOffset + CGFloat(pt.yFraction - 0.5) * bandHeight)
         }
 
-        var area = Path()
-        area.move(to: CGPoint(x: 0, y: height))
-        area.addLine(to: CGPoint(x: CGFloat(first.xFraction) * width, y: mapped[0].y))
+        var fillPath = Path()
+        fillPath.move(to: CGPoint(x: 0, y: height))
+        fillPath.addLine(to: CGPoint(x: CGFloat(first.xFraction) * width, y: mapped[0].y))
+
+        var ridgePath = Path()
+        ridgePath.move(to: mapped[0])
+
         for i in 1..<mapped.count {
             let prev = mapped[i - 1]
             let curr = mapped[i]
             let mid = CGPoint(x: (prev.x + curr.x) * 0.5, y: (prev.y + curr.y) * 0.5)
-            area.addQuadCurve(to: mid, control: prev)
+            fillPath.addQuadCurve(to: mid, control: prev)
+            ridgePath.addQuadCurve(to: mid, control: prev)
         }
         if let last = mapped.last {
-            area.addLine(to: last)
+            fillPath.addLine(to: last)
+            ridgePath.addLine(to: last)
         }
-        area.addLine(to: CGPoint(x: width, y: height))
-        area.closeSubpath()
+        fillPath.addLine(to: CGPoint(x: width, y: height))
+        fillPath.closeSubpath()
 
-        ctx.fill(area, with: .color(fill))
+        ctx.fill(fillPath, with: .color(fill))
+        ctx.stroke(ridgePath, with: .color(outline), style: StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round))
     }
 }

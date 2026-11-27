@@ -1,18 +1,39 @@
 import Accelerate
 import Foundation
 
-/// 端侧单音基频估计协议（统一支撑 vDSP YIN 零依赖基线与后续 SwiftF0 CoreML/ONNX A/B 切换）。
+/// 16 kHz / 256-hop monophonic pitch contour frame representation.
+public struct PitchContour: Sendable, Equatable {
+    public static let sampleRate: Double = 16_000.0
+    public static let hopSize: Int = 256
+    public static let framePeriod: Double = Double(hopSize) / sampleRate // 0.016 s
+
+    public let timestamps: [Double]
+    public let pitchHz: [Double]
+    public let confidence: [Double]
+    public let loudnessDB: [Double]
+
+    public init(timestamps: [Double], pitchHz: [Double], confidence: [Double], loudnessDB: [Double]) {
+        self.timestamps = timestamps
+        self.pitchHz = pitchHz
+        self.confidence = confidence
+        self.loudnessDB = loudnessDB
+    }
+}
+
+/// Offline monophonic fundamental-frequency estimation protocol.
 public protocol PitchDetector: Sendable {
     var displayName: String { get }
     func detect(mono16kSamples: [Float], fmin: Double, fmax: Double) -> PitchContour
 }
 
-/// 纯 Swift + Accelerate/vDSP 零依赖 YIN (CMNDF + 抛物线插值 + AGC 归一化 + 静音/响度门限)。
-/// 保证 iOS 27 首发零第三方二进制依赖即可在真机上完成 16 kHz 单音哼唱追踪与单元测试验证。
+/// Pure Swift + Accelerate/vDSP offline YIN detector (CMNDF + parabolic interpolation + pre-AGC silence gate).
 public struct YINvDSPPitchDetector: PitchDetector {
-    public let displayName = "YIN-vDSP (离线零依赖)"
+    public var displayName: String {
+        String(localized: "pitch_detector_yin_name", defaultValue: "YIN-vDSP（离线零依赖）")
+    }
 
     private let silencePeakThreshold: Float = 0.0025
+    private let unscaledSilenceFloorDB: Double = -46.0
     private let yinThreshold: Float = 0.16
 
     public init() {}
@@ -24,21 +45,31 @@ public struct YINvDSPPitchDetector: PitchDetector {
     ) -> PitchContour {
         let sr = PitchContour.sampleRate
         let hop = PitchContour.hopSize
-        let windowSize = 1024 // 64 ms 窗口，覆盖至 ~62 Hz 低男声基频
-        guard mono16kSamples.count >= hop else {
+        let windowSize = 1024 // 64 ms window
+        guard mono16kSamples.count >= hop,
+              fmin.isFinite, fmax.isFinite,
+              fmin >= 20.0, fmax > fmin, fmax <= sr * 0.49 else {
             return PitchContour(timestamps: [], pitchHz: [], confidence: [], loudnessDB: [])
         }
 
-        // 前置柔和 AGC 峰值归一化（解决深夜轻声哼唱 < -35 dBFS 漏检问题，同时保留绝对静音过滤）
+        // Sanitize non-finite samples before DSP work.
+        let cleanRaw: [Float]
+        if mono16kSamples.contains(where: { !$0.isFinite }) {
+            cleanRaw = mono16kSamples.map { $0.isFinite ? $0 : 0.0 }
+        } else {
+            cleanRaw = mono16kSamples
+        }
+
         var maxPeak: Float = 0.0
-        vDSP_maxmgv(mono16kSamples, 1, &maxPeak, vDSP_Length(mono16kSamples.count))
+        vDSP_maxmgv(cleanRaw, 1, &maxPeak, vDSP_Length(cleanRaw.count))
         let gain: Float = (maxPeak > silencePeakThreshold) ? min(14.0, 0.75 / maxPeak) : 1.0
-        var samples = [Float](repeating: 0, count: mono16kSamples.count)
+
+        var samples = [Float](repeating: 0, count: cleanRaw.count)
         if gain != 1.0 {
             var g = gain
-            vDSP_vsmul(mono16kSamples, 1, &g, &samples, 1, vDSP_Length(mono16kSamples.count))
+            vDSP_vsmul(cleanRaw, 1, &g, &samples, 1, vDSP_Length(cleanRaw.count))
         } else {
-            samples = mono16kSamples
+            samples = cleanRaw
         }
 
         let nFrames = max(1, samples.count / hop)
@@ -54,7 +85,6 @@ public struct YINvDSPPitchDetector: PitchDetector {
         var loudness = [Double](repeating: -120, count: nFrames)
 
         var frameBuf = [Float](repeating: 0, count: windowSize)
-        var diff = [Float](repeating: 0, count: maxLag + 1)
         var cmndf = [Float](repeating: 1, count: maxLag + 1)
         var tempDiff = [Float](repeating: 0, count: windowSize / 2)
 
@@ -65,37 +95,39 @@ public struct YINvDSPPitchDetector: PitchDetector {
             let center = f * hop
             let start = center - halfW
 
-            // 拷贝窗口（越界补零）
-            var framePeak: Float = 0.0
+            // Measure pre-AGC window peak & RMS loudness so quiet noise floors stay gated.
+            var rawFramePeak: Float = 0.0
             for i in 0..<windowSize {
                 let idx = start + i
-                let v: Float = (idx >= 0 && idx < samples.count) ? samples[idx] : 0.0
-                frameBuf[i] = v
-                let av = abs(v)
-                if av > framePeak { framePeak = av }
-            }
-
-            // 32 ms 居中 RMS 响度（与 SwiftF0 loudness_db 同口径）
-            let rmsStart = max(0, center - hop)
-            let rmsEnd = min(samples.count, center + hop)
-            var sumSq: Float = 0.0
-            if rmsEnd > rmsStart {
-                samples.withUnsafeBufferPointer { ptr in
-                    vDSP_svesq(ptr.baseAddress! + rmsStart, 1, &sumSq, vDSP_Length(rmsEnd - rmsStart))
+                if idx >= 0 && idx < cleanRaw.count {
+                    frameBuf[i] = samples[idx]
+                    let av = abs(cleanRaw[idx])
+                    if av > rawFramePeak { rawFramePeak = av }
+                } else {
+                    frameBuf[i] = 0.0
                 }
             }
-            let rms = sqrt(Double(sumSq) / Double(max(1, rmsEnd - rmsStart)))
-            loudness[f] = 20.0 * log10(max(rms, 1e-7))
 
-            // 静音门限过滤
-            if framePeak < silencePeakThreshold * gain || loudness[f] < -46.0 {
+            let rmsStart = max(0, center - hop)
+            let rmsEnd = min(cleanRaw.count, center + hop)
+            var sumSq: Float = 0.0
+            if rmsEnd > rmsStart {
+                cleanRaw.withUnsafeBufferPointer { ptr in
+                    if let base = ptr.baseAddress {
+                        vDSP_svesq(base + rmsStart, 1, &sumSq, vDSP_Length(rmsEnd - rmsStart))
+                    }
+                }
+            }
+            let rawRMS = sqrt(Double(sumSq) / Double(max(1, rmsEnd - rmsStart)))
+            let rawDB = 20.0 * log10(max(rawRMS, 1e-7))
+            loudness[f] = rawDB
+
+            if rawFramePeak < silencePeakThreshold || rawDB < unscaledSilenceFloorDB {
                 pitches[f] = 0.0
                 confidences[f] = 0.0
                 continue
             }
 
-            // YIN 差分函数 d(tau) = sum((x[j] - x[j+tau])^2) via vDSP
-            diff[0] = 0.0
             cmndf[0] = 1.0
             var runningSum: Float = 0.0
 
@@ -105,13 +137,11 @@ public struct YINvDSPPitchDetector: PitchDetector {
                     vDSP_vsub(base + tau, 1, base, 1, &tempDiff, 1, vDSP_Length(halfW))
                     var sq: Float = 0.0
                     vDSP_svesq(tempDiff, 1, &sq, vDSP_Length(halfW))
-                    diff[tau] = sq
                     runningSum += sq
                     cmndf[tau] = runningSum > 1e-9 ? (sq * Float(tau) / runningSum) : 1.0
                 }
             }
 
-            // 绝对阈值搜索首个局部极小值
             var chosenTau = -1
             var tau = minLag
             while tau <= maxLag {
@@ -125,7 +155,6 @@ public struct YINvDSPPitchDetector: PitchDetector {
                 tau += 1
             }
 
-            // 回退取全局极小值（低置信度）
             if chosenTau < 0 {
                 var minVal: Float = 1.0
                 for t in minLag...maxLag where cmndf[t] < minVal {
@@ -140,7 +169,6 @@ public struct YINvDSPPitchDetector: PitchDetector {
                 continue
             }
 
-            // 三点抛物线插值提升亚采样音准精度（< 5 cents）
             var refinedTau = Double(chosenTau)
             if chosenTau > minLag && chosenTau < maxLag {
                 let s0 = Double(cmndf[chosenTau - 1])
@@ -166,7 +194,6 @@ public struct YINvDSPPitchDetector: PitchDetector {
             }
         }
 
-        // 3 帧中位滤波消除孤立八度跳变毛刺
         let smoothedPitches = medianFilterOctaveGuard(pitches: pitches, confidences: confidences)
         return PitchContour(
             timestamps: timestamps,

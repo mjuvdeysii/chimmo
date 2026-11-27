@@ -2,11 +2,13 @@ import AVFAudio
 import Foundation
 import os
 
-/// 端到端离线哼唱捕捉管线：
-/// 半双工机身麦采集 → 16 kHz 降采样 → YIN-vDSP → SwiftF0 DP 音符切分 → 调式引力音符与相对高低轮廓。
+/// Strict half-duplex on-device hum fundamental capture pipeline:
+/// serializes AVAudioEngine capture teardown/startup cleanly on a dedicated session queue,
+/// tracks live contour in RAM, and extracts median voiced F0 in Hz without network or disk writes.
 @MainActor
 public final class HumCapturePipeline: ObservableObject {
     @Published public private(set) var isRecording: Bool = false
+    @Published public private(set) var isStartingCapture: Bool = false
     @Published public private(set) var inputLevel: Double = 0.0
     @Published public private(set) var livePitchTrace: [Double] = []
     @Published public private(set) var statusMessage: String = ""
@@ -14,6 +16,7 @@ public final class HumCapturePipeline: ObservableObject {
     private let router: HalfDuplexAudioRouter
     private let synth: FeltPianoSynth
     private let detector: any PitchDetector
+    private let sessionQueue = DispatchQueue(label: "app.chimmo.hum.session", qos: .userInitiated)
 
     private var recordEngine: AVAudioEngine?
     private let sampleLock = OSAllocatedUnfairLock(initialState: [Float]())
@@ -22,6 +25,8 @@ public final class HumCapturePipeline: ObservableObject {
     private var lastLevelTick: Date = .distantPast
     private var liveTraceTask: Task<Void, Never>?
     private var captureGeneration: UInt64 = 0
+    private var observerTokens: [NSObjectProtocol] = []
+    private var engineConfigToken: NSObjectProtocol?
 
     public init(
         router: HalfDuplexAudioRouter,
@@ -31,13 +36,73 @@ public final class HumCapturePipeline: ObservableObject {
         self.router = router
         self.synth = synth
         self.detector = detector
+        installSessionObservers()
+    }
+
+    deinit {
+        let nc = NotificationCenter.default
+        for token in observerTokens {
+            nc.removeObserver(token)
+        }
+        if let tok = engineConfigToken {
+            nc.removeObserver(tok)
+        }
+    }
+
+    private func installSessionObservers() {
+        let nc = NotificationCenter.default
+        #if os(iOS)
+        let inactiveToken = nc.addObserver(
+            forName: AVAudioSession.didBecomeInactiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            let ctx = note.userInfo?[AVAudioSession.deactivationContextKey] as? AVAudioSession.DeactivationContext
+            guard ctx?.source != .app else { return }
+            Task { @MainActor [weak self] in
+                guard let self, self.isRecording || self.isStartingCapture else { return }
+                self.cancelRecording()
+            }
+        }
+        observerTokens.append(inactiveToken)
+
+        let mediaResetToken = nc.addObserver(
+            forName: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.isRecording || self.isStartingCapture else { return }
+                self.cancelRecording()
+            }
+        }
+        observerTokens.append(mediaResetToken)
+
+        let routeToken = nc.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            let reasonRaw = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
+            let reason = reasonRaw.flatMap(AVAudioSession.RouteChangeReason.init(rawValue:))
+            guard reason == .oldDeviceUnavailable else { return }
+            Task { @MainActor [weak self] in
+                guard let self, self.isRecording || self.isStartingCapture else { return }
+                self.cancelRecording()
+            }
+        }
+        observerTokens.append(routeToken)
+        #endif
     }
 
     public func startRecording() {
-        guard !isRecording else { return }
+        guard !isRecording, !isStartingCapture else { return }
+        isStartingCapture = true
+        statusMessage = ""
         synth.stopForRecordingAsync { [weak self] in
             Task { @MainActor [weak self] in
-                self?.requestPermissionAndBegin()
+                guard let self, self.isStartingCapture else { return }
+                self.requestPermissionAndBegin()
             }
         }
     }
@@ -48,15 +113,25 @@ public final class HumCapturePipeline: ObservableObject {
         case .granted:
             beginEngineCaptureAsync()
         case .denied:
-            statusMessage = "未开启麦克风权限，可直接点下方琴键或手绘曲线"
+            isStartingCapture = false
+            synth.resumeAfterRecording()
+            statusMessage = String(
+                localized: "hum_mic_denied",
+                defaultValue: "未开启麦克风权限，可先前往系统设置允许，或直接从常用人声声高里挑选"
+            )
         case .undetermined:
             Task { @MainActor [weak self] in
                 let granted = await AVAudioApplication.requestRecordPermission()
-                guard let self else { return }
+                guard let self, self.isStartingCapture else { return }
                 if granted {
                     self.beginEngineCaptureAsync()
                 } else {
-                    self.statusMessage = "未开启麦克风权限，可直接点下方琴键或手绘曲线"
+                    self.isStartingCapture = false
+                    self.synth.resumeAfterRecording()
+                    self.statusMessage = String(
+                        localized: "hum_mic_denied",
+                        defaultValue: "未开启麦克风权限，可先前往系统设置允许，或直接从常用人声声高里挑选"
+                    )
                 }
             }
         @unknown default:
@@ -75,16 +150,26 @@ public final class HumCapturePipeline: ObservableObject {
         livePitchTrace = []
         let routerRef = router
         let bufferLock = sampleLock
+        let queueRef = sessionQueue
         bufferLock.withLock { $0.removeAll(keepingCapacity: true) }
         statusMessage = ""
 
-        Task.detached(priority: .userInitiated) { [weak self] in
+        queueRef.async { [weak self] in
             do {
                 try routerRef.configure(mode: .recording)
                 let engine = AVAudioEngine()
                 let input = engine.inputNode
                 let format = input.outputFormat(forBus: 0)
-                let sr = max(8_000.0, format.sampleRate)
+                let sr = format.sampleRate
+                guard format.commonFormat == .pcmFormatFloat32,
+                      sr.isFinite, sr >= 8_000.0, sr <= 192_000.0, format.channelCount >= 1 else {
+                    throw NSError(
+                        domain: "app.chimmo.humcapture",
+                        code: -10,
+                        userInfo: [NSLocalizedDescriptionKey: "Invalid microphone input format"]
+                    )
+                }
+                let maxSampleCap = Int(sr * 12.0)
 
                 try input.installAudioTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
                     guard case let .float(span) = buffer.channelData(0) else { return }
@@ -96,19 +181,20 @@ public final class HumCapturePipeline: ObservableObject {
                     frozenChunk.reserveCapacity(count)
                     for idx in 0..<count {
                         let s = span[idx]
-                        sumSq += s * s
-                        frozenChunk.append(s)
+                        let safe = s.isFinite ? s : Float(0.0)
+                        sumSq += safe * safe
+                        frozenChunk.append(safe)
                     }
                     let chunk = frozenChunk
                     bufferLock.withLock { buf in
-                        if buf.count < 48_000 * 30 {
+                        if buf.count < maxSampleCap {
                             buf.append(contentsOf: chunk)
                         }
                     }
                     let rms = sqrt(Double(sumSq) / Double(count))
                     let normalized = min(1.0, rms * 6.5)
                     Task { @MainActor [weak self] in
-                        guard let self, self.captureGeneration == generation else { return }
+                        guard let self, self.captureGeneration == generation, self.isRecording else { return }
                         let now = Date()
                         if now.timeIntervalSince(self.lastLevelTick) >= 0.05 {
                             self.lastLevelTick = now
@@ -120,29 +206,55 @@ public final class HumCapturePipeline: ObservableObject {
                 engine.prepare()
                 try engine.start()
 
-                await MainActor.run { [weak self] in
-                    guard let self, self.captureGeneration == generation else {
-                        engine.inputNode.removeTap(onBus: 0)
-                        engine.stop()
+                Task { @MainActor [weak self] in
+                    guard let self, self.captureGeneration == generation, self.isStartingCapture else {
+                        queueRef.async {
+                            engine.inputNode.removeTap(onBus: 0)
+                            engine.stop()
+                        }
                         return
                     }
+                    self.isStartingCapture = false
                     self.recordEngine = engine
                     self.capturedSampleRate = sr
                     self.startTimestamp = Date()
                     self.isRecording = true
                     self.statusMessage = ""
+                    self.attachConfigObserver(for: engine, generation: generation)
                     self.startLivePitchTracker()
                 }
             } catch {
-                await MainActor.run { [weak self] in
+                try? routerRef.configure(mode: .playback)
+                Task { @MainActor [weak self] in
                     guard let self, self.captureGeneration == generation else { return }
+                    self.isStartingCapture = false
                     self.liveTraceTask?.cancel()
                     self.liveTraceTask = nil
                     self.livePitchTrace = []
-                    self.statusMessage = "麦克风暂时不可用，可直接手绘曲线或点下方琴键"
+                    self.statusMessage = String(
+                        localized: "hum_mic_unavailable",
+                        defaultValue: "麦克风暂时不可用，可直接从下方常用人声声高里选"
+                    )
                     self.isRecording = false
-                    self.synth.ensureRunning()
+                    self.synth.resumeAfterRecording()
                 }
+            }
+        }
+    }
+
+    private func attachConfigObserver(for eng: AVAudioEngine, generation: UInt64) {
+        if let old = engineConfigToken {
+            NotificationCenter.default.removeObserver(old)
+            engineConfigToken = nil
+        }
+        engineConfigToken = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: eng,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.captureGeneration == generation, self.isRecording || self.isStartingCapture else { return }
+                self.cancelRecording()
             }
         }
     }
@@ -207,149 +319,52 @@ public final class HumCapturePipeline: ObservableObject {
 
     public func cancelRecording() {
         captureGeneration &+= 1
+        isStartingCapture = false
         isRecording = false
         inputLevel = 0.0
         liveTraceTask?.cancel()
         liveTraceTask = nil
         livePitchTrace = []
+        if let tok = engineConfigToken {
+            NotificationCenter.default.removeObserver(tok)
+            engineConfigToken = nil
+        }
 
-        recordEngine?.inputNode.removeTap(onBus: 0)
-        recordEngine?.stop()
+        let engineToStop = recordEngine
         recordEngine = nil
-
         sampleLock.withLock { $0.removeAll(keepingCapacity: false) }
         statusMessage = ""
-        synth.ensureRunning()
-    }
 
-    public func stopAndTranscribe(preferredMode: ScaleMode?) async -> ScaleGravityEngine.SnappedResult? {
-        guard isRecording else { return nil }
-        isRecording = false
-        inputLevel = 0.0
-        liveTraceTask?.cancel()
-        liveTraceTask = nil
-        livePitchTrace = []
-
-        recordEngine?.inputNode.removeTap(onBus: 0)
-        recordEngine?.stop()
-        recordEngine = nil
-
-        let elapsed = Date().timeIntervalSince(startTimestamp ?? Date())
-        let rawSamples = sampleLock.withLock { buf -> [Float] in
-            let copy = buf
-            buf.removeAll(keepingCapacity: false)
-            return copy
-        }
-        let sourceRate = capturedSampleRate
-
-        synth.ensureRunning()
-
-        guard elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
-            statusMessage = "再哼长一点试试"
-            return nil
-        }
-
-        statusMessage = ""
-        let det = detector
-
-        let result: ScaleGravityEngine.SnappedResult = await Task.detached(priority: .userInitiated) {
-            let mono16k = HumCapturePipeline.resampleLinear(rawSamples, from: sourceRate, to: PitchContour.sampleRate)
-            let contour = det.detect(mono16kSamples: mono16k, fmin: 75.0, fmax: 1100.0)
-            let segmented = SwiftF0NoteSegmenter.segmentNotes(from: contour, pitchHoldMs: 85.0)
-            return ScaleGravityEngine.snapToGravityScale(rawNotes: segmented, preferredMode: preferredMode)
-        }.value
-
-        if result.notes.isEmpty {
-            statusMessage = "没听清声音，靠近些轻轻哼一段再试"
-            return nil
-        }
-        statusMessage = ""
-        return result
-    }
-
-    /// 「只听高低走势、不管跑调」的相对轮廓提取器（含自适应噪底门限与三点中值滤波）
-    public func stopAndExtractRelativeContour(slotCount: Int) async -> [Double]? {
-        guard isRecording else { return nil }
-        isRecording = false
-        inputLevel = 0.0
-        liveTraceTask?.cancel()
-        liveTraceTask = nil
-        livePitchTrace = []
-
-        recordEngine?.inputNode.removeTap(onBus: 0)
-        recordEngine?.stop()
-        recordEngine = nil
-
-        let elapsed = Date().timeIntervalSince(startTimestamp ?? Date())
-        let rawSamples = sampleLock.withLock { buf -> [Float] in
-            let copy = buf
-            buf.removeAll(keepingCapacity: false)
-            return copy
-        }
-        let sourceRate = capturedSampleRate
-        synth.ensureRunning()
-
-        guard slotCount > 0, elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
-            statusMessage = "再哼长一点试试"
-            return nil
-        }
-
-        statusMessage = ""
-        let det = detector
-
-        let heights: [Double] = await Task.detached(priority: .userInitiated) {
-            let mono16k = HumCapturePipeline.resampleLinear(rawSamples, from: sourceRate, to: PitchContour.sampleRate)
-            let contour = det.detect(mono16kSamples: mono16k, fmin: 75.0, fmax: 1100.0)
-            let rmsFrames = LivePitchContourFilter.frameRMS(
-                mono16kSamples: mono16k,
-                frameCount: contour.pitchHz.count,
-                hopSize: PitchContour.hopSize
-            )
-            let voicedSemis = LivePitchContourFilter.extractVoicedSemitones(
-                pitchHz: contour.pitchHz,
-                confidence: contour.confidence,
-                frameRMS: rmsFrames
-            )
-            guard voicedSemis.count >= max(2, slotCount) else { return [] }
-
-            var slotMedians: [Double] = []
-            for s in 0..<slotCount {
-                let start = (s * voicedSemis.count) / slotCount
-                let end = max(start + 1, ((s + 1) * voicedSemis.count) / slotCount)
-                let slice = voicedSemis[start..<min(end, voicedSemis.count)].sorted()
-                let mid = slice[slice.count / 2]
-                slotMedians.append(mid)
+        let routerRef = router
+        sessionQueue.async { [weak self] in
+            if let engineToStop {
+                engineToStop.inputNode.removeTap(onBus: 0)
+                engineToStop.stop()
             }
-
-            guard let lo = slotMedians.min(), let hi = slotMedians.max() else { return [] }
-            let span = hi - lo
-            if span < 0.8 {
-                return Array(repeating: 0.35, count: slotCount)
+            try? routerRef.configure(mode: .playback)
+            Task { @MainActor [weak self] in
+                self?.synth.resumeAfterRecording()
             }
-            return slotMedians.map { ($0 - lo) / span }
-        }.value
-
-        if heights.isEmpty {
-            statusMessage = "没听清声音，靠近些轻轻哼一段再试"
-            return nil
         }
-        statusMessage = ""
-        return heights
     }
 
-    /// 离线捕捉轻哼自然基频（Hz），用于「迷走神经同频共振」包裹人声根音。
+    /// Captures on-device natural hum fundamental (Hz) to tune a personal acoustic resonance frequency.
     public func stopAndExtractFundamentalHz() async -> Double? {
         guard isRecording else { return nil }
+        captureGeneration &+= 1
+        isStartingCapture = false
         isRecording = false
         inputLevel = 0.0
         liveTraceTask?.cancel()
         liveTraceTask = nil
         livePitchTrace = []
+        if let tok = engineConfigToken {
+            NotificationCenter.default.removeObserver(tok)
+            engineConfigToken = nil
+        }
 
-        recordEngine?.inputNode.removeTap(onBus: 0)
-        recordEngine?.stop()
+        let engineToStop = recordEngine
         recordEngine = nil
-
         let elapsed = Date().timeIntervalSince(startTimestamp ?? Date())
         let rawSamples = sampleLock.withLock { buf -> [Float] in
             let copy = buf
@@ -357,10 +372,25 @@ public final class HumCapturePipeline: ObservableObject {
             return copy
         }
         let sourceRate = capturedSampleRate
-        synth.ensureRunning()
+        let routerRef = router
+
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            sessionQueue.async {
+                if let engineToStop {
+                    engineToStop.inputNode.removeTap(onBus: 0)
+                    engineToStop.stop()
+                }
+                try? routerRef.configure(mode: .playback)
+                cont.resume()
+            }
+        }
+        synth.resumeAfterRecording()
 
         guard elapsed >= 0.4, rawSamples.count > Int(sourceRate * 0.35) else {
-            statusMessage = "再轻轻多哼一小会儿，我就能锁住你的频率"
+            statusMessage = String(
+                localized: "hum_too_short",
+                defaultValue: "再轻轻多哼一小会儿，我就能锁住你的频率"
+            )
             return nil
         }
 
@@ -393,13 +423,16 @@ public final class HumCapturePipeline: ObservableObject {
             statusMessage = ""
             return hz
         } else {
-            statusMessage = "没听清轻哼声，再靠近轻哼试试，或直接选常用人声"
+            statusMessage = String(
+                localized: "hum_not_detected",
+                defaultValue: "没听清轻哼声，再靠近轻哼试试，或直接选常用人声"
+            )
             return nil
         }
     }
 
     nonisolated public static func resampleLinear(_ input: [Float], from srcRate: Double, to dstRate: Double) -> [Float] {
-        guard !input.isEmpty else { return [] }
+        guard !input.isEmpty, srcRate.isFinite, dstRate.isFinite, srcRate > 0, dstRate > 0 else { return [] }
         if abs(srcRate - dstRate) < 1.0 { return input }
         let ratio = srcRate / dstRate
         let outCount = max(1, Int(Double(input.count) / ratio))
@@ -407,7 +440,7 @@ public final class HumCapturePipeline: ObservableObject {
         let lastIdx = input.count - 1
         for i in 0..<outCount {
             let pos = Double(i) * ratio
-            let idx = min(lastIdx, Int(pos))
+            let idx = min(lastIdx, max(0, Int(pos)))
             let next = min(lastIdx, idx + 1)
             let frac = Float(pos - Double(idx))
             out[i] = input[idx] * (1.0 - frac) + input[next] * frac

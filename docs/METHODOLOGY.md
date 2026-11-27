@@ -1,66 +1,24 @@
-# 《咩哞 · Mie & Mou》开发方法论与 Apple Design Awards 持续打磨宪法（v2.2）
+# 咩哞 · Mie & Mou 声学工程与零依赖方法论
 
-> 文档状态：v2.2（V2.0 战略升维 · 从“音乐欣赏 + 旋律编曲”正式跃迁为「**咩哞 · Mie & Mou 脑波共振场**」，中英文定名 `咩哞 / Mie & Mou`；同步完备 TestFlight 外部公测审核合规链路；全局零 Emoji）。  
-> 适用范围：iOS 主应用（SwiftUI / AVAudioEngine / CoreHaptics）、OpenMotion 互动官网与短片、IP 资产管线及 TestFlight 公测与上架交付链路。
+## 一、严格半双工音频状态机（[`HalfDuplexAudioRouter`](../Chimmo/Audio/HalfDuplexAudioRouter.swift)）
 
----
+- **播放态 (`.playback`)**：采用独立 `.playback` 类别与 `.longFormAudio` 路由策略（无 `.mixWithOthers`），确保 AirPods 蓝牙 A2DP 48 kHz 立体声保真输出及锁屏/控制中心 `MPRemoteCommandCenter` 正常响应。
+- **采集态 (`.recording`)**：切换 `.playAndRecord` + `.measurement` 模式，在激活 `AVAudioSession` 之前优先选择机身内置麦克风，隔离蓝牙 HFP 通话采样率降级；结束或意外中断后自动回调恢复播放路由。
+- **耳机识别准确性**：明确区分真实立体声耳机路由（`.headphones` / `.bluetoothA2DP` / `.bluetoothLE` / `.usbAudio`），排除单声道 `.bluetoothHFP` 与手机外放，按真实设备物理通路切换双耳差频与等时脉动。
+- **中断与拔插保护**：完整处理 iOS 27 `resumptionRecommendationNotification`（仅 `.shouldResume` 自动恢复；`.shouldNotResume` 静默暂停并同步 UI）、`mediaServicesWereResetNotification` 以及拔除耳机 `.oldDeviceUnavailable` 安全暂停。
 
-## 核心总纲
+## 二、无锁实时声学合成与分离通道（[`FeltPianoSynth`](../Chimmo/Audio/FeltPianoSynth.swift)）
 
-**「声波共振，松绑大脑」（与姊妹作《摸索台灯 / Moss & Otto》同处一座温暖画室宇宙）**：
-- **原创窑陶器物先行、零学习负荷**：彻底摒弃外部同质化壳体设计、冗余模板与打卡说教，以咩哞自身 1-3-5 窑陶音偶与棉纸画布为骨架，采用「打开即入声场、声库四频段调音座与夜灯台、工坊铭牌与纪念卡」三页原生结构，3 秒触发即时体感舒缓与和声战栗；
-- **同源共感、独立锋芒**：沿用摸索台灯同源日光棉纸（`#FBF7F0`）、深夜靛蓝（`#0E1430`）、温暖琥珀（`#FFB547`）、纯净纸卡（`#FFFFFF` / `#19213F`）、悬浮 Liquid Glass 导航与无障碍严谨标准；同时拥有咩哞专属窑陶红（`#C4513A`）、影青瓷（`#3D7A77`）与 100% 离线实时脑波 DSP + CoreHaptics 声触共振个性；
-- **严格守门 1.4.1 非医疗与苹果隐私审计红线**：一切文案与文档严格界定为“声学放松、专注氛围与感官艺术体验（非医疗器械）”；强制要求 `PrivacyInfo.xcprivacy`（`CA92.1`）、后台音频合理启停、麦克风权限拒批无损替代路径及 100% 零联网探针通过。
+- **采样率无关滤波器**：每次音频回调先依据实际硬件采样率计算一阶平滑系数与噪声滤波器衰减参数，确保 44.1 kHz、48 kHz 与 96 kHz 音色包络一致。
+- **纯净双耳干声通道隔离**：左右声道双耳正弦差频信号绕过 11 ms / 17 ms 跨声道早期反射缓存直接混合输出，防止双耳频率互相串联串扰；同时解除外放等时脉动 14 Hz 上限，支持完整 1.5–42 Hz 节律调谐。
+- **无缝跨周期相位保护**：所有瞬态与持续正弦振荡器仅对整数倍频或独立累加相位的泛音执行整数周期回绕，杜绝多小时连续播放时的相位跳变杂音；引擎休眠或录音切换前均执行 15 ms 零交叉淡出。
 
----
+## 三、离线轻量音高提取（[`PitchDetector`](../Chimmo/Audio/PitchDetector.swift)）
 
-## V2.2 原创窑陶三页架构（声场 · 声库 · 工坊）
+- **纯 Swift + Accelerate/vDSP YIN**：零第三方二进制模型依赖，使用前置柔和 AGC 提升轻声哼唱追踪灵敏度的同时，保留未缩放真实 `-46 dBFS` RMS 静音门限，避免静默房间的环境噪底误锁定。
+- **跨设备音高折叠**：将人声自然基频平稳折叠回 `120–260 Hz` 温暖载波窗口，兼顾耳机双耳差频舒适响度。
 
-1. **Tab 0 · 声场（`ResonanceFieldView`，默认首页直达）**：打开即进入活体窑陶共振盆。覆盖 `Delta 2.5 Hz / Theta 6.0 Hz / Alpha 10.0 Hz / Gamma 40.0 Hz` 双耳差频（外放自动切换温和等时脉动）；顶栏直达闭眼夜灯零光台、呼吸引导环切换、共振纪念卡导出与定时淡出；轻点播停、左右滑频、长按蓄力松手引爆五度/八度泛音战栗瀑布；3 秒轻哼锁住个人自然声纹（未开麦自动提供三档人声预设）。
-2. **Tab 1 · 声库（`AcousticLibraryView`）**：自适应折行筛选栏（零横向滚动）+ 四频段窑陶调音座（四只守候小偶直通频段）+ 12 套离线声景配方（按时段标记「此刻契合」与收藏）+ 原生深靛「闭眼夜灯零光台」横卡 + 8 首「和声战栗乐章」+ 完整 28 首典藏曲本入口。
-3. **Tab 2 · 工坊（`AtelierSettingsView`）**：1-3-5 窑陶品牌铭牌与累计沉浸徽章 + 1080×1350 离线共振纪念卡一键导出 + 角色试音台与夜灯入口 + 日光/夜灯/自动三态画布外观 + 触觉/锁屏后台偏好 + 「声学安全与非医疗声明 (`ChimmoAcousticSafetyView`)」及法务文档中心。
+## 四、高能效实时绘制与离线导出
 
----
-
-## 一、六大核心方法论支柱（v2.0 Spin-Off Canons）
-
-### 1. 四屏纯血叙事架构（聆听 · 创作 · 曲本 · 工坊）
-模仿并呼应《摸索台灯》四标签叙事节奏，彻底终结功能混杂与迷宫层级：
-1. **Tab 0 · 聆听（`ChimmoTab.showcase` · `OrbitalStageView`）**：非破坏性音乐剧场。精简为「顶部选曲调音头栏 -> 纯净绘本主舞台卡 -> 故事分幕导览条 -> 七小只彩键 + 软胶主控坞」四块纯净区块，默认展示山坡乐谱舞台（兼可切换音乐盒花环与星环），`allowsEditing: false` 严防误改名曲，仅 via 显式「去改编」复制至创作域。
-2. **Tab 1 · 创作（`ChimmoTab.create` · `CreateStudioView`）**：独立无冲突编曲画室。去除顶栏冗余跳转键，空画布提供直达「轻哼一段旋律」与三颗软胶灵感种子；收拢工具条为「轻哼捕音 / 节奏灵感 / 音色和声」三键；底部常驻高对比窑陶「保存作品」与「试听 / 停止」软胶主控。
-3. **Tab 2 · 曲本（`ChimmoTab.songbook` · `MusicBoxShelfView`）**：一等公民作品阁与 28 首典藏曲库。分类与心情筛选全数升级为 `ChimmoFlowRow` 自适应折行（零横向滚动截断），支持内联试听、一键切换至聆听跟灯或进入创作改编。
-4. **Tab 3 · 工坊（`ChimmoTab.settings` · `SettingsView`）**：对标商业级 Apple HIG 与《摸索台灯 · YouView》打造——品牌身份卡、主题哲学横幅（直通 `CharacterSoundTestView`）、日光/夜灯/自动三联画布预览卡、声学偏好卡片，以及原生结构化 `ChimmoLegalDocumentView`（隐私政策、使用条款、开源与曲库鸣谢）。
-
-### 2. 窑陶棉纸 × 哑光软胶视觉语言（告别浓墨重边与假按钮）
-- **褪去浓墨描边**：用柔和的纸卡接触阴影（`ChimmoAtelierCardModifier`）、细腻顶部受光微沿与低饱和彩色光洗替代厚黑轮廓线与笨重偏移色块，使界面平静耐看。
-- **嵌套圆角与留白纪律**：全站严格统一 `ChimmoRadius`（`stage: 28` > `card: 22` > `inner: 16` > `tile: 14` > `chip: 10`）与 `16pt` 呼吸边距；各标签背景光洗严格受系统「减弱透明度（`accessibilityReduceTransparency`）」门控。
-- **两极交互语义不变**：只读信息标签采用纯净胶囊/微字号底色，绝不冒充实体立体按键；一切交互按钮坚持 `>= 40–44pt` 可触热区与 `.contentShape(...)`，杜绝误触发与穿透。
-
-### 3. 零横向滚动与无摩擦手势人体工学
-- 曲库标签与工坊身份徽章全部使用 `ChimmoFlowRow` 自动换行，杜绝横滑筛选条与纵向滚动抢手势或边缘裁字；
-- 赏析与创作双空间各持独立快照 `WorkspaceSnapshot` 与 `hasUnsavedCreationChanges` 脏状态追踪，从「曲本」跳转到任意空间前务必先同步目标 `StudioSpace`，防止快照回溯覆盖新选曲目。
-
-### 4. 深度克制的 IP 有机融合（Non-Intrusive Living IP）
-- 小羊 **咩（`Mie`）** 司职主旋律，小牛 **哞（`Mou`）** 司职低音与四幕和弦织体，`1–7` 七声小偶（`Taono / Doko / Plokko / Udo / Corllo / Bomo / Tinki`）将首调音级力学转化为姿态、耳翼微笑/垂耳与微光。
-- **表达红线**：全员 **绝对不说话（零气泡、零字幕、零嘴型）**，只用真实声学触发后的呼吸、倾角与微光回应。
-
-### 5. Apple Design Awards 工艺、无障碍与硬件键盘联动
-- **全维度无障碍闭环**：全站动画 100% 受 `accessibilityReduceMotion` 门控；顶部光洗受 `accessibilityReduceTransparency` 门控；标准 UI 字号全面使用语义 Dynamic Type（`.headline / .subheadline / .footnote / .caption / .caption2`）配合 `.minimumScaleFactor` 与无障碍大字号纵向重排；
-- **双空间硬件快捷键**：聆听空间支持 `Space` 播停；创作空间支持 `Space` 试听、`Cmd+S` 保存、`Cmd+Z` 撤销、`Cmd+N` 新建，各随 `activeSpace` 动态激活，互不抢键；
-- **全局零 Emoji 与零例行 `statusToast`**。
-
-### 6. 流水线化零模拟器 CI 节奏与窗口交接纪律
-- **本机构建红线**：严禁启动、构建或调用 iOS Simulator；仅使用无模拟器编译门禁检验全工程与测试目标：
-  `set -o pipefail && xcodegen generate && xcodebuild build-for-testing -project Chimmo.xcodeproj -scheme Chimmo -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGNING_IDENTITY=""`
-  要求输出 `** TEST BUILD SUCCEEDED **`、`0` error、`0` Swift/Xcode 编译警告。
-- **错峰推包铁律**：静默查询 GitHub Actions 队列，绝不在运行中强推覆盖；等待期间并行本地打磨下一轮，绿灯后稳步送测。
-
----
-
-## 二、每轮提交前自检清单（Pre-Commit Self-Audit）
-
-1. **四域与快照边界**：`聆听 / 创作 / 曲本 / 工坊` 切换与跨页跳转（尤其从曲本进入聆听或创作）是否正确保序不回滚？
-2. **软胶质感与触控热区**：全站卡片是否统一 `.chimmoAtelierCard`（无杂乱浓黑外框），全部操作按钮是否 `>= 40pt` 且带 `.contentShape(...)`？
-3. **零横向滚动筛选**：曲库与工坊标签是否采用 `ChimmoFlowRow` 自动折行，无 `ScrollView(.horizontal)` 筛选栏？
-4. **无障碍与自适应**：是否保持 `UNGATED_MOTION_HITS == 0`、`accessibilityReduceTransparency` 支持、Dynamic Type 与完整中文 VoiceOver 标签/提示？
-5. **全局零 Emoji 与零警告构建**：源码、单测、`docs/`、`project.yml`、`CHANGELOG.md` 新增行零 Emoji，且无模拟器 `build-for-testing` `0 error / 0 warning`。
+- **按需时间轴**：主舞台 `TimelineView` 仅在激活「声场」页且音频播放/按压蓄力时开启高刷动画；后台、`Reduce Motion` 或非激活标签页均即时暂停渲染与触觉引擎。
+- **异步明信片渲染**：[`ResonanceCardExporter`](../Chimmo/Domain/ResonanceCardExporter.swift) 在后台线程离线绘制 `1080×1350` 不透明 sRGB PNG 图像，无主线程掉帧。

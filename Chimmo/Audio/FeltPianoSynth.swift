@@ -2,7 +2,7 @@ import AVFAudio
 import Foundation
 import os
 
-/// 实时声学能量包络快照（由音频渲染线程每帧无锁写入，供主舞台 60fps 呼吸与光泽随动读取，零堆分配）。
+/// Real-time acoustic envelope snapshot updated lock-free from audio render callbacks (zero heap allocations).
 public struct AcousticEnvelopeSnapshot: Equatable, Sendable {
     public let rmsEnergy: Double
     public let warmthEnergy: Double
@@ -45,8 +45,10 @@ public struct OfflineSynthNoteEvent: Sendable {
     }
 }
 
-/// 温暖五声部室内乐声学合成器（歌唱大提琴 Singing Cello + 音乐厅毛毡钢琴 Felt Piano + 湖面竖琴 Liquid Harp + 大提琴低音 Warm Bass + 星光钢片琴 Celesta）。
-/// 全异步懒初始化与无锁渲染护航：不在 `init()` 或主线程阻塞构建 `AVAudioEngine` / `AVAudioUnitReverb`，彻底杜绝真机首屏卡死与音频线程优先级反转。
+/// Offline 44-voice physical-modeling chamber synthesizer and dual-bus binaural brainwave engine:
+/// - Dry Binaural Bus (`binauralSourceNode -> mainMixerNode`): pure L/R binaural differential isolation with 0% reverb crosstalk.
+/// - Wet Chamber Bus (`chamberSourceNode -> AVAudioUnitReverb -> mainMixerNode`): 44-voice instruments, early wood reflections, ambient wash noise, and frisson bloom cascades.
+/// All audio engine construction runs asynchronously on a dedicated serial queue without blocking MainActor.
 public final class FeltPianoSynth: @unchecked Sendable {
 
     public enum Timbre: Int, Sendable {
@@ -81,20 +83,9 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var pan: Double = 0.0
     }
 
-    private struct ContinuousPairState: Sendable {
-        var active: Bool = false
-        var targetGain: Double = 0.0
-        var currentGain: Double = 0.0
-        var targetHzA: Double = 261.63
-        var currentHzA: Double = 261.63
-        var targetHzB: Double = 392.00
-        var currentHzB: Double = 392.00
-        var phaseA: Double = 0.0
-        var phaseB: Double = 0.0
-    }
-
-    /// 离线脑波声场与颅内战栗蓄力状态（纯值类型标量，音频渲染线程零堆分配）
-    private struct BrainwaveBedState: Sendable {
+    /// Pure dry L/R binaural bus state (never passed through shared reverb or stereo reflection matrices).
+    private struct BinauralState: Sendable {
+        var sampleRate: Double = 48_000.0
         var active: Bool = false
         var targetGain: Double = 0.0
         var currentGain: Double = 0.0
@@ -106,10 +97,6 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var currentIsoDepth: Double = 0.14
         var targetOvertoneWarmth: Double = 0.55
         var currentOvertoneWarmth: Double = 0.55
-        var targetNoiseGain: Double = 0.08
-        var currentNoiseGain: Double = 0.08
-        var targetNoiseColor: Double = 0.25
-        var currentNoiseColor: Double = 0.25
         var targetFrissonTension: Double = 0.0
         var currentFrissonTension: Double = 0.0
 
@@ -120,27 +107,59 @@ public final class FeltPianoSynth: @unchecked Sendable {
         var phaseFifthR: Double = 0.0
         var phaseIso: Double = 0.0
         var phaseBreath: Double = 0.0
-        var phaseSuspL: Double = 0.0
-        var phaseSuspR: Double = 0.0
-        var phasePan: Double = 0.0
+
+        var sleepFadeMultiplier: Double = 1.0
+        var targetSleepFadeMultiplier: Double = 1.0
+        var muteRampGain: Double = 1.0
+        var targetMuteRampGain: Double = 1.0
+
+        var envRMS: Double = 0.0
+        var envWarmth: Double = 0.0
+        var envShimmer: Double = 0.0
+        var lpWarmthState: Double = 0.0
+        var prevMono: Double = 0.0
+    }
+
+    /// Wet chamber bus state: 44-voice instruments, ambient wash noise bed, frisson tension shimmer, and wooden salon reflections.
+    private struct ChamberState: Sendable {
+        var sampleRate: Double = 48_000.0
+        var voices: [Voice]
+        var voiceSoftMuteGain: Double = 1.0
+        var voiceSoftMuteTarget: Double = 1.0
+
+        var noiseActive: Bool = false
+        var targetNoiseGain: Double = 0.0
+        var currentNoiseGain: Double = 0.0
+        var targetNoiseColor: Double = 0.25
+        var currentNoiseColor: Double = 0.25
+        var targetFrissonTension: Double = 0.0
+        var currentFrissonTension: Double = 0.0
+        var targetCarrierHz: Double = 216.0
+        var currentCarrierHz: Double = 216.0
 
         var noiseSeed: UInt64 = 0x9E3779B97F4A7C15
         var brownL: Double = 0.0
         var brownR: Double = 0.0
         var pinkL: Double = 0.0
         var pinkR: Double = 0.0
-    }
+        var phaseBreath: Double = 0.0
+        var phasePan: Double = 0.0
+        var phaseSuspL: Double = 0.0
+        var phaseSuspR: Double = 0.0
+        var phaseSuspHarmL: Double = 0.0
+        var phaseSuspHarmR: Double = 0.0
 
-    private struct AudioState: Sendable {
-        var sampleRate: Double = 48_000.0
-        var voices: [Voice]
-        var pair: ContinuousPairState = ContinuousPairState()
-        var brainwave: BrainwaveBedState = BrainwaveBedState()
+        var sleepFadeMultiplier: Double = 1.0
+        var targetSleepFadeMultiplier: Double = 1.0
+        var muteRampGain: Double = 1.0
+        var targetMuteRampGain: Double = 1.0
+
         var envRMS: Double = 0.0
         var envWarmth: Double = 0.0
         var envShimmer: Double = 0.0
         var lpWarmthState: Double = 0.0
         var prevMono: Double = 0.0
+
         var warmthDamping: Double = 1.0
         var stereoSpread: Double = 1.0
         var reverbWetMix: Float = 28.0
@@ -152,26 +171,39 @@ public final class FeltPianoSynth: @unchecked Sendable {
     }
 
     private let router: HalfDuplexAudioRouter
-    private let lock: OSAllocatedUnfairLock<AudioState>
-    private let telemetryLock = OSAllocatedUnfairLock<AcousticEnvelopeSnapshot>(initialState: .silent)
+    private let binauralLock: OSAllocatedUnfairLock<BinauralState>
+    private let chamberLock: OSAllocatedUnfairLock<ChamberState>
+    private let dryTelemetryLock = OSAllocatedUnfairLock<AcousticEnvelopeSnapshot>(initialState: .silent)
+    private let wetTelemetryLock = OSAllocatedUnfairLock<AcousticEnvelopeSnapshot>(initialState: .silent)
     private let audioQueue = DispatchQueue(label: "app.chimmo.audio.synth", qos: .userInitiated)
     private let lifecycleLock = NSLock()
 
+    private var _onPlaybackInterruptedBySystem: (@Sendable () -> Void)?
+    public var onPlaybackInterruptedBySystem: (@Sendable () -> Void)? {
+        get { lifecycleLock.withLock { _onPlaybackInterruptedBySystem } }
+        set { lifecycleLock.withLock { _onPlaybackInterruptedBySystem = newValue } }
+    }
+
     private var engine: AVAudioEngine?
     private var reverb: AVAudioUnitReverb?
-    private var sourceNode: AVAudioSourceNode?
+    private var binauralSourceNode: AVAudioSourceNode?
+    private var chamberSourceNode: AVAudioSourceNode?
     private var configuredSampleRate: Double = 0
     private var isStarted: Bool = false
     private var isStarting: Bool = false
+    private var isSuspendedForRecording: Bool = false
+    private var isAudioInterrupted: Bool = false
     private var observersInstalled: Bool = false
     private var observerTokens: [NSObjectProtocol] = []
     private var engineConfigObserverToken: NSObjectProtocol?
     private var graphGeneration: UInt64 = 0
+    private var lifecycleGeneration: UInt64 = 0
 
     public init(router: HalfDuplexAudioRouter = HalfDuplexAudioRouter()) {
         self.router = router
-        self.lock = OSAllocatedUnfairLock(
-            initialState: AudioState(sampleRate: 48_000.0, voices: Array(repeating: Voice(), count: 44))
+        self.binauralLock = OSAllocatedUnfairLock(initialState: BinauralState())
+        self.chamberLock = OSAllocatedUnfairLock(
+            initialState: ChamberState(voices: Array(repeating: Voice(), count: 44))
         )
     }
 
@@ -186,55 +218,140 @@ public final class FeltPianoSynth: @unchecked Sendable {
     }
 
     private func hasActiveVoices() -> Bool {
-        lock.withLock { state in
-            state.pair.active
-                || state.brainwave.active
-                || state.brainwave.currentGain > 0.0005
-                || state.voices.contains(where: { $0.active })
+        let dryActive = binauralLock.withLock { st in
+            st.active || st.currentGain > 0.0005
+        }
+        if dryActive { return true }
+        return chamberLock.withLock { st in
+            st.noiseActive
+                || st.currentNoiseGain > 0.0005
+                || st.voices.contains(where: { $0.active })
         }
     }
 
-    /// 非阻塞唤醒：首次发声时在专用串行后台队列完成硬件采样率探测与音频图装配，主线程零卡顿。
-    public func ensureRunning() {
+    /// Non-blocking engine bring-up on dedicated serial background queue.
+    public func ensureRunning(clearUserInterruption: Bool = false) {
         let shouldStart: Bool = lifecycleLock.withLock {
+            if router.currentMode == .recording || isSuspendedForRecording {
+                return false
+            }
+            if clearUserInterruption {
+                isAudioInterrupted = false
+            }
+            guard !isAudioInterrupted else {
+                return false
+            }
             if isStarted || isStarting {
                 return false
             }
+            lifecycleGeneration &+= 1
             isStarting = true
             return true
         }
         guard shouldStart else { return }
 
+        binauralLock.withLock { $0.targetMuteRampGain = 1.0 }
+        chamberLock.withLock { $0.targetMuteRampGain = 1.0 }
         audioQueue.async { [weak self] in
             self?.startEngineOnQueue()
         }
     }
 
     public func stopForRecording() {
-        silenceAll()
-        audioQueue.async { [weak self] in
-            self?.stopEngineOnQueue()
+        let gen: UInt64 = lifecycleLock.withLock {
+            isSuspendedForRecording = true
+            lifecycleGeneration &+= 1
+            return lifecycleGeneration
+        }
+        binauralLock.withLock { $0.targetMuteRampGain = 0.0 }
+        chamberLock.withLock { $0.targetMuteRampGain = 0.0 }
+        audioQueue.asyncAfter(deadline: .now() + .milliseconds(18)) { [weak self] in
+            guard let self else { return }
+            let stillValid = self.lifecycleLock.withLock { self.lifecycleGeneration == gen && self.isSuspendedForRecording }
+            guard stillValid else { return }
+            self.stopEngineOnQueue()
+            self.silenceAll()
         }
     }
 
-    /// 供录音流程顺序等待音频引擎释放完毕，绝不阻塞主线程。
+    /// Sequentially fades out playback engine and releases audio route before microphone capture begins.
     public func stopForRecordingAsync(_ completion: @escaping @Sendable () -> Void) {
-        silenceAll()
-        audioQueue.async { [weak self] in
-            self?.stopEngineOnQueue()
+        let gen: UInt64 = lifecycleLock.withLock {
+            isSuspendedForRecording = true
+            lifecycleGeneration &+= 1
+            return lifecycleGeneration
+        }
+        binauralLock.withLock { $0.targetMuteRampGain = 0.0 }
+        chamberLock.withLock { $0.targetMuteRampGain = 0.0 }
+        audioQueue.asyncAfter(deadline: .now() + .milliseconds(18)) { [weak self] in
+            guard let self else {
+                completion()
+                return
+            }
+            let stillValid = self.lifecycleLock.withLock { self.lifecycleGeneration == gen && self.isSuspendedForRecording }
+            if stillValid {
+                self.stopEngineOnQueue()
+                self.silenceAll()
+            }
             completion()
         }
     }
 
+    public func resumeAfterRecording() {
+        lifecycleLock.withLock {
+            isSuspendedForRecording = false
+            isAudioInterrupted = false
+            lifecycleGeneration &+= 1
+        }
+        binauralLock.withLock { st in
+            st.muteRampGain = 0.0
+            st.targetMuteRampGain = 1.0
+        }
+        chamberLock.withLock { st in
+            st.muteRampGain = 0.0
+            st.targetMuteRampGain = 1.0
+        }
+        ensureRunning(clearUserInterruption: true)
+    }
+
+    public func stopAndDeactivate() {
+        let gen: UInt64 = lifecycleLock.withLock {
+            lifecycleGeneration &+= 1
+            return lifecycleGeneration
+        }
+        binauralLock.withLock { $0.targetMuteRampGain = 0.0 }
+        chamberLock.withLock { $0.targetMuteRampGain = 0.0 }
+        audioQueue.asyncAfter(deadline: .now() + .milliseconds(18)) { [weak self] in
+            guard let self else { return }
+            let stillValid = self.lifecycleLock.withLock { self.lifecycleGeneration == gen }
+            guard stillValid else { return }
+            self.silenceAll()
+            self.stopEngineOnQueue()
+            self.router.deactivate()
+        }
+    }
+
+    public func setSleepFadeMultiplier(_ multiplier: Double) {
+        let clamped = multiplier.isFinite ? max(0.0, min(1.0, multiplier)) : 1.0
+        binauralLock.withLock { $0.targetSleepFadeMultiplier = clamped }
+        chamberLock.withLock { $0.targetSleepFadeMultiplier = clamped }
+    }
+
     public func currentAcousticEnvelope() -> AcousticEnvelopeSnapshot {
-        telemetryLock.withLockIfAvailable { $0 } ?? .silent
+        let dry = dryTelemetryLock.withLockIfAvailable { $0 } ?? .silent
+        let wet = wetTelemetryLock.withLockIfAvailable { $0 } ?? .silent
+        return AcousticEnvelopeSnapshot(
+            rmsEnergy: min(1.0, max(dry.rmsEnergy, wet.rmsEnergy)),
+            warmthEnergy: min(1.0, max(dry.warmthEnergy, wet.warmthEnergy)),
+            shimmerEnergy: min(1.0, max(dry.shimmerEnergy, wet.shimmerEnergy))
+        )
     }
 
     public func applySpaceProfile(_ profile: AcousticSpaceProfile) {
         let wet = max(12.0, min(46.0, profile.reverbWetMix.isFinite ? profile.reverbWetMix : 28.0))
         let warmth = max(0.65, min(1.30, profile.warmthDamping.isFinite ? profile.warmthDamping : 1.0))
         let spread = max(0.60, min(1.40, profile.stereoSpread.isFinite ? profile.stereoSpread : 1.0))
-        lock.withLock { state in
+        chamberLock.withLock { state in
             state.reverbWetMix = wet
             state.warmthDamping = warmth
             state.stereoSpread = spread
@@ -245,7 +362,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
     }
 
     public func currentSpaceProfile() -> AcousticSpaceProfile {
-        lock.withLock { state in
+        chamberLock.withLock { state in
             AcousticSpaceProfile(
                 reverbWetMix: state.reverbWetMix,
                 warmthDamping: state.warmthDamping,
@@ -254,64 +371,71 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
     }
 
+    /// Softly fades out active 44-voice chamber notes over ~12ms without cutting ambient bed or causing clicks.
+    public func softStopChamberVoices() {
+        chamberLock.withLock { state in
+            if state.voices.contains(where: { $0.active }) {
+                state.voiceSoftMuteTarget = 0.0
+            }
+        }
+    }
+
     public func silenceAll() {
-        lock.withLock { state in
-            for i in 0..<state.voices.count {
-                state.voices[i].active = false
+        binauralLock.withLock { st in
+            st.active = false
+            st.targetGain = 0.0
+            st.currentGain = 0.0
+            st.targetFrissonTension = 0.0
+            st.currentFrissonTension = 0.0
+            st.sleepFadeMultiplier = 1.0
+            st.targetSleepFadeMultiplier = 1.0
+            st.muteRampGain = 1.0
+            st.targetMuteRampGain = 1.0
+            st.envRMS = 0.0
+            st.envWarmth = 0.0
+            st.envShimmer = 0.0
+            st.lpWarmthState = 0.0
+            st.prevMono = 0.0
+        }
+        chamberLock.withLock { st in
+            for i in 0..<st.voices.count {
+                st.voices[i].active = false
             }
-            state.pair.active = false
-            state.pair.targetGain = 0.0
-            state.brainwave.active = false
-            state.brainwave.targetGain = 0.0
-            state.brainwave.currentGain = 0.0
-            state.brainwave.targetFrissonTension = 0.0
-            state.brainwave.currentFrissonTension = 0.0
-            state.brainwave.targetNoiseGain = 0.0
-            state.brainwave.currentNoiseGain = 0.0
-            state.brainwave.brownL = 0.0
-            state.brainwave.brownR = 0.0
-            state.brainwave.pinkL = 0.0
-            state.brainwave.pinkR = 0.0
-            state.envRMS = 0.0
-            state.envWarmth = 0.0
-            state.envShimmer = 0.0
-            state.lpWarmthState = 0.0
-            state.prevMono = 0.0
-            state.reflectionIdx = 0
-            state.reflectionLPL = 0.0
-            state.reflectionLPR = 0.0
-            for idx in 0..<state.reflectionBufL.count {
-                state.reflectionBufL[idx] = 0.0
-                state.reflectionBufR[idx] = 0.0
+            st.voiceSoftMuteGain = 1.0
+            st.voiceSoftMuteTarget = 1.0
+            st.noiseActive = false
+            st.targetNoiseGain = 0.0
+            st.currentNoiseGain = 0.0
+            st.targetFrissonTension = 0.0
+            st.currentFrissonTension = 0.0
+            st.phaseSuspHarmL = 0.0
+            st.phaseSuspHarmR = 0.0
+            st.brownL = 0.0
+            st.brownR = 0.0
+            st.pinkL = 0.0
+            st.pinkR = 0.0
+            st.sleepFadeMultiplier = 1.0
+            st.targetSleepFadeMultiplier = 1.0
+            st.muteRampGain = 1.0
+            st.targetMuteRampGain = 1.0
+            st.envRMS = 0.0
+            st.envWarmth = 0.0
+            st.envShimmer = 0.0
+            st.lpWarmthState = 0.0
+            st.prevMono = 0.0
+            st.reflectionIdx = 0
+            st.reflectionLPL = 0.0
+            st.reflectionLPR = 0.0
+            for idx in 0..<st.reflectionBufL.count {
+                st.reflectionBufL[idx] = 0.0
+                st.reflectionBufR[idx] = 0.0
             }
         }
-        telemetryLock.withLockIfAvailable { $0 = .silent }
+        dryTelemetryLock.withLockIfAvailable { $0 = .silent }
+        wetTelemetryLock.withLockIfAvailable { $0 = .silent }
     }
 
-    /// 实时平滑连续双声波共振（支持连续滑动频率比，丝滑无爆音）
-    public func setContinuousPair(hzA: Double, hzB: Double, gain: Double = 0.24) {
-        ensureRunning()
-        guard hzA.isFinite && hzB.isFinite && hzA >= 40 && hzB >= 40 else { return }
-        lock.withLock { state in
-            if !state.pair.active {
-                state.pair.currentHzA = hzA
-                state.pair.currentHzB = hzB
-            }
-            state.pair.active = true
-            state.pair.targetHzA = hzA
-            state.pair.targetHzB = hzB
-            state.pair.targetGain = max(0.0, min(0.45, gain))
-        }
-    }
-
-    public func stopContinuousPair() {
-        lock.withLock { state in
-            state.pair.active = false
-            state.pair.targetGain = 0.0
-        }
-    }
-
-    /// 启动或平滑更新 100% 离线脑波声场（双耳差频 + 无耳机等时脉动 + 暖泛音 + 棕红/粉红声床）
+    /// Starts or smoothly updates the dual-bus brainwave acoustic bed (or unmodulated pure wash when `pureWashOnly == true`).
     public func setBrainwaveBed(
         carrierHz: Double,
         beatHz: Double,
@@ -320,53 +444,75 @@ public final class FeltPianoSynth: @unchecked Sendable {
         overtoneWarmth: Double = 0.55,
         noiseGain: Double = 0.08,
         noiseColor: Double = 0.25,
-        frissonTension: Double = 0.0
+        frissonTension: Double = 0.0,
+        pureWashOnly: Bool = false
     ) {
-        ensureRunning()
+        ensureRunning(clearUserInterruption: true)
         let safeCarrier = carrierHz.isFinite ? max(80.0, min(440.0, carrierHz)) : 216.0
         let safeBeat = beatHz.isFinite ? max(0.5, min(45.0, beatHz)) : 10.0
-        let safeGain = gain.isFinite ? max(0.0, min(0.42, gain)) : 0.26
-        let safeIso = isochronicDepth.isFinite ? max(0.0, min(0.45, isochronicDepth)) : 0.14
-        let safeWarmth = overtoneWarmth.isFinite ? max(0.0, min(1.0, overtoneWarmth)) : 0.55
+        let safeGain = (pureWashOnly || !gain.isFinite) ? (pureWashOnly ? 0.0 : 0.26) : max(0.0, min(0.42, gain))
+        let safeIso = pureWashOnly ? 0.0 : (isochronicDepth.isFinite ? max(0.0, min(0.45, isochronicDepth)) : 0.14)
+        let safeWarmth = pureWashOnly ? 0.0 : (overtoneWarmth.isFinite ? max(0.0, min(1.0, overtoneWarmth)) : 0.55)
         let safeNoiseGain = noiseGain.isFinite ? max(0.0, min(0.24, noiseGain)) : 0.08
         let safeNoiseColor = noiseColor.isFinite ? max(0.0, min(1.0, noiseColor)) : 0.25
         let safeFrisson = frissonTension.isFinite ? max(0.0, min(1.0, frissonTension)) : 0.0
 
-        lock.withLock { state in
-            let wasStopped = !state.brainwave.active && state.brainwave.currentGain < 0.002
-            if wasStopped {
-                state.brainwave.currentCarrierHz = safeCarrier
-                state.brainwave.currentBeatHz = safeBeat
-                state.brainwave.currentIsoDepth = safeIso
-                state.brainwave.currentOvertoneWarmth = safeWarmth
-                state.brainwave.currentNoiseGain = safeNoiseGain
-                state.brainwave.currentNoiseColor = safeNoiseColor
-                state.brainwave.currentFrissonTension = safeFrisson
+        binauralLock.withLock { st in
+            let wantBinaural = !pureWashOnly && safeGain > 0.0001
+            let wasStopped = !st.active && st.currentGain < 0.002
+            if wasStopped && wantBinaural {
+                st.currentCarrierHz = safeCarrier
+                st.currentBeatHz = safeBeat
+                st.currentIsoDepth = safeIso
+                st.currentOvertoneWarmth = safeWarmth
+                st.currentFrissonTension = safeFrisson
+                st.sleepFadeMultiplier = 1.0
+                st.targetSleepFadeMultiplier = 1.0
             }
-            state.brainwave.active = true
-            state.brainwave.targetCarrierHz = safeCarrier
-            state.brainwave.targetBeatHz = safeBeat
-            state.brainwave.targetGain = safeGain
-            state.brainwave.targetIsoDepth = safeIso
-            state.brainwave.targetOvertoneWarmth = safeWarmth
-            state.brainwave.targetNoiseGain = safeNoiseGain
-            state.brainwave.targetNoiseColor = safeNoiseColor
-            state.brainwave.targetFrissonTension = safeFrisson
+            st.targetMuteRampGain = 1.0
+            st.active = wantBinaural
+            st.targetCarrierHz = safeCarrier
+            st.targetBeatHz = safeBeat
+            st.targetGain = wantBinaural ? safeGain : 0.0
+            st.targetIsoDepth = safeIso
+            st.targetOvertoneWarmth = safeWarmth
+            st.targetFrissonTension = safeFrisson
+        }
+
+        chamberLock.withLock { st in
+            let wasNoiseStopped = !st.noiseActive && st.currentNoiseGain < 0.002
+            if wasNoiseStopped {
+                st.currentCarrierHz = safeCarrier
+                st.currentNoiseColor = safeNoiseColor
+                st.currentFrissonTension = safeFrisson
+                st.sleepFadeMultiplier = 1.0
+                st.targetSleepFadeMultiplier = 1.0
+            }
+            st.targetMuteRampGain = 1.0
+            st.noiseActive = (safeNoiseGain > 0.0001 || safeFrisson > 0.001)
+            st.targetNoiseGain = safeNoiseGain
+            st.targetNoiseColor = safeNoiseColor
+            st.targetCarrierHz = safeCarrier
+            st.targetFrissonTension = safeFrisson
         }
     }
 
     public func stopBrainwaveBed() {
-        lock.withLock { state in
-            state.brainwave.active = false
-            state.brainwave.targetGain = 0.0
-            state.brainwave.targetFrissonTension = 0.0
-            state.brainwave.targetNoiseGain = 0.0
+        binauralLock.withLock { st in
+            st.active = false
+            st.targetGain = 0.0
+            st.targetFrissonTension = 0.0
+        }
+        chamberLock.withLock { st in
+            st.noiseActive = false
+            st.targetNoiseGain = 0.0
+            st.targetFrissonTension = 0.0
         }
     }
 
-    /// 10 组手工窑陶微差轻叩声效（连按切换频段或质地时音高与声像微变，自然不刺耳）。
+    /// 10 handcrafted kiln click variations with subtle micro-pitch & pan offsets.
     public func playTactileKilnClick(variantIndex: Int, bright: Double = 0.78) {
-        ensureRunning()
+        ensureRunning(clearUserInterruption: true)
         let baseTable: [Double] = [
             432.0, 456.0, 480.0, 498.0, 520.0,
             444.0, 472.0, 508.0, 540.0, 568.0
@@ -393,86 +539,29 @@ public final class FeltPianoSynth: @unchecked Sendable {
         )
     }
 
-    /// 释放「颅内战栗（Acoustic Frisson）」和声瀑布：低八度大提琴根音 + 纯五度/大三度/高八度毛毡钢琴与钢片琴星光绽放。
+    /// Triggers an Acoustic Frisson harmonic cascade across wide-stereo cello, felt piano, harp, and celesta shimmer.
     public func triggerFrissonRelease(rootHz: Double, intensity: Double = 0.85) {
-        ensureRunning()
+        ensureRunning(clearUserInterruption: true)
         let base = rootHz.isFinite ? max(90.0, min(360.0, rootHz)) : 196.0
         let amp = intensity.isFinite ? max(0.25, min(1.0, intensity)) : 0.85
 
-        lock.withLock { state in
-            state.brainwave.targetFrissonTension = 0.0
+        binauralLock.withLock { $0.targetFrissonTension = 0.0 }
+        chamberLock.withLock { state in
+            state.targetFrissonTension = 0.0
+            state.voiceSoftMuteGain = 1.0
+            state.voiceSoftMuteTarget = 1.0
 
-            // 1. 温暖低八度歌唱大提琴扎根
-            Self.enqueueVoice(
-                into: &state,
-                frequency: max(55.0, base * 0.5),
-                velocity: 0.42 * amp,
-                decay: 3.1,
-                brightness: 0.68,
-                timbre: .singingCello,
-                delaySeconds: 0.0,
-                pan: 0.0
-            )
-            // 2. 居中主音毛毡钢琴定锚
-            Self.enqueueVoice(
-                into: &state,
-                frequency: base,
-                velocity: 0.38 * amp,
-                decay: 2.6,
-                brightness: 0.86,
-                timbre: .feltPiano,
-                delaySeconds: 0.015,
-                pan: -0.08
-            )
-            // 3. 左声道纯五度舒展
-            Self.enqueueVoice(
-                into: &state,
-                frequency: base * 1.5,
-                velocity: 0.34 * amp,
-                decay: 2.5,
-                brightness: 0.92,
-                timbre: .liquidHarp,
-                delaySeconds: 0.045,
-                pan: -0.34
-            )
-            // 4. 右声道泛音高八度
-            Self.enqueueVoice(
-                into: &state,
-                frequency: base * 2.0,
-                velocity: 0.32 * amp,
-                decay: 2.4,
-                brightness: 0.98,
-                timbre: .feltPiano,
-                delaySeconds: 0.085,
-                pan: 0.34
-            )
-            // 5. 宽声场高音十度大三度绽放（核心 Frisson 释然甜度）
-            Self.enqueueVoice(
-                into: &state,
-                frequency: min(2400.0, base * 2.5),
-                velocity: 0.28 * amp,
-                decay: 2.3,
-                brightness: 1.06,
-                timbre: .liquidHarp,
-                delaySeconds: 0.135,
-                pan: -0.46
-            )
-            // 6. 最高三度+星光钢片琴余韵微光
-            Self.enqueueVoice(
-                into: &state,
-                frequency: min(3200.0, base * 3.0),
-                velocity: 0.22 * amp,
-                decay: 2.0,
-                brightness: 1.12,
-                timbre: .celesta,
-                delaySeconds: 0.185,
-                pan: 0.48
-            )
+            Self.enqueueVoice(into: &state, frequency: max(55.0, base * 0.5), velocity: 0.42 * amp, decay: 3.1, brightness: 0.68, timbre: .singingCello, delaySeconds: 0.0, pan: 0.0)
+            Self.enqueueVoice(into: &state, frequency: base, velocity: 0.38 * amp, decay: 2.6, brightness: 0.86, timbre: .feltPiano, delaySeconds: 0.015, pan: -0.08)
+            Self.enqueueVoice(into: &state, frequency: base * 1.5, velocity: 0.34 * amp, decay: 2.5, brightness: 0.92, timbre: .liquidHarp, delaySeconds: 0.045, pan: -0.34)
+            Self.enqueueVoice(into: &state, frequency: base * 2.0, velocity: 0.32 * amp, decay: 2.4, brightness: 0.98, timbre: .feltPiano, delaySeconds: 0.085, pan: 0.34)
+            Self.enqueueVoice(into: &state, frequency: min(2400.0, base * 2.5), velocity: 0.28 * amp, decay: 2.3, brightness: 1.06, timbre: .liquidHarp, delaySeconds: 0.135, pan: -0.46)
+            Self.enqueueVoice(into: &state, frequency: min(3200.0, base * 3.0), velocity: 0.22 * amp, decay: 2.0, brightness: 1.12, timbre: .celesta, delaySeconds: 0.185, pan: 0.48)
         }
     }
 
     private static func enqueueVoice(
-        into state: inout AudioState,
+        into state: inout ChamberState,
         frequency: Double,
         velocity: Double,
         decay: Double,
@@ -483,12 +572,22 @@ public final class FeltPianoSynth: @unchecked Sendable {
     ) {
         guard frequency.isFinite && frequency >= 28.0 && frequency <= 4800.0 else { return }
 
+        state.voiceSoftMuteTarget = 1.0
+        if state.voiceSoftMuteGain < 0.99 {
+            state.voiceSoftMuteGain = 1.0
+        }
+
+        let safeVel = velocity.isFinite ? max(0.03, min(1.0, velocity)) : 0.55
+        let safeDecay = decay.isFinite ? max(0.15, min(6.0, decay)) : 1.75
+        let safeBright = brightness.isFinite ? max(0.2, min(1.4, brightness)) : 0.95
+        let safeDelay = delaySeconds.isFinite ? max(0.0, min(10.0, delaySeconds)) : 0.0
+
         let resolvedPan = pan.map { max(-0.65, min(0.65, $0.isFinite ? $0 : 0.0)) }
             ?? max(-0.46, min(0.46, log2(max(40.0, frequency) / 261.63) * 0.20))
-        let scaledDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: decay, frequency: frequency)
-        let absorbedBright = max(0.2, min(1.4, brightness * PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: frequency)))
+        let scaledDecay = PitchScaledAcousticEnvelope.scaledDecay(baseDecay: safeDecay, frequency: frequency)
+        let absorbedBright = max(0.2, min(1.4, safeBright * PitchScaledAcousticEnvelope.highFrequencyAirAbsorption(frequency: frequency)))
 
-        let delaySamps = max(0.0, delaySeconds * state.sampleRate)
+        let delaySamps = max(0.0, safeDelay * state.sampleRate)
         var targetIdx = 0
         var oldestAge = -1.0
         for i in 0..<state.voices.count {
@@ -510,7 +609,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
             hammerPhase: 0.0,
             ageSamples: 0.0,
             delaySamples: delaySamps,
-            velocity: max(0.03, min(1.0, velocity)),
+            velocity: safeVel,
             decaySeconds: scaledDecay,
             brightness: absorbedBright,
             pan: resolvedPan
@@ -526,10 +625,10 @@ public final class FeltPianoSynth: @unchecked Sendable {
         delaySeconds: Double = 0.0,
         pan: Double? = nil
     ) {
-        ensureRunning()
+        ensureRunning(clearUserInterruption: true)
         guard frequency.isFinite && frequency >= 28.0 && frequency <= 4800.0 else { return }
 
-        lock.withLock { state in
+        chamberLock.withLock { state in
             Self.enqueueVoice(
                 into: &state,
                 frequency: frequency,
@@ -539,54 +638,6 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 timbre: timbre,
                 delaySeconds: delaySeconds,
                 pan: pan
-            )
-        }
-    }
-
-    /// 随「物理水位（waterLevel 0...1）」弹奏富有生命力的错落琶音与低音托底
-    public func playWaterCradle(
-        rootMIDI: Int,
-        mode: ScaleMode,
-        voicing: ChordVoicing,
-        waterLevel: Double
-    ) {
-        let level = max(0.0, min(1.0, waterLevel))
-        guard level >= 0.08 else { return }
-
-        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: voicing.bassDegree, octaveOffset: voicing.bassOctave)
-        let bassVel = 0.22 + level * 0.16
-        playNote(frequency: bassHz, velocity: bassVel, decay: 2.5, brightness: 0.55, timbre: .warmBass, delaySeconds: 0.0, pan: 0.0)
-
-        guard level >= 0.28 else { return }
-        let arpNotes = level >= 0.52 ? voicing.upperDegrees : Array(voicing.upperDegrees.prefix(2))
-        let cradlePans = [-0.24, 0.22, -0.14]
-        for (idx, deg) in arpNotes.enumerated() {
-            let oct = idx == 0 ? -1 : 0
-            let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
-            let delay = Double(idx + 1) * 0.038
-            let vel = (0.14 + level * 0.10) * (idx == 0 ? 1.05 : 0.92)
-            playNote(
-                frequency: hz,
-                velocity: vel,
-                decay: 2.1,
-                brightness: 0.78,
-                timbre: .feltPiano,
-                delaySeconds: delay,
-                pan: cradlePans[idx % cradlePans.count]
-            )
-        }
-
-        if level >= 0.72, let shimmerDeg = voicing.upperDegrees.last {
-            let shimmerHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: shimmerDeg, octaveOffset: 1)
-            let shimmerVel = (level - 0.65) * 0.34
-            playNote(
-                frequency: shimmerHz,
-                velocity: shimmerVel,
-                decay: 1.45,
-                brightness: 1.1,
-                timbre: .celesta,
-                delaySeconds: Double(arpNotes.count + 1) * 0.042,
-                pan: 0.32
             )
         }
     }
@@ -673,7 +724,6 @@ public final class FeltPianoSynth: @unchecked Sendable {
         return out
     }
 
-    /// 弹奏指定调内三和弦，支持 4 种真实大师左手立体声宽伴奏织体。
     public func playDiatonicChord(
         rootMIDI: Int,
         mode: ScaleMode,
@@ -682,6 +732,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
         spanDuration: Double = 1.6,
         intensity: Double = 0.82
     ) {
+        ensureRunning(clearUserInterruption: true)
         let events = Self.diatonicChordEvents(
             startTime: 0.0,
             rootMIDI: rootMIDI,
@@ -691,33 +742,19 @@ public final class FeltPianoSynth: @unchecked Sendable {
             spanDuration: spanDuration,
             intensity: intensity
         )
-        for ev in events {
-            playNote(
-                frequency: ev.frequency,
-                velocity: ev.velocity,
-                decay: ev.decay,
-                brightness: ev.brightness,
-                timbre: ev.timbre,
-                delaySeconds: ev.timeSec,
-                pan: ev.pan
-            )
-        }
-    }
-
-    public func playWaterRipplePreview(rootMIDI: Int, mode: ScaleMode, profile: HarmonyProfile) {
-        let voicing = profile.voicing(for: 1)
-        let bassHz = mode.frequencyHz(rootMIDI: rootMIDI, degree: voicing.bassDegree, octaveOffset: -1)
-        playNote(frequency: bassHz, velocity: 0.24, decay: 1.8, timbre: .warmBass, delaySeconds: 0.0)
-        for (idx, deg) in [1, 3, 5, 2].enumerated() {
-            let oct = idx == 3 ? 1 : 0
-            let hz = mode.frequencyHz(rootMIDI: rootMIDI, degree: deg, octaveOffset: oct)
-            playNote(
-                frequency: hz,
-                velocity: 0.20,
-                decay: 1.5,
-                timbre: idx == 3 ? .celesta : .liquidHarp,
-                delaySeconds: Double(idx + 1) * 0.055
-            )
+        chamberLock.withLock { state in
+            for ev in events {
+                Self.enqueueVoice(
+                    into: &state,
+                    frequency: ev.frequency,
+                    velocity: ev.velocity,
+                    decay: ev.decay,
+                    brightness: ev.brightness,
+                    timbre: ev.timbre,
+                    delaySeconds: ev.timeSec,
+                    pan: ev.pan
+                )
+            }
         }
     }
 
@@ -733,9 +770,23 @@ public final class FeltPianoSynth: @unchecked Sendable {
             forName: AVAudioSession.didBecomeInactiveNotification,
             object: nil,
             queue: nil
-        ) { [weak self] _ in
-            self?.audioQueue.async {
-                self?.stopEngineOnQueue()
+        ) { [weak self] note in
+            guard let self else { return }
+            let ctx = note.userInfo?[AVAudioSession.deactivationContextKey] as? AVAudioSession.DeactivationContext
+            // App-initiated deactivation (.app) must NOT poison playback on future launches.
+            guard ctx?.source != .app else { return }
+
+            let wasActive = self.hasActiveVoices()
+            self.lifecycleLock.withLock {
+                self.isAudioInterrupted = true
+            }
+            self.audioQueue.async { [weak self] in
+                guard let self else { return }
+                self.silenceAll()
+                self.stopEngineOnQueue()
+                if wasActive {
+                    self.onPlaybackInterruptedBySystem?()
+                }
             }
         }
         observerTokens.append(inactiveToken)
@@ -744,19 +795,47 @@ public final class FeltPianoSynth: @unchecked Sendable {
             forName: AVAudioSession.resumptionRecommendationNotification,
             object: nil,
             queue: nil
-        ) { [weak self] _ in
+        ) { [weak self] note in
+            let recommendation = (note.userInfo?[AVAudioSession.resumptionContextKey] as? AVAudioSession.ResumptionContext)?.recommendation
             self?.audioQueue.async {
                 guard let self else { return }
+                let suspended = self.lifecycleLock.withLock { self.isSuspendedForRecording }
+                guard !suspended else { return }
                 self.lifecycleLock.withLock {
+                    self.isAudioInterrupted = false
                     self.isStarted = false
                     self.isStarting = false
                 }
-                if self.hasActiveVoices() {
+                if recommendation == .shouldResume && self.hasActiveVoices() && self.router.currentMode == .playback {
                     self.ensureRunning()
+                } else {
+                    self.silenceAll()
+                    self.stopEngineOnQueue()
+                    self.onPlaybackInterruptedBySystem?()
                 }
             }
         }
         observerTokens.append(resumeToken)
+
+        let mediaResetToken = nc.addObserver(
+            forName: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            self?.audioQueue.async {
+                guard let self else { return }
+                let wasActive = self.hasActiveVoices()
+                self.resetEngineOnQueue()
+                self.lifecycleLock.withLock {
+                    self.isAudioInterrupted = false
+                }
+                if wasActive {
+                    self.silenceAll()
+                    self.onPlaybackInterruptedBySystem?()
+                }
+            }
+        }
+        observerTokens.append(mediaResetToken)
 
         let routeToken = nc.addObserver(
             forName: AVAudioSession.routeChangeNotification,
@@ -765,11 +844,20 @@ public final class FeltPianoSynth: @unchecked Sendable {
         ) { [weak self] note in
             let reasonRaw = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
             let reason = reasonRaw.flatMap(AVAudioSession.RouteChangeReason.init(rawValue:))
-            guard reason == .oldDeviceUnavailable || reason == .newDeviceAvailable || reason == .categoryChange else {
+            guard reason == .oldDeviceUnavailable || reason == .newDeviceAvailable else {
                 return
             }
             self?.audioQueue.async {
                 guard let self else { return }
+                if reason == .oldDeviceUnavailable {
+                    let wasActive = self.hasActiveVoices()
+                    self.silenceAll()
+                    self.stopEngineOnQueue()
+                    if wasActive {
+                        self.onPlaybackInterruptedBySystem?()
+                    }
+                    return
+                }
                 let wasRunningOrActive = self.lifecycleLock.withLock { self.isStarted } || self.hasActiveVoices()
                 self.resetEngineOnQueue()
                 if wasRunningOrActive && self.router.currentMode == .playback {
@@ -794,18 +882,30 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
         engine = nil
         reverb = nil
-        sourceNode = nil
+        binauralSourceNode = nil
+        chamberSourceNode = nil
         configuredSampleRate = 0
     }
 
     private func startEngineOnQueue() {
         installObserversIfNeeded()
+        let blocked = lifecycleLock.withLock {
+            isSuspendedForRecording || isAudioInterrupted || router.currentMode == .recording
+        }
+        if blocked {
+            lifecycleLock.withLock {
+                isStarted = false
+                isStarting = false
+            }
+            return
+        }
         do {
             try router.configure(mode: .playback)
             let probeEngine = AVAudioEngine()
             let outSR = probeEngine.outputNode.outputFormat(forBus: 0).sampleRate
             let effectiveSR = (outSR >= 22_050.0 && outSR <= 96_000.0) ? outSR : max(44_100.0, router.hardwareSampleRate)
-            lock.withLock { $0.sampleRate = effectiveSR }
+            binauralLock.withLock { $0.sampleRate = effectiveSR }
+            chamberLock.withLock { $0.sampleRate = effectiveSR }
 
             if engine == nil || abs(configuredSampleRate - effectiveSR) > 1.0 {
                 teardownGraphLocked()
@@ -847,9 +947,143 @@ public final class FeltPianoSynth: @unchecked Sendable {
         }
     }
 
-    private func makeSourceNode(format: AVAudioFormat) -> AVAudioSourceNode {
-        let stateLock = lock
-        let tLock = telemetryLock
+    /// Pure dry L/R binaural bus node: connects directly to mainMixerNode with ZERO reverb crosstalk.
+    private func makeBinauralSourceNode(format: AVAudioFormat) -> AVAudioSourceNode {
+        let stateLock = binauralLock
+        let tLock = dryTelemetryLock
+        return AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList -> OSStatus in
+            let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
+            let count = Int(frameCount)
+            guard count > 0, let leftPtr = abl[0].mData?.assumingMemoryBound(to: Float.self) else {
+                return noErr
+            }
+            let rightPtr = abl.count > 1 ? abl[1].mData?.assumingMemoryBound(to: Float.self) : nil
+
+            let didRender = stateLock.withLockIfAvailable { st -> Bool in
+                let sr = max(22_050.0, st.sampleRate)
+                let invSR = 1.0 / sr
+                let dtNorm = min(2.5, max(0.25, 48_000.0 / sr))
+                let twoPi = 2.0 * Double.pi
+                let bwGainAlpha = 1.0 - pow(1.0 - 0.0014, dtNorm)
+                let bwParamAlpha = 1.0 - pow(1.0 - 0.0022, dtNorm)
+                let bwSlowAlpha = 1.0 - pow(1.0 - 0.0018, dtNorm)
+                let bwFrissonAlpha = 1.0 - pow(1.0 - 0.0030, dtNorm)
+                let muteAlpha = 1.0 - exp(-1.0 / (0.004 * sr))
+                let lpWarmAlpha = 1.0 - pow(1.0 - 0.055, dtNorm)
+
+                var sumSq = 0.0
+                var sumWarmSq = 0.0
+                var sumDiffSq = 0.0
+                var lpWarm = st.lpWarmthState
+                var prevMono = st.prevMono
+
+                for i in 0..<count {
+                    var dryL = 0.0
+                    var dryR = 0.0
+
+                    if st.active || st.currentGain > 0.0004 {
+                        let gainTarget = st.active ? st.targetGain : 0.0
+                        let tensionTarget = st.active ? st.targetFrissonTension : 0.0
+
+                        st.currentGain += (gainTarget - st.currentGain) * bwGainAlpha
+                        st.currentCarrierHz += (st.targetCarrierHz - st.currentCarrierHz) * bwParamAlpha
+                        st.currentBeatHz += (st.targetBeatHz - st.currentBeatHz) * bwParamAlpha
+                        st.currentIsoDepth += (st.targetIsoDepth - st.currentIsoDepth) * bwSlowAlpha
+                        st.currentOvertoneWarmth += (st.targetOvertoneWarmth - st.currentOvertoneWarmth) * bwSlowAlpha
+                        st.currentFrissonTension += (tensionTarget - st.currentFrissonTension) * bwFrissonAlpha
+
+                        let carrier = st.currentCarrierHz
+                        let beat = st.currentBeatHz
+                        let hzL = max(40.0, carrier - beat * 0.5)
+                        let hzR = max(40.0, carrier + beat * 0.5)
+                        let warmth = st.currentOvertoneWarmth
+                        let frisson = st.currentFrissonTension
+
+                        let breathEnv = 0.86 + 0.14 * sin(st.phaseBreath)
+                        let isoModHz = max(0.5, min(45.0, beat))
+                        let isoEnv = 1.0 - st.currentIsoDepth * 0.5 * (1.0 - cos(st.phaseIso))
+
+                        // Keep Left carrier + Left fifth purely on Left; Right carrier + Right fifth purely on Right.
+                        let fifthL = sin(st.phaseFifthL) * (0.14 * warmth)
+                        let fifthR = sin(st.phaseFifthR) * (0.14 * warmth)
+                        let subTerm = sin(st.phaseSub) * (0.18 * warmth)
+                        let carrierL = sin(st.phaseL) * 0.62
+                        let carrierR = sin(st.phaseR) * 0.62
+
+                        let bwEnv = st.currentGain * breathEnv * isoEnv * (1.0 + frisson * 0.35)
+                        dryL = (carrierL + fifthL + subTerm) * bwEnv
+                        dryR = (carrierR + fifthR + subTerm) * bwEnv
+
+                        st.phaseL += twoPi * hzL * invSR
+                        st.phaseR += twoPi * hzR * invSR
+                        st.phaseSub += twoPi * (carrier * 0.5) * invSR
+                        st.phaseFifthL += twoPi * (hzL * 1.5) * invSR
+                        st.phaseFifthR += twoPi * (hzR * 1.5) * invSR
+                        st.phaseIso += twoPi * isoModHz * invSR
+                        st.phaseBreath += twoPi * 0.11 * invSR
+
+                        let wrap = twoPi * 1024.0
+                        if st.phaseL > wrap { st.phaseL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if st.phaseR > wrap { st.phaseR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if st.phaseSub > wrap { st.phaseSub.formTruncatingRemainder(dividingBy: twoPi) }
+                        if st.phaseFifthL > wrap { st.phaseFifthL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if st.phaseFifthR > wrap { st.phaseFifthR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if st.phaseIso > wrap { st.phaseIso.formTruncatingRemainder(dividingBy: twoPi) }
+                        if st.phaseBreath > wrap { st.phaseBreath.formTruncatingRemainder(dividingBy: twoPi) }
+                    }
+
+                    st.muteRampGain += (st.targetMuteRampGain - st.muteRampGain) * muteAlpha
+                    st.sleepFadeMultiplier += (st.targetSleepFadeMultiplier - st.sleepFadeMultiplier) * bwGainAlpha
+                    let masterGain = max(0.0, min(1.0, st.muteRampGain * st.sleepFadeMultiplier))
+
+                    let outL = tanh(dryL * masterGain * 0.84)
+                    let outR = tanh(dryR * masterGain * 0.84)
+                    leftPtr[i] = Float(outL)
+                    rightPtr?[i] = Float(outR)
+
+                    let mono = (outL + outR) * 0.5
+                    sumSq += mono * mono
+                    lpWarm += (mono - lpWarm) * lpWarmAlpha
+                    sumWarmSq += lpWarm * lpWarm
+                    let diff = mono - prevMono
+                    prevMono = mono
+                    sumDiffSq += diff * diff
+                }
+
+                st.lpWarmthState = lpWarm
+                st.prevMono = prevMono
+                let invN = 1.0 / Double(max(1, count))
+                let rawRMS = min(1.0, sqrt(sumSq * invN) * 2.8)
+                let rawWarm = min(1.0, sqrt(sumWarmSq * invN) * 3.1)
+                let rawShim = min(1.0, sqrt(sumDiffSq * invN) * 14.0)
+                let rmsRiseAlpha = 1.0 - pow(1.0 - 0.38, dtNorm)
+                let rmsFallAlpha = 1.0 - pow(1.0 - 0.14, dtNorm)
+                st.envRMS += (rawRMS - st.envRMS) * (rawRMS > st.envRMS ? rmsRiseAlpha : rmsFallAlpha)
+                st.envWarmth += (rawWarm - st.envWarmth) * (rawWarm > st.envWarmth ? rmsRiseAlpha : rmsFallAlpha)
+                st.envShimmer += (rawShim - st.envShimmer) * (rawShim > st.envShimmer ? rmsRiseAlpha : rmsFallAlpha)
+                let snap = AcousticEnvelopeSnapshot(
+                    rmsEnergy: max(0.0, min(1.0, st.envRMS)),
+                    warmthEnergy: max(0.0, min(1.0, st.envWarmth)),
+                    shimmerEnergy: max(0.0, min(1.0, st.envShimmer))
+                )
+                tLock.withLockIfAvailable { $0 = snap }
+                return true
+            }
+
+            if didRender != true {
+                for i in 0..<count {
+                    leftPtr[i] = 0
+                    rightPtr?[i] = 0
+                }
+            }
+            return noErr
+        }
+    }
+
+    /// Wet chamber & ambient wash bus node routed through hall reverb.
+    private func makeChamberSourceNode(format: AVAudioFormat) -> AVAudioSourceNode {
+        let stateLock = chamberLock
+        let tLock = wetTelemetryLock
         return AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let count = Int(frameCount)
@@ -861,7 +1095,19 @@ public final class FeltPianoSynth: @unchecked Sendable {
             let didRender = stateLock.withLockIfAvailable { state -> Bool in
                 let sr = max(22_050.0, state.sampleRate)
                 let invSR = 1.0 / sr
+                let dtNorm = min(2.5, max(0.25, 48_000.0 / sr))
                 let twoPi = 2.0 * Double.pi
+                let bwGainAlpha = 1.0 - pow(1.0 - 0.0014, dtNorm)
+                let bwParamAlpha = 1.0 - pow(1.0 - 0.0022, dtNorm)
+                let bwSlowAlpha = 1.0 - pow(1.0 - 0.0018, dtNorm)
+                let bwFrissonAlpha = 1.0 - pow(1.0 - 0.0030, dtNorm)
+                let muteAlpha = 1.0 - exp(-1.0 / (0.004 * sr))
+                let voiceSoftAlpha = 1.0 - exp(-1.0 / (0.008 * sr))
+                let brownDecay = pow(0.991, dtNorm)
+                let pinkDecay = pow(0.92, dtNorm)
+                let reflAlpha = 1.0 - pow(1.0 - 0.28, dtNorm)
+                let lpWarmAlpha = 1.0 - pow(1.0 - 0.055, dtNorm)
+
                 var sumSq = 0.0
                 var sumWarmSq = 0.0
                 var sumDiffSq = 0.0
@@ -873,10 +1119,21 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 let refGain = 0.085 * max(0.7, min(1.3, Double(state.reverbWetMix) / 28.0))
 
                 for i in 0..<count {
-                    var mixL = 0.0
-                    var mixR = 0.0
+                    var voiceMixL = 0.0
+                    var voiceMixR = 0.0
+                    var washMixL = 0.0
+                    var washMixR = 0.0
 
-                    // 1. 44 声部室内乐物理微声学发声引擎
+                    state.voiceSoftMuteGain += (state.voiceSoftMuteTarget - state.voiceSoftMuteGain) * voiceSoftAlpha
+                    if state.voiceSoftMuteTarget == 0.0 && state.voiceSoftMuteGain < 0.001 {
+                        for vIdx in 0..<state.voices.count {
+                            state.voices[vIdx].active = false
+                        }
+                        state.voiceSoftMuteGain = 1.0
+                        state.voiceSoftMuteTarget = 1.0
+                    }
+
+                    // 1. 44-voice physical-modeling chamber instruments
                     for vIdx in 0..<state.voices.count {
                         if !state.voices[vIdx].active { continue }
 
@@ -987,90 +1244,36 @@ public final class FeltPianoSynth: @unchecked Sendable {
 
                         let pan = max(-0.68, min(0.68, state.voices[vIdx].pan * state.stereoSpread))
                         let split = stereoSplit * state.stereoSpread
-                        mixL += sample * (0.5 - pan * 0.5) - split
-                        mixR += sample * (0.5 + pan * 0.5) + split
+                        voiceMixL += (sample * (0.5 - pan * 0.5) - split) * state.voiceSoftMuteGain
+                        voiceMixR += (sample * (0.5 + pan * 0.5) + split) * state.voiceSoftMuteGain
 
                         let step = twoPi * instFreq * invSR
                         state.voices[vIdx].phase += step
                         state.voices[vIdx].phaseDetune += step * 1.00058
                         state.voices[vIdx].hammerPhase += step * 7.3
-                        if state.voices[vIdx].phase > twoPi * 1024.0 {
-                            state.voices[vIdx].phase.formTruncatingRemainder(dividingBy: twoPi)
-                            state.voices[vIdx].phaseDetune.formTruncatingRemainder(dividingBy: twoPi)
-                        }
                         state.voices[vIdx].ageSamples += 1.0
                     }
 
-                    // 2. 连续物理共鸣双振子
-                    if state.pair.active || state.pair.currentGain > 0.0004 {
-                        let gainTarget = state.pair.active ? state.pair.targetGain : 0.0
-                        state.pair.currentGain += (gainTarget - state.pair.currentGain) * 0.0018
-                        state.pair.currentHzA += (state.pair.targetHzA - state.pair.currentHzA) * 0.0035
-                        state.pair.currentHzB += (state.pair.targetHzB - state.pair.currentHzB) * 0.0035
+                    // 2. Ambient noise wash & frisson suspension shimmer (isolated on chamber bus)
+                    if state.noiseActive || state.currentNoiseGain > 0.0004 || state.currentFrissonTension > 0.001 {
+                        let noiseTarget = state.noiseActive ? state.targetNoiseGain : 0.0
+                        let tensionTarget = state.noiseActive ? state.targetFrissonTension : 0.0
+                        state.currentNoiseGain += (noiseTarget - state.currentNoiseGain) * bwGainAlpha
+                        state.currentNoiseColor += (state.targetNoiseColor - state.currentNoiseColor) * bwSlowAlpha
+                        state.currentCarrierHz += (state.targetCarrierHz - state.currentCarrierHz) * bwParamAlpha
+                        state.currentFrissonTension += (tensionTarget - state.currentFrissonTension) * bwFrissonAlpha
 
-                        let sA = (sin(state.pair.phaseA) * 0.72 + sin(state.pair.phaseA * 2.0) * 0.18 + sin(state.pair.phaseA * 3.0) * 0.06)
-                        let sB = (sin(state.pair.phaseB) * 0.72 + sin(state.pair.phaseB * 2.0) * 0.18 + sin(state.pair.phaseB * 3.0) * 0.06)
-                        let g = state.pair.currentGain
-                        mixL += (sA * 0.62 + sB * 0.38) * g
-                        mixR += (sA * 0.38 + sB * 0.62) * g
-
-                        state.pair.phaseA += twoPi * state.pair.currentHzA * invSR
-                        state.pair.phaseB += twoPi * state.pair.currentHzB * invSR
-                        if state.pair.phaseA > twoPi * 1024.0 { state.pair.phaseA.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.pair.phaseB > twoPi * 1024.0 { state.pair.phaseB.formTruncatingRemainder(dividingBy: twoPi) }
-                    }
-
-                    // 2.5 离线脑波声场（双耳差频 + 无耳机等时脉动 + 暖泛音 + 棕红/粉红声床 + 战栗张力）
-                    if state.brainwave.active
-                        || state.brainwave.currentGain > 0.0004
-                        || state.brainwave.currentNoiseGain > 0.0004 {
-                        let gainTarget = state.brainwave.active ? state.brainwave.targetGain : 0.0
-                        let noiseTarget = state.brainwave.active ? state.brainwave.targetNoiseGain : 0.0
-                        let tensionTarget = state.brainwave.active ? state.brainwave.targetFrissonTension : 0.0
-
-                        state.brainwave.currentGain += (gainTarget - state.brainwave.currentGain) * 0.0014
-                        state.brainwave.currentCarrierHz += (state.brainwave.targetCarrierHz - state.brainwave.currentCarrierHz) * 0.0022
-                        state.brainwave.currentBeatHz += (state.brainwave.targetBeatHz - state.brainwave.currentBeatHz) * 0.0022
-                        state.brainwave.currentIsoDepth += (state.brainwave.targetIsoDepth - state.brainwave.currentIsoDepth) * 0.0018
-                        state.brainwave.currentOvertoneWarmth += (state.brainwave.targetOvertoneWarmth - state.brainwave.currentOvertoneWarmth) * 0.0018
-                        state.brainwave.currentNoiseGain += (noiseTarget - state.brainwave.currentNoiseGain) * 0.0016
-                        state.brainwave.currentNoiseColor += (state.brainwave.targetNoiseColor - state.brainwave.currentNoiseColor) * 0.0018
-                        state.brainwave.currentFrissonTension += (tensionTarget - state.brainwave.currentFrissonTension) * 0.0030
-
-                        let carrier = state.brainwave.currentCarrierHz
-                        let beat = state.brainwave.currentBeatHz
-                        let hzL = max(40.0, carrier - beat * 0.5)
-                        let hzR = max(40.0, carrier + beat * 0.5)
-                        let warmth = state.brainwave.currentOvertoneWarmth
-                        let frisson = state.brainwave.currentFrissonTension
-
-                        let breathEnv = 0.86 + 0.14 * sin(state.brainwave.phaseBreath)
-                        let isoModHz = min(14.0, beat)
-                        let isoEnv = 1.0 - state.brainwave.currentIsoDepth * 0.5 * (1.0 - cos(state.brainwave.phaseIso))
-                        let panShift = 0.14 * sin(state.brainwave.phasePan)
-                        let overtoneL = sin(state.brainwave.phaseFifthL) * (0.14 * warmth) * (1.0 - panShift)
-                        let overtoneR = sin(state.brainwave.phaseFifthR) * (0.14 * warmth) * (1.0 + panShift)
-
-                        let toneBaseL = sin(state.brainwave.phaseL) * 0.62
-                            + sin(state.brainwave.phaseSub) * (0.20 * warmth)
-                            + overtoneL
-                        let toneBaseR = sin(state.brainwave.phaseR) * 0.62
-                            + sin(state.brainwave.phaseSub) * (0.20 * warmth)
-                            + overtoneR
-
-                        var suspL = 0.0
-                        var suspR = 0.0
+                        let panShift = 0.14 * sin(state.phasePan)
+                        let frisson = state.currentFrissonTension
                         if frisson > 0.001 {
-                            suspL = (sin(state.brainwave.phaseSuspL) * 0.55 + sin(state.brainwave.phaseSuspL * 1.185) * 0.45) * 0.34 * frisson
-                            suspR = (sin(state.brainwave.phaseSuspR) * 0.55 + sin(state.brainwave.phaseSuspR * 1.185) * 0.45) * 0.34 * frisson
+                            let suspL = (sin(state.phaseSuspL) * 0.55 + sin(state.phaseSuspHarmL) * 0.45) * 0.10 * frisson
+                            let suspR = (sin(state.phaseSuspR) * 0.55 + sin(state.phaseSuspHarmR) * 0.45) * 0.10 * frisson
+                            washMixL += suspL
+                            washMixR += suspR
                         }
 
-                        var bwL = (toneBaseL * (1.0 + frisson * 0.35) + suspL) * state.brainwave.currentGain * breathEnv * isoEnv
-                        var bwR = (toneBaseR * (1.0 + frisson * 0.35) + suspR) * state.brainwave.currentGain * breathEnv * isoEnv
-
-                        // xorshift64* 零分配暖色噪声床（左右声道独立滤波 + 0.065Hz 极缓呼吸环绕漂移）
-                        if state.brainwave.currentNoiseGain > 0.0004 {
-                            var s = state.brainwave.noiseSeed
+                        if state.currentNoiseGain > 0.0004 {
+                            var s = state.noiseSeed
                             s ^= s << 13
                             s ^= s >> 7
                             s ^= s << 17
@@ -1079,62 +1282,56 @@ public final class FeltPianoSynth: @unchecked Sendable {
                             s ^= s >> 7
                             s ^= s << 17
                             let wB = (Double(s >> 11) * (1.0 / 9007199254740992.0)) * 2.0 - 1.0
-                            state.brainwave.noiseSeed = (s == 0) ? 0x9E3779B97F4A7C15 : s
+                            state.noiseSeed = (s == 0) ? 0x9E3779B97F4A7C15 : s
 
-                            state.brainwave.brownL = max(-0.8, min(0.8, state.brainwave.brownL * 0.991 + wA * 0.052))
-                            state.brainwave.brownR = max(-0.8, min(0.8, state.brainwave.brownR * 0.991 + wB * 0.052))
-                            state.brainwave.pinkL = max(-0.8, min(0.8, state.brainwave.pinkL * 0.92 + wA * 0.14))
-                            state.brainwave.pinkR = max(-0.8, min(0.8, state.brainwave.pinkR * 0.92 + wB * 0.14))
+                            state.brownL = max(-0.8, min(0.8, state.brownL * brownDecay + wA * 0.052 * sqrt(dtNorm)))
+                            state.brownR = max(-0.8, min(0.8, state.brownR * brownDecay + wB * 0.052 * sqrt(dtNorm)))
+                            state.pinkL = max(-0.8, min(0.8, state.pinkL * pinkDecay + wA * 0.14 * sqrt(dtNorm)))
+                            state.pinkR = max(-0.8, min(0.8, state.pinkR * pinkDecay + wB * 0.14 * sqrt(dtNorm)))
 
-                            let c = state.brainwave.currentNoiseColor
-                            let colL = state.brainwave.brownL * (1.0 - c) + state.brainwave.pinkL * c
-                            let colR = state.brainwave.brownR * (1.0 - c) + state.brainwave.pinkR * c
-                            let nGain = state.brainwave.currentNoiseGain * (0.90 + 0.10 * sin(state.brainwave.phaseBreath))
-                            bwL += colL * nGain * (1.0 - panShift)
-                            bwR += colR * nGain * (1.0 + panShift)
+                            let c = state.currentNoiseColor
+                            let colL = state.brownL * (1.0 - c) + state.pinkL * c
+                            let colR = state.brownR * (1.0 - c) + state.pinkR * c
+                            let nGain = state.currentNoiseGain * (0.90 + 0.10 * sin(state.phaseBreath))
+                            washMixL += colL * nGain * (1.0 - panShift)
+                            washMixR += colR * nGain * (1.0 + panShift)
                         }
 
-                        mixL += bwL
-                        mixR += bwR
-
-                        state.brainwave.phaseL += twoPi * hzL * invSR
-                        state.brainwave.phaseR += twoPi * hzR * invSR
-                        state.brainwave.phaseSub += twoPi * (carrier * 0.5) * invSR
-                        state.brainwave.phaseFifthL += twoPi * (hzL * 1.5) * invSR
-                        state.brainwave.phaseFifthR += twoPi * (hzR * 1.5) * invSR
-                        state.brainwave.phaseIso += twoPi * isoModHz * invSR
-                        state.brainwave.phaseBreath += twoPi * 0.11 * invSR
-                        state.brainwave.phaseSuspL += twoPi * (carrier * 1.125) * invSR
-                        state.brainwave.phaseSuspR += twoPi * (carrier * 1.125 + 1.4) * invSR
-                        state.brainwave.phasePan += twoPi * 0.065 * invSR
+                        let carrier = state.currentCarrierHz
+                        state.phaseBreath += twoPi * 0.11 * invSR
+                        state.phaseSuspL += twoPi * (carrier * 1.125) * invSR
+                        state.phaseSuspR += twoPi * (carrier * 1.125 + 1.4) * invSR
+                        state.phaseSuspHarmL += twoPi * (carrier * 1.125 * 1.185) * invSR
+                        state.phaseSuspHarmR += twoPi * ((carrier * 1.125 + 1.4) * 1.185) * invSR
+                        state.phasePan += twoPi * 0.065 * invSR
 
                         let wrap = twoPi * 1024.0
-                        if state.brainwave.phaseL > wrap { state.brainwave.phaseL.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseR > wrap { state.brainwave.phaseR.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseSub > wrap { state.brainwave.phaseSub.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseFifthL > wrap { state.brainwave.phaseFifthL.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseFifthR > wrap { state.brainwave.phaseFifthR.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseIso > wrap { state.brainwave.phaseIso.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseBreath > wrap { state.brainwave.phaseBreath.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseSuspL > wrap { state.brainwave.phaseSuspL.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phaseSuspR > wrap { state.brainwave.phaseSuspR.formTruncatingRemainder(dividingBy: twoPi) }
-                        if state.brainwave.phasePan > wrap { state.brainwave.phasePan.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.phaseBreath > wrap { state.phaseBreath.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.phaseSuspL > wrap { state.phaseSuspL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.phaseSuspR > wrap { state.phaseSuspR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.phaseSuspHarmL > wrap { state.phaseSuspHarmL.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.phaseSuspHarmR > wrap { state.phaseSuspHarmR.formTruncatingRemainder(dividingBy: twoPi) }
+                        if state.phasePan > wrap { state.phasePan.formTruncatingRemainder(dividingBy: twoPi) }
                     }
 
-                    // 3. 零堆分配木质沙龙早期声学反射（11ms/17ms 柔和低通交叉回响）
+                    // 3. Wooden salon early reflections (chamber voices & ambient noise only)
+                    let mixL = voiceMixL + washMixL
+                    let mixR = voiceMixR + washMixR
                     let wIdx = state.reflectionIdx
                     let rL = (wIdx + refCap - refDelayL) % refCap
                     let rR = (wIdx + refCap - refDelayR) % refCap
-                    let delayedL = state.reflectionBufL[rL]
-                    let delayedR = state.reflectionBufR[rR]
-                    state.reflectionLPL += (delayedL - state.reflectionLPL) * 0.28
-                    state.reflectionLPR += (delayedR - state.reflectionLPR) * 0.28
+                    state.reflectionLPL += (state.reflectionBufL[rL] - state.reflectionLPL) * reflAlpha
+                    state.reflectionLPR += (state.reflectionBufR[rR] - state.reflectionLPR) * reflAlpha
                     state.reflectionBufL[wIdx] = mixL
                     state.reflectionBufR[wIdx] = mixR
                     state.reflectionIdx = (wIdx + 1) % refCap
 
-                    let spatialL = mixL + state.reflectionLPR * refGain
-                    let spatialR = mixR + state.reflectionLPL * refGain
+                    state.muteRampGain += (state.targetMuteRampGain - state.muteRampGain) * muteAlpha
+                    state.sleepFadeMultiplier += (state.targetSleepFadeMultiplier - state.sleepFadeMultiplier) * bwGainAlpha
+                    let masterGain = max(0.0, min(1.0, state.muteRampGain * state.sleepFadeMultiplier))
+
+                    let spatialL = (mixL + state.reflectionLPR * refGain) * masterGain
+                    let spatialR = (mixR + state.reflectionLPL * refGain) * masterGain
                     let outL = tanh(spatialL * 0.84)
                     let outR = tanh(spatialR * 0.84)
                     leftPtr[i] = Float(outL)
@@ -1142,7 +1339,7 @@ public final class FeltPianoSynth: @unchecked Sendable {
 
                     let mono = (outL + outR) * 0.5
                     sumSq += mono * mono
-                    lpWarm += (mono - lpWarm) * 0.055
+                    lpWarm += (mono - lpWarm) * lpWarmAlpha
                     sumWarmSq += lpWarm * lpWarm
                     let diff = mono - prevMono
                     prevMono = mono
@@ -1155,9 +1352,11 @@ public final class FeltPianoSynth: @unchecked Sendable {
                 let rawRMS = min(1.0, sqrt(sumSq * invN) * 2.8)
                 let rawWarm = min(1.0, sqrt(sumWarmSq * invN) * 3.1)
                 let rawShim = min(1.0, sqrt(sumDiffSq * invN) * 14.0)
-                state.envRMS += (rawRMS - state.envRMS) * (rawRMS > state.envRMS ? 0.38 : 0.14)
-                state.envWarmth += (rawWarm - state.envWarmth) * (rawWarm > state.envWarmth ? 0.35 : 0.12)
-                state.envShimmer += (rawShim - state.envShimmer) * (rawShim > state.envShimmer ? 0.42 : 0.16)
+                let rmsRiseAlpha = 1.0 - pow(1.0 - 0.38, dtNorm)
+                let rmsFallAlpha = 1.0 - pow(1.0 - 0.14, dtNorm)
+                state.envRMS += (rawRMS - state.envRMS) * (rawRMS > state.envRMS ? rmsRiseAlpha : rmsFallAlpha)
+                state.envWarmth += (rawWarm - state.envWarmth) * (rawWarm > state.envWarmth ? rmsRiseAlpha : rmsFallAlpha)
+                state.envShimmer += (rawShim - state.envShimmer) * (rawShim > state.envShimmer ? rmsRiseAlpha : rmsFallAlpha)
                 let snap = AcousticEnvelopeSnapshot(
                     rmsEnergy: max(0.0, min(1.0, state.envRMS)),
                     warmthEnergy: max(0.0, min(1.0, state.envWarmth)),
@@ -1203,11 +1402,14 @@ public final class FeltPianoSynth: @unchecked Sendable {
             return
         }
 
-        // 优先构建完整「声源 -> 音乐厅混响 -> mainMixerNode」链路；若极少数音频路由拒绝混响格式则自动降级为「声源 -> mainMixerNode」直通，绝不静音！
-        let initialWet = lock.withLock { $0.reverbWetMix }
+        // Parallel audio topology:
+        //   binauralSourceNode -> mainMixerNode (0% reverb crosstalk)
+        //   chamberSourceNode  -> AVAudioUnitReverb (.mediumHall2) -> mainMixerNode
+        let initialWet = chamberLock.withLock { $0.reverbWetMix }
         do {
             let eng = AVAudioEngine()
-            let node = makeSourceNode(format: format)
+            let dryNode = makeBinauralSourceNode(format: format)
+            let wetNode = makeChamberSourceNode(format: format)
             let rev = AVAudioUnitReverb()
             rev.loadFactoryPreset(.mediumHall2)
             rev.wetDryMix = initialWet
@@ -1215,9 +1417,11 @@ public final class FeltPianoSynth: @unchecked Sendable {
             let mixer = eng.mainMixerNode
             mixer.outputVolume = 1.0
 
-            eng.attach(node)
+            eng.attach(dryNode)
+            eng.attach(wetNode)
             eng.attach(rev)
-            try eng.connectNode(node, to: rev, format: format)
+            try eng.connectNode(dryNode, to: mixer, format: format)
+            try eng.connectNode(wetNode, to: rev, format: format)
             try eng.connectNode(rev, to: mixer, format: format)
 
             eng.prepare()
@@ -1227,16 +1431,20 @@ public final class FeltPianoSynth: @unchecked Sendable {
             attachConfigObserver(for: eng, generation: graphGeneration)
             self.engine = eng
             self.reverb = rev
-            self.sourceNode = node
+            self.binauralSourceNode = dryNode
+            self.chamberSourceNode = wetNode
             self.configuredSampleRate = sampleRate
         } catch {
             let eng = AVAudioEngine()
-            let node = makeSourceNode(format: format)
+            let dryNode = makeBinauralSourceNode(format: format)
+            let wetNode = makeChamberSourceNode(format: format)
             let mixer = eng.mainMixerNode
             mixer.outputVolume = 1.0
 
-            eng.attach(node)
-            try eng.connectNode(node, to: mixer, format: format)
+            eng.attach(dryNode)
+            eng.attach(wetNode)
+            try eng.connectNode(dryNode, to: mixer, format: format)
+            try eng.connectNode(wetNode, to: mixer, format: format)
 
             eng.prepare()
             try eng.start()
@@ -1245,12 +1453,14 @@ public final class FeltPianoSynth: @unchecked Sendable {
             attachConfigObserver(for: eng, generation: graphGeneration)
             self.engine = eng
             self.reverb = nil
-            self.sourceNode = node
+            self.binauralSourceNode = dryNode
+            self.chamberSourceNode = wetNode
             self.configuredSampleRate = sampleRate
         }
     }
 
-    /// 离线音频管线自检（供 XCTest 直接验证 48kHz 双端混响连接绝不报 -10868 且真实输出有效 PCM 声压，绝不触发实时录音/播放权限）
+    // MARK: - Offline Signal Verification & Telemetry API (Zero Hardware Permissions Needed)
+
     public func verifyOfflineRenderPeak(
         sampleRate: Double = 48_000.0,
         frequency: Double = 440.0,
@@ -1271,8 +1481,8 @@ public final class FeltPianoSynth: @unchecked Sendable {
         envelopeDuringRender: AcousticEnvelopeSnapshot,
         envelopeAfterSilence: AcousticEnvelopeSnapshot
     ) {
-        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
-            state.voices[0] = Voice(
+        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 12, blockSize: 512) { _, chamber in
+            chamber.voices[0] = Voice(
                 active: true,
                 timbre: timbre,
                 frequency: frequency,
@@ -1287,30 +1497,6 @@ public final class FeltPianoSynth: @unchecked Sendable {
             )
         }
         return (res.peak, res.reverbInRate, res.reverbOutRate, res.envelopeDuringRender, res.envelopeAfterSilence)
-    }
-
-    public func verifyContinuousPairRenderTelemetry(
-        sampleRate: Double = 48_000.0,
-        hzA: Double = 329.63,
-        hzB: Double = 261.63,
-        gain: Double = 0.20
-    ) throws -> (
-        peak: Float,
-        duringEnvelope: AcousticEnvelopeSnapshot,
-        afterStopEnvelope: AcousticEnvelopeSnapshot
-    ) {
-        let clampedGain = max(0.05, min(0.42, gain))
-        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
-            state.pair.active = true
-            state.pair.currentHzA = max(40.0, hzA)
-            state.pair.targetHzA = max(40.0, hzA)
-            state.pair.currentHzB = max(40.0, hzB)
-            state.pair.targetHzB = max(40.0, hzB)
-            state.pair.currentGain = clampedGain
-            state.pair.targetGain = clampedGain
-        }
-        stopContinuousPair()
-        return (res.peak, res.envelopeDuringRender, res.envelopeAfterSilence)
     }
 
     public func verifyBrainwaveOfflineTelemetry(
@@ -1328,25 +1514,114 @@ public final class FeltPianoSynth: @unchecked Sendable {
         let safeCarrier = max(80.0, min(440.0, carrierHz.isFinite ? carrierHz : 216.0))
         let safeBeat = max(0.5, min(45.0, beatHz.isFinite ? beatHz : 10.0))
         let safeNoise = max(0.0, min(0.24, noiseGain.isFinite ? noiseGain : 0.08))
-        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
-            state.brainwave.active = true
-            state.brainwave.currentCarrierHz = safeCarrier
-            state.brainwave.targetCarrierHz = safeCarrier
-            state.brainwave.currentBeatHz = safeBeat
-            state.brainwave.targetBeatHz = safeBeat
-            state.brainwave.currentGain = 0.26
-            state.brainwave.targetGain = 0.26
-            state.brainwave.currentNoiseGain = safeNoise
-            state.brainwave.targetNoiseGain = safeNoise
-            state.brainwave.currentOvertoneWarmth = 0.55
-            state.brainwave.targetOvertoneWarmth = 0.55
-            state.brainwave.currentIsoDepth = 0.12
-            state.brainwave.targetIsoDepth = 0.12
+        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 12, blockSize: 512) { dry, wet in
+            dry.active = true
+            dry.currentCarrierHz = safeCarrier
+            dry.targetCarrierHz = safeCarrier
+            dry.currentBeatHz = safeBeat
+            dry.targetBeatHz = safeBeat
+            dry.currentGain = 0.26
+            dry.targetGain = 0.26
+            dry.currentOvertoneWarmth = 0.55
+            dry.targetOvertoneWarmth = 0.55
+            dry.currentIsoDepth = 0.12
+            dry.targetIsoDepth = 0.12
+
+            wet.noiseActive = (safeNoise > 0.0001)
+            wet.currentNoiseGain = safeNoise
+            wet.targetNoiseGain = safeNoise
+            wet.currentCarrierHz = safeCarrier
+            wet.targetCarrierHz = safeCarrier
         }
-        // 同时额外计算一次非零相位偏移下的 L/R 差值以确认双耳载波真实存在
-        let diff = abs(res.peakL - res.peakR) + (res.peak > 0.005 ? Float(0.02 * safeBeat / 10.0) : 0.0)
-        stopBrainwaveBed()
-        return (res.peakL, res.peakR, diff, res.envelopeDuringRender, res.envelopeAfterSilence)
+        return (res.peakL, res.peakR, res.lrSampleMaxDiff, res.envelopeDuringRender, res.envelopeAfterSilence)
+    }
+
+    public func verifyFrissonReleaseOfflineTelemetry(
+        sampleRate: Double = 48_000.0,
+        rootHz: Double = 196.0,
+        intensity: Double = 0.88
+    ) throws -> (peak: Float, duringEnvelope: AcousticEnvelopeSnapshot, afterStopEnvelope: AcousticEnvelopeSnapshot) {
+        let base = rootHz.isFinite ? max(90.0, min(360.0, rootHz)) : 196.0
+        let amp = intensity.isFinite ? max(0.25, min(1.0, intensity)) : 0.88
+        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 12, blockSize: 512) { _, chamber in
+            Self.enqueueVoice(into: &chamber, frequency: max(55.0, base * 0.5), velocity: 0.42 * amp, decay: 3.1, brightness: 0.68, timbre: .singingCello, delaySeconds: 0.0, pan: 0.0)
+            Self.enqueueVoice(into: &chamber, frequency: base, velocity: 0.38 * amp, decay: 2.6, brightness: 0.86, timbre: .feltPiano, delaySeconds: 0.005, pan: -0.08)
+            Self.enqueueVoice(into: &chamber, frequency: base * 1.5, velocity: 0.34 * amp, decay: 2.5, brightness: 0.92, timbre: .liquidHarp, delaySeconds: 0.012, pan: -0.34)
+        }
+        return (res.peak, res.envelopeDuringRender, res.envelopeAfterSilence)
+    }
+
+    /// True single-channel AM depth measurement: measures Left channel block RMS spread with `isochronicDepth = 0.38` vs `0.0` (zero noise).
+    public func verifySingleChannelIsochronicDepth(
+        sampleRate: Double = 48_000.0,
+        carrierHz: Double = 220.0,
+        beatHz: Double = 40.0,
+        isochronicDepth: Double
+    ) throws -> (minLeftBlockRMS: Float, maxLeftBlockRMS: Float) {
+        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 64, blockSize: 150) { dry, _ in
+            dry.active = true
+            dry.currentCarrierHz = carrierHz
+            dry.targetCarrierHz = carrierHz
+            dry.currentBeatHz = beatHz
+            dry.targetBeatHz = beatHz
+            dry.currentGain = 0.28
+            dry.targetGain = 0.28
+            dry.currentIsoDepth = isochronicDepth
+            dry.targetIsoDepth = isochronicDepth
+            dry.currentOvertoneWarmth = 0.0
+            dry.targetOvertoneWarmth = 0.0
+        }
+        return (res.minLeftBlockRMS, res.maxLeftBlockRMS)
+    }
+
+    /// Captures exact L/R PCM samples through the live dual-bus graph (dry binaural -> mixer; wet chamber -> reverb -> mixer) for spectral L/R isolation verification.
+    public func renderDualBusOfflineSamples(
+        sampleRate: Double = 48_000.0,
+        frameCount: Int = 24_000,
+        carrierHz: Double = 200.0,
+        beatHz: Double = 10.0,
+        gain: Double = 0.28,
+        isochronicDepth: Double = 0.0,
+        overtoneWarmth: Double = 0.0,
+        noiseGain: Double = 0.0,
+        pureWashOnly: Bool = false
+    ) throws -> (left: [Float], right: [Float]) {
+        let blockSize = 512
+        let blocks = max(1, (frameCount + blockSize - 1) / blockSize)
+        var capturedL: [Float] = []
+        var capturedR: [Float] = []
+        capturedL.reserveCapacity(blocks * blockSize)
+        capturedR.reserveCapacity(blocks * blockSize)
+
+        _ = try runOfflineDualBusRender(
+            sampleRate: sampleRate,
+            blocks: blocks,
+            blockSize: blockSize,
+            onBlock: { leftSlice, rightSlice in
+                capturedL.append(contentsOf: leftSlice)
+                capturedR.append(contentsOf: rightSlice)
+            }
+        ) { dry, wet in
+            dry.active = !pureWashOnly && gain > 0.0001
+            dry.currentCarrierHz = carrierHz
+            dry.targetCarrierHz = carrierHz
+            dry.currentBeatHz = beatHz
+            dry.targetBeatHz = beatHz
+            dry.currentGain = pureWashOnly ? 0.0 : gain
+            dry.targetGain = pureWashOnly ? 0.0 : gain
+            dry.currentIsoDepth = isochronicDepth
+            dry.targetIsoDepth = isochronicDepth
+            dry.currentOvertoneWarmth = overtoneWarmth
+            dry.targetOvertoneWarmth = overtoneWarmth
+
+            wet.noiseActive = noiseGain > 0.0001
+            wet.currentNoiseGain = noiseGain
+            wet.targetNoiseGain = noiseGain
+            wet.currentCarrierHz = carrierHz
+            wet.targetCarrierHz = carrierHz
+        }
+
+        return (Array(capturedL.prefix(frameCount)), Array(capturedR.prefix(frameCount)))
     }
 
     public func verifySpatialPanOfflineTelemetry(
@@ -1364,8 +1639,8 @@ public final class FeltPianoSynth: @unchecked Sendable {
             applySpaceProfile(profile)
         }
         let clampedPan = max(-0.65, min(0.65, pan.isFinite ? pan : 0.0))
-        let res = try runOfflineReverbRender(sampleRate: sampleRate) { state in
-            state.voices[0] = Voice(
+        let res = try runOfflineDualBusRender(sampleRate: sampleRate, blocks: 12, blockSize: 512) { _, chamber in
+            chamber.voices[0] = Voice(
                 active: true,
                 timbre: .feltPiano,
                 frequency: frequency,
@@ -1383,13 +1658,19 @@ public final class FeltPianoSynth: @unchecked Sendable {
         return (res.peakL, res.peakR, res.reverbInRate, res.reverbOutRate)
     }
 
-    private func runOfflineReverbRender(
+    private func runOfflineDualBusRender(
         sampleRate: Double,
-        configureAudioState: (inout AudioState) -> Void
+        blocks: Int,
+        blockSize: Int,
+        onBlock: ((_ left: UnsafeBufferPointer<Float>, _ right: UnsafeBufferPointer<Float>) -> Void)? = nil,
+        configureAudioState: (inout BinauralState, inout ChamberState) -> Void
     ) throws -> (
         peak: Float,
         peakL: Float,
         peakR: Float,
+        lrSampleMaxDiff: Float,
+        minLeftBlockRMS: Float,
+        maxLeftBlockRMS: Float,
         reverbInRate: Double,
         reverbOutRate: Double,
         envelopeDuringRender: AcousticEnvelopeSnapshot,
@@ -1403,49 +1684,73 @@ public final class FeltPianoSynth: @unchecked Sendable {
             stopEngineOnQueue()
         }
         silenceAll()
-        let activeWet = lock.withLock { state -> Float in
-            state.sampleRate = sampleRate
-            configureAudioState(&state)
-            return state.reverbWetMix
-        }
+
+        var drySnapshot = BinauralState()
+        drySnapshot.sampleRate = sampleRate
+        var wetSnapshot = ChamberState(voices: Array(repeating: Voice(), count: 44))
+        wetSnapshot.sampleRate = sampleRate
+        configureAudioState(&drySnapshot, &wetSnapshot)
+
+        let configuredWetMix: Float = wetSnapshot.reverbWetMix
+        let dryPrepared = drySnapshot
+        let wetPrepared = wetSnapshot
+        binauralLock.withLock { $0 = dryPrepared }
+        chamberLock.withLock { $0 = wetPrepared }
 
         let eng = AVAudioEngine()
-        let node = makeSourceNode(format: format)
+        let dryNode = makeBinauralSourceNode(format: format)
+        let wetNode = makeChamberSourceNode(format: format)
         let rev = AVAudioUnitReverb()
         rev.loadFactoryPreset(.mediumHall2)
-        rev.wetDryMix = activeWet
+        rev.wetDryMix = configuredWetMix
         let mixer = eng.mainMixerNode
         mixer.outputVolume = 1.0
 
-        eng.attach(node)
+        eng.attach(dryNode)
+        eng.attach(wetNode)
         eng.attach(rev)
-        try eng.connectNode(node, to: rev, format: format)
+        try eng.connectNode(dryNode, to: mixer, format: format)
+        try eng.connectNode(wetNode, to: rev, format: format)
         try eng.connectNode(rev, to: mixer, format: format)
 
-        try eng.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 512)
+        try eng.enableManualRenderingMode(.offline, format: format, maximumFrameCount: AVAudioFrameCount(blockSize))
         try eng.start()
 
         let inRate = rev.inputFormat(forBus: 0).sampleRate
         let outRate = rev.outputFormat(forBus: 0).sampleRate
 
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: eng.manualRenderingFormat, frameCapacity: 512) else {
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: eng.manualRenderingFormat, frameCapacity: AVAudioFrameCount(blockSize)) else {
             eng.stop()
             throw NSError(domain: "app.chimmo.synth", code: -2, userInfo: [NSLocalizedDescriptionKey: "Buffer allocation failed"])
         }
 
         var peakL: Float = 0.0
         var peakR: Float = 0.0
+        var lrDiff: Float = 0.0
+        var minLeftRMS: Float = .greatestFiniteMagnitude
+        var maxLeftRMS: Float = 0.0
         let chCount = Int(buffer.format.channelCount)
-        for _ in 0..<8 {
-            let status = try eng.renderOffline(512, to: buffer)
+
+        for _ in 0..<blocks {
+            let status = try eng.renderOffline(AVAudioFrameCount(blockSize), to: buffer)
             if status == .success, let channels = buffer.floatChannelData {
                 let len = Int(buffer.frameLength)
+                var sqSumL: Float = 0.0
+                let leftBuf = UnsafeBufferPointer(start: channels[0], count: len)
+                let rightPtr = chCount > 1 ? channels[1] : channels[0]
+                let rightBuf = UnsafeBufferPointer(start: rightPtr, count: len)
+                onBlock?(leftBuf, rightBuf)
                 for i in 0..<len {
-                    peakL = max(peakL, abs(channels[0][i]))
-                    if chCount > 1 {
-                        peakR = max(peakR, abs(channels[1][i]))
-                    }
+                    let sL = leftBuf[i]
+                    let sR = rightBuf[i]
+                    peakL = max(peakL, abs(sL))
+                    peakR = max(peakR, abs(sR))
+                    lrDiff = max(lrDiff, abs(sL - sR))
+                    sqSumL += sL * sL
                 }
+                let blkRMS = sqrt(sqSumL / Float(max(1, len)))
+                minLeftRMS = min(minLeftRMS, blkRMS)
+                maxLeftRMS = max(maxLeftRMS, blkRMS)
             }
         }
         let peak = max(peakL, peakR)
@@ -1453,225 +1758,6 @@ public final class FeltPianoSynth: @unchecked Sendable {
         eng.stop()
         silenceAll()
         let afterEnv = currentAcousticEnvelope()
-        return (peak, peakL, peakR, inRate, outRate, duringEnv, afterEnv)
-    }
-
-    /// 完全隔离的整曲离线立体声渲染（绝不触碰实时 `AVAudioSession` 或正在播放的引擎，用于本地离线导出可播放音频）。
-    public static func renderOfflineSongPCM(
-        document: MelodyDocument,
-        chordPreset: ChordProgressionPreset = .autoMatch,
-        chordOverrides: [Int: DiatonicChord] = [:],
-        accompanimentTexture: AccompanimentTexture = .swanRipple,
-        melodyVoice: MelodyVoice? = nil,
-        shadowEnabled: Bool = false,
-        playbackRate: Double = 1.0,
-        visualMode: StageVisualMode = .orbitalDisc,
-        sampleRate: Double = 44_100.0
-    ) throws -> (left: [Float], right: [Float], sampleRate: Int) {
-        let safeSR = max(22_050.0, min(48_000.0, sampleRate.isFinite ? sampleRate : 44_100.0))
-        let safeRate = max(0.5, min(1.6, playbackRate.isFinite ? playbackRate : 1.0))
-        let rateScale = 1.0 / safeRate
-        let profile = AcousticSpaceProfile.profile(for: document.scaleMode)
-
-        let synth = FeltPianoSynth(router: HalfDuplexAudioRouter())
-        synth.lock.withLock { state in
-            state.sampleRate = safeSR
-            state.reverbWetMix = Float(max(12.0, min(46.0, profile.reverbWetMix.isFinite ? profile.reverbWetMix : 28.0)))
-            state.warmthDamping = max(0.65, min(1.30, profile.warmthDamping.isFinite ? profile.warmthDamping : 1.0))
-            state.stereoSpread = max(0.60, min(1.40, profile.stereoSpread.isFinite ? profile.stereoSpread : 1.0))
-        }
-
-        let groove = document.grooveStrength
-        let totalDur = max(0.6, document.totalDuration)
-        let resolvedVoice = melodyVoice ?? document.preferredVoice ?? .singingCello
-        let voiceTimbre = Timbre.from(voice: resolvedVoice)
-        let spans = TheoryLensEngine.buildChordSpans(
-            document: document,
-            preset: chordPreset,
-            overrides: chordOverrides
-        )
-
-        var events: [OfflineSynthNoteEvent] = []
-        if chordPreset != .off {
-            for span in spans {
-                let chordEvents = diatonicChordEvents(
-                    startTime: span.startTime * rateScale,
-                    rootMIDI: document.rootMIDI,
-                    mode: document.scaleMode,
-                    chord: span.chord,
-                    texture: accompanimentTexture,
-                    spanDuration: max(0.75, (span.endTime - span.startTime) * rateScale),
-                    intensity: 0.72
-                )
-                events.append(contentsOf: chordEvents)
-            }
-        }
-
-        let sortedNotes = document.notes.sorted {
-            $0.displayOnset(grooveStrength: groove) < $1.displayOnset(grooveStrength: groove)
-        }
-        for bead in sortedNotes {
-            let onset = bead.displayOnset(grooveStrength: groove)
-            let dur = bead.displayDuration(grooveStrength: groove)
-            let hz = document.scaleMode.frequencyHz(
-                rootMIDI: document.rootMIDI,
-                degree: bead.degree,
-                octaveOffset: bead.octaveOffset
-            )
-            let pan = AcousticSpatialPanMapper.pan(
-                forBeatOnset: onset,
-                totalDuration: totalDur,
-                visualMode: visualMode
-            )
-            events.append(OfflineSynthNoteEvent(
-                timeSec: onset * rateScale,
-                frequency: hz,
-                velocity: 0.62,
-                decay: max(0.85, dur * 1.45 * rateScale),
-                brightness: 0.96,
-                timbre: voiceTimbre,
-                pan: pan
-            ))
-        }
-
-        if shadowEnabled {
-            let shadowNotes = CounterpointShadowEngine.generateShadowVoice(document: document, spans: spans)
-            let shadowTimbre: Timbre = (resolvedVoice == .liquidHarp) ? .celesta : .liquidHarp
-            for shadow in shadowNotes {
-                let sHz = document.scaleMode.frequencyHz(
-                    rootMIDI: document.rootMIDI,
-                    degree: shadow.degree,
-                    octaveOffset: shadow.octaveOffset
-                )
-                let sPan = -AcousticSpatialPanMapper.pan(
-                    forBeatOnset: shadow.onset,
-                    totalDuration: totalDur,
-                    visualMode: visualMode
-                ) * 0.65
-                events.append(OfflineSynthNoteEvent(
-                    timeSec: shadow.onset * rateScale,
-                    frequency: sHz,
-                    velocity: 0.36,
-                    decay: max(0.85, shadow.duration * rateScale * 1.35),
-                    brightness: 0.85,
-                    timbre: shadowTimbre,
-                    pan: sPan
-                ))
-            }
-        }
-        events.sort { $0.timeSec < $1.timeSec }
-
-        let rawSeconds = document.notes.isEmpty ? 1.0 : (totalDur * rateScale + 1.85)
-        let clampedSeconds = max(1.0, min(28.0, rawSeconds))
-        let totalFrames = max(512, Int((clampedSeconds * safeSR).rounded()))
-        let chunkFrames: AVAudioFrameCount = 512
-
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: safeSR, channels: 2) else {
-            throw NSError(domain: "app.chimmo.synth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid audio format"])
-        }
-
-        let eng = AVAudioEngine()
-        let node = synth.makeSourceNode(format: format)
-        let mixer = eng.mainMixerNode
-        mixer.outputVolume = 1.0
-        eng.attach(node)
-
-        do {
-            let rev = AVAudioUnitReverb()
-            rev.loadFactoryPreset(.mediumHall2)
-            rev.wetDryMix = Float(max(12.0, min(46.0, profile.reverbWetMix.isFinite ? profile.reverbWetMix : 28.0)))
-            eng.attach(rev)
-            try eng.connectNode(node, to: rev, format: format)
-            try eng.connectNode(rev, to: mixer, format: format)
-        } catch {
-            try eng.connectNode(node, to: mixer, format: format)
-        }
-
-        try eng.enableManualRenderingMode(.offline, format: format, maximumFrameCount: chunkFrames)
-        try eng.start()
-        defer { eng.stop() }
-
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: eng.manualRenderingFormat, frameCapacity: chunkFrames) else {
-            throw NSError(domain: "app.chimmo.synth", code: -2, userInfo: [NSLocalizedDescriptionKey: "Buffer allocation failed"])
-        }
-
-        var leftOut: [Float] = []
-        var rightOut: [Float] = []
-        leftOut.reserveCapacity(totalFrames)
-        rightOut.reserveCapacity(totalFrames)
-
-        let immutableEvents = events
-        var renderedFrames = 0
-        var nextEventIdx = 0
-        while renderedFrames < totalFrames {
-            let remaining = totalFrames - renderedFrames
-            let blockCount = min(Int(chunkFrames), remaining)
-            let blockStartSec = Double(renderedFrames) / safeSR
-            let blockEndSec = Double(renderedFrames + blockCount) / safeSR
-
-            let batchStart = nextEventIdx
-            while nextEventIdx < immutableEvents.count && immutableEvents[nextEventIdx].timeSec < blockEndSec {
-                nextEventIdx += 1
-            }
-            if batchStart < nextEventIdx {
-                let batch = immutableEvents[batchStart..<nextEventIdx]
-                synth.lock.withLock { state in
-                    for ev in batch {
-                        Self.enqueueVoice(
-                            into: &state,
-                            frequency: ev.frequency,
-                            velocity: ev.velocity,
-                            decay: ev.decay,
-                            brightness: ev.brightness,
-                            timbre: ev.timbre,
-                            delaySeconds: max(0.0, ev.timeSec - blockStartSec),
-                            pan: ev.pan
-                        )
-                    }
-                }
-            }
-
-            let status = try eng.renderOffline(AVAudioFrameCount(blockCount), to: buffer)
-            if status == .success, let channels = buffer.floatChannelData {
-                let len = Int(buffer.frameLength)
-                let chCount = Int(buffer.format.channelCount)
-                for i in 0..<len {
-                    let sL = channels[0][i]
-                    let sR = chCount > 1 ? channels[1][i] : sL
-                    leftOut.append(sL.isFinite ? sL : 0.0)
-                    rightOut.append(sR.isFinite ? sR : 0.0)
-                }
-            } else {
-                for _ in 0..<blockCount {
-                    leftOut.append(0.0)
-                    rightOut.append(0.0)
-                }
-            }
-            renderedFrames += blockCount
-        }
-
-        var maxAbs: Float = 0.0
-        for i in 0..<leftOut.count {
-            maxAbs = max(maxAbs, max(abs(leftOut[i]), abs(rightOut[i])))
-        }
-        if maxAbs > 0.88 {
-            let scale = 0.88 / maxAbs
-            for i in 0..<leftOut.count {
-                leftOut[i] *= scale
-                rightOut[i] *= scale
-            }
-        }
-
-        let fadeSamples = min(leftOut.count, Int(safeSR * 0.06))
-        if fadeSamples > 0 {
-            let startIdx = leftOut.count - fadeSamples
-            for offset in 0..<fadeSamples {
-                let gain = Float(fadeSamples - offset) / Float(fadeSamples)
-                leftOut[startIdx + offset] *= gain
-                rightOut[startIdx + offset] *= gain
-            }
-        }
-
-        return (leftOut, rightOut, Int(safeSR))
+        return (peak, peakL, peakR, lrDiff, minLeftRMS, maxLeftRMS, inRate, outRate, duringEnv, afterEnv)
     }
 }

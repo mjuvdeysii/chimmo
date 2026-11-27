@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 七只活生生的哑光窑陶咩哞（遵循 mossling 家族生命感标准）：
+/// 七只富有生命感的哑光窑陶咩哞小伙伴：
 /// 各自拥有独立的呼吸节拍、不规则眨眼、眼神跟随（全员转眼看向正在发声的伙伴）、脚底接地影，以及唱响时的喜悦笑眼与共鸣微光。
 public struct ChimmoFigureView: View {
     public let member: ChimmoMember
@@ -67,7 +67,7 @@ public struct ChimmoFigureView: View {
     }
 
     private var inkContour: Color {
-        isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
+        isNight ? Color(hex: 0xD8DFF4).opacity(0.65) : Color(hex: 0x231B15)
     }
 
     private var baseTiltDegrees: Double {
@@ -131,7 +131,7 @@ public struct ChimmoFigureView: View {
             .offset(y: bounceOffsetY)
             .rotationEffect(.degrees(baseTiltDegrees), anchor: .bottom)
         }
-        .frame(width: 50, height: 58)
+        .frame(width: 56, height: 64)
         .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.58), value: isSinging)
         .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.72), value: isMinor)
         .accessibilityHidden(true)
@@ -348,8 +348,8 @@ public struct ChimmoFigureView: View {
             .offset(x: 13, y: -3)
 
             HStack(spacing: 9) {
-                Capsule().fill(Color(hex: 0x4D2B22)).frame(width: 8, height: 4.8)
-                Capsule().fill(Color(hex: 0x4D2B22)).frame(width: 8, height: 4.8)
+                Capsule().fill(isNight ? Color(hex: 0x8F685E) : Color(hex: 0x4D2B22)).frame(width: 8, height: 4.8)
+                Capsule().fill(isNight ? Color(hex: 0x8F685E) : Color(hex: 0x4D2B22)).frame(width: 8, height: 4.8)
             }
             .offset(y: 22)
 
@@ -369,8 +369,8 @@ public struct ChimmoFigureView: View {
     private var bomoBody: some View {
         ZStack {
             HStack(spacing: 11) {
-                Capsule().fill(Color(hex: 0x3E2318)).frame(width: 8.5, height: 4.8)
-                Capsule().fill(Color(hex: 0x3E2318)).frame(width: 8.5, height: 4.8)
+                Capsule().fill(isNight ? Color(hex: 0x9C755F) : Color(hex: 0x3E2318)).frame(width: 8.5, height: 4.8)
+                Capsule().fill(isNight ? Color(hex: 0x9C755F) : Color(hex: 0x3E2318)).frame(width: 8.5, height: 4.8)
             }
             .offset(y: 22)
 

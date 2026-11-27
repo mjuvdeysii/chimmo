@@ -1,0 +1,6806 @@
+{
+  "sourceLanguage": "zh-Hans",
+  "strings": {
+    "action_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        }
+      }
+    },
+    "action_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成"
+          }
+        }
+      }
+    },
+    "action_pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停声场"
+          }
+        }
+      }
+    },
+    "action_pause_sound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause Acoustic Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停声场"
+          }
+        }
+      }
+    },
+    "action_pause_specimen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause Chamber Audition"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停室乐试听"
+          }
+        }
+      }
+    },
+    "action_play_sound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Acoustic Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启声场"
+          }
+        }
+      }
+    },
+    "action_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Resonance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启共鸣"
+          }
+        }
+      }
+    },
+    "appearance_auto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match System"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随系统"
+          }
+        }
+      }
+    },
+    "appearance_auto_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动"
+          }
+        }
+      }
+    },
+    "appearance_day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm Cotton Day"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暖昼陶纸"
+          }
+        }
+      }
+    },
+    "appearance_day_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暖昼"
+          }
+        }
+      }
+    },
+    "appearance_night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midnight Indigo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深眠月夜"
+          }
+        }
+      }
+    },
+    "appearance_night_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深眠"
+          }
+        }
+      }
+    },
+    "archive_cat_classical": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古典公版"
+          }
+        }
+      }
+    },
+    "archive_cat_original": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创舒缓"
+          }
+        }
+      }
+    },
+    "archive_cat_romantic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫印象"
+          }
+        }
+      }
+    },
+    "archive_empty_search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No chamber specimens match this search."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有匹配该关键词的曲目范例"
+          }
+        }
+      }
+    },
+    "archive_nav_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chamber & Public Domain Archive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古典与原创室乐全集"
+          }
+        }
+      }
+    },
+    "archive_pause_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to stop preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点停止试听"
+          }
+        }
+      }
+    },
+    "archive_play_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-tap to synthesize and preview this chamber work offline"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点离线合成播放该室内乐片段"
+          }
+        }
+      }
+    },
+    "archive_search_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search title, composer, or mood"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索曲名、作曲家或意象"
+          }
+        }
+      }
+    },
+    "atelier_guild_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to audition 1-7 felt-piano scale members & kiln personalities"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击试听 1–7 音级毛毡琴声色与窑陶性格"
+          }
+        }
+      }
+    },
+    "atelier_haptics_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gentle Core Haptics pulses while sweeping bands or releasing harmonic blooms"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "转动频段与蓄积释怀时同步释放细腻 Core Haptics 触觉共振"
+          }
+        }
+      }
+    },
+    "atelier_haptics_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tactile Kiln Haptics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "掌心声学微振反馈"
+          }
+        }
+      }
+    },
+    "atelier_kiln_hub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atelier & Compliance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声学工坊与合规边界"
+          }
+        }
+      }
+    },
+    "atelier_licenses_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public-domain score credits, pure Swift vDSP DSP & licensing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公版古典曲谱索引、vDSP 纯 Swift 算法与版权说明"
+          }
+        }
+      }
+    },
+    "atelier_local_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On-Device Only"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅存本机"
+          }
+        }
+      }
+    },
+    "atelier_open_lamp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night Lamp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "琥珀夜灯"
+          }
+        }
+      }
+    },
+    "atelier_prefs_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance & Tactile Feel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观与触觉手感"
+          }
+        }
+      }
+    },
+    "atelier_privacy_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% offline, zero tracking · Only CA92.1 & 35F9.1 declared"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% 本地离线零联网 · 仅声明 CA92.1 与 35F9.1"
+          }
+        }
+      }
+    },
+    "atelier_reset_confirm_btn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Local History"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空本地统计"
+          }
+        }
+      }
+    },
+    "atelier_reset_confirm_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear local minutes, sessions, and bloom counts? Saved favorites remain."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空本机全部专注时长、伴眠与战栗记录？已收藏配方会保留。"
+          }
+        }
+      }
+    },
+    "atelier_reset_stats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Listening History"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置本机聆听统计"
+          }
+        }
+      }
+    },
+    "atelier_safety_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non-medical acoustic art experience · Includes 40 Hz listening cautions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯感官声学艺术体验，非医疗器械；含 40 Hz 高频听感留意说明"
+          }
+        }
+      }
+    },
+    "atelier_share_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Postcard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生成今日明信片"
+          }
+        }
+      }
+    },
+    "atelier_summary_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening Trace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聆听留痕"
+          }
+        }
+      }
+    },
+    "atelier_terms_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voluntary listening notice & static PNG card sharing permissions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自愿聆听约定与静态 PNG 明信片分享授权"
+          }
+        }
+      }
+    },
+    "atelier_theme_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day & Night Paper Theme"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "昼夜纸墨主题"
+          }
+        }
+      }
+    },
+    "atelier_version_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mie & Mou %@ · 100%% Offline"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "咩哞 · Mie & Mou %@ · 100%% 本地离线"
+          }
+        }
+      }
+    },
+    "band_desc_alpha": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unforced sunlit rhythm that unwinds tight pacing while keeping thoughts clear."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松弛平顺的日光松弛节律，在保持头脑清醒的同时卸下紧绷节奏。"
+          }
+        }
+      }
+    },
+    "band_desc_delta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deep unhurried low-frequency swell paired with warm brown rain for settling into rest."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "极缓沉稳的深空脉冲，配合厚重棕红底噪，像在棉布夜色里慢慢落定。"
+          }
+        }
+      }
+    },
+    "band_desc_gamma": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crisp 40 Hz high-band shimmer paired with sea-salt mist texture for steady clarity."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "40 Hz 明澈高频稳态微振，配合海盐微光颗粒感，唤醒清晰专注力。"
+          }
+        }
+      }
+    },
+    "band_desc_theta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft cradling drift blended with warm ceramic fifth overtones for twilight unwinding."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "温软漂浮的摇篮摆频，搭配手工陶窑泛音，适合放空与入睡前过渡。"
+          }
+        }
+      }
+    },
+    "band_pill_vo_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@, %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@，%@，%@"
+          }
+        }
+      }
+    },
+    "band_sub_alpha": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calm Flow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松弛心流"
+          }
+        }
+      }
+    },
+    "band_sub_delta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deep Settling"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深睡休整"
+          }
+        }
+      }
+    },
+    "band_sub_gamma": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crisp Focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清澈聚焦"
+          }
+        }
+      }
+    },
+    "band_sub_theta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft Drift"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浅眠冥想"
+          }
+        }
+      }
+    },
+    "brand_full_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mie & Mou"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "咩哞 · Mie & Mou"
+          }
+        }
+      }
+    },
+    "breath_exhale": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exhale slowly"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "慢慢呼气"
+          }
+        }
+      }
+    },
+    "breath_inhale": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inhale gently"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缓缓吸气"
+          }
+        }
+      }
+    },
+    "breath_steady": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow a calm steady breath"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟着缓拍深呼吸"
+          }
+        }
+      }
+    },
+    "cap_airg_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descending bass steps beneath sustained suspension lines evoke serene architectural poise."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稳定低音阶梯下走遇上高音留音解决，构建古典建筑般的壮阔感。"
+          }
+        }
+      }
+    },
+    "cap_airg_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stepwise bass & suspended resolution"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低音步进下的延留解放"
+          }
+        }
+      }
+    },
+    "cap_airg_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Air on G · Bach"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G弦咏叹 · 巴赫"
+          }
+        }
+      }
+    },
+    "cap_claire_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Misty seventh chords join unhurried breath phrasing for an intimate moonlit release."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "朦胧七和弦与长呼吸延留相接，带来月光铺满纸面的起皮战栗。"
+          }
+        }
+      }
+    },
+    "cap_claire_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night mist & seventh reflections"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夜色弥散与七度回望"
+          }
+        }
+      }
+    },
+    "cap_claire_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clair de Lune · Debussy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月光 · 德彪西"
+          }
+        }
+      }
+    },
+    "cap_coast_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft syncopated warmth evokes evening coast lights passing across quiet water."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻快切分与暖融和声交织，像夜晚海岸列车驶过灯火时的愉悦微振。"
+          }
+        }
+      }
+    },
+    "cap_coast_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gentle seventh sway & twilight blue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "七和弦微斜与蓝调轻落"
+          }
+        }
+      }
+    },
+    "cap_coast_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coastline Tram (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夜海电车（原创）"
+          }
+        }
+      }
+    },
+    "cap_consolation_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm chord arches lift gently and settle on a tender octave exhale."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "反复堆积温柔张力后在尾音舒展平复，常用于触发长舒一口气的体验。"
+          }
+        }
+      }
+    },
+    "cap_consolation_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supported octave release"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "温润和弦托举下的高八度释怀"
+          }
+        }
+      }
+    },
+    "cap_consolation_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consolation No. 3 · Liszt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安慰曲 · 李斯特"
+          }
+        }
+      }
+    },
+    "cap_gymno_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternating major sevenths and spacious rests create an iconic unhurried exhale."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大七度交替摇晃配合长片断停顿，是减压慢释然的代表质感。"
+          }
+        }
+      }
+    },
+    "cap_gymno_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Major-seventh cradle & silence"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大七和弦慢速摇摆与留白"
+          }
+        }
+      }
+    },
+    "cap_gymno_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gymnopédie No. 1 · Satie"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "吉诺佩蒂 · 萨蒂"
+          }
+        }
+      }
+    },
+    "cap_stardust_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlocking two-part lines climb into clear overtone space like opening night skies."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双声部一呼一应攀升到泛音高点，像抬头看见星空一下子展开。"
+          }
+        }
+      }
+    },
+    "cap_stardust_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interwoven two-voice counterpoint"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复调织体交错绽放"
+          }
+        }
+      }
+    },
+    "cap_stardust_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stardust Canon (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星尘卡农（原创）"
+          }
+        }
+      }
+    },
+    "cap_summer_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open add9 piano voicings suspend brightness before landing smoothly home."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清亮九音和弦把旋律托在半空，再稳稳收拢回主调家门。"
+          }
+        }
+      }
+    },
+    "cap_summer_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4-5-3-6 add9 summer suspension"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4-5-3-6 透明 add9 悬浮进行"
+          }
+        }
+      }
+    },
+    "cap_summer_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summer Fourths (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夏风四度（原创）"
+          }
+        }
+      }
+    },
+    "cap_swan_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long cello arcs hover gently before gliding home, evoking a warm rhythmic release."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高音弧线停悬再滑回主音，制造温柔饱满的心跳释放感。"
+          }
+        }
+      }
+    },
+    "cap_swan_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Singing cello & harp ripples"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大提琴长弧线条与竖琴水波"
+          }
+        }
+      }
+    },
+    "cap_swan_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Swan · Saint-Saens"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天鹅 · 圣桑"
+          }
+        }
+      }
+    },
+    "card_brand_header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIE & MOU"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "咩哞 · MIE & MOU"
+          }
+        }
+      }
+    },
+    "card_carrier_wash_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrier %.0f Hz · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "载波 %.0f Hz · %@"
+          }
+        }
+      }
+    },
+    "card_err_encode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to encode PNG image data."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法编码共鸣明信片 PNG 数据"
+          }
+        }
+      }
+    },
+    "card_err_photo_perm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo Library add permission is off; save via Share instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未开启相册添加权限，请通过下方分享按钮保存卡片"
+          }
+        }
+      }
+    },
+    "card_err_photo_save": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save card to Photos. Please try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到相册失败，请稍后重试"
+          }
+        }
+      }
+    },
+    "card_err_write": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to write temporary PNG file; check available storage."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地临时卡片写入失败，请检查可用空间"
+          }
+        }
+      }
+    },
+    "card_minutes_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minutes of quiet acoustic stillness"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已安静共振停留 %lld 分钟"
+          }
+        }
+      }
+    },
+    "card_preview_vo_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resonance Postcard Preview, %@ %.1f Hz, %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日共鸣明信片预览，%@ %.1f 赫兹，%@"
+          }
+        }
+      }
+    },
+    "card_pure_wash_carrier_free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pure ambient wash · zero periodic wave pulses"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全自然环境声床 · 零周期声波脉冲"
+          }
+        }
+      }
+    },
+    "card_quiet_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% Offline Acoustic Art · Quiet Listening"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "离线纯声学静心时刻 · 安静聆听"
+          }
+        }
+      }
+    },
+    "card_save_photos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to Photos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存入相册"
+          }
+        }
+      }
+    },
+    "card_saved_ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved high-resolution PNG postcard to Photos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存高清 PNG 明信片到手机相册"
+          }
+        }
+      }
+    },
+    "card_saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving..."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存中..."
+          }
+        }
+      }
+    },
+    "card_share_btn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Card"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享卡片"
+          }
+        }
+      }
+    },
+    "card_sheet_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resonance Postcard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日共振明信片"
+          }
+        }
+      }
+    },
+    "companion_first_welcome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put on headphones or rest beside your pillow for a quiet moment with Mie & Mou."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "戴上耳机或放在枕边，咩哞陪你开启第一段安静共鸣。"
+          }
+        }
+      }
+    },
+    "companion_minutes_band": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld quiet minutes together · Most visited: %@ field."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已陪你安静停留 %lld 分钟 · 你最常停在 %@ 声场。"
+          }
+        }
+      }
+    },
+    "companion_with_frisson": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld quiet minutes together · %lld gentle harmonic releases."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已陪你安静停留 %lld 分钟 · 捕捉到 %lld 次温柔心流战栗。"
+          }
+        }
+      }
+    },
+    "field_btn_hum": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hum to Tune"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻哼找同频"
+          }
+        }
+      }
+    },
+    "field_carrier_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrier %.0f Hz · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "载波 %.0f Hz · %@"
+          }
+        }
+      }
+    },
+    "field_clear_hum_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear personal hum tuning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除个人轻哼定频"
+          }
+        }
+      }
+    },
+    "field_dial_drag_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slide dial left or right to tune (1.5-42 Hz)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左右轻拖表盘微调声波频率 (1.5–42 Hz)"
+          }
+        }
+      }
+    },
+    "field_dial_vo_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resonance Frequency Dial"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声波共鸣表盘"
+          }
+        }
+      }
+    },
+    "field_dial_vo_value": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f Hz, %@, %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f 赫兹，%@，%@"
+          }
+        }
+      }
+    },
+    "field_hum_badge_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hum-tuned %.0f Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻哼同频 %.0f Hz"
+          }
+        }
+      }
+    },
+    "field_night_lamp_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Amber OLED Night Lamp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启琥珀夜灯暗屏模式"
+          }
+        }
+      }
+    },
+    "field_pure_wash_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pure ambient wash · tap wash below to restore wave pulses"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯自然声床模式 · 轻点下方声床按钮可恢复声波脉冲"
+          }
+        }
+      }
+    },
+    "field_share_card_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Resonance Postcard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生成今日声波共振卡片"
+          }
+        }
+      }
+    },
+    "field_specimen_banner_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chamber Playing: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "室内乐播放中：%@"
+          }
+        }
+      }
+    },
+    "field_timer_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep Timer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "睡眠定时"
+          }
+        }
+      }
+    },
+    "field_timer_rem_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fading in %lld min"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "约 %lld 分后渐弱"
+          }
+        }
+      }
+    },
+    "field_timer_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set sleep fade-out timer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置睡前渐弱关机定时"
+          }
+        }
+      }
+    },
+    "field_wash_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust natural wash bed & overtone warmth"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "调节自然声床与窑陶暖泛音"
+          }
+        }
+      }
+    },
+    "filter_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All 28"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部 28 首"
+          }
+        }
+      }
+    },
+    "frisson_charging": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gathering Bloom..."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "蓄力释怀..."
+          }
+        }
+      }
+    },
+    "frisson_hold_btn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold Bloom"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按住释怀"
+          }
+        }
+      }
+    },
+    "frisson_vo_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press and hold, then release to bloom a gentle chamber cascade."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长按蓄力后松手，释放柔和室内乐泛音涟漪"
+          }
+        }
+      }
+    },
+    "frisson_vo_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acoustic Harmonic Bloom Release"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声学和声张力释放"
+          }
+        }
+      }
+    },
+    "guild_header_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap any member to hear their felt-piano timbre: 1, 3, 5 ground home; 4 & 7 lean forward."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点任意成员试听毛毡琴声：1·3·5 是归属基石，4·7 是温柔推进张力。"
+          }
+        }
+      }
+    },
+    "guild_header_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seven Scale Ceramic Voices"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "七位音高小伙伴的窑陶声色"
+          }
+        }
+      }
+    },
+    "guild_member_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to audition pitch timbre & tactile feel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点试听该音阶音色与触感"
+          }
+        }
+      }
+    },
+    "guild_nav_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seven Scale Companions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "咩哞七小只图鉴"
+          }
+        }
+      }
+    },
+    "hum_btn_finish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock This Pitch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成锁定同频"
+          }
+        }
+      }
+    },
+    "hum_btn_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Hum Capture"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始捕捉轻哼"
+          }
+        }
+      }
+    },
+    "hum_btn_starting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing Microphone..."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在准备麦克风..."
+          }
+        }
+      }
+    },
+    "hum_locked_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrier tuned to your natural voice at %.0f Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已将你的自然音色锁频至 %.0f Hz 共振载波"
+          }
+        }
+      }
+    },
+    "hum_mic_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone access is off. Enable in Settings or choose a vocal preset below."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未开启麦克风权限，可先前往系统设置允许，或直接从常用人声声高里挑选"
+          }
+        }
+      }
+    },
+    "hum_mic_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone unavailable right now. Choose a vocal preset below instead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "麦克风暂时不可用，可直接从下方常用人声声高里选"
+          }
+        }
+      }
+    },
+    "hum_not_detected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not hear a clear hum. Hum slightly closer or pick a preset below."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没听清轻哼声，再靠近轻哼试试，或直接选常用人声"
+          }
+        }
+      }
+    },
+    "hum_preset_bright": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "256 Hz Light Bright"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "256 Hz 清亮轻声"
+          }
+        }
+      }
+    },
+    "hum_preset_locked_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected %.0f Hz warm vocal carrier"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已选择 %.0f Hz 暖声共振载波"
+          }
+        }
+      }
+    },
+    "hum_preset_low": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "131 Hz Deep Warm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "131 Hz 深男低音"
+          }
+        }
+      }
+    },
+    "hum_preset_soft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "220 Hz Soft Clear"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "220 Hz 柔和女声"
+          }
+        }
+      }
+    },
+    "hum_preset_warm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "174 Hz Balanced Mid"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "174 Hz 中性暖嗓"
+          }
+        }
+      }
+    },
+    "hum_quick_vocal_header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Vocal Root Presets (No Mic Needed)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常用人声定频参考（无需麦克风）"
+          }
+        }
+      }
+    },
+    "hum_sheet_intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hum softly for 2-3 seconds; fundamental analysis runs strictly offline in memory to tune your carrier."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻轻哼 2–3 秒任意舒缓单音，本机离线采集基频后将合成器载波调谐至你的自然共鸣音高。"
+          }
+        }
+      }
+    },
+    "hum_sheet_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hum to Tune"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻哼找同频"
+          }
+        }
+      }
+    },
+    "hum_too_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hum slightly longer so the detector can lock a steady pitch."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再轻轻多哼一小会儿，我就能锁住你的频率"
+          }
+        }
+      }
+    },
+    "legal_l_b1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The 44-voice chamber synthesis & binaural DSP engine (FeltPianoSynth), pure Swift / Accelerate vDSP pitch tracking, and all ceramic vector artwork are built with zero third-party binaries."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App 内 44 声部室内乐与双耳波合成引擎（FeltPianoSynth）、纯 Swift / Accelerate vDSP 音高检测模块以及所有视觉绘制均为自研零外部二进制依赖实现。"
+          }
+        }
+      }
+    },
+    "legal_l_b2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classical capsules and specimens draw from verified Public Domain works arranged with custom multi-voice chamber textures; modern studies are 100% original. All license and source notices are bundled offline in the app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声库中的古典战栗胶囊全部取材于已进入国际公版领域（Public Domain）的传世作品，并在其之上加入自研多声部室内乐伴奏织体；现代夏日及星尘示范曲目为本作品 100% 原创。全部许可与公版参考清单已完整内置本机离线展示。"
+          }
+        }
+      }
+    },
+    "legal_l_h1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Offline Audio Synthesis & Pitch DSP"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一、离线音频引擎与基频计算"
+          }
+        }
+      }
+    },
+    "legal_l_h2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Public Domain Scores & Original Works"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "二、公版古典乐谱与原创示范集"
+          }
+        }
+      }
+    },
+    "legal_licenses_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public-domain scores & custom Swift DSP"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公版古典名作与自研音频数学"
+          }
+        }
+      }
+    },
+    "legal_licenses_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scores & Credits"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公版谱源与致谢"
+          }
+        }
+      }
+    },
+    "legal_p_b1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mie & Mou operates strictly offline: zero analytics SDKs, zero ads, zero crash telemetry, zero accounts, and zero outbound network requests. All settings stay inside local device storage."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「咩哞 · Mie & Mou」运行于完全本地离线架构：不集成任何第三方统计、广告、崩溃追踪 SDK，不包含账户体系或服务器同步，您的所有设置与声场参数只保存在本机系统存储中。"
+          }
+        }
+      }
+    },
+    "legal_p_b2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Microphone access is used strictly on-demand inside Hum Pitch Match to compute your vocal fundamental (Hz) in RAM—never saved or uploaded.\n2. Photos Add-Only access is requested solely when you tap Save to Photos to export a static PNG card.\n3. Only CA92.1 (UserDefaults) and 35F9.1 (SystemBootTime) Required Reason APIs are declared in PrivacyInfo.xcprivacy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. 麦克风仅在您主动开启「轻哼找同频」时临时采样计算基频（Hz），纯内存瞬时处理后即刻释放，从不落盘、从不上传。\n2. 相册添加权限仅在您主动点击「存入相册」时将生成的静态 PNG 卡片写入相册，绝不读取既有照片。\n3. 本机仅声明 Apple Privacy Manifest 所需的 CA92.1（用户偏好）与 35F9.1（系统运行时间片统计）两项必要 API。"
+          }
+        }
+      }
+    },
+    "legal_p_b3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can revoke permissions in iOS Settings, reset local statistics in Atelier, or delete the app at any time with zero external trace."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您可以随时关闭系统权限、重置本地统计偏好或直接卸载应用，本应用在云端或外部均不留存任何痕迹。"
+          }
+        }
+      }
+    },
+    "legal_p_h1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. 100% Offline, Zero Network Traffic"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一、100% 本地离线，无网络请求"
+          }
+        }
+      }
+    },
+    "legal_p_h2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Microphone & Photo Boundaries"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "二、麦克风与照片权限边界"
+          }
+        }
+      }
+    },
+    "legal_p_h3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Full On-Device Data Control"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "三、数据清理控制权"
+          }
+        }
+      }
+    },
+    "legal_privacy_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% Offline · Zero Tracking · No Account"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% 本地离线 · 零追踪 · 无账户"
+          }
+        }
+      }
+    },
+    "legal_privacy_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy & Security"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私与安全声明"
+          }
+        }
+      }
+    },
+    "legal_t_b1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mie & Mou is an offline sensory sound-art and quiet companionship tool. It is NOT a medical device or clinical software and does not diagnose, treat, cure, or prevent insomnia, neurological conditions, tinnitus, or any health disorder. Consult a qualified physician for medical care."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「咩哞 · Mie & Mou」是专注聆听放松、规律呼吸陪伴与和声体验的离线声学艺术工具，不属于医疗器械或临床诊疗软件，不用于诊断、治疗、治愈或预防任何身体或心理疾病（含失眠障碍、神经系统疾病、耳鸣治疗或注意缺陷等）。如有健康困扰请及时咨询专业执业医师。"
+          }
+        }
+      }
+    },
+    "legal_t_b2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You may freely save and share generated static PNG postcards personally; do not represent any audio or card output as medical therapy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您可自由导出保存本地生成的静态共鸣 PNG 卡片并与亲友分享，请勿将本应用曲目或声音生成物用于误导性医疗疗效宣传。"
+          }
+        }
+      }
+    },
+    "legal_t_b3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binaural beats and isochronic pulses are crafted strictly for sensory ambiance at comfortable volumes. If you have epilepsy, pulse sensitivity, active tinnitus, or a hearing implant, enable Pure Ambient Wash (No Pulse) in the wash drawer or consult a physician before using 40 Hz tones. Never use sleep or Night Lamp modes while driving or operating machinery."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双耳差频与等时脉动声场仅为艺术氛围营造，请佩戴舒适音量收听。若您存在癫痫病史、规律声光脉冲敏感、耳鸣发作或佩戴植入式助听装置，请优先在声床抽屉中启用无脉冲的「纯自然声床（零声波脉冲）」或咨询医师后再决定是否使用 40 Hz 频段；驾驶与机械作业时切勿开启睡前静息或夜灯模式。"
+          }
+        }
+      }
+    },
+    "legal_t_h1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Non-Medical Sensory Art Boundary"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一、非医疗健康与声学边界"
+          }
+        }
+      }
+    },
+    "legal_t_h2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Postcard Export Usage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "二、导出分享授权"
+          }
+        }
+      }
+    },
+    "legal_t_h3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Safe Listening Practice"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "三、收听安全提示"
+          }
+        }
+      }
+    },
+    "legal_terms_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non-medical art notice & listening guidelines"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非医疗声明 · 自愿收听 · 知识版权归你"
+          }
+        }
+      }
+    },
+    "legal_terms_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用条款"
+          }
+        }
+      }
+    },
+    "lib_archive_link_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse by era, search, and audition all 28 chamber felt-piano & cello works"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按时代浏览、检索并试听全套钢琴、大提琴与竖琴微声学范例"
+          }
+        }
+      }
+    },
+    "lib_archive_link_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chamber & Public Domain Archive (28)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古典公版与原创室乐全集（28 首）"
+          }
+        }
+      }
+    },
+    "lib_capsules_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to hear · Offline chamber sound"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单点即听 · 离线室内乐"
+          }
+        }
+      }
+    },
+    "lib_count_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld scenes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 组"
+          }
+        }
+      }
+    },
+    "lib_empty_capsules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No chamber capsules match this search."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有匹配该关键词的室内乐胶囊"
+          }
+        }
+      }
+    },
+    "lib_empty_favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the heart button on any scene card to save your favorite presets."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点任意声景卡片右上角的心形图标，即可收集常听配方。"
+          }
+        }
+      }
+    },
+    "lib_empty_search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No acoustic scenes match your search."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有匹配该关键词的声景"
+          }
+        }
+      }
+    },
+    "lib_fav_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorite acoustic scene"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏该声景"
+          }
+        }
+      }
+    },
+    "lib_filter_afternoon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afternoon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "午后"
+          }
+        }
+      }
+    },
+    "lib_filter_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部场景"
+          }
+        }
+      }
+    },
+    "lib_filter_evening": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "傍晚"
+          }
+        }
+      }
+    },
+    "lib_filter_fav": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已收藏"
+          }
+        }
+      }
+    },
+    "lib_filter_midnight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midnight"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深夜"
+          }
+        }
+      }
+    },
+    "lib_filter_morning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晨间"
+          }
+        }
+      }
+    },
+    "lib_mins_hint_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested %lld min"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议 %lld 分钟"
+          }
+        }
+      }
+    },
+    "lib_playing_preset_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在聆听：%@"
+          }
+        }
+      }
+    },
+    "lib_quick_start_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested Now: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一键开启此刻建议：%@"
+          }
+        }
+      }
+    },
+    "lib_search_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search soundscapes or chamber capsules"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索白昼声场或室内乐胶囊"
+          }
+        }
+      }
+    },
+    "lib_section_capsules": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harmonic Release Capsules"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "和声战栗胶囊"
+          }
+        }
+      }
+    },
+    "lib_section_presets": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Circadian Soundscapes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时间声景配方"
+          }
+        }
+      }
+    },
+    "lib_unfav_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from favorites"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消收藏该声景"
+          }
+        }
+      }
+    },
+    "member_name_bomo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bomo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钵莫"
+          }
+        }
+      }
+    },
+    "member_name_corllo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corllo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "壳咯"
+          }
+        }
+      }
+    },
+    "member_name_doko": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doko"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "豆叩"
+          }
+        }
+      }
+    },
+    "member_name_plokko": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plokko"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍咯"
+          }
+        }
+      }
+    },
+    "member_name_taono": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taono"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "陶诺"
+          }
+        }
+      }
+    },
+    "member_name_tinki": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinki"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "叮尖"
+          }
+        }
+      }
+    },
+    "member_name_udo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "呜嘟"
+          }
+        }
+      }
+    },
+    "member_role_bomo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nostalgia"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "怀旧"
+          }
+        }
+      }
+    },
+    "member_role_corllo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horizon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "远望"
+          }
+        }
+      }
+    },
+    "member_role_doko": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "迈步"
+          }
+        }
+      }
+    },
+    "member_role_plokko": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晴雨"
+          }
+        }
+      }
+    },
+    "member_role_taono": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "家"
+          }
+        }
+      }
+    },
+    "member_role_tinki": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiptoe"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "踮脚"
+          }
+        }
+      }
+    },
+    "member_role_udo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lift"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬步"
+          }
+        }
+      }
+    },
+    "member_vo_bomo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 La, lyrical sixth"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 La，抒情音"
+          }
+        }
+      }
+    },
+    "member_vo_corllo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 Sol"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 Sol"
+          }
+        }
+      }
+    },
+    "member_vo_doko": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 Re"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 Re"
+          }
+        }
+      }
+    },
+    "member_vo_plokko": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 Mi, bright or wistful color"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 Mi，决定明亮或忧郁"
+          }
+        }
+      }
+    },
+    "member_vo_taono": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Do, tonic home"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Do，主音"
+          }
+        }
+      }
+    },
+    "member_vo_tinki": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Ti, leans home toward 1"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Ti，倾向回到 1"
+          }
+        }
+      }
+    },
+    "member_vo_udo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4 Fa"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4 Fa"
+          }
+        }
+      }
+    },
+    "minibar_jump_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to Acoustic Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回声场主界面"
+          }
+        }
+      }
+    },
+    "minibar_specimen_playing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chamber capsule playing · Tap for Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "室乐胶囊播放中 · 点击切回声场"
+          }
+        }
+      }
+    },
+    "mode_tag_bright": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm Bright"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明朗暖春"
+          }
+        }
+      }
+    },
+    "mode_tag_dreamy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lydian Float"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "梦幻悬浮"
+          }
+        }
+      }
+    },
+    "mode_tag_mist": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forest Mist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深林微雾"
+          }
+        }
+      }
+    },
+    "mode_tag_night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deep Nocturne"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深邃夜曲"
+          }
+        }
+      }
+    },
+    "mode_tag_sunset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Golden Dusk"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "余晖飘逸"
+          }
+        }
+      }
+    },
+    "night_lamp_blind_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag up/down for 1.5-42 Hz · Tap play/pause · Hold bloom"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上下滑动盲调 1.5–42 Hz · 轻点启停 · 长按释放和声"
+          }
+        }
+      }
+    },
+    "night_lamp_close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Amber Night Lamp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭琥珀夜灯"
+          }
+        }
+      }
+    },
+    "night_lamp_pad_vo_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night Lamp Tactile Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夜灯触觉声场盘"
+          }
+        }
+      }
+    },
+    "night_lamp_pad_vo_value": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f Hz, %@, %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f 赫兹，%@，%@"
+          }
+        }
+      }
+    },
+    "night_lamp_paused_state": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resting · Tap to wake night field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已静息 · 轻点开启夜灯声场"
+          }
+        }
+      }
+    },
+    "night_lamp_playing_state": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glowing softly · Tap to pause"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柔和共鸣中 · 轻点暂停"
+          }
+        }
+      }
+    },
+    "night_lamp_timer_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep Fade %02lld:%02lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "渐弱倒计时 %02lld:%02lld"
+          }
+        }
+      }
+    },
+    "night_lamp_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amber OLED Night Lamp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "琥珀夜灯暗屏场"
+          }
+        }
+      }
+    },
+    "pitch_detector_yin_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YIN-vDSP (Offline Pure Swift)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YIN-vDSP（离线零依赖）"
+          }
+        }
+      }
+    },
+    "preset_alpha_afternoon_tea_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gentle flow pulse that softens midday fatigue cleanly"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松弛平顺节奏，柔和化开午间困意与杂念"
+          }
+        }
+      }
+    },
+    "preset_alpha_afternoon_tea_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midday Tea Mist · 10.5 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "午后茶雾 · 10.5 Hz"
+          }
+        }
+      }
+    },
+    "preset_alpha_ceramic_porch_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm ceramic fifth overtones supporting easy breathing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微暖五度泛音托住轻松呼吸感"
+          }
+        }
+      }
+    },
+    "preset_alpha_ceramic_porch_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porch Breeze · 9 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "陶檐微风 · 9 Hz"
+          }
+        }
+      }
+    },
+    "preset_alpha_morning_dew_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean morning Alpha lift without harsh edge"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清晨唤醒，明快不躁的 Alpha 心流声场"
+          }
+        }
+      }
+    },
+    "preset_alpha_morning_dew_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning Dew · 10 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "朝露晴空 · 10 Hz"
+          }
+        }
+      }
+    },
+    "preset_alpha_reading_lamp_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unhurried slow Alpha companion for late-evening reading"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柔和慢速 Alpha，陪你翻完睡前最后一章"
+          }
+        }
+      }
+    },
+    "preset_alpha_reading_lamp_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading Lamp · 8.5 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纸灯夜读 · 8.5 Hz"
+          }
+        }
+      }
+    },
+    "preset_delta_deep_cotton_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2.5 Hz slow swell + warm 136.1 Hz floor for quiet nights"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2.5 Hz 极缓深波 + 136.1 Hz 暖底，整夜安稳伴眠"
+          }
+        }
+      }
+    },
+    "preset_delta_deep_cotton_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotton Cloud · 2.5 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深眠棉云 · 2.5 Hz"
+          }
+        }
+      }
+    },
+    "preset_delta_velvet_night_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gentle low-glare bedside drone near slow-wave cadence."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴近夜晚舒缓慢波节律的极轻低鸣，暗屏低眩光伴睡"
+          }
+        }
+      }
+    },
+    "preset_delta_velvet_night_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velvet Silence · 1.8 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗夜零噪 · 1.8 Hz"
+          }
+        }
+      }
+    },
+    "preset_gamma_clear_desk_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crisp high-band focus anchor for reading & sketching"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "早晨阅读与创作前的明晰高频专注锚"
+          }
+        }
+      }
+    },
+    "preset_gamma_clear_desk_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Timber · 40 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "木桌清澈 · 40 Hz"
+          }
+        }
+      }
+    },
+    "preset_gamma_laser_atelier_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steady 40 Hz shimmer filtering room distractions cleanly"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高频稳态脉动，隔绝纷扰进入深度心流"
+          }
+        }
+      }
+    },
+    "preset_gamma_laser_atelier_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet Atelier · 40 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "静默工坊 · 40 Hz"
+          }
+        }
+      }
+    },
+    "preset_theta_dream_drift_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft borderline drift hovering calmly between wake and rest"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停留在浅睡临界线上的柔软波动与远景呼吸"
+          }
+        }
+      }
+    },
+    "preset_theta_dream_drift_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dream Drift · 4.2 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浮梦半醒 · 4.2 Hz"
+          }
+        }
+      }
+    },
+    "preset_theta_nap_hammock_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "20-minute sunlit afternoon rest cradle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "20 分钟浅眠小憩，轻盈落回温软怀抱"
+          }
+        }
+      }
+    },
+    "preset_theta_nap_hammock_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hammock Rest · 6 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日光午睡 · 6 Hz"
+          }
+        }
+      }
+    },
+    "preset_theta_rain_eaves_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dense brown rain bed enveloping hum-tuned overtones"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绵密棕红雨声包覆轻哼泛音，进入睡意准备"
+          }
+        }
+      }
+    },
+    "preset_theta_rain_eaves_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rainy Eaves · 4.8 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "棉檐晚雨 · 4.8 Hz"
+          }
+        }
+      }
+    },
+    "preset_theta_twilight_kiln_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm kiln dusk resonance unwinding the day smoothly"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "傍晚卸下疲惫，温暖陶音缓慢降噪过渡"
+          }
+        }
+      }
+    },
+    "preset_theta_twilight_kiln_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twilight Kiln · 5.5 Hz"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暮色熄窑 · 5.5 Hz"
+          }
+        }
+      }
+    },
+    "route_headphones": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binaural Stereo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双耳差频"
+          }
+        }
+      }
+    },
+    "route_headphones_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stereo headphones connected; pure L/R binaural beat field active"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前已连接立体声耳机，呈现双耳差频声场"
+          }
+        }
+      }
+    },
+    "route_refresh_vo_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double tap to verify current headphone or speaker output"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点确认当前耳机或外放输出模式"
+          }
+        }
+      }
+    },
+    "route_speaker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaker Pulse"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外放微脉动"
+          }
+        }
+      }
+    },
+    "route_speaker_vo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device speaker output active; gentle isochronic envelope pulse enabled"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前外放模式，切换柔和等时声波脉动"
+          }
+        }
+      }
+    },
+    "safety_body_boundary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delta, Theta, Alpha, and Gamma soundscapes, hum tuning, and sleep fade timers provide offline acoustic art and calming ambiance only—never medical diagnosis, clinical intervention, or therapy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "咩哞提供的 Delta / Theta / Alpha / Gamma 声场、轻哼定频共振与睡眠渐弱定时均属于纯粹离线感官艺术与放松陪伴体验，不构成医疗诊断、康复介入或疾病治疗手段。"
+          }
+        }
+      }
+    },
+    "safety_body_caution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. If you experience epilepsy, active tinnitus, pulse sensitivity, or wear a hearing implant, enable Pure Ambient Wash (No Pulse) inside the Wash Drawer or consult a clinician before listening to 40 Hz Gamma.\n2. Do not use deep-rest Delta/Theta beds or Night Lamp mode while driving or operating machinery."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. 若您对规律脉冲声响、光声节律变化敏感，或存在癫痫病史、耳鸣发作期或植入式助听装置，请优先在声床抽屉里开启无脉冲的「纯自然声床（零声波脉冲）」，或遵照医嘱再决定是否收听 40 Hz 频段。\n2. 驾驶、高空作业或需要高度警觉操作机械期间，请勿使用深睡（Delta / Theta）睡前静息及闭眼夜灯模式。"
+          }
+        }
+      }
+    },
+    "safety_body_headphones": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stereo wired or A2DP Bluetooth headphones deliver true L/R binaural differentials; built-in speakers switch automatically to comfortable low-distortion isochronic amplitude pulses."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "佩戴立体声有线/蓝牙耳机时，左右耳分别呈现差频双声波；使用手机扬声器外放时，系统自动切换为低失真柔和等时包络脉冲，确保随时保持清晰听感与舒适温和音量。"
+          }
+        }
+      }
+    },
+    "safety_nav_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acoustic Safety & Non-Medical Notice"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收听安全与非医疗边界"
+          }
+        }
+      }
+    },
+    "safety_title_boundary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensory Art Boundary (Non-Medical)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声学艺术边界（非医疗软件）"
+          }
+        }
+      }
+    },
+    "safety_title_caution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "40 Hz Gamma & Sensitivity Cautions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "特殊人群与 40 Hz Gamma 收听留意"
+          }
+        }
+      }
+    },
+    "safety_title_headphones": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Headphone Binaural vs. Speaker Mode"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "耳机双耳差频与外放模式"
+          }
+        }
+      }
+    },
+    "spec_bach_air_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_bach_air_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anchors time with a long serene 3 before cascading gently down 4-2-7-low-1 over shifting harmonies."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开头用一颗极长的 3·拍咯定住时光，随后 4-2-7↓-1 像丝绸般蜿蜒落下。"
+          }
+        }
+      }
+    },
+    "spec_bach_air_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J. S. Bach BWV 1068 (~1730 PD) · Silk sustained breath"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫 BWV 1068 约1730 公版 · 长音如丝的呼吸"
+          }
+        }
+      }
+    },
+    "spec_bach_air_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bach: Air on the G String"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G弦上的咏叹调 · 巴赫"
+          }
+        }
+      }
+    },
+    "spec_bach_cello_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_bach_cello_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternates deep bass anchors with shimmering upper crests so one cello implies an entire ensemble."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 1→5→3 的宽幅波浪里，低音当和声根基，高音连成隐藏旋律。"
+          }
+        }
+      }
+    },
+    "spec_bach_cello_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J. S. Bach BWV 1007 (~1720 PD) · Rolling solo wave"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫 BWV 1007 约1720 公版 · 一人分饰两角的波浪"
+          }
+        }
+      }
+    },
+    "spec_bach_cello_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bach: Cello Suite No. 1 Prelude"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无伴奏大提琴前奏曲 · 巴赫"
+          }
+        }
+      }
+    },
+    "spec_bach_invention_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_bach_invention_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Builds a crisp seven-note wooden motif at home before transposing it a fifth higher like mountain air."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把 1-2-3-4-2-3-1 短动机当成木积木，先在低处摆一遍，再搬到属音 5 高处原样复刻。"
+          }
+        }
+      }
+    },
+    "spec_bach_invention_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J. S. Bach BWV 772 (1723 PD) · Contrapuntal motif echo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫 BWV 772 1723 公版 · 动机攀升与回声"
+          }
+        }
+      }
+    },
+    "spec_bach_invention_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bach: Two-Part Invention No. 1"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "二部创意曲 · 巴赫"
+          }
+        }
+      }
+    },
+    "spec_bach_minuet_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_bach_minuet_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drops from 5 to 1 and climbs five tidy scale steps with crisp triple-time symmetry."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 跳下 1 后一口气沿楼梯走到 5，跳两下 1 点地，再迈向高音 1↑——节奏明快对称。"
+          }
+        }
+      }
+    },
+    "spec_bach_minuet_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BWV Anh. 114 (1725 PD) · Crisp triple-meter step"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BWV Anh.114 1725 公版 · 轻快三拍子舞步"
+          }
+        }
+      }
+    },
+    "spec_bach_minuet_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bach: Minuet in G, BWV Anh. 114"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G大调小步舞曲 · 巴赫"
+          }
+        }
+      }
+    },
+    "spec_bach_prelude_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_bach_prelude_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unfolds triad pillars one pure stone at a time (1-3-5-1-up) so harmonic gravity feels visible."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把和弦里的音一颗颗拆开往上爬（1-3-5-1↑），像晶莹的水晶楼梯。"
+          }
+        }
+      }
+    },
+    "spec_bach_prelude_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J. S. Bach (1722 PD) · Crystal broken-chord staircase"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫 BWV 846 1722 公版 · 黄金和弦阶梯"
+          }
+        }
+      }
+    },
+    "spec_bach_prelude_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bach: Prelude in C, BWV 846"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C大调前奏曲 · 巴赫"
+          }
+        }
+      }
+    },
+    "spec_beethoven_elise_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_beethoven_elise_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rocking half-step neighbors above resolve gently into broken minor triads rising from below."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高处两颗相邻音珠轻轻往复摇摆制造悬念，再由分解三和弦自下而上托起归主。"
+          }
+        }
+      }
+    },
+    "spec_beethoven_elise_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ludwig van Beethoven (1810 PD) · Delicate minor sway"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贝多芬 WoO 59 1810 公版 · 灵巧摇摆与分解托起"
+          }
+        }
+      }
+    },
+    "spec_beethoven_elise_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beethoven: Bagatelle WoO 59"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "致爱丽丝 · 贝多芬"
+          }
+        }
+      }
+    },
+    "spec_beethoven_moonlight_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_beethoven_moonlight_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds a quiet repeated 5 while dark minor water currents shift subtly underneath."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上方旋律几乎只在同一颗 5 上低声重复，靠底下悄悄滑动的小调水波推动情绪前进。"
+          }
+        }
+      }
+    },
+    "spec_beethoven_moonlight_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ludwig van Beethoven (1801 PD) · Nocturnal minor stillness"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贝多芬 Op.27 No.2 1801 公版 · 深邃小调独白"
+          }
+        }
+      }
+    },
+    "spec_beethoven_moonlight_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beethoven: Moonlight Sonata I"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月光奏鸣曲 · 贝多芬"
+          }
+        }
+      }
+    },
+    "spec_campanella_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_campanella_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright celesta leaps strike a crystal bell motif in minor mode while an inner line threads delicately beneath."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小调里的钟声跳跃：高处的 5·壳咯像清脆银铃反复敲响，另一条声音在下面灵巧穿梭。"
+          }
+        }
+      }
+    },
+    "spec_campanella_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Franz Liszt (1851 PD) · Sparkling celesta bell motif"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "李斯特《帕格尼尼练习曲·钟》1851 公版 · 灵动铃音"
+          }
+        }
+      }
+    },
+    "spec_campanella_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liszt: La Campanella Theme"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钟 · 李斯特"
+          }
+        }
+      }
+    },
+    "spec_chopin_nocturne_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_chopin_nocturne_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A steady bass anchor and two lilting chord steps buoy the long major-sixth singing leap overhead."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圆舞呼吸左手伴奏：一拍沉稳低音，两拍轻柔上浮，托着右手 5↓→3 的大六度优雅起飞。"
+          }
+        }
+      }
+    },
+    "spec_chopin_nocturne_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frederic Chopin (1832 PD) · Lyrical waltz twilight"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "肖邦 Op.9 No.2 1832 公版 · 浪漫派圆舞夜色"
+          }
+        }
+      }
+    },
+    "spec_chopin_nocturne_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chopin: Nocturne Op. 9 No. 2"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "降E大调夜曲 · 肖邦"
+          }
+        }
+      }
+    },
+    "spec_consolation3_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_consolation3_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sings unhurriedly across 5-3-2-1 over luminous broken chords, giving every sustained tone quiet warmth."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在 5-3-2-1 之间像轻抚琴键般歌唱，底下的水波琵音让每个长音都泛着柔和微光。"
+          }
+        }
+      }
+    },
+    "spec_consolation3_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Franz Liszt (1850 PD) · Cantabile nocturne arc"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "李斯特《安慰曲》No.3 1850 公版 · 如歌夜曲"
+          }
+        }
+      }
+    },
+    "spec_consolation3_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liszt: Consolation No. 3"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安慰曲 · 李斯特"
+          }
+        }
+      }
+    },
+    "spec_debussy_clair_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_debussy_clair_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmeasured moonlight drifts softly down from 1-up and 6 into silver ripples of 5 and 3."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高处的 1↑ 与 6 缓步滑落到 5 与 3，像月光透过云层一层层融在水里。"
+          }
+        }
+      }
+    },
+    "spec_debussy_clair_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Debussy (1890 PD) · Impressionist lunar mist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "德彪西《贝加莫组曲》1890 公版 · 印象派月雾"
+          }
+        }
+      }
+    },
+    "spec_debussy_clair_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debussy: Clair de Lune"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月光 · 德彪西"
+          }
+        }
+      }
+    },
+    "spec_debussy_flaxen_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_debussy_flaxen_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glides along a weightless 6-3-2-1 pentatonic arc bathed in pale golden morning light."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从 6→3→2→1 的五声柔和弧线起步，清澈得像阳光照在金色麦田上。"
+          }
+        }
+      }
+    },
+    "spec_debussy_flaxen_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Debussy (1910 PD) · Pentatonic morning sun"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "德彪西《前奏曲》1910 公版 · 五声暖阳"
+          }
+        }
+      }
+    },
+    "spec_debussy_flaxen_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debussy: Girl with the Flaxen Hair"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "亚麻色头发的少女 · 德彪西"
+          }
+        }
+      }
+    },
+    "spec_dvorak_home_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_dvorak_home_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rests purely on 1-2-3-5, skipping half-step tension to bathe the melody in warm dusk nostalgia."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全曲只用 1-2-3-5 四颗核心音高，避开紧绷的 4 和 7，写出辽阔温暖的田野夜色。"
+          }
+        }
+      }
+    },
+    "spec_dvorak_home_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antonin Dvorak (1893 PD) · Warm pentatonic horizon"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "《自新大陆》第二乐章 1893 公版 · 柔和五声音阶"
+          }
+        }
+      }
+    },
+    "spec_dvorak_home_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dvorak: Largo (Going Home)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "念故乡 · 德沃夏克"
+          }
+        }
+      }
+    },
+    "spec_liebestraum_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_liebestraum_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens with an ascending sixth leap from low 5 up to 3, gently lingering before exhaling gracefully back to 1."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开头从低处 5↓ 一跃大跳六度到 3·拍咯，反复轻唤同一颗音后，轻轻叹息落回 1·陶诺，像在夜风里倾诉心事。"
+          }
+        }
+      }
+    },
+    "spec_liebestraum_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Franz Liszt (1850 PD) · Expressive sixth leap and warm sigh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "李斯特《爱之梦》No.3 1850 公版 · 六度深情仰望"
+          }
+        }
+      }
+    },
+    "spec_liebestraum_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liszt: Liebestraum No. 3"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "爱之梦 · 李斯特"
+          }
+        }
+      }
+    },
+    "spec_mozart_twinkle_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_mozart_twinkle_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the horizon with a clean fifth leap (1 to 5), peeks up to 6, and walks calmly down the steps."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1→5 纯五度瞬间打开视野，6 往上一探立刻回 5，再沿 4-3-2-1 一步步走回家。"
+          }
+        }
+      }
+    },
+    "spec_mozart_twinkle_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W. A. Mozart K.265 (1781 PD) · Pure fifth leap and stepwise return"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "莫扎特 K.265 1781 公版 · 五度大跳与级进回家"
+          }
+        }
+      }
+    },
+    "spec_mozart_twinkle_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mozart: Ah! vous dirai-je Variations"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小星星引力 · 莫扎特"
+          }
+        }
+      }
+    },
+    "spec_orig_bittersweet_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_bittersweet_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walks through sunny major cadences yet closes tenderly on relative minor 6 for lingering warmth."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晴朗大调结尾刻意不回 1·陶诺，轻轻停在 6·钵莫怀里留下悠长余韵。"
+          }
+        }
+      }
+    },
+    "spec_orig_bittersweet_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Deceptive cadence resting on 6"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创大调余韵 · 结尾不回 1 而落在 6"
+          }
+        }
+      }
+    },
+    "spec_orig_bittersweet_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bittersweet Daylight (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "白昼微酸（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_coast_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_coast_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweeps effortlessly through 2-5-1 progressions beneath gentle coastal nightlights."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从 2·豆叩滑向 5·壳咯再落回 1·陶诺，展现现代都市和声的丝滑转弯。"
+          }
+        }
+      }
+    },
+    "spec_orig_coast_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Smooth 2-5-1 coastal turn"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创都市夜色 · 2-5-1 顺滑转弯"
+          }
+        }
+      }
+    },
+    "spec_orig_coast_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midnight Coastline (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "午夜海岸（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_rain_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_rain_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairs a lowered minor third with a glistening 5-4-3-2 descent like rain settling on evening stone."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "降半音的小调 3·拍咯伴随 5-4-3-2 湿润下行，带来安静绵长的雨夜色彩。"
+          }
+        }
+      }
+    },
+    "spec_orig_rain_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Bittersweet minor streetglow"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创微酸小调 · 3·拍咯降半音的电影氛围"
+          }
+        }
+      }
+    },
+    "spec_orig_rain_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rain-Washed Corner (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "雨后街角（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_slope_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_slope_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arcs gracefully through 1-2-3-5-6 without semitone friction over open crystalline ninth harmonies."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只用温润的 1-2-3-5-6 五声音阶画弧线，配以开放九度透明钢琴，透亮清澈。"
+          }
+        }
+      }
+    },
+    "spec_orig_slope_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · East Asian pentatonic shimmer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创东亚电影舒缓风 · 五声音阶 + 四度透明钢琴"
+          }
+        }
+      }
+    },
+    "spec_orig_slope_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunlit Meadow (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晴空草坡（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_stairs_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_stairs_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Floats a still 5-3 motif above slowly descending bass steps that deepen the emotional weight."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上方旋律绕着 5 和 3 轻轻盘旋，底下的和弦光带一步步往下沉。"
+          }
+        }
+      }
+    },
+    "spec_orig_stairs_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Descending bass beneath still skies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创下行低音 · 旋律不动、和弦下沉"
+          }
+        }
+      }
+    },
+    "spec_orig_stairs_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slow Staircase (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "慢行楼梯（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_stardust_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_stardust_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tosses a delicate call from the upper register to an intimate midrange answer before joining home."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高音区的问句与中音区的答句彼此接力，营造空间对谈般的轻盈立体感。"
+          }
+        }
+      }
+    },
+    "spec_orig_stardust_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Antiphonal octave call and answer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创高低八度问答 · 单旋律也能听出空间感"
+          }
+        }
+      }
+    },
+    "spec_orig_stardust_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stardust Dialogue (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星尘对话（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_summer_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_summer_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suspends open add9 felt piano across 4-5-3-6, resting tenderly on degree 6 for airy daylight warmth."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用透明 add9 钢琴搭配 4-5-3-6 悬浮进行，旋律停在 6·钵莫生出柔和微光余韵。"
+          }
+        }
+      }
+    },
+    "spec_orig_summer_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Open add9 clouds (4-5-3-6)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创现代舒缓风 · 4-5-3-6 透明加九悬浮进行"
+          }
+        }
+      }
+    },
+    "spec_orig_summer_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summer Fourths (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夏风四度（原创）"
+          }
+        }
+      }
+    },
+    "spec_orig_tinki_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Ambient Studies"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学舒缓集"
+          }
+        }
+      }
+    },
+    "spec_orig_tinki_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustains degree 7 on tiptoe before releasing straight into tonic 1-up for pure harmonic relief."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7·叮尖踮起脚尖拉紧半音张力，下一拍落到高音 1↑ 时瞬间舒展和声涟漪。"
+          }
+        }
+      }
+    },
+    "spec_orig_tinki_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Study · Leading-tone 7->1 resolution"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原创声学示范 · 导音 7→1↑ 张力与释然"
+          }
+        }
+      }
+    },
+    "spec_orig_tinki_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinki Goes Home (Original)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "叮尖回家（原创）"
+          }
+        }
+      }
+    },
+    "spec_pachelbel_canon_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baroque & Classical"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "巴赫与古典公版"
+          }
+        }
+      }
+    },
+    "spec_pachelbel_canon_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walks serenely down 3-2-1-7-6-5 before lifting back home — a golden chord backbone spanning centuries."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3-2-1-7↓-6↓-5↓-6↓-7↓——稳步下沉再轻轻回扬的骨架，古典与现代共鸣的经典地基。"
+          }
+        }
+      }
+    },
+    "spec_pachelbel_canon_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Johann Pachelbel (~1680 PD) · Timeless descending bass sequence"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帕赫贝尔 约1680 公版 · 流传三百年的黄金骨架"
+          }
+        }
+      }
+    },
+    "spec_pachelbel_canon_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pachelbel: Canon in D Ground"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "D大调卡农 · 帕赫贝尔"
+          }
+        }
+      }
+    },
+    "spec_satie_gymnopedie_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_satie_gymnopedie_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half of the music lives in negative space, letting sparse 3/4 waltz chords breathe around long chimes."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好的编曲一半是留白：每颗音珠拖出绵长余影，让圆舞和弦在空隙里安静呼吸。"
+          }
+        }
+      }
+    },
+    "spec_satie_gymnopedie_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erik Satie (1888 PD) · Minimalist triple stillness"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "萨蒂 1888 公版 · 三拍子留白美学"
+          }
+        }
+      }
+    },
+    "spec_satie_gymnopedie_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satie: Gymnopedie No. 1"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "吉诺佩蒂 No.1 · 萨蒂"
+          }
+        }
+      }
+    },
+    "spec_schubert_serenade_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_schubert_serenade_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A gentle 5-6-5 triplet turn lifts upward to high 1, voicing a quiet twilight greeting beneath the window."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "三个快音轻轻一转再向上仰起（5-6-5→1↑），像在夜色窗下欲言又止的轻声问候。"
+          }
+        }
+      }
+    },
+    "spec_schubert_serenade_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Franz Schubert (1828 PD) · Quiet window-side triple turn"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "舒伯特《天鹅之歌》小夜曲 1828 公版 · 窗下叹息"
+          }
+        }
+      }
+    },
+    "spec_schubert_serenade_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schubert: Standchen (Serenade)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小夜曲 · 舒伯特"
+          }
+        }
+      }
+    },
+    "spec_swan_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_swan_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arpeggiated ripples carry the solo cello as it glides softly from 1-up through 7 and 3 before rising cleanly toward home."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左手用细腻的水波琵音铺开镜面湖水，大提琴先从高处 1↑→7→3 滑入湖心，再从 4→5→6 缓缓扬起飞向高音 1↑。"
+          }
+        }
+      }
+    },
+    "spec_swan_lake_cat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Romantic & Impressionist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浪漫与印象派公版"
+          }
+        }
+      }
+    },
+    "spec_swan_lake_insight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweeps from sustained 5 through a rising minor scale arc, shaping a deeply lyrical evening silhouette."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用微酸小调 5→1-2-3-4-5 勾勒出月夜下的宿命感，大提琴线条绵长深沉。"
+          }
+        }
+      }
+    },
+    "spec_swan_lake_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "P. I. Tchaikovsky (1876 PD) · Poignant moonlit minor theme"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "柴可夫斯基《天鹅湖》场景主题 1876 公版 · 宿命小调"
+          }
+        }
+      }
+    },
+    "spec_swan_lake_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tchaikovsky: Swan Lake Scene"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天鹅湖 · 柴可夫斯基"
+          }
+        }
+      }
+    },
+    "spec_swan_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camille Saint-Saens (1886 PD) · Flowing harp ripples and singing cello"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圣桑《动物狂欢节》1886 公版 · 流动水波与深情大跳"
+          }
+        }
+      }
+    },
+    "spec_swan_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saint-Saens: The Swan"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天鹅 · 圣桑"
+          }
+        }
+      }
+    },
+    "stat_frisson": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloom Releases"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "战栗释怀"
+          }
+        }
+      }
+    },
+    "stat_minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet Minutes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注分钟"
+          }
+        }
+      }
+    },
+    "stat_sessions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整伴眠"
+          }
+        }
+      }
+    },
+    "state_paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暂停"
+          }
+        }
+      }
+    },
+    "state_playing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playing"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在播放"
+          }
+        }
+      }
+    },
+    "tab_atelier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atelier"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工坊"
+          }
+        }
+      }
+    },
+    "tab_field": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Field"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声场"
+          }
+        }
+      }
+    },
+    "tab_library": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "声库"
+          }
+        }
+      }
+    },
+    "timer_15": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15m Timer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 分关机"
+          }
+        }
+      }
+    },
+    "timer_15_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15m Active"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15分定时中"
+          }
+        }
+      }
+    },
+    "timer_30": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30m Timer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 分关机"
+          }
+        }
+      }
+    },
+    "timer_30_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30m Active"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30分定时中"
+          }
+        }
+      }
+    },
+    "timer_menu_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Sleep Timer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消睡眠定时"
+          }
+        }
+      }
+    },
+    "timer_menu_mins_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade out after %lld min"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 分钟后渐弱停止"
+          }
+        }
+      }
+    },
+    "tod_afternoon_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested now: 6 Hz sunlit drift or 40 Hz quiet atelier focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此刻推荐 6 Hz 午休漂浮或 40 Hz 静默专注"
+          }
+        }
+      }
+    },
+    "tod_afternoon_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midday Pause · Clear Space"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "午间留白 · 重启精力"
+          }
+        }
+      }
+    },
+    "tod_evening_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested now: 4.8-5.5 Hz Theta with warm kiln fifths"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此刻推荐 Theta 4.8–5.5 Hz 与陶窑暖声床慢慢过渡"
+          }
+        }
+      }
+    },
+    "tod_evening_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening Dusk · Unwind Gently"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暮色降温 · 卸下喧嚣"
+          }
+        }
+      }
+    },
+    "tod_midnight_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delta 1.8-2.5 Hz and low-glare OLED Night Lamp are ready."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此刻推荐 Delta 1.8–2.5 Hz 与纯黑夜灯柔和低眩光"
+          }
+        }
+      }
+    },
+    "tod_midnight_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late Night · Quiet Cotton Rest"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夜色沉落 · 安稳伴眠"
+          }
+        }
+      }
+    },
+    "tod_morning_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested now: 10 Hz Morning Dew or 40 Hz Clear Timber"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此刻推荐 Alpha 10 Hz 或 Gamma 40 Hz，轻盈进入白昼秩序"
+          }
+        }
+      }
+    },
+    "tod_morning_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Morning · Soft Focus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "晨光清澈 · 唤醒心流"
+          }
+        }
+      }
+    },
+    "vo_pair_fmt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "wash_breeze_pink": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stream Pink"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "溪风粉红"
+          }
+        }
+      }
+    },
+    "wash_drawer_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natural Wash & Overtone Warmth"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自然声床与暖泛音"
+          }
+        }
+      }
+    },
+    "wash_kiln_overtone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiln Fifths"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "陶窑泛音"
+          }
+        }
+      }
+    },
+    "wash_mist_white": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sea-Salt Mist"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "海盐微雾"
+          }
+        }
+      }
+    },
+    "wash_note_breeze": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balanced pink acoustic wash inspired by clear running water."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴近自然溪流的柔粉噪声，透气而不压迫。"
+          }
+        }
+      }
+    },
+    "wash_note_kiln": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rich ceramic fifth overtones layered over an ultra-soft floor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "丰富五度泛音共鸣叠加极淡微噪声，温润包覆感。"
+          }
+        }
+      }
+    },
+    "wash_note_mist": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lighter airy texture voiced for 40 Hz Gamma clarity."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更轻亮的海雾颗粒感，配 40 Hz Gamma 最透彻。"
+          }
+        }
+      }
+    },
+    "wash_note_rain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm dense brown-noise rain bed that gently softens room clutter."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绵密低沉的暖褐雨床，适合遮蔽日常环境杂音。"
+          }
+        }
+      }
+    },
+    "wash_pure_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pure Ambient"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯自然声床"
+          }
+        }
+      }
+    },
+    "wash_pure_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pure Ambient Wash · No Pulse"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯自然声床 · 无脉冲"
+          }
+        }
+      }
+    },
+    "wash_pure_toggle_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play warm brown or pink ambient textures alone with zero binaural or isochronic modulation."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅聆听棕红雨声与粉红溪风环境声床，完全关闭双耳差频与等时脉动"
+          }
+        }
+      }
+    },
+    "wash_pure_toggle_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pure Ambient Wash (No Pulse)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯自然声床（零声波脉冲）"
+          }
+        }
+      }
+    },
+    "wash_rain_brown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roofline Brown"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檐雨棕红"
+          }
+        }
+      }
+    },
+    "wash_slider_noise": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natural Wash Level"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自然声床湿度"
+          }
+        }
+      }
+    },
+    "wash_slider_warmth": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceramic Overtone Warmth"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窑陶泛音温度"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

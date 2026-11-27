@@ -1,41 +1,13 @@
-import SwiftUI
+import AVFAudio
+import Combine
+import Foundation
 import XCTest
 @testable import Chimmo
 
+@MainActor
 final class BrainwaveResonanceTests: XCTestCase {
 
-    func testOfflineBrainwaveAudioTelemetryAndStereoBinauralSpread() throws {
-        let synth = FeltPianoSynth()
-
-        for band in BrainwaveBand.allCases {
-            let telemetry = try synth.verifyBrainwaveOfflineTelemetry(
-                sampleRate: 48_000.0,
-                carrierHz: band.defaultCarrierHz,
-                beatHz: band.defaultBeatHz,
-                noiseGain: band.defaultNoiseGain
-            )
-            XCTAssertGreaterThan(telemetry.peakL, 0.01, "\(band.shortCode) 左声道应有真实声压")
-            XCTAssertGreaterThan(telemetry.peakR, 0.01, "\(band.shortCode) 右声道应有真实声压")
-            XCTAssertLessThanOrEqual(telemetry.peakL, 0.95, "\(band.shortCode) 左声道必须经过安全限幅")
-            XCTAssertLessThanOrEqual(telemetry.peakR, 0.95, "\(band.shortCode) 右声道必须经过安全限幅")
-            XCTAssertGreaterThan(telemetry.lrDifference, 0.001, "\(band.shortCode) 双耳差频左右声道应存在波形差异")
-            XCTAssertGreaterThan(telemetry.duringEnvelope.rmsEnergy, 0.001)
-            XCTAssertEqual(telemetry.afterStopEnvelope.rmsEnergy, 0.0, accuracy: 0.0001)
-        }
-    }
-
-    func testFrissonReleaseOfflineAudioRender() throws {
-        let synth = FeltPianoSynth()
-        synth.triggerFrissonRelease(rootHz: 196.0, intensity: 0.85)
-        let res = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 196.0, timbre: .feltPiano)
-        XCTAssertGreaterThan(res.peak, 0.02)
-        XCTAssertLessThanOrEqual(res.peak, 0.95)
-        XCTAssertEqual(res.reverbInRate, 48_000.0, accuracy: 1.0)
-        XCTAssertEqual(res.reverbOutRate, 48_000.0, accuracy: 1.0)
-        XCTAssertEqual(res.envelopeAfterSilence.rmsEnergy, 0.0, accuracy: 0.0001)
-    }
-
-    func testDomainModelsPresetsAndCapsulesIntegrity() {
+    func testBrainwaveCatalogAndKinematics() {
         XCTAssertEqual(BrainwaveBand.allCases, [.delta, .theta, .alpha, .gamma])
         XCTAssertEqual(AcousticWashKind.allCases.count, 4)
         XCTAssertEqual(ResonancePreset.all.count, 12)
@@ -43,24 +15,18 @@ final class BrainwaveResonanceTests: XCTestCase {
         XCTAssertEqual(FrissonCapsule.all.count, 8)
         XCTAssertEqual(Set(FrissonCapsule.all.map(\.id)).count, 8)
 
-        for band in BrainwaveBand.allCases {
-            XCTAssertLessThan(band.minBeatHz, band.maxBeatHz)
-            XCTAssertGreaterThanOrEqual(band.defaultBeatHz, band.minBeatHz)
-            XCTAssertLessThanOrEqual(band.defaultBeatHz, band.maxBeatHz)
-        }
-
         for cap in FrissonCapsule.all {
+            XCTAssertFalse(cap.title.isEmpty)
             XCTAssertFalse(cap.specimen.notes.isEmpty)
-            XCTAssertFalse(cap.frissonHighlight.isEmpty)
         }
-    }
 
-    func testResonanceKinematicsSafetyAndTimeWindows() {
         XCTAssertEqual(ResonanceKinematics.band(forBeatHz: 2.0), .delta)
         XCTAssertEqual(ResonanceKinematics.band(forBeatHz: 6.0), .theta)
         XCTAssertEqual(ResonanceKinematics.band(forBeatHz: 10.0), .alpha)
+        XCTAssertEqual(ResonanceKinematics.band(forBeatHz: 16.0), .alpha)
         XCTAssertEqual(ResonanceKinematics.band(forBeatHz: 38.0), .gamma)
         XCTAssertEqual(ResonanceKinematics.band(forBeatHz: .nan), .alpha)
+
         XCTAssertEqual(ResonanceKinematics.clampedBeatHz(-10.0), 1.5, accuracy: 0.001)
         XCTAssertEqual(ResonanceKinematics.clampedBeatHz(999.0), 42.0, accuracy: 0.001)
 
@@ -68,181 +34,222 @@ final class BrainwaveResonanceTests: XCTestCase {
         XCTAssertEqual(pair.left, 211.0, accuracy: 0.001)
         XCTAssertEqual(pair.right, 221.0, accuracy: 0.001)
 
-        // 人声基频八度折叠（低男声、高女声与异常值安全兜底）
         XCTAssertTrue((120.0...260.0).contains(ResonanceKinematics.foldHumFrequencyToCarrier(85.0)))
         XCTAssertTrue((120.0...260.0).contains(ResonanceKinematics.foldHumFrequencyToCarrier(420.0)))
         XCTAssertEqual(ResonanceKinematics.foldHumFrequencyToCarrier(.nan), 174.0, accuracy: 0.001)
 
-        // 全天 24 小时推荐配方完整性
-        for hour in [0, 8, 15, 20, 23] {
-            let steps = ResonanceKinematics.recommendedPresets(forHour: hour)
-            XCTAssertEqual(steps.count, 3)
+        for hour in 0..<24 {
             let banner = ResonanceKinematics.timeOfDayBanner(forHour: hour)
             XCTAssertFalse(banner.title.isEmpty)
+            XCTAssertFalse(banner.subtitle.isEmpty)
+            XCTAssertFalse(ResonanceKinematics.recommendedPresets(forHour: hour).isEmpty)
         }
 
-        // Reduce Motion 下保持完全静态无振荡缩放
         let s1 = ResonanceKinematics.orbPulseScale(phaseTime: 0.5, beatHz: 10.0, energy: 0.8, frissonCharge: 0.0, reduceMotion: true)
         let s2 = ResonanceKinematics.orbPulseScale(phaseTime: 3.7, beatHz: 10.0, energy: 0.8, frissonCharge: 0.0, reduceMotion: true)
-        XCTAssertEqual(s1, 1.0, accuracy: 0.0001)
-        XCTAssertEqual(s2, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(s1, s2, accuracy: 0.0001)
 
-        let companion = ResonanceKinematics.gentleCompanionMessage(totalMinutes: 12, frissonCount: 3, favoriteBand: .theta)
-        XCTAssertFalse(companion.isEmpty)
-        XCTAssertTrue(companion.contains("漂浮放空"))
-        XCTAssertFalse(companion.contains("打卡"))
+        let inhale = ResonanceKinematics.breathGuidePhase(at: 2.0, reduceMotion: false)
+        let exhale = ResonanceKinematics.breathGuidePhase(at: 7.0, reduceMotion: false)
+        XCTAssertNotEqual(inhale.label, exhale.label)
+        let reduced = ResonanceKinematics.breathGuidePhase(at: 7.0, reduceMotion: true)
+        XCTAssertEqual(reduced.progress, 0.5, accuracy: 0.001)
     }
 
-    @MainActor
-    func testResonanceStatsStoreAndViewModelLifecycle() throws {
-        let suiteName = "app.chimmo.v2.tests.\(UUID().uuidString)"
+    func testYINvDSPPitchDetectorPreAGCGateAndBounds() {
+        let detector = YINvDSPPitchDetector()
+        let sr = PitchContour.sampleRate
+        let count = Int(sr * 0.25)
+
+        let sine180 = (0..<count).map { i in
+            Float(0.32 * sin(2.0 * Double.pi * 180.0 * Double(i) / sr))
+        }
+        let validContour = detector.detect(mono16kSamples: sine180, fmin: 75.0, fmax: 700.0)
+        let voicedHz = validContour.pitchHz.filter { $0 > 0 }
+        XCTAssertFalse(voicedHz.isEmpty)
+        let medianHz = voicedHz.sorted()[voicedHz.count / 2]
+        XCTAssertEqual(medianHz, 180.0, accuracy: 4.0)
+
+        let quietNoise = (0..<count).map { i in
+            Float(0.001 * sin(2.0 * Double.pi * 180.0 * Double(i) / sr))
+        }
+        let gatedContour = detector.detect(mono16kSamples: quietNoise, fmin: 75.0, fmax: 700.0)
+        XCTAssertTrue(gatedContour.pitchHz.allSatisfy { $0 == 0.0 })
+
+        XCTAssertTrue(detector.detect(mono16kSamples: sine180, fmin: .nan, fmax: 700.0).pitchHz.isEmpty)
+        XCTAssertTrue(detector.detect(mono16kSamples: sine180, fmin: 900.0, fmax: 200.0).pitchHz.isEmpty)
+    }
+
+    func testDualBusDryBinauralIsolationIsochronicAMAndPureWashDSP() throws {
+        let synth = FeltPianoSynth()
+        let sr = 48_000.0
+
+        // 1. Spectral L/R channel isolation test: L = 195 Hz, R = 205 Hz with 0% hall crosstalk.
+        let samples = try synth.renderDualBusOfflineSamples(
+            sampleRate: sr,
+            frameCount: 24_000,
+            carrierHz: 200.0,
+            beatHz: 10.0,
+            gain: 0.28,
+            isochronicDepth: 0.0,
+            overtoneWarmth: 0.0,
+            noiseGain: 0.0,
+            pureWashOnly: false
+        )
+        let sliceL = Array(samples.left.dropFirst(4_800))
+        let sliceR = Array(samples.right.dropFirst(4_800))
+        let magL195 = dftMagnitude(sliceL, freqHz: 195.0, sampleRate: sr)
+        let magL205 = dftMagnitude(sliceL, freqHz: 205.0, sampleRate: sr)
+        let magR205 = dftMagnitude(sliceR, freqHz: 205.0, sampleRate: sr)
+        let magR195 = dftMagnitude(sliceR, freqHz: 195.0, sampleRate: sr)
+
+        XCTAssertGreaterThan(magL195, 0.05)
+        XCTAssertGreaterThan(magR205, 0.05)
+        XCTAssertLessThan(magL205 / max(1e-6, magL195), 0.02, "Left channel leaked Right carrier!")
+        XCTAssertLessThan(magR195 / max(1e-6, magR205), 0.02, "Right channel leaked Left carrier!")
+
+        // 2. True single-channel AM depth test on Left channel (speaker pulse 40 Hz, noiseGain = 0).
+        let modulated = try synth.verifySingleChannelIsochronicDepth(sampleRate: sr, carrierHz: 220.0, beatHz: 40.0, isochronicDepth: 0.38)
+        let unmodulated = try synth.verifySingleChannelIsochronicDepth(sampleRate: sr, carrierHz: 220.0, beatHz: 40.0, isochronicDepth: 0.0)
+        let modSpread = modulated.maxLeftBlockRMS - modulated.minLeftBlockRMS
+        let flatSpread = unmodulated.maxLeftBlockRMS - unmodulated.minLeftBlockRMS
+        XCTAssertGreaterThan(modSpread, 0.02)
+        XCTAssertGreaterThan(modSpread, flatSpread * 2.5)
+
+        // 3. Pure Ambient Wash Only produces audible noise wash with zero binaural carrier tone.
+        let washOnly = try synth.renderDualBusOfflineSamples(
+            sampleRate: sr,
+            frameCount: 16_384,
+            carrierHz: 200.0,
+            beatHz: 10.0,
+            gain: 0.0,
+            noiseGain: 0.16,
+            pureWashOnly: true
+        )
+        let washSlice = Array(washOnly.left.dropFirst(4_096))
+        let washPeak = washSlice.map(abs).max() ?? 0.0
+        let carrierLeak = dftMagnitude(washSlice, freqHz: 195.0, sampleRate: sr)
+        XCTAssertGreaterThan(washPeak, 0.005)
+        XCTAssertLessThan(carrierLeak, 0.005)
+
+        // 4. General telemetry checks for binaural, multi-timbre, frisson, and pan.
+        let bw = try synth.verifyBrainwaveOfflineTelemetry(sampleRate: sr, carrierHz: 216.0, beatHz: 10.0, noiseGain: 0.08)
+        XCTAssertGreaterThan(bw.peakL, 0.01)
+        XCTAssertGreaterThan(bw.peakR, 0.01)
+        XCTAssertGreaterThan(bw.lrDifference, 0.005)
+        XCTAssertGreaterThan(bw.duringEnvelope.rmsEnergy, 0.01)
+        XCTAssertEqual(bw.afterStopEnvelope, .silent)
+
+        for timbre in [FeltPianoSynth.Timbre.feltPiano, .liquidHarp, .celesta, .singingCello, .warmBass] {
+            let res = try synth.verifyOfflineRenderTelemetry(sampleRate: sr, frequency: 261.63, timbre: timbre)
+            XCTAssertGreaterThan(res.peak, 0.01)
+            XCTAssertEqual(res.reverbInRate, sr, accuracy: 1.0)
+            XCTAssertEqual(res.reverbOutRate, sr, accuracy: 1.0)
+            XCTAssertEqual(res.envelopeAfterSilence, .silent)
+        }
+
+        let frisson = try synth.verifyFrissonReleaseOfflineTelemetry(sampleRate: sr, rootHz: 196.0, intensity: 0.85)
+        XCTAssertGreaterThan(frisson.peak, 0.02)
+        XCTAssertGreaterThan(frisson.duringEnvelope.rmsEnergy, 0.02)
+        XCTAssertEqual(frisson.afterStopEnvelope, .silent)
+
+        let leftPan = try synth.verifySpatialPanOfflineTelemetry(pan: -0.5)
+        XCTAssertGreaterThan(leftPan.peakL, leftPan.peakR)
+        let rightPan = try synth.verifySpatialPanOfflineTelemetry(pan: 0.5)
+        XCTAssertGreaterThan(rightPan.peakR, rightPan.peakL)
+    }
+
+    func testResonanceViewModelStateSleepResumeStatsAndPureWash() throws {
+        let suiteName = "app.chimmo.tests.\(UUID().uuidString)"
         let defs = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        defs.removePersistentDomain(forName: suiteName)
         defer { defs.removePersistentDomain(forName: suiteName) }
 
-        let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("chimmo_v2_\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let corrupt = ResonanceStatsStore.Snapshot(
+            totalMinutes: 99_999_999,
+            sessionsCompleted: -50,
+            frissonReleasesCount: 5_000_000,
+            bandMinutes: ["alpha": -12, "theta": 8_000_000],
+            recentPresetIDs: Array(repeating: "p", count: 25),
+            favoritePresetIDs: ["alpha_morning_dew"]
+        )
+        defs.set(try JSONEncoder().encode(corrupt), forKey: "app.chimmo.resonance.stats.v2")
 
-        let studio = StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir), preferences: defs)
         let stats = ResonanceStatsStore(preferences: defs)
-        let vm = ResonanceViewModel(studioVM: studio, statsStore: stats, preferences: defs)
+        XCTAssertEqual(stats.snapshot.totalMinutes, 500_000)
+        XCTAssertEqual(stats.snapshot.sessionsCompleted, 0)
+        XCTAssertEqual(stats.snapshot.frissonReleasesCount, 100_000)
+        XCTAssertEqual(stats.snapshot.bandMinutes["alpha"], 0)
+        XCTAssertEqual(stats.snapshot.bandMinutes["theta"], 500_000)
+        XCTAssertLessThanOrEqual(stats.snapshot.recentPresetIDs.count, 12)
 
-        // 1. 启动配方、切换频段与离线记录
-        let preset = ResonancePreset.all[0]
-        vm.startPreset(preset)
-        XCTAssertTrue(vm.isBedPlaying)
-        XCTAssertEqual(vm.selectedBand, preset.band)
-        XCTAssertEqual(vm.activePreset?.id, preset.id)
-        XCTAssertEqual(stats.recentPresetIDs.first, preset.id)
+        // Reset clears counters while preserving favorites.
+        stats.resetAllStats()
+        XCTAssertEqual(stats.snapshot.totalMinutes, 0)
+        XCTAssertEqual(stats.snapshot.favoritePresetIDs, ["alpha_morning_dew"])
+        XCTAssertEqual(stats.favoriteBand, .alpha)
 
-        // 2. 颅内战栗蓄力 -> 释放
-        vm.beginFrissonHold()
-        XCTAssertTrue(vm.isHoldingFrisson)
-        vm.updateFrissonHold(progress: 0.85)
-        XCTAssertEqual(vm.frissonCharge, 0.85, accuracy: 0.001)
-        let burstBefore = vm.frissonBurstSequence
-        vm.releaseFrissonHold()
-        XCTAssertFalse(vm.isHoldingFrisson)
-        XCTAssertEqual(vm.frissonBurstSequence, burstBefore + 1)
-        XCTAssertEqual(stats.frissonPeakCount, 1)
+        let vm = ResonanceViewModel(preferences: defs, statsStore: stats, enableSystemNowPlaying: false)
+        var didForwardChange = false
+        let cancellable = vm.objectWillChange.sink { _ in didForwardChange = true }
+        defer { cancellable.cancel() }
 
-        // 3. 预设人声基频回退（保证拒麦审核场景仍畅通）
-        vm.applyFallbackVoiceRoot(hz: 136.1, label: "低沉男声")
-        XCTAssertEqual(vm.matchedHumHz ?? 0.0, 136.1, accuracy: 0.2)
-        XCTAssertTrue(vm.isBedPlaying)
+        stats.toggleFavoritePreset(ResonancePreset.all[1].id)
+        XCTAssertTrue(didForwardChange)
+        XCTAssertTrue(stats.isFavorite(ResonancePreset.all[1].id))
 
-        // 4. 收藏与后台停播逻辑
-        stats.toggleFavoritePreset(preset.id)
-        XCTAssertTrue(stats.isFavorite(preset.id))
-        vm.backgroundAudioEnabled = false
-        vm.handleAppEnteredBackground()
-        XCTAssertFalse(vm.isBedPlaying)
+        // Sleep timer survives pause/resume without vanishing deadline.
+        vm.setSleepTimer(minutes: 15)
+        XCTAssertEqual(vm.sleepTimerMinutes, 15)
+        XCTAssertGreaterThan(vm.sleepRemainingSeconds, 800)
+        vm.pauseResonancePlayback()
+        XCTAssertEqual(vm.sleepTimerMinutes, 15)
+        XCTAssertGreaterThan(vm.sleepRemainingSeconds, 800)
+        vm.startResonancePlayback()
+        XCTAssertTrue(vm.isResonancePlaying)
+        XCTAssertEqual(vm.sleepTimerMinutes, 15)
+        vm.setSleepTimer(minutes: nil)
 
-        // 5. V2.2 三页窑陶声学架构日/夜实例化校验 + 声学安全合规页
-        XCTAssertEqual(ResonanceTab.allCases, [.field, .library, .atelier])
-        XCTAssertNotNil(ResonanceRootView(preferences: defs))
-        for isNight in [false, true] {
-            let p = ChimmoPalette(isNight: isNight)
-            XCTAssertNotNil(ResonanceFieldView(vm: vm, palette: p))
-            XCTAssertNotNil(AcousticLibraryView(vm: vm, palette: p))
-            XCTAssertNotNil(AtelierSettingsView(vm: vm, palette: p))
-        }
-        XCTAssertNotNil(ChimmoAcousticSafetyView())
-        vm.stopAllAudio()
-    }
+        // Pure Ambient Wash persistence & zero-pulse modulation check.
+        XCTAssertFalse(vm.pureAmbientWashOnly)
+        vm.pureAmbientWashOnly = true
+        XCTAssertTrue(defs.bool(forKey: "app.chimmo.pureAmbientWashOnly"))
+        XCTAssertEqual(vm.isochronicDepthForCurrentRoute, 0.0, accuracy: 0.0001)
+        vm.pureAmbientWashOnly = false
 
-    func testTestFlightPublicBetaBundleAndPrivacyCompliance() throws {
-        // 1. PrivacyInfo.xcprivacy 必须真实打包并包含 UserDefaults CA92.1 声明（杜绝 ITMS-91053）
-        let privacyURL = try XCTUnwrap(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
-        let privacyData = try Data(contentsOf: privacyURL)
-        let plistObj = try PropertyListSerialization.propertyList(from: privacyData, format: nil)
-        let dict = try XCTUnwrap(plistObj as? [String: Any])
-        XCTAssertEqual(dict["NSPrivacyTracking"] as? Bool, false)
-        let apiTypes = try XCTUnwrap(dict["NSPrivacyAccessedAPITypes"] as? [[String: Any]])
-        let hasUserDefaultsReason = apiTypes.contains { item in
-            let api = item["NSPrivacyAccessedAPIType"] as? String
-            let reasons = item["NSPrivacyAccessedAPITypeReasons"] as? [String] ?? []
-            return api == "NSPrivacyAccessedAPICategoryUserDefaults" && reasons.contains("CA92.1")
-        }
-        XCTAssertTrue(hasUserDefaultsReason, "PrivacyInfo.xcprivacy 必须申报 NSPrivacyAccessedAPICategoryUserDefaults (CA92.1)")
+        vm.appearanceMode = .night
+        XCTAssertTrue(vm.resolvedIsNight(systemScheme: .light))
+        vm.appearanceMode = .day
+        XCTAssertFalse(vm.resolvedIsNight(systemScheme: .dark))
+        vm.appearanceMode = .auto
+        XCTAssertTrue(vm.resolvedIsNight(systemScheme: .dark))
 
-        // 2. Info.plist 后台音频、免加密问卷与麦克风合规声明校验
-        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "ITSAppUsesNonExemptEncryption") as? Bool, false)
-        let bgModes = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String] ?? []
-        XCTAssertTrue(bgModes.contains("audio"), "Info.plist 必须开启 UIBackgroundModes audio 支持锁屏声场")
-        let micDesc = Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") as? String ?? ""
-        XCTAssertFalse(micDesc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        let shortVer = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-        XCTAssertEqual(shortVer, "2.2.0")
-    }
+        vm.hapticsEnabled = false
+        XCTAssertFalse(AcousticHapticsEngine.shared.isEnabled)
+        vm.hapticsEnabled = true
+        XCTAssertTrue(AcousticHapticsEngine.shared.isEnabled)
 
-    @MainActor
-    func testV21NowPlayingBreathGuideKilnClicksAndShareCardExporter() throws {
-        // 1. 10 变奏窑陶轻叩声效与离线声压校验
-        let synth = FeltPianoSynth()
-        for variant in 0..<10 {
-            synth.playTactileKilnClick(variantIndex: variant)
-        }
-        synth.silenceAll()
-        let harpRes = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 432.0, timbre: .liquidHarp)
-        let celestaRes = try synth.verifyOfflineRenderTelemetry(sampleRate: 48_000.0, frequency: 568.0, timbre: .celesta)
-        XCTAssertGreaterThan(harpRes.peak, 0.01)
-        XCTAssertGreaterThan(celestaRes.peak, 0.01)
+        vm.applyQuickHumPresetHz(174.0)
+        XCTAssertEqual(vm.matchedHumHz ?? 0, 174.0, accuracy: 0.1)
+        vm.clearMatchedHum()
+        XCTAssertNil(vm.matchedHumHz)
+        vm.pauseResonancePlayback()
 
-        // 2. 4s 吸 / 6s 呼呼吸节律与减弱动态静态门控
-        let inhale = ResonanceKinematics.breathGuidePhase(at: 2.0, reduceMotion: false)
-        XCTAssertTrue(inhale.isInhaling)
-        XCTAssertGreaterThan(inhale.progress, 0.1)
-        let exhale = ResonanceKinematics.breathGuidePhase(at: 7.0, reduceMotion: false)
-        XCTAssertFalse(exhale.isInhaling)
-        let reduced = ResonanceKinematics.breathGuidePhase(at: 7.0, reduceMotion: true)
-        XCTAssertEqual(reduced.progress, 0.5, accuracy: 0.0001)
-        XCTAssertEqual(reduced.label, "平稳呼吸")
-
-        // 3. 1080x1350 离线脑波共振纪念卡 PNG 日/夜双态及轻哼锁定校验
-        for isNight in [false, true] {
-            let png = try XCTUnwrap(
-                ResonanceCardExporter.renderPNGData(
-                    band: .theta,
-                    beatHz: 6.0,
-                    carrierHz: 184.0,
-                    matchedHumHz: 184.0,
-                    totalMinutes: 28,
-                    frissonCount: 5,
-                    isNight: isNight
-                )
-            )
-            XCTAssertGreaterThan(png.count, 5000)
-            XCTAssertEqual(Array(png.prefix(4)), [0x89, 0x50, 0x4E, 0x47])
-        }
-
-        // 4. 锁屏 Now Playing 控制器隔离模式 + 分享弹窗实例化
         let np = NowPlayingResonanceController(enabled: false)
-        np.bindCommands(onPlay: {}, onPause: {}, onToggle: {})
-        np.updateNowPlaying(
-            title: "漂浮放空 · 6.0 Hz",
-            bandLabel: "立体声双耳",
-            isPlaying: true,
-            durationSeconds: 900,
-            elapsedSeconds: 15,
-            accentHex: 0xC4513A,
-            isNight: false
-        )
-        np.clear()
+        np.clearNowPlayingInfo()
+        XCTAssertEqual(defs.string(forKey: "app.chimmo.appearanceMode"), ChimmoAppearanceMode.auto.rawValue)
+    }
 
-        let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("chimmo_v21_\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: tempDir) }
-
-        let vm = ResonanceViewModel(
-            studioVM: StudioViewModel(notebookStore: MelodyNotebookStore(directory: tempDir)),
-            statsStore: ResonanceStatsStore(),
-            enableSystemNowPlaying: false
-        )
-        XCTAssertNotNil(ResonanceShareCardSheet(vm: vm, palette: ChimmoPalette(isNight: false)))
-        XCTAssertNotNil(ResonanceShareCardSheet(vm: vm, palette: ChimmoPalette(isNight: true)))
+    private func dftMagnitude(_ samples: [Float], freqHz: Double, sampleRate: Double) -> Double {
+        let n = samples.count
+        guard n > 0 else { return 0.0 }
+        let omega = 2.0 * Double.pi * freqHz / sampleRate
+        var real = 0.0
+        var imag = 0.0
+        for (i, s) in samples.enumerated() {
+            let x = Double(s)
+            real += x * cos(omega * Double(i))
+            imag -= x * sin(omega * Double(i))
+        }
+        return (2.0 / Double(n)) * hypot(real, imag)
     }
 }

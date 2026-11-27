@@ -1,201 +1,124 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hans">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>开源许可 · 咩哞 (Mie &amp; Mou)</title>
+  <title>公版谱源与致谢 · 咩哞（Mie &amp; Mou）</title>
   <style>
     :root {
       --bg: #FBF7F0;
-      --paper: #FFFFFF;
-      --shelf: #F2EBE0;
-      --butter: #F8EBD0;
-      --mint: #E3F0ED;
-      --outline: #1C1D19;
-      --border: rgba(28, 29, 25, 0.11);
-      --border-strong: rgba(28, 29, 25, 0.16);
+      --surface: #F4ECE0;
+      --card: #FFFDF8;
       --ink: #1C1D19;
-      --sub: #5C564D;
-      --accent: #C4513A;
-      --prominent: #B8442E;
-      --celadon: #3D7A77;
-      --shadow-soft: 0 10px 28px rgba(122, 82, 48, 0.08);
-      --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10);
+      --muted: #4E4A42;
+      --border: rgba(28, 29, 25, 0.14);
+      --accent: #2B6865;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0E1430;
-        --paper: #19213F;
-        --shelf: #212A4C;
-        --butter: #272B4D;
-        --mint: #1B3049;
-        --outline: #FFB547;
-        --border: rgba(242, 226, 196, 0.12);
-        --border-strong: rgba(255, 181, 71, 0.28);
-        --ink: #F2E2C4;
-        --sub: #B8BED4;
-        --accent: #F08A6C;
-        --prominent: #C4513A;
-        --celadon: #7EC8C3;
-        --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.36);
-        --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
-      }
-    }
-    @media (prefers-contrast: more) {
-      :root {
-        --border: rgba(28, 29, 25, 0.34);
-        --border-strong: rgba(28, 29, 25, 0.56);
-      }
-      .hero-banner, .card, .back-bar, .brand-pill { border-width: 1.6px; }
-      a.home-btn { border-color: var(--outline); }
-    }
-    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
-      :root {
-        --border: rgba(242, 226, 196, 0.36);
-        --border-strong: rgba(255, 181, 71, 0.62);
+        --bg: #0E1326;
+        --surface: #161D38;
+        --card: #1E2646;
+        --ink: #F4EEE2;
+        --muted: #C6CEE8;
+        --border: rgba(244, 238, 226, 0.16);
+        --accent: #7ECBC5;
       }
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 28px 16px 40px;
       background: var(--bg);
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", sans-serif;
       line-height: 1.72;
     }
-    .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
-    .hero-banner {
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 18px 22px;
-      box-shadow: var(--shadow-soft);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-    .brand-pill {
+    .wrap { max-width: 780px; margin: 0 auto; padding: 28px 20px 56px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .pill-link, .lang-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 4px 12px 4px 6px;
+      min-height: 44px;
+      padding: 0 16px;
       border-radius: 999px;
-      background: var(--butter);
-      color: var(--ink);
+      background: var(--card);
       border: 1px solid var(--border);
-      font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 6px;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
     }
-    h1 { margin: 0; font-size: 24px; font-weight: 900; }
-    .meta { margin: 4px 0 0; color: var(--sub); font-size: 13px; font-weight: 700; }
+    h1 { margin: 0 0 8px; font-size: 1.9rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .card {
-      background: var(--paper);
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 18px 22px;
-      box-shadow: var(--shadow-soft);
+      padding: 20px;
+      margin-bottom: 14px;
     }
-    h2 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
-    p { margin: 0 0 12px; font-size: 15px; font-weight: 500; }
-    pre {
-      margin: 0;
-      padding: 14px;
-      background: var(--shelf);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      white-space: pre-wrap;
-      font-size: 13px;
-      color: var(--ink);
-      line-height: 1.55;
-    }
-    .back-bar {
+    h2 { margin: 0 0 8px; font-size: 1.12rem; }
+    p { margin: 0 0 8px; color: var(--muted); }
+    footer {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.90rem;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
       flex-wrap: wrap;
-      background: var(--shelf);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 12px 18px;
-      box-shadow: var(--shadow-soft);
+      gap: 14px;
+      justify-content: space-between;
     }
-    a.home-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 9px 16px;
-      min-height: 40px;
-      border-radius: 999px;
-      background: var(--prominent);
-      color: #FFFFFF;
-      border: 1px solid transparent;
-      box-shadow: var(--shadow-btn);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
-    a { color: var(--accent); text-decoration: none; font-weight: 800; }
-    a:hover { text-decoration: underline; }
-    a:focus-visible { outline: 2px solid var(--prominent); outline-offset: 2px; border-radius: 6px; }
-    a.home-btn:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
+    footer a { color: var(--muted); font-weight: 600; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <header class="hero-banner">
+    <div class="top-bar">
+      <a class="pill-link" href="index.html" data-zh="返回咩哞主页" data-en="Back to Home">返回咩哞主页</a>
+      <button id="langToggle" class="lang-btn" type="button">EN</button>
+    </div>
+    <h1 data-zh="公版谱源与音频架构致谢" data-en="Public-Domain Sources &amp; Credits">公版谱源与音频架构致谢</h1>
+    <p class="meta" data-zh="更新日期：2026-11-27 · 咩哞 Mie &amp; Mou (app.chimmo)" data-en="Updated: 2026-11-27 · Mie &amp; Mou (app.chimmo)">更新日期：2026-11-27 · 咩哞 Mie &amp; Mou (app.chimmo)</p>
+
+    <article class="card">
+      <h2 data-zh="一、零第三方依赖纯自研引擎" data-en="1. Zero Third-Party Binaries">一、零第三方依赖纯自研引擎</h2>
+      <p data-zh="「咩哞 · Mie &amp; Mou」不内置任何外部预训练模型或第三方闭源音频库。44 声部物理建模室乐合成引擎（FeltPianoSynth）、纯 Swift / Apple Accelerate vDSP 音高检测模块（YINvDSPPitchDetector）以及窑陶矢量角色徽章全部为项目原生代码实现。" data-en="Mie &amp; Mou bundles zero third-party SDKs, closed binaries, or pre-trained external weights. Its 44-voice chamber synth, pure Swift / Accelerate vDSP pitch detector, and ceramic vector illustrations are implemented natively.">「咩哞 · Mie &amp; Mou」不内置任何外部预训练模型或第三方闭源音频库。44 声部物理建模室乐合成引擎（FeltPianoSynth）、纯 Swift / Apple Accelerate vDSP 音高检测模块（YINvDSPPitchDetector）以及窑陶矢量角色徽章全部为项目原生代码实现。</p>
+    </article>
+
+    <article class="card">
+      <h2 data-zh="二、公版古典名作与原创室内乐精选" data-en="2. Public-Domain Classics &amp; Originals">二、公版古典名作与原创室内乐精选</h2>
+      <p data-zh="声库中收录的巴赫、帕赫贝尔、圣桑、德彪西、萨蒂与李斯特等经典室内乐范例均取材自确认处于全球公版领域（Public Domain）的早期版本旋律片段，并由本应用实时生成原创和声与织体渲染；现代夏日、星尘对谈与海岸夜色示范曲目为本作品 100% 原创制作。" data-en="Classical excerpts from Bach, Pachelbel, Saint-Saens, Debussy, Satie, Liszt, Tchaikovsky, Chopin, Schubert, Mozart, Dvorak, and Beethoven are drawn strictly from verified Public Domain works with custom real-time chamber realizations; all 8 contemporary studies are 100% original.">声库中收录的巴赫、帕赫贝尔、圣桑、德彪西、萨蒂与李斯特等经典室内乐范例均取材自确认处于全球公版领域（Public Domain）的早期版本旋律片段，并由本应用实时生成原创和声与织体渲染；现代夏日、星尘对谈与海岸夜色示范曲目为本作品 100% 原创制作。</p>
+    </article>
+
+    <article class="card">
+      <h2 data-zh="三、系统框架致谢" data-en="3. Apple Native Frameworks">三、系统框架致谢</h2>
+      <p data-zh="感谢 Apple iOS 原生框架生态：SwiftUI、AVFAudio、Accelerate/vDSP、CoreHaptics、MediaPlayer 与 Photos，支撑本应用在离线单机环境下实现低功耗与无障碍包容体验。" data-en="Built on native Apple frameworks: SwiftUI, AVFAudio, Accelerate/vDSP, CoreHaptics, MediaPlayer, and Photos.">感谢 Apple iOS 原生框架生态：SwiftUI、AVFAudio、Accelerate/vDSP、CoreHaptics、MediaPlayer 与 Photos，支撑本应用在离线单机环境下实现低功耗与无障碍包容体验。</p>
+    </article>
+
+    <footer>
+      <span data-zh="咩哞 · Mie &amp; Mou (app.chimmo)" data-en="Mie &amp; Mou (app.chimmo)">咩哞 · Mie &amp; Mou (app.chimmo)</span>
       <div>
-        <span class="brand-pill">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
-            <circle cx="17.5" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.6"/>
-            <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
-            <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
-          </svg>
-          <span>OPEN SOURCE ACKNOWLEDGMENTS</span>
-        </span>
-        <h1>开源许可与曲目鸣谢</h1>
-        <p class="meta">本机离线声学引擎、开源社区与内置 28 首曲库版权边界说明</p>
+        <a href="privacy.html" data-zh="隐私声明" data-en="Privacy Policy">隐私声明</a> ·
+        <a href="terms.html" data-zh="使用条款" data-en="Terms">使用条款</a>
       </div>
-    </header>
-
-    <section class="card">
-      <h2>1. SwiftF0 (MIT License)</h2>
-      <p>本项目中的动态规划音符切分算法（<code>SwiftF0NoteSegmenter.swift</code>）参考并移植自 <a href="https://github.com/lars76/swift-f0">lars76/swift-f0</a>。</p>
-      <pre>MIT License
-
-Copyright (c) 2025 Lars Nieradzik
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.</pre>
-    </section>
-
-    <section class="card">
-      <h2>2. 内置曲库与版权边界</h2>
-      <p>内置 20 首古典名曲（圣桑《天鹅》、李斯特、巴赫、柴可夫斯基、德彪西、肖邦、德沃夏克、萨蒂、贝多芬、舒伯特、帕赫贝尔、莫扎特等）均为作者逝世逾百年的全球公有领域乐谱独立编配。</p>
-      <p style="margin-bottom:0;">内置 8 首夏日治愈与现代技法曲目均为本项目 100% 原创，不含任何受版权保护的现代影视或流行作品旋律。</p>
-    </section>
-
-    <footer class="back-bar">
-      <a class="home-btn" href="index.html">返回咩哞主页</a>
-      <nav class="nav-links" aria-label="法律与开源页面">
-        <a href="privacy.html">隐私政策</a>
-        <a href="terms.html">使用条款</a>
-        <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
-      </nav>
     </footer>
   </main>
+  <script>
+    (() => {
+      let lang = "zh";
+      const btn = document.getElementById("langToggle");
+      function apply() {
+        document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en";
+        btn.textContent = lang === "zh" ? "EN" : "中文";
+        document.querySelectorAll("[data-zh]").forEach((el) => {
+          el.innerHTML = lang === "zh" ? el.dataset.zh : el.dataset.en;
+        });
+      }
+      btn.addEventListener("click", () => { lang = lang === "zh" ? "en" : "zh"; apply(); });
+    })();
+  </script>
 </body>
 </html>

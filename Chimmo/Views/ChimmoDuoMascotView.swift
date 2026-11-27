@@ -1,59 +1,7 @@
 import QuartzCore
 import SwiftUI
 
-/// 咩哞 · Chimmo 声学双子星（Mie & Mou）：
-/// - 「咩 · Mie」：轻盈云朵瓷小羊，头生螺旋卷羊角，掌管高音主旋律与跟唱律动；
-/// - 「哞 · Mou」：沉稳可可陶小牛，头戴新月黄铜牛角，掌管低音根音与和声伴奏。
-public enum ChimmoDuoCharacter: String, CaseIterable, Identifiable, Sendable {
-    case mie // 咩（羊叫声 · 主旋律高音）
-    case mou // 哞（牛叫声 · 低音伴奏和声）
-
-    public var id: String { rawValue }
-
-    public var chineseName: String {
-        switch self {
-        case .mie: return "咩"
-        case .mou: return "哞"
-        }
-    }
-
-    public var englishName: String {
-        switch self {
-        case .mie: return "Mie"
-        case .mou: return "Mou"
-        }
-    }
-
-    public var roleShort: String {
-        switch self {
-        case .mie: return "主旋律"
-        case .mou: return "伴奏"
-        }
-    }
-
-    public var accessibilityLabel: String {
-        switch self {
-        case .mie: return "小羊咩，主旋律"
-        case .mou: return "小牛哞，低音伴奏"
-        }
-    }
-
-    public var signatureDegree: Int {
-        switch self {
-        case .mie: return 5
-        case .mou: return 1
-        }
-    }
-
-    public var signatureOctave: Int {
-        switch self {
-        case .mie: return 0
-        case .mou: return -1
-        }
-    }
-}
-
-/// 纯值驱动的双子实时陪伴姿态快照（100% 可单测、严格尊重减弱动态效果）。
+/// Mie & Mou harmonic duo companions.
 public struct ChimmoDuoCompanionState: Equatable, Sendable {
     public let sheepBouncePt: CGFloat
     public let sheepEarWiggleDeg: Double
@@ -250,7 +198,7 @@ public struct ChimmoSheepView: View {
         let cx = w * 0.5
         let cy = h * 0.54
         let lw = max(1.1, s * 0.055)
-        let inkContour = isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
+        let inkContour = isNight ? Color(hex: 0xD8DFF4).opacity(0.62) : Color(hex: 0x231B15)
         let contourWidth = max(1.2, lw * 0.85)
         let comicStroke = StrokeStyle(lineWidth: contourWidth, lineCap: .round, lineJoin: .round)
 
@@ -496,7 +444,7 @@ public struct ChimmoCowView: View {
         let cx = w * 0.5
         let cy = h * 0.56
         let lw = max(1.1, s * 0.055)
-        let inkContour = isNight ? Color(hex: 0x0A0F24) : Color(hex: 0x231B15)
+        let inkContour = isNight ? Color(hex: 0xD8DFF4).opacity(0.62) : Color(hex: 0x231B15)
         let contourWidth = max(1.2, lw * 0.85)
         let comicStroke = StrokeStyle(lineWidth: contourWidth, lineCap: .round, lineJoin: .round)
 
@@ -571,7 +519,8 @@ public struct ChimmoCowView: View {
         // 眼睛（唤醒时温厚圆眼 / 错峰眨眼 / 伴奏关闭时静谧闭眼弧）
         let eyeY = cy - s * 0.08
         let eyeDX = s * 0.11
-        let inkColor = Color(hex: 0x1C1D19)
+        let inkColor = isNight ? Color(hex: 0xFFB84D) : Color(hex: 0x1C1D19)
+        let highlightColor = isNight ? Color(hex: 0xFFF7E8).opacity(0.88) : Color.white.opacity(0.94)
         let gazeShiftX = kin.gazeOffsetX * s * 0.022
         for side in [-1.0, 1.0] {
             let ex = cx + CGFloat(side) * eyeDX
@@ -606,7 +555,7 @@ public struct ChimmoCowView: View {
                 let hr = max(0.6, er * 0.34)
                 ctx.fill(
                     Path(ellipseIn: CGRect(x: gx - er * 0.45, y: eyeY - er * 0.55, width: hr * 2, height: hr * 2)),
-                    with: .color(Color.white.opacity(0.94))
+                    with: .color(highlightColor)
                 )
             }
         }
@@ -717,6 +666,7 @@ public struct LivingChimmoDuoBadgeView: View {
     public var melodyActive: Bool = false
     public var cowAwake: Bool = true
     public var gazeBias: Double = 0.0
+    public var isActiveOnScreen: Bool = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -725,23 +675,27 @@ public struct LivingChimmoDuoBadgeView: View {
         accentColor: Color,
         melodyActive: Bool = false,
         cowAwake: Bool = true,
-        gazeBias: Double = 0.0
+        gazeBias: Double = 0.0,
+        isActiveOnScreen: Bool = true
     ) {
         self.isNight = isNight
         self.accentColor = accentColor
         self.melodyActive = melodyActive
         self.cowAwake = cowAwake
         self.gazeBias = gazeBias
+        self.isActiveOnScreen = isActiveOnScreen
     }
 
     public var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { _ in
+        let shouldPause = reduceMotion || !isActiveOnScreen
+        let interval = melodyActive ? (1.0 / 24.0) : (1.0 / 12.0)
+        TimelineView(.animation(minimumInterval: interval, paused: shouldPause)) { timeline in
             ChimmoDuoBadgeView(
                 isNight: isNight,
                 accentColor: accentColor,
                 melodyActive: melodyActive,
                 cowAwake: cowAwake,
-                phaseTime: reduceMotion ? 0.0 : CACurrentMediaTime(),
+                phaseTime: shouldPause ? 0.0 : timeline.date.timeIntervalSinceReferenceDate,
                 gazeBias: gazeBias
             )
         }

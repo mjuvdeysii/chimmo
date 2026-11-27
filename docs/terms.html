@@ -1,174 +1,124 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hans">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>使用条款 · 咩哞 (Mie &amp; Mou)</title>
+  <title>使用条款 · 咩哞（Mie &amp; Mou）</title>
   <style>
     :root {
       --bg: #FBF7F0;
-      --paper: #FFFFFF;
-      --shelf: #F2EBE0;
-      --butter: #F8EBD0;
-      --mint: #E3F0ED;
-      --outline: #1C1D19;
-      --border: rgba(28, 29, 25, 0.11);
-      --border-strong: rgba(28, 29, 25, 0.16);
+      --surface: #F4ECE0;
+      --card: #FFFDF8;
       --ink: #1C1D19;
-      --sub: #5C564D;
-      --accent: #C4513A;
-      --prominent: #B8442E;
-      --celadon: #3D7A77;
-      --shadow-soft: 0 10px 28px rgba(122, 82, 48, 0.08);
-      --shadow-btn: 0 4px 12px rgba(122, 82, 48, 0.10);
+      --muted: #4E4A42;
+      --border: rgba(28, 29, 25, 0.14);
+      --accent: #2B6865;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0E1430;
-        --paper: #19213F;
-        --shelf: #212A4C;
-        --butter: #272B4D;
-        --mint: #1B3049;
-        --outline: #FFB547;
-        --border: rgba(242, 226, 196, 0.12);
-        --border-strong: rgba(255, 181, 71, 0.28);
-        --ink: #F2E2C4;
-        --sub: #B8BED4;
-        --accent: #F08A6C;
-        --prominent: #C4513A;
-        --celadon: #7EC8C3;
-        --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.36);
-        --shadow-btn: 0 4px 14px rgba(0, 0, 0, 0.28);
-      }
-    }
-    @media (prefers-contrast: more) {
-      :root {
-        --border: rgba(28, 29, 25, 0.34);
-        --border-strong: rgba(28, 29, 25, 0.56);
-      }
-      .hero-banner, .card, .back-bar, .brand-pill { border-width: 1.6px; }
-      a.home-btn { border-color: var(--outline); }
-    }
-    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
-      :root {
-        --border: rgba(242, 226, 196, 0.36);
-        --border-strong: rgba(255, 181, 71, 0.62);
+        --bg: #0E1326;
+        --surface: #161D38;
+        --card: #1E2646;
+        --ink: #F4EEE2;
+        --muted: #C6CEE8;
+        --border: rgba(244, 238, 226, 0.16);
+        --accent: #7ECBC5;
       }
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 28px 16px 40px;
       background: var(--bg);
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", sans-serif;
       line-height: 1.72;
     }
-    .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
-    .hero-banner {
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 18px 22px;
-      box-shadow: var(--shadow-soft);
-    }
-    .brand-pill {
+    .wrap { max-width: 780px; margin: 0 auto; padding: 28px 20px 56px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .pill-link, .lang-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 4px 12px 4px 6px;
+      min-height: 44px;
+      padding: 0 16px;
       border-radius: 999px;
-      background: var(--butter);
-      color: var(--ink);
+      background: var(--card);
       border: 1px solid var(--border);
-      font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 6px;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
     }
-    h1 { margin: 0; font-size: 24px; font-weight: 900; }
-    .meta { margin: 4px 0 0; color: var(--sub); font-size: 13px; font-weight: 700; }
+    h1 { margin: 0 0 8px; font-size: 1.9rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
     .card {
-      background: var(--paper);
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 18px 22px;
-      box-shadow: var(--shadow-soft);
+      padding: 20px;
+      margin-bottom: 14px;
     }
-    h2 { margin: 0 0 8px; font-size: 17px; font-weight: 900; }
-    p { margin: 0; font-size: 15px; font-weight: 500; }
-    .back-bar {
+    h2 { margin: 0 0 8px; font-size: 1.12rem; }
+    p { margin: 0 0 8px; color: var(--muted); }
+    footer {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.90rem;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
       flex-wrap: wrap;
-      background: var(--shelf);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 12px 18px;
-      box-shadow: var(--shadow-soft);
+      gap: 14px;
+      justify-content: space-between;
     }
-    a.home-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 9px 16px;
-      min-height: 40px;
-      border-radius: 999px;
-      background: var(--prominent);
-      color: #FFFFFF;
-      border: 1px solid transparent;
-      box-shadow: var(--shadow-btn);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .nav-links { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 800; }
-    a { color: var(--accent); text-decoration: none; font-weight: 800; }
-    a:hover { text-decoration: underline; }
-    a:focus-visible { outline: 2px solid var(--prominent); outline-offset: 2px; border-radius: 6px; }
-    a.home-btn:focus-visible { outline: 2px solid var(--outline); outline-offset: 2px; }
+    footer a { color: var(--muted); font-weight: 600; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <header class="hero-banner">
-      <span class="brand-pill">
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="6.5" cy="14" r="4.2" fill="#E64980" stroke="#231B15" stroke-width="1.6"/>
-          <circle cx="17.5" cy="14" r="4.2" fill="#2E7DB2" stroke="#231B15" stroke-width="1.6"/>
-          <rect x="8" y="6.5" width="8" height="12" rx="4" fill="#F25563" stroke="#231B15" stroke-width="1.7"/>
-          <circle cx="12" cy="14" r="2.2" fill="#FFFDF7" stroke="#231B15" stroke-width="1.1"/>
-        </svg>
-        <span>MIE &amp; MOU TERMS OF USE</span>
-      </span>
-      <h1>咩哞（Mie &amp; Mou）使用条款</h1>
-      <p class="meta">生效日期：2026 年 11 月 21 日 · 最近修订：2026 年 11 月 26 日</p>
-    </header>
+    <div class="top-bar">
+      <a class="pill-link" href="index.html" data-zh="返回咩哞主页" data-en="Back to Home">返回咩哞主页</a>
+      <button id="langToggle" class="lang-btn" type="button">EN</button>
+    </div>
+    <h1 data-zh="使用条款与非医疗安全约定" data-en="Terms of Use &amp; Safety Notice">使用条款与非医疗安全约定</h1>
+    <p class="meta" data-zh="生效日期：2026-11-27 · 咩哞 Mie &amp; Mou (app.chimmo)" data-en="Effective Date: 2026-11-27 · Mie &amp; Mou (app.chimmo)">生效日期：2026-11-27 · 咩哞 Mie &amp; Mou (app.chimmo)</p>
 
-    <section class="card">
-      <h2>1. 创作与作品归属</h2>
-      <p>您使用咩哞（Mie &amp; Mou）导出的声音、PNG 卡片、WAV 音频与标准 MIDI 作品，其个人创作权益完全归您本人所有。</p>
-    </section>
+    <article class="card">
+      <h2 data-zh="一、声学艺术定位与非医疗边界" data-en="1. Sensory Sound-Art Scope (Non-Medical)">一、声学艺术定位与非医疗边界</h2>
+      <p data-zh="「咩哞 · Mie &amp; Mou」为专注声学审美体验、放松伴眠节律与室内乐赏析的离线应用软件，不属于医疗器械或临床辅助程序，不承担任何医疗诊断、治疗、预防或治愈疾病（包括但不限于失眠障碍、神经系统疾病、耳鸣或注意力障碍）的功效保证。" data-en="Mie &amp; Mou is strictly an offline sensory sound-art, relaxation, and acoustic chamber appreciation application. It is not a medical device and is not intended to diagnose, treat, cure, or prevent any physical or neurological condition.">「咩哞 · Mie &amp; Mou」为专注声学审美体验、放松伴眠节律与室内乐赏析的离线应用软件，不属于医疗器械或临床辅助程序，不承担任何医疗诊断、治疗、预防或治愈疾病（包括但不限于失眠障碍、神经系统疾病、耳鸣或注意力障碍）的功效保证。</p>
+    </article>
 
-    <section class="card">
-      <h2>2. 应用与 IP 权利</h2>
-      <p>应用内的「咩哞七小只（陶诺、豆叩、拍咯、呜嘟、壳咯、钵莫、叮尖）」以及小羊咩、小牛哞角色造型、声学视觉设计与原创代码受著作权保护。</p>
-    </section>
+    <article class="card">
+      <h2 data-zh="二、40 Hz 频段与高敏感人群收听留意" data-en="2. 40 Hz Listening &amp; Sensitivity Cautions">二、40 Hz 频段与高敏感人群收听留意</h2>
+      <p data-zh="若您有癫痫病史、规律声光脉冲敏感、耳鸣发作期或佩戴植入式助听装置，请优先在声床抽屉里开启无脉冲的「纯自然声床（零声波脉冲）」，或在咨询专业医师后再使用 40 Hz Gamma 高频微脉动功能。驾驶车辆或从事高警觉机械操作期间切勿使用睡前深波或闭眼夜灯模式。" data-en="If you have a history of epilepsy, pulse sensitivity, active tinnitus, or wear a hearing implant, enable Pure Ambient Wash (No Pulse) inside the Wash Drawer or consult a physician before listening to 40 Hz Gamma modulation. Never use deep-rest modes or OLED Night Lamp while driving or operating machinery.">若您有癫痫病史、规律声光脉冲敏感、耳鸣发作期或佩戴植入式助听装置，请优先在声床抽屉里开启无脉冲的「纯自然声床（零声波脉冲）」，或在咨询专业医师后再使用 40 Hz Gamma 高频微脉动功能。驾驶车辆或从事高警觉机械操作期间切勿使用睡前深波或闭眼夜灯模式。</p>
+    </article>
 
-    <section class="card">
-      <h2>3. 非医疗用途与免责声明</h2>
-      <p>本应用按“现状”提供，完全在设备本地离线运行，仅用于声学放松、专注氛围与感官艺术体验，非医疗器械，不提供任何临床诊断或治疗。请勿在驾驶或需高度警觉的安全环境中使用深度放松声场。</p>
-    </section>
+    <article class="card">
+      <h2 data-zh="三、静态 PNG 明信片分享授权" data-en="3. Static PNG Keepsake Card Sharing">三、静态 PNG 明信片分享授权</h2>
+      <p data-zh="您对在本应用内亲手生成的 1080×1350 静态 PNG 共振明信片享有自由保存与非误导性个人分享权利，请勿将其用于虚假健康或医疗功效宣传。" data-en="You may freely save and share 1080x1350 static PNG keepsake cards generated locally on device for personal non-misleading purposes.">您对在本应用内亲手生成的 1080×1350 静态 PNG 共振明信片享有自由保存与非误导性个人分享权利，请勿将其用于虚假健康或医疗功效宣传。</p>
+    </article>
 
-    <footer class="back-bar">
-      <a class="home-btn" href="index.html">返回咩哞主页</a>
-      <nav class="nav-links" aria-label="法律与开源页面">
-        <a href="privacy.html">隐私政策</a>
-        <a href="licenses.html">开源许可</a>
-        <a href="https://github.com/mjuvdeysii/chimmo">GitHub 仓库</a>
-      </nav>
+    <footer>
+      <span data-zh="咩哞 · Mie &amp; Mou (app.chimmo)" data-en="Mie &amp; Mou (app.chimmo)">咩哞 · Mie &amp; Mou (app.chimmo)</span>
+      <div>
+        <a href="privacy.html" data-zh="隐私声明" data-en="Privacy Policy">隐私声明</a> ·
+        <a href="licenses.html" data-zh="公版致谢" data-en="Credits">公版致谢</a>
+      </div>
     </footer>
   </main>
+  <script>
+    (() => {
+      let lang = "zh";
+      const btn = document.getElementById("langToggle");
+      function apply() {
+        document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en";
+        btn.textContent = lang === "zh" ? "EN" : "中文";
+        document.querySelectorAll("[data-zh]").forEach((el) => {
+          el.innerHTML = lang === "zh" ? el.dataset.zh : el.dataset.en;
+        });
+      }
+      btn.addEventListener("click", () => { lang = lang === "zh" ? "en" : "zh"; apply(); });
+    })();
+  </script>
 </body>
 </html>
